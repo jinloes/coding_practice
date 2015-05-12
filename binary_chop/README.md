@@ -1,0 +1,1 @@
+Practicing writing a binary search algorithm recursively and iteratively.
