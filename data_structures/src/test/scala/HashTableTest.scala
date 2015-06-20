@@ -35,5 +35,40 @@ class HashTableTest extends FeatureSpec with Matchers with GivenWhenThen {
     }
   }
 
-  feature("A hash table should be able to handle collisions") (pending)
+  feature("A hash table should be able to handle collisions") {
+    scenario("add two items that have the same hash index") {
+      Given("a hash table with small capacity")
+      val table = new HashTable[String, Integer](1)
+      When("insert two values")
+      table.put("a", 5)
+      table.put("b", 6)
+      Then("Both values should exist in the hash table")
+      table.get("a") should be(5)
+      table.get("b") should be(6)
+      table.getSize should be(2)
+    }
+  }
+
+  feature("A hash table should be able to remove elements from itself"){
+    scenario("remove an item that exists in the hash table") {
+      Given("a hash table with a value")
+      val table = new HashTable[String, Integer](1)
+      table.put("a", 5)
+      When("remove key from the hash table")
+      val removedItem = table.remove("a")
+      Then("the key should not exist in the hash table")
+      removedItem should be(5)
+      table.containsKey("a") should be(false)
+    }
+
+    scenario("remove an item that does not exist in the hash table") {
+      Given("an empty hash table")
+      val table = new HashTable[String, Integer](1)
+      When("remove key from the hash table")
+      val removedItem = table.remove("a")
+      Then("the key should not exist in the hash table")
+      removedItem should be(null)
+      table.containsKey("a") should be(false)
+    }
+  }
 }
