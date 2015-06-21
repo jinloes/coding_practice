@@ -1,4 +1,4 @@
-import com.jinloes.simple_functions.ShortestPath
+import com.jinloes.simple_functions.graph.ShortestPath
 import org.jgrapht.graph._
 import org.scalatest.{FlatSpec, Matchers}
 
