@@ -23,13 +23,16 @@ public class ShortestPath {
     public static List<String> findShortestPath(DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph, String start,
                                                 String end) {
         Map<String, Double> pathWeight = new HashMap<>();
-        Map<String, DefaultWeightedEdge> pathEdge = new HashMap<>();
+        Map<String, List<String>> shortestPathMap = new HashMap<>();
         List<String> path = new ArrayList<>();
         if (graph.vertexSet().isEmpty() || !graph.containsVertex(start) || !graph.containsVertex(end)) {
             return path;
         }
         Stack<String> vertices = new Stack<>();
         pathWeight.put(start, 0.0);
+        List<String> shortestPath = new ArrayList<>();
+        shortestPath.add(start);
+        shortestPathMap.put(start, shortestPath);
         vertices.push(start);
         while (!vertices.empty()) {
             String vertex = vertices.pop();
@@ -40,32 +43,25 @@ public class ShortestPath {
                 double targetPathWeight = weight + pathWeight.get(vertex);
                 if (!pathWeight.containsKey(target)) {
                     pathWeight.put(target, targetPathWeight);
-                    pathEdge.put(target, edge);
+                    shortestPath = shortestPathMap.get(vertex);
+                    List<String> currentShortestPath = new ArrayList<>(shortestPath);
+                    currentShortestPath.add(target);
+                    shortestPathMap.put(target, currentShortestPath);
                     vertices.push(target);
                 } else if (targetPathWeight < pathWeight.get(target)) {
                     pathWeight.put(target, targetPathWeight);
-                    pathEdge.put(target, edge);
+                    shortestPath = shortestPathMap.get(vertex);
+                    List<String> currentShortestPath = new ArrayList<>(shortestPath);
+                    currentShortestPath.add(target);
+                    shortestPathMap.put(target, currentShortestPath);
                 }
             }
         }
-        return buildPath(graph, start, end, pathEdge);
-    }
-
-    private static List<String> buildPath(DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph, String start,
-                                          String end, Map<String, DefaultWeightedEdge> pathEdge) {
-        List<String> path = new ArrayList<>();
-        DefaultWeightedEdge startEdge = pathEdge.get(end);
         // If the start edge is null it meant there was no path to the target vertex
-        if (startEdge == null) {
-            return path;
+        if (!shortestPathMap.containsKey(end)) {
+            return new ArrayList<>();
         }
-        path.add(0, graph.getEdgeTarget(startEdge));
-        while (!graph.getEdgeSource(startEdge).equals(start)) {
-            path.add(0, graph.getEdgeSource(startEdge));
-            startEdge = pathEdge.get(graph.getEdgeSource(startEdge));
-        }
-        path.add(0, graph.getEdgeSource(startEdge));
-        return path;
+        return shortestPathMap.get(end);
     }
 
     /**
@@ -81,7 +77,7 @@ public class ShortestPath {
     public static List<String> shortestPathBfs(DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph,
                                                String start, String end) {
         Map<String, Double> pathWeightMap = new HashMap<>();
-        Map<String, String> pathSourceMap = new HashMap<>();
+        Map<String, List<String>> pathSourceMap = new HashMap<>();
         List<String> path = new ArrayList<>();
         if (graph.vertexSet().isEmpty()) {
             return path;
@@ -89,6 +85,9 @@ public class ShortestPath {
         Queue<String> vertices = new ArrayDeque<>();
         vertices.add(start);
         pathWeightMap.put(start, 0.0);
+        List<String> shortestPath = new ArrayList<>();
+        shortestPath.add(start);
+        pathSourceMap.put(start, shortestPath);
         while (!vertices.isEmpty()) {
             String vertex = vertices.poll();
             for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(vertex)) {
@@ -96,30 +95,25 @@ public class ShortestPath {
                 double pathWeight = pathWeightMap.get(vertex) + graph.getEdgeWeight(edge);
                 if (!pathWeightMap.containsKey(target)) {
                     pathWeightMap.put(target, pathWeight);
-                    pathSourceMap.put(target, vertex);
+                    List<String> sourceShortestPath = pathSourceMap.get(vertex);
+                    shortestPath = new ArrayList<>(sourceShortestPath);
+                    shortestPath.add(target);
+                    pathSourceMap.put(target, shortestPath);
                     vertices.add(target);
                 } else if (pathWeight < pathWeightMap.get(target)) {
                     pathWeightMap.put(target, pathWeight);
-                    pathSourceMap.put(target, vertex);
+                    List<String> sourceShortestPath = pathSourceMap.get(vertex);
+                    shortestPath = new ArrayList<>(sourceShortestPath);
+                    shortestPath.add(target);
+                    pathSourceMap.put(target, shortestPath);
                 }
             }
         }
 
-        return buildBfsPath(start, end, pathSourceMap);
-    }
-
-    private static List<String> buildBfsPath(String start, String end, Map<String, String> pathSourceMap) {
-        List<String> path = new ArrayList<>();
         if (!pathSourceMap.containsKey(end)) {
             // There was no path to end from start
-            return path;
+            return new ArrayList<>();
         }
-        String pathPosition = end;
-        path.add(0, pathPosition);
-        while (!Objects.equals(pathPosition, start)) {
-            pathPosition = pathSourceMap.get(pathPosition);
-            path.add(0, pathPosition);
-        }
-        return path;
+        return pathSourceMap.get(end);
     }
 }
