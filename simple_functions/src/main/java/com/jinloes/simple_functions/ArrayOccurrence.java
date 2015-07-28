@@ -3,7 +3,7 @@ package com.jinloes.simple_functions;
 /**
  * Finds the number of occurrences of a given number in an array in less then n time.
  */
-public class ArrayOccurence {
+public class ArrayOccurrence {
     public static int findOccurrences(int[] arr, int numToSearch) {
         if (arr == null || arr.length == 0) {
             return 0;

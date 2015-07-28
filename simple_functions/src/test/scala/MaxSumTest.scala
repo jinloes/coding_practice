@@ -12,7 +12,7 @@ class MaxSumTest extends FeatureSpec with Matchers with GivenWhenThen {
       When("find max sum")
       val max = MaxSum.findMax(arr)
       Then("max sum should be 2")
-      max should be (2)
+      max should be (3)
     }
 
     scenario("Find the max sum in a more complex array") {
