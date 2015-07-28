@@ -1,4 +1,6 @@
 import com.jinloes.simple_functions.graph.{ConnectNodes, Node}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
