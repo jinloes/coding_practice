@@ -1,2 +1,2 @@
 # coding_practice
-practicing coding and implementing simple fucntions in java
+practicing coding and implementing simple functions in java
