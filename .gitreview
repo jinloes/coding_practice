@@ -1,5 +1,5 @@
 [gerrit]
-host=10.43.16.94
+host=jinloes-vitrualbox
 port=29418
 project=jinloes/coding_practice
 defaultbranch=master
