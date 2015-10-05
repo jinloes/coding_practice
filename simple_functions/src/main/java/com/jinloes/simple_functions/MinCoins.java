@@ -38,12 +38,16 @@ public class MinCoins {
         for (int i = 0; i <= sum; i++) {
             // add each coin value to previously known sum and see if it takes less coins to achieve than currently
             // known
-            for (int value : coinValues) {
-                int foundSum = i + value;
-                int numCoins = sumMap.get(i) + 1;
-                if (!sumMap.containsKey(foundSum) || sumMap.get(foundSum) > numCoins) {
-                    sumMap.put(foundSum, numCoins);
+            if (sumMap.containsKey(i)) {
+                for (int value : coinValues) {
+                    int foundSum = i + value;
+                    int numCoins = sumMap.get(i) + 1;
+                    if (!sumMap.containsKey(foundSum) || sumMap.get(foundSum) > numCoins) {
+                        sumMap.put(foundSum, numCoins);
+                    }
                 }
+            } else {
+                sumMap.put(i, 0);
             }
         }
         return sumMap.get(sum);
