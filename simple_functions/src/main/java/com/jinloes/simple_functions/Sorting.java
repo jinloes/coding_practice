@@ -1,8 +1,11 @@
 package com.jinloes.simple_functions;
 
+import org.apache.commons.collections4.CollectionUtils;
+import scala.concurrent.forkjoin.ForkJoinPool;
+import scala.concurrent.forkjoin.RecursiveAction;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Executes different sorting algorithms
@@ -73,32 +76,59 @@ public class Sorting {
      * @return sorted list
      */
     public static List<Integer> mergeSort(List<Integer> list) {
-        if (list.size() == 1) {
+        if (CollectionUtils.isEmpty(list) || list.size() == 1) {
             return list;
         }
-        int mid = list.size() / 2;
-        List<Integer> left = new ArrayList<>(list.subList(0, mid));
-        List<Integer> right = new ArrayList<>(list.subList(mid, list.size()));
-        left = mergeSort(left);
-        right = mergeSort(right);
-        return merge(left, right);
+        MergeSorter mergeSorter = new MergeSorter(list);
+        ForkJoinPool forkJoinPool = new ForkJoinPool(4);
+        forkJoinPool.invoke(mergeSorter);
+        return mergeSorter.getResult();
     }
 
-    private static List<Integer> merge(List<Integer> left, List<Integer> right) {
-        List<Integer> result = new ArrayList<>();
-        while (!left.isEmpty() && !right.isEmpty()) {
-            Integer leftVal = left.get(0);
-            Integer rightVal = right.get(0);
-            if (leftVal.compareTo(rightVal) <= 0) {
-                result.add(leftVal);
-                left.remove(0);
-            } else {
-                result.add(rightVal);
-                right.remove(0);
-            }
+    private static class MergeSorter extends RecursiveAction {
+        private final List<Integer> toSort;
+        private final List<Integer> result;
+
+        public MergeSorter(List<Integer> toSort) {
+            this.toSort = toSort;
+            result = new ArrayList<>(toSort.size());
         }
-        result.addAll(left.stream().collect(Collectors.toList()));
-        result.addAll(right.stream().collect(Collectors.toList()));
-        return result;
+
+        public List<Integer> getResult() {
+            return result;
+        }
+
+        @Override
+        protected void compute() {
+            if (CollectionUtils.isEmpty(toSort) || toSort.size() <= 1) {
+                result.addAll(toSort);
+                return;
+            }
+            int mid = toSort.size() / 2;
+            List<Integer> left = new ArrayList<>(toSort.subList(0, mid));
+            List<Integer> right = new ArrayList<>(toSort.subList(mid, toSort.size()));
+            MergeSorter leftSorter = new MergeSorter(left);
+            MergeSorter rightSorter = new MergeSorter(right);
+            invokeAll(leftSorter, rightSorter);
+            result.addAll(merge(leftSorter.getResult(), rightSorter.getResult()));
+        }
+
+        private static List<Integer> merge(List<Integer> left, List<Integer> right) {
+            List<Integer> result = new ArrayList<>();
+            while (!left.isEmpty() && !right.isEmpty()) {
+                Integer leftVal = left.get(0);
+                Integer rightVal = right.get(0);
+                if (leftVal.compareTo(rightVal) <= 0) {
+                    result.add(leftVal);
+                    left.remove(0);
+                } else {
+                    result.add(rightVal);
+                    right.remove(0);
+                }
+            }
+            result.addAll(left);
+            result.addAll(right);
+            return result;
+        }
     }
 }
