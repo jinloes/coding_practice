@@ -16,6 +16,7 @@ import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * Created by jinloes on 9/23/15.
  */
 public class EventHandlerRunner {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventHandlerRunner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     public static final MetricRegistry METRIC_REGISTRY = new MetricRegistry();
 
     public static void main(String[] args) throws InterruptedException {
