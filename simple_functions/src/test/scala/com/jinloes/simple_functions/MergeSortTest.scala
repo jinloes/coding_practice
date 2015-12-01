@@ -11,8 +11,8 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 
 /**
- * Tests for {@link Sorter#mergeSort}
- */
+  * Tests for {@link Sorter#mergeSort}
+  */
 @RunWith(classOf[JUnitRunner])
 class MergeSortTest extends FlatSpec with Matchers {
   "Merge sort" should "be able to sort and array" in {

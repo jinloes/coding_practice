@@ -5,8 +5,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
- * Tests for {@link NumberCombination}
- */
+  * Tests for {@link NumberCombination}
+  */
 @RunWith(classOf[JUnitRunner])
 class NumberCombinationTest extends FlatSpec with Matchers {
   "A number combination detector" should "detect if a sum exists in an array " in {

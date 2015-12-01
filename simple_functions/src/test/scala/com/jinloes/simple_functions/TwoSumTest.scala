@@ -9,14 +9,14 @@ import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 import scala.collection.JavaConverters._
 
 /**
- * Tests for {@link TwoSum}.
- */
+  * Tests for {@link TwoSum}.
+  */
 @RunWith(classOf[JUnitRunner])
 class TwoSumTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Two should should find all the pairs of numbers that sum to a value") {
     scenario("an empty array") {
       Given("an empty array")
-      val arr:Array[Int] = Array()
+      val arr: Array[Int] = Array()
       When("find the 2 sum")
       val actual = TwoSum.find2Sum(arr, 3)
       Then("the pairs should be found")

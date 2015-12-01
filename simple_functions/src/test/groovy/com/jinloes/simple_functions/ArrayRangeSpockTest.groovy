@@ -1,6 +1,5 @@
 package com.jinloes.simple_functions
 
-import com.jinloes.simple_functions.ArrayRange
 import spock.lang.Specification
 
 import static org.assertj.core.api.Assertions.assertThat
@@ -8,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat
 /**
  * Spock unit tests for {@link ArrayRange}
  */
-class ArrayRangeTest extends Specification {
+class ArrayRangeSpockTest extends Specification {
     def "Calculating ranges of an empty array"() {
         expect:
         assertThat(ArrayRange.calculateRanges([] as int[])).isEmpty()

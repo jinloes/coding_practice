@@ -1,5 +1,7 @@
 package com.jinloes.simple_functions.graph;
 
+import com.google.common.base.MoreObjects;
+
 import java.util.Objects;
 
 /**
@@ -58,17 +60,6 @@ public class Node {
         this.value = value;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Node node = (Node) o;
-        return Objects.equals(left, node.left) &&
-                Objects.equals(right, node.right) &&
-                Objects.equals(next, node.next) &&
-                Objects.equals(previous, node.previous) &&
-                Objects.equals(value, node.value);
-    }
 
     @Override
     public int hashCode() {
@@ -76,14 +67,29 @@ public class Node {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        final Node other = (Node) obj;
+        return Objects.equals(this.left, other.left)
+                && Objects.equals(this.right, other.right)
+                && Objects.equals(this.next, other.next)
+                && Objects.equals(this.previous, other.previous)
+                && Objects.equals(this.value, other.value);
+    }
+
+    @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Node{");
-        sb.append("left=").append(left != null ? left.getValue() : null);
-        sb.append(", right=").append(right != null ? right.getValue() : null);
-        sb.append(", next=").append(next != null ? next.getValue() : null);
-        sb.append(", previous=").append(previous != null ? previous.getValue() : null);
-        sb.append(", value='").append(value).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return MoreObjects.toStringHelper(this)
+                .add("left", left)
+                .add("right", right)
+                .add("next", next)
+                .add("previous", previous)
+                .add("value", value)
+                .toString();
     }
 }

@@ -1,7 +1,7 @@
 package com.jinloes.simple_functions;
 
 /**
- * Finds the max sum in an array;
+ * Finds the max sum in an array.
  */
 public class MaxSum {
     public static int findMax(int[] arr) {

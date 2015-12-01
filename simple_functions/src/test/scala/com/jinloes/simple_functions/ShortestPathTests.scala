@@ -9,8 +9,8 @@ import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 import scala.collection.JavaConverters._
 
 /**
- * Tests for {@Link ShortestPath}
- */
+  * Tests for {@Link ShortestPath}
+  */
 @RunWith(classOf[JUnitRunner])
 class ShortestPathTests extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Find the shortest path in a graph with BFS") {

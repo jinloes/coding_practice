@@ -23,9 +23,9 @@ public class MinCoins {
 
     private static int findClosestCoin(int value, int[] coinValues) {
         int closestCoin = 0;
-        for (int i = 0; i < coinValues.length; i++) {
-            if (value - coinValues[i] >= 0) {
-                closestCoin = coinValues[i];
+        for (int coinValue : coinValues) {
+            if (value - coinValue >= 0) {
+                closestCoin = coinValue;
             }
         }
         return closestCoin;
@@ -36,8 +36,8 @@ public class MinCoins {
         sumMap.put(0, 0);
         // Until we reach the sum
         for (int i = 0; i <= sum; i++) {
-            // add each coin value to previously known sum and see if it takes less coins to achieve than currently
-            // known
+            // add each coin value to previously known sum and see if it takes less coins to
+            // achieve than currently known
             if (sumMap.containsKey(i)) {
                 for (int value : coinValues) {
                     int foundSum = i + value;

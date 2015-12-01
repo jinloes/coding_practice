@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * You have an unsorted array, and you are given a value S.
- * Find all pairs of elements in the array that add up to value S.
+ * You have an unsorted array, and you are given a value S. Find all pairs of elements in the array
+ * that add up to value S.
  */
 public class TwoSum {
     public static Set<Pair<Integer, Integer>> find2Sum(int[] arr, int sum) {
@@ -31,7 +31,9 @@ public class TwoSum {
                 int min = Math.min(val, difference);
                 int max = Math.max(val, difference);
                 pairs.add(new Pair<>(min, max));
-            } else if (sumCount.containsKey(difference) && difference == val && sumCount.get(difference) > 1) {
+            } else if (sumCount.containsKey(difference)
+                    && difference == val
+                    && sumCount.get(difference) > 1) {
                 int min = Math.min(val, difference);
                 int max = Math.max(val, difference);
                 pairs.add(new Pair<>(min, max));

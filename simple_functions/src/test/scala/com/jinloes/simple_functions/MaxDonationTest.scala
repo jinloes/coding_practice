@@ -5,8 +5,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
- * Tests for {@link MaxDonation}
- */
+  * Tests for {@link MaxDonation}
+  */
 @RunWith(classOf[JUnitRunner])
 class MaxDonationTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Calculate the max donation") {

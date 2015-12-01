@@ -18,7 +18,8 @@ public class LongestNonDecreasingSequence {
         int runningLargest = 0;
         for (int val : arr) {
             int largestLength = 0;
-            // Search for the entry that's less than the value and has the longest increasing sequence
+            // Search for the entry that's less than the value and has the longest increasing
+            // sequence
             for (Map.Entry<Integer, Integer> entry : length.entrySet()) {
                 if (entry.getKey() < val && entry.getValue() > largestLength) {
                     largestLength = entry.getValue();
@@ -39,15 +40,15 @@ public class LongestNonDecreasingSequence {
      * @param arr array to check
      * @return length of longest non decreasing sequence
      */
-    public static int findLongestNonDecreasingSequence(int arr[]) {
+    public static int findLongestNonDecreasingSequence(int[] arr) {
         if (arr == null || arr.length == 0) {
             return 0;
         }
         int longestNonDecreasingSequence = 0;
         int currentLongestNonDecreasingSequence = 0;
         int previous = arr[0];
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] >= previous) {
+        for (int anArr : arr) {
+            if (anArr >= previous) {
                 currentLongestNonDecreasingSequence++;
             } else {
                 if (currentLongestNonDecreasingSequence > longestNonDecreasingSequence) {
@@ -55,7 +56,7 @@ public class LongestNonDecreasingSequence {
                 }
                 currentLongestNonDecreasingSequence = 1;
             }
-            previous = arr[i];
+            previous = anArr;
         }
         if (currentLongestNonDecreasingSequence > longestNonDecreasingSequence) {
             longestNonDecreasingSequence = currentLongestNonDecreasingSequence;

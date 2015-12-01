@@ -6,8 +6,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
- * Tests for {@link ConnectNodes}.
- */
+  * Tests for {@link ConnectNodes}.
+  */
 @RunWith(classOf[JUnitRunner])
 class ConnectNodesTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Connect nodes at each level so that a node will have a next pointer and a previous pointer") {

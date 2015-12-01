@@ -5,8 +5,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
- * Tests for {@link ZigZagSequence}
- */
+  * Tests for {@link ZigZagSequence}
+  */
 @RunWith(classOf[JUnitRunner])
 class ZigZagSequenceTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("find the longest zigzag sequence in an array") {

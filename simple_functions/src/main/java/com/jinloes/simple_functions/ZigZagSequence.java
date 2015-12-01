@@ -4,7 +4,7 @@ package com.jinloes.simple_functions;
  * Finds the largest zigzag sequence in an array.
  */
 public class ZigZagSequence {
-    public static int findLongest(int arr[]) {
+    public static int findLongest(int[] arr) {
         if (arr.length == 0) {
             return 0;
         }

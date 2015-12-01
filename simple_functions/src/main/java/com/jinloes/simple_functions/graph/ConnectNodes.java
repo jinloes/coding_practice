@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 /**
- * Connects nodes at each level of a graph
+ * Connects nodes at each level of a graph.
  */
 public class ConnectNodes {
     public static void connectNodes(Node root) {
