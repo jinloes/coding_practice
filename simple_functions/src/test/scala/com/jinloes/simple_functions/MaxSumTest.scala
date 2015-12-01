@@ -1,9 +1,13 @@
-import com.jinloes.simple_functions.MaxSum
+package com.jinloes.simple_functions
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
  * Tests for {@link MaxSum}
  */
+@RunWith(classOf[JUnitRunner])
 class MaxSumTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Find the max sum in an array in which numbers can be positive or negative") {
     scenario("Find the max sum in a simple array") {

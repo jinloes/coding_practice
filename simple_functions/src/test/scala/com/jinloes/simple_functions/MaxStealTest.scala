@@ -1,9 +1,13 @@
-import com.jinloes.simple_functions.MaxSteal
+package com.jinloes.simple_functions
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
  * Tests for {@link MaxSteal}
  */
+@RunWith(classOf[JUnitRunner])
 class MaxStealTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("A thief should be able to steal the max values from a houses") {
     scenario("A thief should steal from 1 house") {

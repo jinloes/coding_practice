@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Implements tree traversals.
  */
-public class Traversal {
+public class TreeTraverser {
     /**
      * Performs a preorder traversal.
      * The algorithm is as follows.

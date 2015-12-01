@@ -1,5 +1,9 @@
+package com.jinloes.simple_functions
+
 import com.jinloes.simple_functions.graph.ShortestPath
 import org.jgrapht.graph.{DefaultDirectedWeightedGraph, DefaultWeightedEdge}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 import scala.collection.JavaConverters._
@@ -7,6 +11,7 @@ import scala.collection.JavaConverters._
 /**
  * Tests for {@Link ShortestPath}
  */
+@RunWith(classOf[JUnitRunner])
 class ShortestPathTests extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Find the shortest path in a graph with BFS") {
     scenario("find the shortest path with a simple graph") {

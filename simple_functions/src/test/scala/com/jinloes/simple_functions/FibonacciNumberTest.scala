@@ -1,9 +1,13 @@
-import com.jinloes.simple_functions.FibonacciNumber
+package com.jinloes.simple_functions
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
  * Test for {@link FibonacciNumber}
  */
+@RunWith(classOf[JUnitRunner])
 class FibonacciNumberTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Calculate a fibonacci number") {
     scenario("small fibonacci number") {

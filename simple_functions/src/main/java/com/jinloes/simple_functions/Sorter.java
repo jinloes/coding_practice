@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Executes different sorting algorithms
  */
-public class Sorting {
+public class Sorter {
     /**
      * The basic algorithm for quick sort is:
      * 1. Pick pivot

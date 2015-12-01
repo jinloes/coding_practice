@@ -1,6 +1,9 @@
+package com.jinloes.simple_functions
+
 import javafx.util.Pair
 
-import com.jinloes.simple_functions.TwoSum
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 import scala.collection.JavaConverters._
@@ -8,6 +11,7 @@ import scala.collection.JavaConverters._
 /**
  * Tests for {@link TwoSum}.
  */
+@RunWith(classOf[JUnitRunner])
 class TwoSumTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Two should should find all the pairs of numbers that sum to a value") {
     scenario("an empty array") {

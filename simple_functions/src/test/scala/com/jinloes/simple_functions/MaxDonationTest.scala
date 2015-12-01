@@ -1,9 +1,13 @@
-import com.jinloes.simple_functions.MaxDonation
+package com.jinloes.simple_functions
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
  * Tests for {@link MaxDonation}
  */
+@RunWith(classOf[JUnitRunner])
 class MaxDonationTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Calculate the max donation") {
     scenario("a simple neighborhood") {

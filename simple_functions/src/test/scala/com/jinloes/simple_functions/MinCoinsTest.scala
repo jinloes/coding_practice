@@ -1,6 +1,10 @@
-import com.jinloes.simple_functions.MinCoins
+package com.jinloes.simple_functions
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
 
+@RunWith(classOf[JUnitRunner])
 class MinCoinsTest extends FlatSpec with Matchers {
 
   "Find min coins" should "return the minimum number of coins equal a sum" in {

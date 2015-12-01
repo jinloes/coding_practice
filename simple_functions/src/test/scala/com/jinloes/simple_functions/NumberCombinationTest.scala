@@ -1,9 +1,13 @@
-import com.jinloes.simple_functions.NumberCombination
-import org.scalatest.{Matchers, FlatSpec}
+package com.jinloes.simple_functions
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * Tests for {@link NumberCombination}
  */
+@RunWith(classOf[JUnitRunner])
 class NumberCombinationTest extends FlatSpec with Matchers {
   "A number combination detector" should "detect if a sum exists in an array " in {
     NumberCombination.findCombo(Array(15, 5, 3, 1), 8) should be(true)

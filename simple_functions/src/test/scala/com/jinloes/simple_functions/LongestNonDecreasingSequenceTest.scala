@@ -1,9 +1,13 @@
-import com.jinloes.simple_functions.LongestNonDecreasingSequence
+package com.jinloes.simple_functions
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
  * Tests for {@link LongestNonDecreasingSequence}.
  */
+@RunWith(classOf[JUnitRunner])
 class LongestNonDecreasingSequenceTest extends FeatureSpec with Matchers with GivenWhenThen {
 
   feature("Find the length of the longest increasing sequence") {

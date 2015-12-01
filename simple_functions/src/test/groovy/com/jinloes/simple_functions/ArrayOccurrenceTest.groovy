@@ -1,3 +1,5 @@
+package com.jinloes.simple_functions
+
 import com.jinloes.simple_functions.ArrayOccurrence
 import spock.lang.Specification
 

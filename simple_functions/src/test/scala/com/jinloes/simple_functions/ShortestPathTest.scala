@@ -1,5 +1,9 @@
+package com.jinloes.simple_functions
+
 import com.jinloes.simple_functions.graph.ShortestPath
 import org.jgrapht.graph._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.JavaConverters._
@@ -7,6 +11,7 @@ import scala.collection.JavaConverters._
 /**
  * Tests for {@link ShortestPath}
  */
+@RunWith(classOf[JUnitRunner])
 class ShortestPathTest extends FlatSpec with Matchers {
 
   "Shortest path" should "return the shortest path from a point to another" in {
