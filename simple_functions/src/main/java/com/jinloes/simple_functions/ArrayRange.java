@@ -5,15 +5,13 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Calculates the range of integers given an array of integers.
- * Example:
- * Input arr - [0 1 2 7 21 22 1098 1099]
- * Output - "0-2,7,21-22,1098-1099"
+ * Calculates the range of integers given an array of integers. Example: Input arr - [0 1 2 7 21 22
+ * 1098 1099] Output - "0-2,7,21-22,1098-1099"
  */
 public class ArrayRange {
     public static List<String> calculateRanges(int[] ints) {
         List<String> ranges = new ArrayList<>();
-        if(ints != null && ints.length > 0) {
+        if (ints != null && ints.length > 0) {
             int startVal = ints[0];
             int endVal = ints[0];
             for (int i = 1; i < ints.length; i++) {
@@ -31,7 +29,7 @@ public class ArrayRange {
     }
 
     private static void createRangeString(List<String> ranges, int startVal, int endVal) {
-        if(startVal != endVal) {
+        if (startVal != endVal) {
             ranges.add(startVal + "-" + endVal);
         } else {
             ranges.add(Objects.toString(startVal));

@@ -5,8 +5,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
- * Tests for {@link MaxSum}
- */
+  * Tests for {@link MaxSum}
+  */
 @RunWith(classOf[JUnitRunner])
 class MaxSumTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("Find the max sum in an array in which numbers can be positive or negative") {
@@ -16,7 +16,7 @@ class MaxSumTest extends FeatureSpec with Matchers with GivenWhenThen {
       When("find max sum")
       val max = MaxSum.findMax(arr)
       Then("max sum should be 2")
-      max should be (2)
+      max should be(2)
     }
 
     scenario("Find the max sum in a more complex array") {

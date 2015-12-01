@@ -1,6 +1,5 @@
 package com.jinloes.simple_functions
 
-import com.jinloes.simple_functions.ArrayOccurrence
 import spock.lang.Specification
 
 import static org.assertj.core.api.StrictAssertions.assertThat

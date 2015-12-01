@@ -1,10 +1,10 @@
 package com.jinloes.simple_functions;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 
 import java.util.Objects;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link Division}.

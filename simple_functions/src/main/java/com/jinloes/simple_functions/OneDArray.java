@@ -9,16 +9,16 @@ public class OneDArray {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         int testCases = scanner.nextInt();
-        for(int i = 0; i < testCases; i++) {
+        for (int i = 0; i < testCases; i++) {
             scanner.nextLine();
             int arrLen = scanner.nextInt();
             int jumpSize = scanner.nextInt();
             scanner.nextLine();
             int[] arr = new int[arrLen];
-            for(int j = 0; j < arrLen; j++) {
+            for (int j = 0; j < arrLen; j++) {
                 arr[j] = scanner.nextInt();
             }
-            if(checkRecursively(arr, 0, jumpSize)) {
+            if (checkRecursively(arr, 0, jumpSize)) {
                 System.out.println("YES");
             } else {
                 System.out.println("NO");
@@ -27,18 +27,15 @@ public class OneDArray {
     }
 
     private static boolean checkRecursively(int[] arr, int pos, int jumpSize) {
-        if(pos >= arr.length) {
+        if (pos >= arr.length) {
             return true;
         }
-        if(arr[pos] == 1) {
+        if (arr[pos] == 1) {
             return false;
         }
-        if(checkRecursively(arr, pos + jumpSize, jumpSize)) {
+        if (checkRecursively(arr, pos + jumpSize, jumpSize)) {
             return true;
         }
-        if(checkRecursively(arr, pos + 1, jumpSize)) {
-            return true;
-        }
-        return false;
+        return checkRecursively(arr, pos + 1, jumpSize);
     }
 }

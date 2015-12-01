@@ -1,27 +1,33 @@
 package com.jinloes.simple_functions;
 
 import org.apache.commons.collections4.CollectionUtils;
-import scala.concurrent.forkjoin.ForkJoinPool;
-import scala.concurrent.forkjoin.RecursiveAction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
+
 
 /**
- * Executes different sorting algorithms
+ * Executes different sorting algorithms.
  */
 public class Sorter {
     /**
      * The basic algorithm for quick sort is:
-     * 1. Pick pivot
-     * 2. Move move pivot to the end of the array sequence.
-     * 3. for each element in the array sequence
-     * - if the element is less than the pivot move it to a stored index
-     * - increment the stored index
-     * - the point of the stored index is to contain all the values less than the pivot
-     * 4. move the pivot to the stored index, so that values to the right of it are greater than the pivot
-     * 5. repeat process on left sub array and right sub array
-     * <p>
+     * <pre>
+     *     {@code
+     *      1. Pick pivot
+     *      2. Move move pivot to the end of the array sequence.
+     *      3. for each element in the array sequence
+     *          - if the element is less than the pivot move it to a stored index
+     *              - increment the stored index
+     *              - the point of the stored index is to contain all the values less than the
+     *                  pivot
+     *      4. move the pivot to the stored index, so that values to the right of it are greater
+     *          than the pivot
+     *      5. repeat process on left sub array and right sub array.
+     * }
+     * </pre>
      * Quick sort can be done in place but can be unstable.
      *
      * @param arr array to sort
@@ -65,12 +71,15 @@ public class Sorter {
 
     /**
      * Merge sort algorithm is:
-     * <p>
-     * 1. Split the list up in half
-     * 2. Split the left and right lists up until a single value is left.
-     * 3. Merge the left and right results
-     * <p>
-     * Merge sort requires extra memory, but works real well for data that does not have random access.
+     * <pre>
+     *     {@code
+     *      1. Split the list up in half
+     *      2. Split the left and right lists up until a single value is left.
+     *      3. Merge the left and right results
+     * }
+     * </pre>
+     * Merge sort requires extra memory, but works real well for data that does not have random
+     * access.
      *
      * @param list list to sort
      * @return sorted list
@@ -94,6 +103,24 @@ public class Sorter {
             result = new ArrayList<>(toSort.size());
         }
 
+        private static List<Integer> merge(List<Integer> left, List<Integer> right) {
+            List<Integer> result = new ArrayList<>();
+            while (!left.isEmpty() && !right.isEmpty()) {
+                Integer leftVal = left.get(0);
+                Integer rightVal = right.get(0);
+                if (leftVal.compareTo(rightVal) <= 0) {
+                    result.add(leftVal);
+                    left.remove(0);
+                } else {
+                    result.add(rightVal);
+                    right.remove(0);
+                }
+            }
+            result.addAll(left);
+            result.addAll(right);
+            return result;
+        }
+
         public List<Integer> getResult() {
             return result;
         }
@@ -111,24 +138,6 @@ public class Sorter {
             MergeSorter rightSorter = new MergeSorter(right);
             invokeAll(leftSorter, rightSorter);
             result.addAll(merge(leftSorter.getResult(), rightSorter.getResult()));
-        }
-
-        private static List<Integer> merge(List<Integer> left, List<Integer> right) {
-            List<Integer> result = new ArrayList<>();
-            while (!left.isEmpty() && !right.isEmpty()) {
-                Integer leftVal = left.get(0);
-                Integer rightVal = right.get(0);
-                if (leftVal.compareTo(rightVal) <= 0) {
-                    result.add(leftVal);
-                    left.remove(0);
-                } else {
-                    result.add(rightVal);
-                    right.remove(0);
-                }
-            }
-            result.addAll(left);
-            result.addAll(right);
-            return result;
         }
     }
 }

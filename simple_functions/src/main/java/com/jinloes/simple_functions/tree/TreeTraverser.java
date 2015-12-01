@@ -1,19 +1,17 @@
 package com.jinloes.simple_functions.tree;
 
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * Implements tree traversals.
  */
 public class TreeTraverser {
     /**
-     * Performs a preorder traversal.
-     * The algorithm is as follows.
-     * 1. display node
-     * 2. display left subtree
-     * 3. display right subtree
+     * Performs a preorder traversal. The algorithm is as follows. 1. display node 2. display left
+     * subtree 3. display right subtree
      *
      * @param root tree root
      * @return list of the node values in preorder

@@ -8,17 +8,17 @@ import org.scalatest.{FlatSpec, Matchers}
 class MinCoinsTest extends FlatSpec with Matchers {
 
   "Find min coins" should "return the minimum number of coins equal a sum" in {
-    MinCoins.findMinCoins(0, Array(1, 3, 5)) should be (0)
-    MinCoins.findMinCoins(1, Array(1, 3, 5)) should be (1)
-    MinCoins.findMinCoins(3, Array(1, 3, 5)) should be (1)
-    MinCoins.findMinCoins(5, Array(1, 3, 5)) should be (1)
-    MinCoins.findMinCoins(4, Array(1, 3, 5)) should be (2)
-    MinCoins.findMinCoins(11, Array(1, 3, 5)) should be (3)
-    MinCoins.findMinCoins(15, Array(1, 3, 5)) should be (3)
-    MinCoins.findMinCoins(21, Array(1, 3, 5)) should be (5)
+    MinCoins.findMinCoins(0, Array(1, 3, 5)) should be(0)
+    MinCoins.findMinCoins(1, Array(1, 3, 5)) should be(1)
+    MinCoins.findMinCoins(3, Array(1, 3, 5)) should be(1)
+    MinCoins.findMinCoins(5, Array(1, 3, 5)) should be(1)
+    MinCoins.findMinCoins(4, Array(1, 3, 5)) should be(2)
+    MinCoins.findMinCoins(11, Array(1, 3, 5)) should be(3)
+    MinCoins.findMinCoins(15, Array(1, 3, 5)) should be(3)
+    MinCoins.findMinCoins(21, Array(1, 3, 5)) should be(5)
 
-    MinCoins.findMinCoins(16, Array(1, 2, 4, 6)) should be (3)
-    MinCoins.findMinCoins(35, Array(1, 2, 4, 6)) should be (7)
+    MinCoins.findMinCoins(16, Array(1, 2, 4, 6)) should be(3)
+    MinCoins.findMinCoins(35, Array(1, 2, 4, 6)) should be(7)
   }
 
   "Find min coins alternative" should "return the minimum number of coins equal a sum" in {

@@ -8,18 +8,18 @@ public class SubstringIndex {
         if (subString == null || string == null) {
             return -1;
         }
-        int j = 0;
+        int matchCount = 0;
         for (int i = 0; i < string.length(); i++) {
-            if (j == subString.length()) {
-                return i - j;
-            } else if (string.charAt(i) == subString.charAt(j)) {
-                j++;
+            if (matchCount == subString.length()) {
+                return i - matchCount;
+            } else if (string.charAt(i) == subString.charAt(matchCount)) {
+                matchCount++;
             } else {
-                j = 0;
+                matchCount = 0;
             }
         }
-        if (j == subString.length()) {
-            return string.length() - j;
+        if (matchCount == subString.length()) {
+            return string.length() - matchCount;
         }
         return -1;
     }

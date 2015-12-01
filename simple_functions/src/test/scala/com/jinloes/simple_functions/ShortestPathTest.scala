@@ -9,8 +9,8 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.JavaConverters._
 
 /**
- * Tests for {@link ShortestPath}
- */
+  * Tests for {@link ShortestPath}
+  */
 @RunWith(classOf[JUnitRunner])
 class ShortestPathTest extends FlatSpec with Matchers {
 

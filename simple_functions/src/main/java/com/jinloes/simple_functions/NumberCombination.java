@@ -5,21 +5,22 @@ package com.jinloes.simple_functions;
  */
 public class NumberCombination {
     public static boolean findCombo(int[] arr, int sum) {
-        int i = 0;
-        while(i < arr.length -1 && arr[i] > sum ) {
-            i++;
+        int idx = 0;
+        while (idx < arr.length - 1 && arr[idx] > sum) {
+            idx++;
         }
-        return findRecursively(arr, i, sum, 0);
+        return findRecursively(arr, idx, sum, 0);
     }
+
     private static boolean findRecursively(int[] arr, int start, int sum, int runningSum) {
-        if(runningSum == sum) {
+        if (runningSum == sum) {
             return true;
         }
-        if(start >= arr.length) {
+        if (start >= arr.length) {
             return false;
         }
-        for(int i = start; i < arr.length; i++) {
-            if(findRecursively(arr, i + 1, sum, runningSum + arr[i])) {
+        for (int i = start; i < arr.length; i++) {
+            if (findRecursively(arr, i + 1, sum, runningSum + arr[i])) {
                 return true;
             }
         }

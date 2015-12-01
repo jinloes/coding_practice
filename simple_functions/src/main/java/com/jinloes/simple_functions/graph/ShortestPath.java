@@ -3,29 +3,38 @@ package com.jinloes.simple_functions.graph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.Stack;
 
 /**
  * Finds the shortest path in a graph from start to end.
  */
 public class ShortestPath {
     /**
-     * Executes a shortest path search using depth first search.
-     * A major advantage of DFS is that you don't need to store every vertex at each level.
-     * DFS is more advantageous if you know your solution is going to be at the bottom of the graph/tree so you don't
-     * have to look at each level first.
+     * Executes a shortest path search using depth first search. A major advantage of DFS is that
+     * you don't need to store every vertex at each level. DFS is more advantageous if you know your
+     * solution is going to be at the bottom of the graph/tree so you don't have to look at each
+     * level first.
      *
      * @param graph graph to search
      * @param start start vertex
      * @param end   end vertex
      * @return shortest path from start to end
      */
-    public static List<String> findShortestPath(DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph, String start,
-                                                String end) {
+    public static List<String> findShortestPath(
+            DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph, String start,
+            String end) {
         Map<String, Double> pathWeight = new HashMap<>();
         Map<String, List<String>> shortestPathMap = new HashMap<>();
         List<String> path = new ArrayList<>();
-        if (graph.vertexSet().isEmpty() || !graph.containsVertex(start) || !graph.containsVertex(end)) {
+        if (graph.vertexSet().isEmpty() || !graph.containsVertex(start)
+                || !graph.containsVertex(end)) {
             return path;
         }
         Stack<String> vertices = new Stack<>();
@@ -65,17 +74,18 @@ public class ShortestPath {
     }
 
     /**
-     * Performs a breadth first search to find the shortest path from one point to another in a graph.
-     * A major downside to breadth first search is that you need to store all the vertices at a level.
-     * BFS would find a solution to a problem if the answer is close to the root.
+     * Performs a breadth first search to find the shortest path from one point to another in a
+     * graph. A major downside to breadth first search is that you need to store all the vertices at
+     * a level. BFS would find a solution to a problem if the answer is close to the root.
      *
      * @param graph graph
      * @param start start vertex
      * @param end   end vertex
      * @return the shortest path from start to finish
      */
-    public static List<String> shortestPathBfs(DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph,
-                                               String start, String end) {
+    public static List<String> shortestPathBfs(
+            DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph, String start,
+            String end) {
         Map<String, Double> pathWeightMap = new HashMap<>();
         Map<String, List<String>> pathSourceMap = new HashMap<>();
         List<String> path = new ArrayList<>();

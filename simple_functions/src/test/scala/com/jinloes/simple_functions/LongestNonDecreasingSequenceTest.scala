@@ -5,8 +5,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
- * Tests for {@link LongestNonDecreasingSequence}.
- */
+  * Tests for {@link LongestNonDecreasingSequence}.
+  */
 @RunWith(classOf[JUnitRunner])
 class LongestNonDecreasingSequenceTest extends FeatureSpec with Matchers with GivenWhenThen {
 

@@ -5,8 +5,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 /**
- * Tests for {@link MaxSteal}
- */
+  * Tests for {@link MaxSteal}
+  */
 @RunWith(classOf[JUnitRunner])
 class MaxStealTest extends FeatureSpec with Matchers with GivenWhenThen {
   feature("A thief should be able to steal the max values from a houses") {
