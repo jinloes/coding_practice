@@ -1,3 +1,5 @@
 .gitreview
 build
 *.iml
+.idea
+.gradle
