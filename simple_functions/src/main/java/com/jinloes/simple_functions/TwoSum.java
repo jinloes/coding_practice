@@ -1,6 +1,7 @@
 package com.jinloes.simple_functions;
 
-import javafx.util.Pair;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,13 +31,13 @@ public class TwoSum {
             if (sumCount.containsKey(difference) && difference != val) {
                 int min = Math.min(val, difference);
                 int max = Math.max(val, difference);
-                pairs.add(new Pair<>(min, max));
+                pairs.add(Pair.of(min, max));
             } else if (sumCount.containsKey(difference)
                     && difference == val
                     && sumCount.get(difference) > 1) {
                 int min = Math.min(val, difference);
                 int max = Math.max(val, difference);
-                pairs.add(new Pair<>(min, max));
+                pairs.add(Pair.of(min, max));
             }
         }
         return pairs;

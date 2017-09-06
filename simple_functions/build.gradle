@@ -19,6 +19,7 @@ checkstyle {
 }
 
 dependencies {
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.6'
     compile 'org.apache.commons:commons-collections4:4.0'
     compile 'org.scala-lang:scala-library:2.11.6'
     compile 'jgrapht:jgrapht:0.7.3',
