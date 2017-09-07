@@ -1,7 +1,5 @@
 package com.jinloes.simple_functions
 
-import javafx.util.Pair
-
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
