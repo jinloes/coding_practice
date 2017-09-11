@@ -32,6 +32,45 @@ public class Sorter {
      *
      * @param arr array to sort
      */
+    public static void qsort(int[] arr) {
+        if (arr == null || arr.length == 1) {
+            return;
+        }
+        qsortInternal(arr, 0, arr.length - 1);
+    }
+
+    private static void qsortInternal(int[] arr, int start, int end) {
+        if (start >= end) {
+            return;
+        }
+        int partitionIdx = qsortPartition(arr, start, end);
+        quickSortInternal(arr, start, partitionIdx - 1);
+        quickSortInternal(arr, partitionIdx + 1, end);
+
+    }
+
+    private static int qsortPartition(int[] arr, int start, int end) {
+        int partitionIdx = (start - 1);
+        int partition = arr[end];
+        for (int i = start; i < end; i++) {
+            if (partition > arr[i]) {
+                partitionIdx++;
+                int temp = arr[i];
+                arr[i] = partition;
+                arr[partitionIdx] = temp;
+            }
+        }
+        int temp = arr[partitionIdx + 1];
+        arr[partitionIdx + 1] = arr[end];
+        arr[end] = temp;
+        return partitionIdx + 1;
+    }
+
+    /**
+     * Uses mid partition
+     *
+     * @param arr to sort
+     */
     public static void quickSort(int[] arr) {
         if (arr == null) {
             return;
