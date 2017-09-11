@@ -1,8 +1,8 @@
 package com.jinloes.simple_functions;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link ArrayRange}.

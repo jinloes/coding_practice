@@ -1,7 +1,6 @@
 package com.jinloes.simple_functions;
 
 import com.jinloes.simple_functions.tree.BstVerifier;
-import com.jinloes.simple_functions.tree.Lca;
 import com.jinloes.simple_functions.tree.Node;
 import org.junit.Test;
 
@@ -18,6 +17,7 @@ public class BstVerifierTest {
 
         assertThat(BstVerifier.verify(root)).isTrue();
     }
+
     @Test
     public void testVerifyFalse() {
         Node<Integer> threeLeft = new Node<>(4, null, null);
