@@ -62,6 +62,9 @@ public class Lca {
 
     /**
      * Finds the Lca using a traversal. Assumes that both nodes exist in the tree.
+     * If both left and right traversals return an LCA then the root is the LCA.
+     * If only one is returned, return the node where the LCA lies, left or right.
+     *
      *
      * @param root   root
      * @param first  node to find Lca of

@@ -179,4 +179,24 @@ public class Sorter {
             result.addAll(merge(leftSorter.getResult(), rightSorter.getResult()));
         }
     }
+
+    public static List<Integer> mSort(List<Integer> toSort) {
+        if (toSort.size() < 2) {
+            return toSort;
+        }
+        int mid = toSort.size() / 2;
+        List<Integer> left = mSort(new ArrayList<>(toSort.subList(0, mid)));
+        List<Integer> right = mSort(new ArrayList<>(toSort.subList(mid, toSort.size())));
+        List<Integer> merged = new ArrayList<>();
+        while (!left.isEmpty() && !right.isEmpty()) {
+            if (left.get(0) < right.get(0)) {
+                merged.add(left.remove(0));
+            } else {
+                merged.add(right.remove(0));
+            }
+        }
+        merged.addAll(left);
+        merged.addAll(right);
+        return merged;
+    }
 }
