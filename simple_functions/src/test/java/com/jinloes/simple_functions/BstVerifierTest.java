@@ -4,7 +4,7 @@ import com.jinloes.simple_functions.tree.BstVerifier;
 import com.jinloes.simple_functions.tree.Node;
 import org.junit.Test;
 
-import static org.assertj.core.api.StrictAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BstVerifierTest {
 
