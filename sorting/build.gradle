@@ -2,7 +2,6 @@ group 'com.jinloes'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
-apply plugin: 'scala'
 
 sourceCompatibility = 1.8
 
@@ -11,10 +10,6 @@ repositories {
 }
 
 dependencies {
-    compile group: 'com.codepoetics', name: 'protonpack', version: '1.15'
-    compile group: 'com.google.guava', name: 'guava', version: '28.1-jre'
-
     testCompile 'junit:junit:4.11'
-    testCompile 'org.scalatest:scalatest_2.11:2.2.5'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.11.1'
 }
