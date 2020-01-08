@@ -13,6 +13,7 @@ repositories {
 dependencies {
     compile group: 'com.codepoetics', name: 'protonpack', version: '1.15'
     compile group: 'com.google.guava', name: 'guava', version: '28.1-jre'
+    compile group: 'org.jgrapht', name: 'jgrapht-core', version: '1.3.1'
 
     testCompile 'junit:junit:4.11'
     testCompile 'org.scalatest:scalatest_2.11:2.2.5'

@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PreorderTraversalTest extends BaseTraversalTest {
+public class PreorderTraversalTest extends BaseTreeTest {
 
     @Test
     public void traverse() {
