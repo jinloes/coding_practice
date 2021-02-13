@@ -4,35 +4,61 @@ import com.google.common.base.MoreObjects;
 
 import java.util.Objects;
 
-public class Node<T> {
+public class BinaryTreeNode<T> {
     private final T value;
-    private final Node<T> left;
-    private final Node<T> right;
+    private BinaryTreeNode<T> left;
+    private BinaryTreeNode<T> right;
+    private BinaryTreeNode<T> parent;
 
-    public Node(T value, Node<T> left, Node<T> right) {
+    public BinaryTreeNode(T value) {
+        this(value, null, null, null);
+    }
+
+    public BinaryTreeNode(T value, BinaryTreeNode<T> left, BinaryTreeNode<T> right) {
+        this(value, left, right, null);
+    }
+
+    public BinaryTreeNode(T value, BinaryTreeNode<T> left, BinaryTreeNode<T> right, BinaryTreeNode<T> parent) {
         this.value = value;
         this.left = left;
         this.right = right;
+        this.parent = parent;
     }
 
     public T getValue() {
         return value;
     }
 
-    public Node<T> getLeft() {
+    public BinaryTreeNode<T> getLeft() {
         return left;
     }
 
 
-    public Node<T> getRight() {
+    public BinaryTreeNode<T> getRight() {
         return right;
+    }
+
+    public BinaryTreeNode<T> getParent() {
+        return parent;
+    }
+
+    public void setLeft(BinaryTreeNode<T> left) {
+        this.left = left;
+    }
+
+    public void setRight(BinaryTreeNode<T> right) {
+        this.right = right;
+    }
+
+    public void setParent(BinaryTreeNode<T> parent) {
+        this.parent = parent;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Node<?> node = (Node<?>) o;
+        BinaryTreeNode<?> node = (BinaryTreeNode<?>) o;
         return Objects.equals(value, node.value) &&
                 Objects.equals(left, node.left) &&
                 Objects.equals(right, node.right);
