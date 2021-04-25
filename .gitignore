@@ -5,4 +5,4 @@ build
 .gradle
 out
 gradlew*
-gradle
+**/gradle
