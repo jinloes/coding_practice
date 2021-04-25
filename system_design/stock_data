@@ -1,0 +1,40 @@
+Stock Data: Imagine you are building some sort of service that will be called by up to 1,000 client applications to get
+simple end-of-day stock price information (open, close, high, low). You may assume that you already have the data,
+and you can store it in any format you wish. How would you design the client-facing service that provides the
+information to client applications?You are respon­ sible for the development, rollout, and ongoing monitoring and
+maintenance of the feed. Describe the different methods you considered and why you would recommend your approach.
+Your service can use any technologies you wish, and can distribute the information to the client applications in any
+mechanism you choose.
+
+
+Considerations:
+    - Clients call it at the end of the day (all at once)
+    - Read heavy
+
+
+API -> Database
+
+Security
+ - Each client is registered and has an access key and secret
+ - secured by OAuth JWT tokens
+
+API
+ - GET /stock_data/feed
+ - query parameter to store progress when pulling the stock data
+ - requires stock_data_read permission
+ - json list of
+    - date: string
+    - open: double
+    - close: double
+    - high: double
+    - low: double
+
+Monitoring
+    - Server load (CPU/memory)
+    - Average response time
+    - Requests/sec
+
+Scaling
+    - Data can be preloaded in a high efficient cache like Redis or Cassandra for quick access
+    - horizontally scale if CPU reaches 70% utilization
+    - consider vertically scaling on off peak times if needed

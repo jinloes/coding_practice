@@ -1,5 +1,6 @@
 package com.jinloes.simple_functions;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -8,6 +9,12 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class MergeKListsTest {
+    private MergeKLists mergeKLists;
+
+    @Before
+    public void setUp() throws Exception {
+        mergeKLists = new MergeKLists();
+    }
 
     @Test
     public void merge() {
@@ -22,7 +29,7 @@ public class MergeKListsTest {
         ListNode l3 = new ListNode(2);
         l3.next = new ListNode(6);
 
-        ListNode head = new MergeKLists().merge(new ListNode[]{l1, l2, l3});
+        ListNode head = mergeKLists.merge(new ListNode[]{l1, l2, l3});
 
         List<Integer> vals = new ArrayList<>();
 
@@ -33,5 +40,12 @@ public class MergeKListsTest {
         }
 
         assertThat(vals).containsExactly(1, 1, 2, 3, 4, 4, 5, 6);
+    }
+
+    @Test
+    public void mergeEmpty() {
+        ListNode head = mergeKLists.merge(new ListNode[1]);
+
+        assertThat(head).isNull();
     }
 }

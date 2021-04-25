@@ -1,0 +1,21 @@
+How would you design the data structures for a very large social network like Face­ book or LinkedIn?
+Describe how you would design an algorithm to show the shortest path between two people
+(e.g., Me -> Bob -> Susan -> Jason -> You).
+
+Considerations
+    - people will be related in some way so a graph structure makes sense
+
+Shortest Path Algorithm
+    - BFS approach
+        - queue up neighbors
+        - if neighbor != person looking for
+
+Scaling
+    - All the data cannot be kept in one machine
+        - may have to go to other machines for the user's data
+            - Look up where Bob's data live and pull it
+            - Only have the id stored locally
+    - Batch up lookups on machines
+    - Think about geographically locating data near each other
+        - Reduces amount of look ups needed
+    - Can store the paths to users to speed up look up time in the future
