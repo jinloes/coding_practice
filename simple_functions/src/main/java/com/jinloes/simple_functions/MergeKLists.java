@@ -3,6 +3,11 @@ package com.jinloes.simple_functions;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+/**
+ * You are given an array of k linked-lists lists, each linked-list is sorted in ascending order.
+ * <p>
+ * Merge all the linked-lists into one sorted linked-list and return it.
+ */
 public class MergeKLists {
     private PriorityQueue<ListNode> priorityQueue;
 
@@ -10,26 +15,23 @@ public class MergeKLists {
         priorityQueue = new PriorityQueue<>(nodes.length, Comparator.comparingInt(o -> o.val));
 
         for (ListNode node : nodes) {
-            priorityQueue.offer(node);
+            if (node != null) {
+                priorityQueue.offer(node);
+            }
         }
 
-        ListNode head = null;
-        ListNode current = null;
+        ListNode dummy = new ListNode(0);
+        ListNode current = dummy;
 
         while (!priorityQueue.isEmpty()) {
             ListNode next = priorityQueue.poll();
-            if (head == null) {
-                head = new ListNode(next.val);
-                current = head;
-            } else {
-                current.next = new ListNode(next.val);
-                current = current.next;
-            }
+            current.next = new ListNode(next.val);
+            current = current.next;
             if (next.next != null) {
                 priorityQueue.offer(next.next);
             }
 
         }
-        return head;
+        return dummy.next;
     }
 }
