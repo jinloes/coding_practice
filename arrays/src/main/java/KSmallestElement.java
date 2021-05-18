@@ -1,5 +1,3 @@
-package com.jinloes.simple_functions.array;
-
 import java.util.SortedSet;
 import java.util.TreeSet;
 

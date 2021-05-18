@@ -1,1 +1,1 @@
-include ":simple_functions", ":data_structures", ":sorting"
+include ":simple_functions", ":data_structures", ":sorting", ":primitive_types", ":arrays"

@@ -1,6 +1,4 @@
-package com.jinloes.simple_functions.array;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

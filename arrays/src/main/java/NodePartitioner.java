@@ -1,5 +1,3 @@
-package com.jinloes.simple_functions.array;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;

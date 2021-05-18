@@ -1,5 +1,3 @@
-package com.jinloes.simple_functions.array;
-
 public class LongestCommonPrefix {
     public static String compute(String[] strs) {
         String prefix = strs[0];

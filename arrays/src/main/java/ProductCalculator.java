@@ -1,5 +1,3 @@
-package com.jinloes.simple_functions.array;
-
 /**
  * Calculates the product of every element in an array ignoring the current index.
  */
