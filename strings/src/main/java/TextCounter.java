@@ -1,5 +1,3 @@
-package com.jinloes.simple_functions.string;
-
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;

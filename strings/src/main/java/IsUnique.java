@@ -1,5 +1,3 @@
-package com.jinloes.simple_functions.string;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;

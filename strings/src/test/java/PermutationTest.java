@@ -1,14 +1,12 @@
-package com.jinloes.simple_functions.string;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class PermutationTest {
     private Permutation permutation = new Permutation();
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         permutation = new Permutation();
     }
