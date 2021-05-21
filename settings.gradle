@@ -1,1 +1,2 @@
-include ":simple_functions", ":data_structures", ":sorting", ":primitive_types", ":arrays", ":strings", ":linked_lists"
+include ":simple_functions", ":data_structures", ":sorting", ":primitive_types", ":arrays", ":strings", 
+        ":linked_lists", ":stacks", ":queues", ":binary_trees", ":heaps", ":searching"
