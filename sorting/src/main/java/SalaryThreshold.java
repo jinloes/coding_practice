@@ -29,7 +29,7 @@ public class SalaryThreshold {
             capSalaries.add(total);
         }
 
-        // O(nlogn)
+        // O(logn)
         int end = Math.abs(Collections.binarySearch(capSalaries, targetPayroll)) - 1;
 
         if (end > currentSalaries.size() - 1) {
