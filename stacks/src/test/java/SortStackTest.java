@@ -1,9 +1,6 @@
-package com.jinloes.simple_functions.stack;
-
-
 import com.google.common.collect.Lists;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Comparator;
 import java.util.Stack;
@@ -14,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SortStackTest {
     private SortStack sortStack;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         sortStack = new SortStack();
     }

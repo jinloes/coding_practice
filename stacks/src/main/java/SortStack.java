@@ -1,5 +1,3 @@
-package com.jinloes.simple_functions.stack;
-
 import java.util.Stack;
 
 /**
