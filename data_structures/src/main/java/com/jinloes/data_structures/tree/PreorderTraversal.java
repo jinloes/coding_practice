@@ -1,24 +1,53 @@
 package com.jinloes.data_structures.tree;
 
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 /**
- * Preorder visits tree nodes in root, left, right order.
+ * Perform a preorder traversal on a binary tree.
  */
 public class PreorderTraversal {
-    public static <T> List<T> traverse(TreeNode<T> root) {
-        List<T> traversal = Lists.newArrayList(root.getValue());
-        List<TreeNode<T>> children = root.getChildren();
-        if (children.size() > 0) {
-            List<T> childTraversal = traverse(root.getChildren().get(0));
-            traversal.addAll(childTraversal);
+    public static <T> List<T> traverse(BinaryTreeNode<T> root) {
+        List<T> values = new ArrayList<>();
+        if (root == null) {
+            return values;
         }
-        if (children.size() > 1) {
-            List<T> childTraversal = traverse(root.getChildren().get(1));
-            traversal.addAll(childTraversal);
+        traverseHelper(root, values);
+        return values;
+    }
+
+    public static <T> void traverseHelper(BinaryTreeNode<T> root, List<T> values) {
+        if (root == null) {
+            return;
         }
-        return traversal;
+
+        values.add(root.value);
+        traverseHelper(root.left, values);
+        traverseHelper(root.right, values);
+    }
+
+    public static <T> List<T> traverseWithoutRecursion(BinaryTreeNode<T> root) {
+        List<T> result = new ArrayList<>();
+        if (root == null) {
+            return result;
+        }
+        Stack<BinaryTreeNode<T>> stack = new Stack<>();
+        stack.add(root);
+        BinaryTreeNode<T> current;
+
+        while (!stack.isEmpty()) {
+            current = stack.pop();
+
+            if (current.right != null) {
+                stack.add(current.right);
+            }
+            if (current.left != null) {
+                stack.add(current.left);
+            }
+            result.add(current.value);
+        }
+
+        return result;
     }
 }

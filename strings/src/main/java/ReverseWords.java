@@ -1,20 +1,22 @@
 /**
- * Implement a function for reversing the words in a string s.
+ * Write a function that reverses the order of the words in a string.
+ * Assume that all words are space delimited and treat punctuation the same as letters.
  */
 public class ReverseWords {
-    public static String reverse(String text) {
-        StringBuilder result = new StringBuilder();
 
-        String[] parts = text.split(" ");
+    public static String reverse(String str) {
+        String[] parts = str.split(" ");
 
-        for (int i = parts.length - 1; i >= 0; i--) {
-            result.append(parts[i]);
-            result.append(' ');
+        int start = 0;
+        int end = parts.length - 1;
+
+        for (int i = 0; i < parts.length / 2; i++) {
+            String temp = parts[start + i];
+            parts[start + i] = parts[end - i];
+            parts[end - i] = temp;
         }
 
-        result.deleteCharAt(result.length() - 1);
-
-        return result.toString();
+        return String.join(" ", parts);
     }
 
 }
