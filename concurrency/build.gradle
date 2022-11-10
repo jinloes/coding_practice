@@ -1,0 +1,13 @@
+group 'com.jinloes'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
+    testImplementation 'net.jodah:concurrentunit:0.4.2'
+}
