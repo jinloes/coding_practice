@@ -1,5 +1,3 @@
-import io.vavr.Tuple2;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -9,21 +7,24 @@ import java.util.List;
  * that covers all the intervals.
  */
 public class IntervalCovering {
-    public static List<Integer> findMinimumVisits(List<Tuple2<Integer, Integer>> intervals) {
-        intervals.sort(Comparator.comparing(Tuple2::_1));
+    public record Interval(int start, int end) {
+    }
+
+    public static List<Integer> findMinimumVisits(List<Interval> intervals) {
+        intervals.sort(Comparator.comparingInt(o -> o.start));
 
         List<Integer> result = new ArrayList<>();
+        int lastVisited = intervals.get(0).end;
 
-        int lastVisit = intervals.get(0)._2();
-        result.add(lastVisit);
-
-        for (Tuple2<Integer, Integer> interval : intervals) {
-            // it the start is greater than our last visit time we have a new last visit time
-            if (lastVisit < interval._1()) {
-                lastVisit = interval._2();
-                result.add(lastVisit);
+        for (int i = 1; i < intervals.size(); i++) {
+            Interval next = intervals.get(i);
+            if (next.start > lastVisited) {
+                result.add(lastVisited);
+                lastVisited = next.end;
             }
         }
+
+        result.add(lastVisited);
 
         return result;
     }

@@ -1,20 +1,23 @@
-import io.vavr.Tuple;
-import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class IntervalCoveringTest {
+public class IntervalCoveringTest {
 
     @Test
-    void findMinimumVisits() {
-        assertThat(IntervalCovering.findMinimumVisits(Lists.newArrayList(
-                Tuple.of(1, 2),
-                Tuple.of(2, 3),
-                Tuple.of(3, 4),
-                Tuple.of(2, 3),
-                Tuple.of(3, 4),
-                Tuple.of(4, 5)
-        ))).containsExactly(2, 4);
+    public void findMinimumVisits() {
+        assertThat(IntervalCovering.findMinimumVisits(
+                new ArrayList<>(List.of(
+                        new IntervalCovering.Interval(1, 2),
+                        new IntervalCovering.Interval(2, 3),
+                        new IntervalCovering.Interval(3, 4),
+                        new IntervalCovering.Interval(2, 3),
+                        new IntervalCovering.Interval(3, 4),
+                        new IntervalCovering.Interval(4, 5)
+                )))
+        ).containsExactly(2, 4);
     }
 }
