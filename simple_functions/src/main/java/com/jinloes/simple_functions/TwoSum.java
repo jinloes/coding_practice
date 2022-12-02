@@ -1,8 +1,6 @@
 package com.jinloes.simple_functions;
 
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,11 +11,16 @@ import java.util.Set;
  * that add up to value S.
  */
 public class TwoSum {
-    public static Set<Pair<Integer, Integer>> find2Sum(int[] arr, int sum) {
+    private record Pair(int v1, int v2){
+        public static Pair of(int v1, int v2) {
+            return new Pair(v1, v2);
+        }
+    }
+    public static Set<Pair> find2Sum(int[] arr, int sum) {
         if (arr == null || arr.length < 2) {
             return new HashSet<>();
         }
-        Set<Pair<Integer, Integer>> pairs = new HashSet<>();
+        Set<Pair> pairs = new HashSet<>();
         Map<Integer, Integer> sumCount = new HashMap<>();
         for (Integer val : arr) {
             if (!sumCount.containsKey(val)) {
