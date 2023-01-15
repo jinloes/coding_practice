@@ -9,6 +9,7 @@ dependencies {
     implementation group: 'org.jgrapht', name: 'jgrapht-core', version: '1.5.0'
     implementation group: 'com.google.guava', name: 'guava'
     implementation group: 'com.scalified', name: 'tree', version: '0.2.5'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.1'
 
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'

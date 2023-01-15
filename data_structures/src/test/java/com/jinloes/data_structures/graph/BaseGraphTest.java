@@ -3,12 +3,12 @@ package com.jinloes.data_structures.graph;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeAll;
 
 public class BaseGraphTest {
     protected Graph<String, DefaultEdge> stringGraph;
 
-    @Before
+    @BeforeAll
     public void setUp() {
         stringGraph = new SimpleGraph<>(DefaultEdge.class);
 

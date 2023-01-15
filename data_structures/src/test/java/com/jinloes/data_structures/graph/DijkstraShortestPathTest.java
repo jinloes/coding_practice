@@ -3,15 +3,15 @@ package com.jinloes.data_structures.graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DijkstraShortestPathTest {
     private SimpleWeightedGraph<Integer, DefaultWeightedEdge> weightedGraph;
 
-    @Before
+    @BeforeAll
     public void setUp() {
         weightedGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 

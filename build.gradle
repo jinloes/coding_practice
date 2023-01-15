@@ -15,6 +15,7 @@ subprojects {
     dependencyManagement {
         dependencies {
             dependency group: 'com.google.guava', name: 'guava', version: '31.1-jre'
+            dependency group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
             dependency group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.1'
             dependency group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.9.1'
             dependency group: 'org.assertj', name: 'assertj-core', version: '3.23.1'

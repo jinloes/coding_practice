@@ -1,15 +1,15 @@
 package com.jinloes.data_structures;
 
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimeMapTest {
     private TimeMap timeMap;
 
-    @Before
+    @BeforeAll
     public void setUp() throws Exception {
         timeMap = new TimeMap();
     }

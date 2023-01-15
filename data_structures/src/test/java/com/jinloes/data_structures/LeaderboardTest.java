@@ -1,14 +1,14 @@
 package com.jinloes.data_structures;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LeaderboardTest {
     private Leaderboard leaderboard;
 
-    @Before
+    @BeforeAll
     public void setUp() throws Exception {
         leaderboard = new Leaderboard();
     }
