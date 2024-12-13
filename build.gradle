@@ -12,16 +12,24 @@ subprojects {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 
+    ext {
+        set('jUnitVersion', '5.11.3')
+    }
+
     dependencyManagement {
         dependencies {
-            dependency group: 'com.google.guava', name: 'guava', version: '31.1-jre'
-            dependency group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
-            dependency group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.1'
-            dependency group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.9.1'
-            dependency group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
+            dependency group: 'com.google.guava', name: 'guava', version: '33.3.1-jre'
+            dependency group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "$jUnitVersion"
+            dependency group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: "$jUnitVersion"
+            dependency group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "$jUnitVersion"
+            dependency group: 'org.assertj', name: 'assertj-core', version: '3.26.3'
             dependency group: 'io.vavr', name: 'vavr', version: '0.10.3'
 
         }
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }
 

@@ -1,6 +1,7 @@
 package com.jinloes.data_structures;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.IntStream;
@@ -10,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LRUTest {
     private LRU<String, String> lru;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() throws Exception {
         lru = new LRU<>(5);
     }

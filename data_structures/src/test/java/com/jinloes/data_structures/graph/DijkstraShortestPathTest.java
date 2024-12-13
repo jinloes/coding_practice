@@ -4,6 +4,7 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class DijkstraShortestPathTest {
     private SimpleWeightedGraph<Integer, DefaultWeightedEdge> weightedGraph;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() {
         weightedGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 

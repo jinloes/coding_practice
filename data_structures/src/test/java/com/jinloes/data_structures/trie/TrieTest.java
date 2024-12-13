@@ -1,6 +1,7 @@
 package com.jinloes.data_structures.trie;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TrieTest {
     private Trie trie;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() {
         trie = new Trie();
     }
