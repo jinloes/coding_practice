@@ -3,11 +3,16 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
-    testImplementation 'net.jodah:concurrentunit:0.4.2'
+    implementation group: 'com.google.guava', name: 'guava'
+
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
+    testImplementation group: 'net.jodah', name: 'concurrentunit', version: '0.4.6'
 }

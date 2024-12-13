@@ -2,6 +2,7 @@ package com.jinloes.data_structures;
 
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TimeMapTest {
     private TimeMap timeMap;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() throws Exception {
         timeMap = new TimeMap();
     }

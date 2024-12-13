@@ -1,6 +1,7 @@
 package com.jinloes.data_structures;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LeaderboardTest {
     private Leaderboard leaderboard;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() throws Exception {
         leaderboard = new Leaderboard();
     }

@@ -2,12 +2,13 @@ package com.jinloes.data_structures.tree;
 
 import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 public class BaseTreeTest {
     protected TreeNode<Integer> root;
     protected TreeNode<String> nAryRoot;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() {
 
         /*

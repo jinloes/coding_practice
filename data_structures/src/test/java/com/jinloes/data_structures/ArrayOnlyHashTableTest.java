@@ -1,6 +1,7 @@
 package com.jinloes.data_structures;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +10,7 @@ public class ArrayOnlyHashTableTest {
 
     private ArrayOnlyHashTable<String, String> hashTable;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() {
         hashTable = new ArrayOnlyHashTable<>(1, 1);
     }
