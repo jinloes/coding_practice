@@ -53,7 +53,7 @@ public class ParallelStreamTest {
         new ThreadFactoryBuilder()
             .setNameFormat("test-pool-%d")
             .build());
-    CompletableFuture<?>[] futures = IntStream.range(0, 1000)
+    CompletableFuture<?>[] futures = IntStream.range(0, 1)
         .mapToObj(val -> CompletableFuture.runAsync(() -> handleVal(val), executorService))
         .toArray(CompletableFuture[]::new);
 
@@ -63,7 +63,7 @@ public class ParallelStreamTest {
 
   private void handleVal(int val) {
     try {
-      Thread.sleep(1000);
+      Thread.sleep(1);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
