@@ -1,0 +1,18 @@
+group 'com.jinloes'
+version '1.0-SNAPSHOT'
+
+dependencies {
+    implementation group: 'org.pcre4j', name: 'regex', version: '0.4.3'
+    implementation group: 'org.pcre4j', name: 'jna', version: '0.4.3'
+    implementation group: 'com.github.tommyettinger', name: 'regexodus', version: '0.1.16'
+    implementation group: 'org.apache.commons', name: 'commons-lang3'
+
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'
+
+    testImplementation group: 'org.assertj', name: 'assertj-core'
+}
+
+test {
+    useJUnitPlatform()
+}
