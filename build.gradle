@@ -23,10 +23,16 @@ subprojects {
                 entry 'junit-jupiter-engine'
                 entry 'junit-jupiter-params'
             }
-            dependency group: 'com.google.guava', name: 'guava', version: '33.3.1-jre'
+            dependencySet(group: 'com.fasterxml.jackson.core', version: '2.18.2') {
+                entry 'jackson-core'
+                entry 'jackson-databind'
+            }
+            dependency group: 'com.google.guava', name: 'guava', version: '33.4.0-jre'
             dependency group: 'org.assertj', name: 'assertj-core', version: '3.26.3'
             dependency group: 'io.vavr', name: 'vavr', version: '0.10.3'
             dependency group: 'org.apache.commons', name: 'commons-lang3', version: '3.17.0'
+            dependency group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+            dependency group: 'commons-io', name: 'commons-io', version: '2.18.0'
 
 
         }
