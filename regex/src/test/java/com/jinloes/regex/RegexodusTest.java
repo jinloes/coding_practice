@@ -1,4 +1,4 @@
-package com.jinloes.coding_practice;
+package com.jinloes.regex;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
