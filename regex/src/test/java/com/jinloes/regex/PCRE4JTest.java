@@ -7,11 +7,13 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,6 +98,12 @@ public class PCRE4JTest implements RegexRunner {
   @Test
   public void testAnalyze() throws IOException {
     Path validRegexes = Path.of(System.getenv("OUTPUT_REGEX_FILE"));
+    Path validPcre2Output = Path.of(
+        "/Users/jinloes/Library/Application Support/JetBrains/IntelliJIdea2023.2/scratches/dlp/valid_pcre2_regexes"
+            + ".txt");
+
+    Files.deleteIfExists(validPcre2Output);
+    Files.createFile(validPcre2Output);
 
     List<List<Pair<String, String>>> parsed = Files.lines(validRegexes)
         .map(regex -> {
@@ -111,6 +119,13 @@ public class PCRE4JTest implements RegexRunner {
             Collectors.filtering(result -> !Objects.isNull(result.getRight()), Collectors.toList()), List::of));
 
     List<Pair<String, String>> valid = parsed.get(0);
+    valid.forEach(regex -> {
+      try {
+        Files.writeString(validPcre2Output, regex + System.lineSeparator(), StandardOpenOption.APPEND);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
     List<Pair<String, String>> failed = parsed.get(1);
 
     String failedRegexes = failed.stream()
@@ -178,7 +193,7 @@ public class PCRE4JTest implements RegexRunner {
 
   @Test
   @Disabled
-  public void testInterateMatchesFromFile() throws IOException {
+  public void testIterateMatchesFromFile() throws IOException {
     runRegexes(null, (regex, data) -> {
       Matcher matcher = Pattern.compile(regex, Pattern.MULTILINE)
           .matcher(data);
@@ -196,7 +211,7 @@ public class PCRE4JTest implements RegexRunner {
   @Disabled
   public void testIterateMatchesFromFileLowLevel() throws IOException {
     runRegexes(null, (regex, data) -> {
-      return pcre2Engine.iterateMatches(data, regex, true);q
+      return pcre2Engine.iterateMatches(data, regex, true);
     });
   }
 
