@@ -10,10 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -136,21 +138,32 @@ public class JavaRegexTest implements RegexRunner {
     runRegexes(null, (regex, data) -> {
       Pattern pattern = Pattern.compile(regex);
       Matcher matcher = pattern.matcher(data);
-      List<String> javaMatches = new ArrayList<>();
-      while (matcher.find()) {
-        String match = matcher.group();
-        javaMatches.add(match);
-      }
 
-      MatchResult pcre2Matches = pcre2Engine.iterateMatches(data, regex, false);
+      CompletableFuture<List<String>> javaFuture = CompletableFuture.supplyAsync(() -> {
+        List<String> javaMatches = new ArrayList<>();
+        while (matcher.find()) {
+          String match = matcher.group();
+          javaMatches.add(match);
+        }
+        return javaMatches;
+      });
 
-      if (javaMatches.size() != pcre2Matches.numMatches) {
+
+      CompletableFuture<List<String>> pcre2Future = CompletableFuture.supplyAsync(() -> {
+        MatchResult result = pcre2Engine.iterateMatches(data, regex, false);
+        return Arrays.asList(result.matches);
+      });
+
+      List<String> javaMatches = javaFuture.join();
+      List<String> pcre2Matches = pcre2Future.join();
+
+      if (javaMatches.size() != pcre2Matches.size()) {
         System.out.printf("Regex %s different amount of matches Java: %d PCRE2: %d\n", javaMatches.size(),
-            pcre2Matches.matches.length);
+            pcre2Matches.size());
       } else if (!javaMatches.isEmpty()) {
         for (int i = 0; i < javaMatches.size(); i++) {
           String javaMatch = javaMatches.get(i);
-          String pcre2Match = pcre2Matches.matches[i];
+          String pcre2Match = pcre2Matches.get(i);
           if (!Objects.equals(javaMatch, pcre2Match)) {
             System.out.printf("Regex %s\n Java: %s PCRE: %s\n", regex, javaMatch, pcre2Match);
           }
