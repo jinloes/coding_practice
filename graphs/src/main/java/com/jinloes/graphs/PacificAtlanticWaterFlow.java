@@ -1,4 +1,4 @@
-package com.jinloes.coding_practice.graphs;
+package com.jinloes.graphs;
 
 import java.util.ArrayList;
 import java.util.HashSet;
