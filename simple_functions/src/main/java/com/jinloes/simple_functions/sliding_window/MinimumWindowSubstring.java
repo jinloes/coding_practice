@@ -9,55 +9,56 @@ import java.util.Map;
  * <p>
  * Note that If there is such a window, it is guaranteed that there will always be only one unique minimum window in s.
  */
-public class MinimumWindowSubString {
+class MinimumWindowSubstring {
     public String minWindow(String s, String t) {
-        if (t.length() > s.length()) {
-            return "";
+        Map<Character, Integer> tCountMap = new HashMap<>();
+        Map<Character, Integer> sCountMap = new HashMap<>();
+
+        for (char c : t.toCharArray()) {
+            int count = tCountMap.getOrDefault(c, 0);
+            tCountMap.put(c, count + 1);
         }
 
-        Map<Character, Integer> charCount = new HashMap<>();
-        Map<Character, Integer> tCharCount = new HashMap<>();
+        int left = 0;
+        int right = 0;
+        int minSize = Integer.MAX_VALUE;
+        int minLeft = 0;
+        int formed = 0;
 
-        for (int i = 0; i < t.length(); i++) {
-            tCharCount.compute(t.charAt(i), (character, integer) -> integer == null ? 1 : integer + 1);
-        }
+        while (right < s.length()) {
+            char c = s.charAt(right);
+            if (!tCountMap.containsKey(c)) {
+                right++;
+                continue;
+            }
+            int count = sCountMap.getOrDefault(c, 0);
+            sCountMap.put(c, count + 1);
 
-        int matches = 0;
-        int start = 0;
-        int minLength = Integer.MAX_VALUE;
-        int minStart = -1;
-
-        for (int i = 0; i < s.length(); i++) {
-            char current = s.charAt(i);
-
-            int newVal = charCount.compute(current, (character, integer) -> integer == null ? 1 : integer + 1);
-
-            if (newVal <= tCharCount.getOrDefault(current, 0)) {
-                matches++;
+            if (count + 1 == tCountMap.get(c)) {
+                formed++;
             }
 
-            if (matches == t.length()) {
-                // Try to minimize the window
-                while (charCount.get(s.charAt(start)) > tCharCount.getOrDefault(s.charAt(start), 0)
-                        || charCount.get(s.charAt(start)) == 0) {
-
-                    if (charCount.get(s.charAt(start)) > tCharCount.getOrDefault(s.charAt(start), 0)) {
-                        charCount.compute(s.charAt(start), ((character, integer) -> integer - 1));
-                    }
-                    start++;
+            while (left <= right && formed == tCountMap.size()) {
+                if (right - left + 1 < minSize) {
+                    minSize = right - left + 1;
+                    minLeft = left;
                 }
-
-                // update window size
-                int lenWindow = i - start + 1;
-                if (minLength > lenWindow) {
-                    minLength = lenWindow;
-                    minStart = start;
+                char leftC = s.charAt(left);
+                if (!sCountMap.containsKey(leftC)) {
+                    left++;
+                    continue;
                 }
+                int leftCount = sCountMap.get(leftC);
+                if (leftCount - 1 < tCountMap.get(leftC)) {
+                    formed--;
+                }
+                sCountMap.put(leftC, leftCount - 1);
+                left++;
             }
+            right++;
+
         }
-        if (minStart == -1) {
-            return "";
-        }
-        return s.substring(minStart, minStart + minLength);
+
+        return minSize != Integer.MAX_VALUE ? s.substring(minLeft, minLeft + minSize) : "";
     }
 }
