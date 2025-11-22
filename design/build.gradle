@@ -1,0 +1,11 @@
+group 'com.jinloes'
+version '1.0-SNAPSHOT'
+
+dependencies {
+    implementation group: 'com.google.guava', name: 'guava'
+
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'
+
+    testImplementation group: 'org.assertj', name: 'assertj-core'
+}
