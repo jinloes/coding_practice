@@ -1,14 +1,14 @@
 package com.jinloes.data_structures;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Tests for HashTable
- */
 class HashTableTest {
     private HashTable<String, Integer> table;
 
@@ -18,154 +18,105 @@ class HashTableTest {
     }
 
     @Test
-    void createEmptyHashTableWithDefaultCapacity() {
-        HashTable<String, Integer> emptyTable = new HashTable<>();
-        assertEquals(0, emptyTable.getSize(), "Size should be 0 for default capacity");
-    }
-
-    @Test
-    void createEmptyHashTableWithSpecifiedCapacity() {
-        HashTable<String, Integer> emptyTable = new HashTable<>(5);
-        assertEquals(0, emptyTable.getSize(), "Size should be 0 for specified capacity");
-    }
-
-    @Test
-    void addItemToHashTable() {
-        // When: insert a number into the hash table
+    void addItem() {
         table.put("a", 5);
 
-        // Then: the item should exist in the hash table
-        assertEquals(1, table.getSize(), "Size should be 1 after adding item");
-        assertTrue(table.containsKey("a"), "Table should contain key 'a'");
-        assertTrue(table.containsValue(5), "Table should contain value 5");
-        assertEquals(5, (int) table.get("a"), "Get should return 5 for key 'a'");
+        assertThat(table.getSize()).isEqualTo(1);
+        assertThat(table.containsKey("a")).isTrue();
+        assertThat(table.containsValue(5)).isTrue();
+        assertThat(table.get("a")).isEqualTo(5);
     }
 
     @Test
     void handleCollisions() {
-        // Given: a hash table with small capacity
         HashTable<String, Integer> table = new HashTable<>(1);
 
-        // When: insert two values
         table.put("a", 5);
         table.put("b", 6);
 
-        // Then: Both values should exist in the hash table
-        assertEquals(5, (int) table.get("a"), "Get should return 5 for key 'a'");
-        assertEquals(6, (int) table.get("b"), "Get should return 6 for key 'b'");
-        assertEquals(2, table.getSize(), "Size should be 2 after adding two items");
+        assertThat(table.get("a")).isEqualTo(5);
+        assertThat(table.get("b")).isEqualTo(6);
+        assertThat(table.getSize()).isEqualTo(2);
     }
 
     @Test
-    void removeItemThatExists() {
+    void removeExistingItem() {
         table.put("a", 5);
 
-        // When: remove key from the hash table
-        Integer removedItem = table.remove("a");
+        Integer removed = table.remove("a");
 
-        // Then: the key should not exist in the hash table
-        assertEquals(5, (int) removedItem, "Removed item should be 5");
-        assertFalse(table.containsKey("a"), "Table should not contain key 'a' after removal");
+        assertThat(removed).isEqualTo(5);
+        assertThat(table.containsKey("a")).isFalse();
     }
 
     @Test
-    void removeItemThatDoesNotExist() {
-        // When: remove key from the hash table
-        Integer removedItem = table.remove("a");
-
-        // Then: the key should not exist in the hash table
-        assertNull(removedItem, "Removed item should be null for non-existent key");
-        assertFalse(table.containsKey("a"), "Table should not contain key 'a'");
-    }
-
-    @Nested
-    class EdgeCaseTests {
-        @Test
-        void putNullKey() {
-            assertThrows(NullPointerException.class, () -> table.put(null, 5),
-                "Should throw NullPointerException for null key");
-        }
-
-        @Test
-        void containsKeyNull() {
-            assertThrows(NullPointerException.class, () -> table.containsKey(null),
-                "Should throw NullPointerException for null key");
-        }
-
-        @Test
-        void getNullKey() {
-            assertThrows(NullPointerException.class, () -> table.get(null),
-                "Should throw NullPointerException for null key");
-        }
-
-        @Test
-        void removeNullKey() {
-            assertThrows(NullPointerException.class, () -> table.remove(null),
-                "Should throw NullPointerException for null key");
-        }
-
-        @Test
-        void putExistingKeyUpdatesValue() {
-            table.put("a", 5);
-            assertEquals(1, table.getSize(), "Size should remain 1 after updating existing key");
-
-            table.put("a", 10);
-            assertEquals(1, table.getSize(), "Size should remain 1 after updating existing key");
-            assertEquals(10, (int) table.get("a"), "Value should be updated to 10");
-            assertTrue(table.containsValue(10), "Table should contain new value 10");
-            assertFalse(table.containsValue(5), "Table should not contain old value 5");
-        }
-
-        @Test
-        void containsValueReturnsFalse() {
-            assertFalse(table.containsValue(5), "Empty table should not contain value");
-            table.put("a", 5);
-            assertFalse(table.containsValue(6), "Table should not contain different value");
-        }
-
-        @Test
-        void isEmptyReturnsTrueForEmptyTable() {
-            assertTrue(table.isEmpty(), "Empty table should return true for isEmpty()");
-        }
-
-        @Test
-        void isEmptyReturnsFalseForNonEmptyTable() {
-            table.put("a", 5);
-            assertFalse(table.isEmpty(), "Non-empty table should return false for isEmpty()");
-        }
+    void removeMissingItemReturnsNull() {
+        assertThat(table.remove("a")).isNull();
     }
 
     @Nested
     class ConstructorTests {
         @Test
-        void constructorWithZeroCapacity() {
-            assertThrows(IllegalArgumentException.class, () -> new HashTable<>(0),
-                "Should throw IllegalArgumentException for zero capacity");
+        void defaultCapacity() {
+            HashTable<String, Integer> emptyTable = new HashTable<>();
+
+            assertThat(emptyTable.getSize()).isZero();
+            assertThat(emptyTable.isEmpty()).isTrue();
         }
 
         @Test
-        void constructorWithNegativeCapacity() {
-            assertThrows(IllegalArgumentException.class, () -> new HashTable<>(-1),
-                "Should throw IllegalArgumentException for negative capacity");
+        void specifiedCapacity() {
+            HashTable<String, Integer> emptyTable = new HashTable<>(5);
+
+            assertThat(emptyTable.getSize()).isZero();
+            assertThat(emptyTable.isEmpty()).isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, -1})
+        void invalidCapacityThrows(int capacity) {
+            assertThatThrownBy(() -> new HashTable<>(capacity))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    class EdgeCaseTests {
+        @Test
+        void nullKeyThrows() {
+            assertThatThrownBy(() -> table.put(null, 5)).isInstanceOf(NullPointerException.class);
+            assertThatThrownBy(() -> table.get(null)).isInstanceOf(NullPointerException.class);
+            assertThatThrownBy(() -> table.containsKey(null)).isInstanceOf(NullPointerException.class);
+            assertThatThrownBy(() -> table.remove(null)).isInstanceOf(NullPointerException.class);
         }
 
         @Test
-        void constructorWithZeroCapacityForString() {
-            assertThrows(IllegalArgumentException.class, () -> new HashTable<String, Integer>(0),
-                "Should throw IllegalArgumentException for zero capacity");
+        void putExistingKeyUpdatesValue() {
+            table.put("a", 5);
+            table.put("a", 10);
+
+            assertThat(table.getSize()).isEqualTo(1);
+            assertThat(table.get("a")).isEqualTo(10);
+            assertThat(table.containsValue(10)).isTrue();
+            assertThat(table.containsValue(5)).isFalse();
         }
 
         @Test
-        void constructorWithNegativeCapacityForString() {
-            assertThrows(IllegalArgumentException.class, () -> new HashTable<String, Integer>(-1),
-                "Should throw IllegalArgumentException for negative capacity");
+        void containsValueReturnsFalseForEmptyTable() {
+            assertThat(table.containsValue(5)).isFalse();
         }
 
         @Test
-        void constructorWithPositiveCapacity() {
-            HashTable<String, Integer> table = new HashTable<>(10);
-            assertEquals(0, table.getSize(), "New table should have size 0");
-            assertFalse(table.isEmpty(), "New table should not be empty");
+        void containsValueReturnsFalseForMissingValue() {
+            table.put("a", 5);
+            assertThat(table.containsValue(6)).isFalse();
+        }
+
+        @Test
+        void isEmpty() {
+            assertThat(table.isEmpty()).isTrue();
+            table.put("a", 5);
+            assertThat(table.isEmpty()).isFalse();
         }
     }
 }

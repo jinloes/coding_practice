@@ -9,8 +9,10 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
 
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
     ext {
         jUnitVersion = '5.11.3'
@@ -23,6 +25,7 @@ subprojects {
                 entry 'junit-jupiter-engine'
                 entry 'junit-jupiter-params'
             }
+            dependency group: 'org.junit.platform', name: 'junit-platform-launcher', version: '6.0.3'
             dependencySet(group: 'com.fasterxml.jackson.core', version: '2.18.2') {
                 entry 'jackson-core'
                 entry 'jackson-databind'
@@ -36,6 +39,10 @@ subprojects {
 
 
         }
+    }
+
+    dependencies {
+        testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher'
     }
 
     test {

@@ -1,19 +1,18 @@
 package com.jinloes.data_structures;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
+import java.util.AbstractMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 
 /**
- * A hash table implementation that uses chaining with TreeMaps to handle collisions.
+ * A hash table implementation that uses chaining with LinkedLists to handle collisions.
  * This implementation provides O(1) average time complexity for basic operations
  * (get, put, remove) when the hash function distributes keys uniformly.
  *
  * @param <K> the type of keys maintained by this hash table
  * @param <V> the type of mapped values
- * @author Jinloes
- * @version 1.0
  */
 public class HashTable<K, V> {
 
@@ -21,13 +20,13 @@ public class HashTable<K, V> {
     public static final int DEFAULT_CAPACITY = 16;
 
     /** Current capacity of the hash table */
-    private int capacity;
+    private final int capacity;
 
     /** Number of key-value pairs in the hash table */
     private int size;
 
-    /** Array of TreeMaps to handle collisions using separate chaining */
-    private TreeMap<K, V>[] buckets;
+    /** Array of LinkedLists to handle collisions using separate chaining */
+    private final LinkedList<Map.Entry<K, V>>[] buckets;
 
     /**
      * Constructs a new hash table with default capacity.
@@ -47,13 +46,10 @@ public class HashTable<K, V> {
         if (capacity <= 0) {
             throw new IllegalArgumentException("Capacity must be positive");
         }
-
         this.capacity = capacity;
-        this.buckets = (TreeMap<K, V>[]) Array.newInstance(TreeMap.class, capacity);
-
-        // Initialize each bucket with a new TreeMap
+        this.buckets = (LinkedList<Map.Entry<K, V>>[]) Array.newInstance(LinkedList.class, capacity);
         for (int i = 0; i < capacity; i++) {
-            buckets[i] = new TreeMap<>();
+            buckets[i] = new LinkedList<>();
         }
     }
 
@@ -76,14 +72,13 @@ public class HashTable<K, V> {
     }
 
     /**
-     * Computes the hash index for a given key.
-     * Uses modulo operation to ensure the index is within bucket range.
+     * Computes the bucket index for a given key.
      *
      * @param key the key to hash
-     * @return the hash index
+     * @return the bucket index
      * @throws NullPointerException if the key is null
      */
-    private int getHashIndex(K key) {
+    private int getBucketIndex(K key) {
         Objects.requireNonNull(key, "Key cannot be null");
         return Math.abs(key.hashCode() % capacity);
     }
@@ -99,17 +94,15 @@ public class HashTable<K, V> {
      */
     public void put(K key, V value) {
         Objects.requireNonNull(key, "Key cannot be null");
-
-        int bucketIndex = getHashIndex(key);
-        TreeMap<K, V> bucket = buckets[bucketIndex];
-
-        // Check if key already exists to update size correctly
-        boolean keyExists = bucket.containsKey(key);
-        bucket.put(key, value);
-
-        if (!keyExists) {
-            size++;
+        LinkedList<Map.Entry<K, V>> bucket = buckets[getBucketIndex(key)];
+        for (Map.Entry<K, V> entry : bucket) {
+            if (entry.getKey().equals(key)) {
+                entry.setValue(value);
+                return;
+            }
         }
+        bucket.add(new AbstractMap.SimpleEntry<>(key, value));
+        size++;
     }
 
     /**
@@ -121,7 +114,12 @@ public class HashTable<K, V> {
      */
     public boolean containsKey(K key) {
         Objects.requireNonNull(key, "Key cannot be null");
-        return buckets[getHashIndex(key)].containsKey(key);
+        for (Map.Entry<K, V> entry : buckets[getBucketIndex(key)]) {
+            if (entry.getKey().equals(key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -131,9 +129,11 @@ public class HashTable<K, V> {
      * @return true if this hash table maps one or more keys to the specified value
      */
     public boolean containsValue(V value) {
-        for (TreeMap<K, V> bucket : buckets) {
-            if (bucket.containsValue(value)) {
-                return true;
+        for (LinkedList<Map.Entry<K, V>> bucket : buckets) {
+            for (Map.Entry<K, V> entry : bucket) {
+                if (Objects.equals(entry.getValue(), value)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -149,7 +149,12 @@ public class HashTable<K, V> {
      */
     public V get(K key) {
         Objects.requireNonNull(key, "Key cannot be null");
-        return buckets[getHashIndex(key)].get(key);
+        for (Map.Entry<K, V> entry : buckets[getBucketIndex(key)]) {
+            if (entry.getKey().equals(key)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     /**
@@ -161,14 +166,14 @@ public class HashTable<K, V> {
      */
     public V remove(K key) {
         Objects.requireNonNull(key, "Key cannot be null");
-
-        int bucketIndex = getHashIndex(key);
-        TreeMap<K, V> bucket = buckets[bucketIndex];
-
-        V removedValue = bucket.remove(key);
-        if (removedValue != null) {
-            size--;
+        LinkedList<Map.Entry<K, V>> bucket = buckets[getBucketIndex(key)];
+        for (Map.Entry<K, V> entry : bucket) {
+            if (entry.getKey().equals(key)) {
+                bucket.remove(entry);
+                size--;
+                return entry.getValue();
+            }
         }
-        return removedValue;
+        return null;
     }
 }
