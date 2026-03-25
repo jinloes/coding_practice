@@ -8,3 +8,7 @@ gradlew*
 **/gradle
 **/cmake-build-debug/**
 **/.DS_Store
+**/bin
+**/.settings
+**/.classpath
+**/.project

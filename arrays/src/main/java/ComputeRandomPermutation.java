@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Design an algorithm that creates uniformly random permutations of {0,1... n-1). You are givena random number generator
+ * Design an algorithm that creates uniformly random permutations of {0,1... n-1). You are given a random number generator
  * that returns integers in the set {0,1,...,n-1) with equal probability; use as few calls to it as possible.
  */
 public class ComputeRandomPermutation {

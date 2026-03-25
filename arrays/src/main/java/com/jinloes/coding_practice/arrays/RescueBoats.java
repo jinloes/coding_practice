@@ -1,4 +1,4 @@
-package com.jinloes.arrays;
+package com.jinloes.coding_practice.arrays;
 
 import java.util.*;
 
