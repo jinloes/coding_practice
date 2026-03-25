@@ -1,15 +1,15 @@
 package com.jinloes.simple_functions.sliding_window;
 
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LongestSubstringKRepeatingCharsTest {
     private LongestSubstringKRepeatingChars longestSubstringKRepeatingChars;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.longestSubstringKRepeatingChars = new LongestSubstringKRepeatingChars();
     }

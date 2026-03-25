@@ -1,3 +1,5 @@
+apply plugin: 'java'
+
 dependencies {
     implementation group: 'org.reflections', name: 'reflections', version: '0.10.2'
     implementation group: 'com.google.guava', name: 'guava'

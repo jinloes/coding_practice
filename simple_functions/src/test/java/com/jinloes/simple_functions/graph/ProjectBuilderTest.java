@@ -2,8 +2,8 @@ package com.jinloes.simple_functions.graph;
 
 import org.assertj.core.util.Lists;
 import org.jgrapht.alg.util.Pair;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ProjectBuilderTest {
     private ProjectBuilder projectBuilder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         projectBuilder = new ProjectBuilder();
     }

@@ -1,14 +1,14 @@
 package com.jinloes.simple_functions;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RemoveNthFromEndTest {
     private ListNode head = null;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ListNode n1 = new ListNode(1);
         ListNode n2 = new ListNode(2);

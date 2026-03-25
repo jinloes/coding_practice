@@ -1,15 +1,15 @@
 package com.jinloes.simple_functions.linked_list;
 
 import com.jinloes.simple_functions.ListNode;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class KthLastTest {
     private KthLast kthLast;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         kthLast = new KthLast();
     }

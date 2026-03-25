@@ -4,15 +4,15 @@ package com.jinloes.simple_functions.tree;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FindPathTest {
     private FindPath findPath;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         findPath = new FindPath();
     }

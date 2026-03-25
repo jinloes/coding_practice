@@ -1,11 +1,4 @@
-group 'com.jinloes'
-version '1.0-SNAPSHOT'
-
 apply plugin: 'java'
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation group: 'com.google.guava', name: 'guava'

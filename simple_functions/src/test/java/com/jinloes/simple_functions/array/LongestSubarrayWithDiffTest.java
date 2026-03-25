@@ -1,14 +1,14 @@
 package com.jinloes.simple_functions.array;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LongestSubarrayWithDiffTest {
     private LongestSubarrayWithDiff longestSubarray;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         longestSubarray = new LongestSubarrayWithDiff();
     }

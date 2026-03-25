@@ -1,7 +1,7 @@
 package com.jinloes.simple_functions.dynamic_programming;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TripleStepTest {
     private TripleStep tripleStep;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         tripleStep = new TripleStep();
     }

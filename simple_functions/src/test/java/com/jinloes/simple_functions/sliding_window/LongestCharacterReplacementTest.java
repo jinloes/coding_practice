@@ -1,7 +1,7 @@
 package com.jinloes.simple_functions.sliding_window;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.*;
 import java.time.temporal.ChronoField;
@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LongestCharacterReplacementTest {
     private LongestCharacterReplacement longestCharacterReplacement;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         longestCharacterReplacement = new LongestCharacterReplacement();
     }

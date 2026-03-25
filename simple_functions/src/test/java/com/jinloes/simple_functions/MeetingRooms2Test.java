@@ -1,14 +1,14 @@
 package com.jinloes.simple_functions;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class MeetingRooms2Test {
     private MeetingRooms2 meetingRooms2;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         meetingRooms2 = new MeetingRooms2();
     }

@@ -2,8 +2,8 @@ package com.jinloes.simple_functions.linked_list;
 
 
 import com.jinloes.simple_functions.ListNode;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,7 +11,7 @@ public class RemoveDuplicatesTest {
     private RemoveDuplicates removeDuplicates;
     private ListNode head;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         removeDuplicates = new RemoveDuplicates();
         head = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(3, new ListNode(4)))));

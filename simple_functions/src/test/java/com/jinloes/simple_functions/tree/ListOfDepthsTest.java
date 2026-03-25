@@ -4,8 +4,8 @@ package com.jinloes.simple_functions.tree;
 import com.scalified.tree.TreeNode;
 import com.scalified.tree.multinode.ArrayMultiTreeNode;
 import org.assertj.core.util.Lists;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ListOfDepthsTest {
     private ListOfDepths listOfDepths;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         listOfDepths = new ListOfDepths();
     }
