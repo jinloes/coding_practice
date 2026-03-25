@@ -1,10 +1,4 @@
-/*pluginManagement {
-    repositories {
-        mavenCentral()
-    }
-}*/
-
 include ":simple_functions", ":data_structures", ":sorting", ":primitive_types", ":arrays", ":strings",
         ":linked_lists", ":stacks", ":queues", ":binary_trees", ":heaps", ":searching", ":hash_tables",
-        ":binary_search_tree", ":recursion", "greedy_algorithms", ":graphs", "parallel_computing",
+        ":binary_search_tree", ":recursion", ":greedy_algorithms", ":graphs", ":regex",
         ":concurrency", ":interface_scanner", ":design"

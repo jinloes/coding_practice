@@ -1,13 +1,12 @@
 package com.jinloes.regex;
 
-import static org.junit.jupiter.params.provider.Arguments.arguments;
-
-import java.util.EnumSet;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.pcre4j.Pcre2CompileOption;
+
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class ValidPCRE2TestPatterns implements ArgumentsProvider {
   Stream<Arguments> VALID_PATTERNS = Stream.of(
