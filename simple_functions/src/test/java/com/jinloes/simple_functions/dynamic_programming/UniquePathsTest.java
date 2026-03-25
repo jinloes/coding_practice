@@ -3,6 +3,7 @@ package com.jinloes.simple_functions.dynamic_programming;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +21,8 @@ public class UniquePathsTest {
                 .isEqualTo(28);
     }
 
-    @Test(timeout = 150)
+    @Test
+    @Timeout(value = 150, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
     public void uniquePathsSlow() {
         // Takes 2mins + unoptimized
         assertThat(uniquePaths.uniquePaths(23, 12))

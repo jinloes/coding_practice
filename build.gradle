@@ -34,6 +34,8 @@ subprojects {
                     entry 'jackson-core'
                     entry 'jackson-databind'
                 }
+
+                dependency group: 'org.projectlombok', name: 'lombok', version: '1.18.36'
                 dependency group: 'com.google.guava', name: 'guava', version: '33.4.0-jre'
                 dependency group: 'org.assertj', name: 'assertj-core', version: '3.26.3'
                 dependency group: 'io.vavr', name: 'vavr', version: '0.10.3'

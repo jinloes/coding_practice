@@ -10,6 +10,10 @@ dependencies {
     implementation group: 'com.google.guava', name: 'guava'
     implementation group: 'com.scalified', name: 'tree', version: '0.2.5'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
+
+    compileOnly group: 'org.projectlombok', name: 'lombok'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok'
 
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'

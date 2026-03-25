@@ -11,7 +11,7 @@ import java.util.Set;
  * that add up to value S.
  */
 public class TwoSum {
-    private record Pair(int v1, int v2){
+    public record Pair(int v1, int v2){
         public static Pair of(int v1, int v2) {
             return new Pair(v1, v2);
         }

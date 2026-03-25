@@ -3,6 +3,7 @@ package com.jinloes.simple_functions.dynamic_programming;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +23,8 @@ public class CoinsTest {
         assertThat(coins.numWays(25)).isEqualTo(916);
     }
 
-    @Test(timeout = 50)
+    @Test
+    @Timeout(value = 50, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
     public void numWaysLarge() {
         assertThat(coins.numWays(45)).isEqualTo(418060);
     }

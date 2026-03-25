@@ -2,6 +2,7 @@ package com.jinloes.simple_functions.dynamic_programming;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.math.BigDecimal;
 
@@ -24,7 +25,8 @@ public class TripleStepTest {
 
     }
 
-    @Test(timeout = 100)
+    @Test
+    @Timeout(value = 100, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
     public void countOverflow() {
         // Overflow condition, slow about a min unoptimized, ~50 ms optimized
         assertThat(tripleStep.count(37)).isEqualTo(new BigDecimal("3831006429"));

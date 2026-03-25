@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
+import static com.jinloes.simple_functions.TwoSum.Pair;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TwoSumTest {
