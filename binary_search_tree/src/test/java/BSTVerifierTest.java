@@ -1,29 +1,30 @@
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BSTVerifierTest {
+class BstVerifierTest {
+    private BstVerifier bstVerifier;
 
-    private static Stream<Arguments> trees() {
-        BSTNode<Integer> invalid = new BSTNode<>(10, new BSTNode<>(5, new BSTNode<>(1, new BSTNode<>(6, null, null), null), null),
-                null);
-        BSTNode<Integer> valid = new BSTNode<>(10, new BSTNode<>(5, new BSTNode<>(1, null, null), new BSTNode<>(6, null, null)),
-                null);
-
-        return Stream.of(
-                Arguments.of(invalid, false),
-                Arguments.of(valid, true)
-
-        );
+    @BeforeEach
+    void setUp() {
+        bstVerifier = new BstVerifier();
     }
 
-    @ParameterizedTest
-    @MethodSource("trees")
-    void isValid(BSTNode<Integer> root, boolean expected) {
-        assertThat(BSTVerifier.isValid(root)).isEqualTo(expected);
+    @Test
+    void testVerify() {
+        BSTNode<Integer> root = new BSTNode<>(4,
+                new BSTNode<>(2, new BSTNode<>(1), new BSTNode<>(3)),
+                new BSTNode<>(5));
+        assertThat(bstVerifier.isBST(root)).isTrue();
+    }
+
+    @Test
+    void testVerifyFalse() {
+        BSTNode<Integer> threeLeft = new BSTNode<>(4, null, null);
+        BSTNode<Integer> oneLeft = new BSTNode<>(2, null, null);
+        BSTNode<Integer> oneRight = new BSTNode<>(6, threeLeft, null);
+        BSTNode<Integer> root = new BSTNode<>(1, oneLeft, oneRight);
+        assertThat(bstVerifier.isBST(root)).isFalse();
     }
 }

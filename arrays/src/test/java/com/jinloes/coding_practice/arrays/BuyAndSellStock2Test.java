@@ -23,7 +23,7 @@ class BuyAndSellStock2Test {
 
                 // Single transaction is best (no second profitable transaction)
                 Arguments.of(new int[]{1, 2, 3, 4, 5}, 4),                      // strictly increasing
-                Arguments.of(new int[]{2, 10, 1, 3}, 8),                        // big profit first, then small
+                Arguments.of(new int[]{2, 10, 1, 3}, 10),                       // buy@2 sell@10 (+8), buy@1 sell@3 (+2) = 10
 
                 // Two transactions are better than one
                 Arguments.of(new int[]{12, 11, 13, 9, 12, 8, 14, 13, 15}, 10),  // original test case
@@ -33,7 +33,7 @@ class BuyAndSellStock2Test {
                 Arguments.of(new int[]{1, 2, 4, 2, 5, 7, 2, 4, 9, 0}, 13),     // multiple peaks
 
                 // Three transactions possible but only two allowed
-                Arguments.of(new int[]{1, 3, 2, 5, 0, 3, 7, 2, 8}, 12),       // multiple peaks
+                Arguments.of(new int[]{1, 3, 2, 5, 0, 3, 7, 2, 8}, 13),       // buy@0 sell@7 (+7), buy@2 sell@8 (+6) = 13
 
                 // Very small profits
                 Arguments.of(new int[]{1, 2, 1, 2}, 2),                         // alternating small profits

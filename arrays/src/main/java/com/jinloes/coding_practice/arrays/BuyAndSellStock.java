@@ -28,7 +28,7 @@ public class BuyAndSellStock {
         for (int price : prices) {
             // Calculate potential profit if we sell at current price
             // This checks if selling today gives us better profit than we've seen so far
-            maxProfit = Math.max(maxProfit, price - minPrice);
+            maxProfit = (int) Math.max(maxProfit, (long) price - minPrice);
 
             // Update the minimum price seen so far
             // This represents the best day to buy up to the current day

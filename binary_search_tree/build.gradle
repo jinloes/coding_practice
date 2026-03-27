@@ -3,6 +3,7 @@ apply plugin: 'java'
 dependencies {
     implementation group: 'com.google.guava', name: 'guava'
     implementation group: 'io.vavr', name: 'vavr'
+    implementation group: 'com.scalified', name: 'tree', version: '0.2.5'
 
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'

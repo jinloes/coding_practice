@@ -1,4 +1,4 @@
-include ":simple_functions", ":data_structures", ":sorting", ":primitive_types", ":arrays", ":strings",
-        ":linked_lists", ":stacks", ":queues", ":binary_trees", ":heaps", ":searching", ":hash_tables",
-        ":binary_search_tree", ":recursion", ":greedy_algorithms", ":graphs", ":regex",
-        ":concurrency", ":interface_scanner", ":design"
+include ":sorting", ":bit_manipulation", ":arrays", ":strings",
+        ":linked_lists", ":stacks_and_queues", ":binary_trees", ":heaps", ":searching", ":hash_tables",
+        ":binary_search_tree", ":recursion", ":greedy", ":graphs", ":regex",
+        ":concurrency", ":reflection", ":design", ":dynamic_programming"

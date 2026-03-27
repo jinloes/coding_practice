@@ -15,6 +15,15 @@ class PartitionRepeatedEntriesTest {
 
         PartitionRepeatedEntries.rearrange(entries);
 
-        assertThat(entries).containsExactlyInAnyOrder(1);
+        // All elements preserved
+        assertThat(entries).containsExactlyInAnyOrder(1, 1, 2, 2, 2, 3, 4, 4);
+        // Equal elements are grouped together (no value appears non-consecutively)
+        for (int i = 1; i < entries.size(); i++) {
+            if (!entries.get(i).equals(entries.get(i - 1))) {
+                for (int j = i + 1; j < entries.size(); j++) {
+                    assertThat(entries.get(j)).isNotEqualTo(entries.get(i - 1));
+                }
+            }
+        }
     }
 }

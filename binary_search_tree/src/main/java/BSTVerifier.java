@@ -1,22 +1,22 @@
+
+
 /**
- * Write a program that takes as input a binary tree and checks if the tree satisfies the
- * BST property.
+ * Write a function to check if a binary tree is a BST.
  */
-public class BSTVerifier {
-    public static boolean isValid(BSTNode<Integer> root) {
-        return isValid(root, Integer.MIN_VALUE, Integer.MAX_VALUE);
+public class BstVerifier {
 
-    }
-
-    private static boolean isValid(BSTNode<Integer> root, int lowerBound, int upperBound) {
+    public boolean isBST(BSTNode<Integer> root) {
         if (root == null) {
             return true;
         }
 
-        if (root.data > upperBound || root.data < lowerBound) {
+        if ((root.left != null && root.left.data > root.data)
+                || (root.right != null && root.right.data < root.data)) {
             return false;
         }
 
-        return isValid(root.left, lowerBound, root.data) && isValid(root.right, root.data, upperBound);
+        return isBST(root.left) && isBST(root.right);
     }
+
+
 }

@@ -76,7 +76,7 @@ public class PCRE2Engine {
     var matchData = new Pcre2MatchData(pcre2Code);
     var matchContext = new Pcre2MatchContext(pcre2Code.api(), null);
 
-    // Encode once; ovector positions are byte offsets into t his array
+    // Encode once; ovector positions are byte offsets into this array
     byte[] inputBytes = input.getBytes(StandardCharsets.UTF_8);
     List<String> matches = new ArrayList<>();
     int charOffset = 0;

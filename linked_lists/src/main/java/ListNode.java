@@ -1,10 +1,10 @@
-import com.google.common.base.MoreObjects;
-
 import java.util.Objects;
 
 public class ListNode<T> {
-    public T data;
-    public ListNode<T> next;
+    T data;
+    ListNode<T> next;
+
+    public ListNode() {}
 
     public ListNode(T data) {
         this(data, null);
@@ -18,21 +18,13 @@ public class ListNode<T> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ListNode<?> listNode = (ListNode<?>) o;
-        return Objects.equals(data, listNode.data) &&
-                Objects.equals(next, listNode.next);
+        if (!(o instanceof ListNode)) return false;
+        ListNode<?> that = (ListNode<?>) o;
+        return Objects.equals(data, that.data) && Objects.equals(next, that.next);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(data, next);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("data", data)
-                .toString();
     }
 }
