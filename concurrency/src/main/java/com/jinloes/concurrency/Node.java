@@ -1,61 +1,53 @@
-package com.jinloes;
+package com.jinloes.concurrency;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * Created by jinloes on 11/11/15.
- */
+@Slf4j
 public class Node {
-    private Lock lock = new ReentrantLock();
+
+    private final Lock lock = new ReentrantLock();
 
     public void propagateUpdate(String update, Node backup) {
-        boolean acquired = false;
         boolean done = false;
-        // while the update hasn't been propagated
         while (!done) {
+            boolean acquired = false;
             try {
-                // try to get lock
-                acquired = lock.tryLock(TimeUnit.SECONDS.toSeconds(1), TimeUnit.SECONDS);
-                // if get lock continue
+                acquired = lock.tryLock(1, TimeUnit.SECONDS);
                 if (acquired) {
-                    System.out.println("Update received " + update);
+                    log.info("Update received {}", update);
                     done = tryConfirmUpdate(backup, update);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
-
+                Thread.currentThread().interrupt();
             } finally {
-                // unlock no matter the result
                 if (acquired) {
                     lock.unlock();
                 }
             }
-            // if not done release the lock and wait to try later
             if (!done) {
                 try {
                     Thread.sleep(TimeUnit.SECONDS.toMillis(1));
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
                 }
             }
         }
     }
 
-    public boolean tryConfirmUpdate(Node other, String update) {
+    private boolean tryConfirmUpdate(Node other, String update) {
         boolean acquired = false;
         try {
-            // try to get lock
-            acquired = lock.tryLock(TimeUnit.SECONDS.toSeconds(1), TimeUnit.SECONDS);
+            acquired = lock.tryLock(1, TimeUnit.SECONDS);
             if (acquired) {
-                System.out.println("Received confirm of update " + update + " from " + other);
+                log.info("Received confirm of update {} from {}", update, other);
                 return true;
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         } finally {
-            // if any error occur unlock
             if (acquired) {
                 lock.unlock();
             }

@@ -42,6 +42,12 @@ subprojects {
                 dependency group: 'org.apache.commons', name: 'commons-lang3', version: '3.17.0'
                 dependency group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
                 dependency group: 'commons-io', name: 'commons-io', version: '2.18.0'
+                dependency group: 'org.slf4j', name: 'slf4j-api', version: '2.0.17'
+                dependencySet(group: 'org.apache.logging.log4j', version: '2.24.3') {
+                    entry 'log4j-api'
+                    entry 'log4j-core'
+                    entry 'log4j-slf4j2-impl'
+                }
             }
         }
 
