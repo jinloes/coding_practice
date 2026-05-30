@@ -3,12 +3,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BstVerifierTest {
-    private BstVerifier bstVerifier;
+class BSTVerifierTest {
+    private BSTVerifier bstVerifier;
 
     @BeforeEach
     void setUp() {
-        bstVerifier = new BstVerifier();
+        bstVerifier = new BSTVerifier();
     }
 
     @Test

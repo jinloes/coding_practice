@@ -1,9 +1,7 @@
-
-
 /**
  * Write a function to check if a binary tree is a BST.
  */
-public class BstVerifier {
+public class BSTVerifier {
 
     public boolean isBST(BSTNode<Integer> root) {
         if (root == null) {
@@ -17,6 +15,4 @@ public class BstVerifier {
 
         return isBST(root.left) && isBST(root.right);
     }
-
-
 }
