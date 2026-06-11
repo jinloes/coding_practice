@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LRUCache {
-    public class Node {
+    private static class Node {
         int key;
         int value;
         Node next;
@@ -24,6 +24,9 @@ public class LRUCache {
     private Node tail = new Node(0, 0);
 
     public LRUCache(int capacity) {
+        if (capacity <= 0) {
+            throw new IllegalArgumentException("Capacity must be positive");
+        }
         this.capacity = capacity;
         this.cache = new HashMap<>();
         this.head.next = tail;

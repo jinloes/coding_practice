@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public class ArrayOnlyHashTable<K, V> {
     private static final int INITIAL_CAPACITY = 10;
+    private static final int BUCKET_GROWTH_INCREMENT = 50;
     private Object[][] arr;
     private int capacity;
 
@@ -17,11 +18,12 @@ public class ArrayOnlyHashTable<K, V> {
         this(INITIAL_CAPACITY, INITIAL_CAPACITY);
     }
 
-    @SuppressWarnings("unchecked")
     ArrayOnlyHashTable(int initialCapacity, int bucketCapacity) {
         this.capacity = initialCapacity;
         this.arr = new Object[initialCapacity][];
-        Arrays.fill(this.arr, new Object[bucketCapacity]);
+        for (int i = 0; i < initialCapacity; i++) {
+            this.arr[i] = new Object[bucketCapacity];
+        }
     }
 
 
@@ -30,18 +32,20 @@ public class ArrayOnlyHashTable<K, V> {
         Object[] objArr = arr[keyIdx];
         HashNode<K, V> hashNode = new HashNode<>(key, value);
         Optional<Indexed<Object>> valueIdx = findByKey(key, objArr);
-        if (!valueIdx.isPresent()) {
+        if (valueIdx.isPresent()) {
+            // overwrite the existing value for this key
+            objArr[(int) valueIdx.get().getIndex()] = hashNode;
+        } else {
             if (objArr[objArr.length - 1] != null) {
-                objArr = Arrays.copyOf(objArr, objArr.length + 50);
+                objArr = Arrays.copyOf(objArr, objArr.length + BUCKET_GROWTH_INCREMENT);
                 arr[keyIdx] = objArr;
             }
-            // insert into the first null space
-            for (int i = 0; i < objArr.length; i++) {
-                if (objArr[i] == null) {
-                    objArr[i] = hashNode;
-                    break;
-                }
+            // insert into the first null space (grow above guarantees one exists)
+            int slot = 0;
+            while (objArr[slot] != null) {
+                slot++;
             }
+            objArr[slot] = hashNode;
         }
     }
 
@@ -72,7 +76,8 @@ public class ArrayOnlyHashTable<K, V> {
     }
 
     private int getHashKey(K key) {
-        return key.hashCode() % capacity;
+        Objects.requireNonNull(key, "Key cannot be null");
+        return Math.abs(key.hashCode() % capacity);
     }
 
     private Optional<Indexed<Object>> findByKey(K key, Object[] objArr) {
@@ -83,7 +88,7 @@ public class ArrayOnlyHashTable<K, V> {
 
     }
 
-    private static class HashNode<K, V> {
+    static class HashNode<K, V> {
         private final K key;
         private final V value;
 

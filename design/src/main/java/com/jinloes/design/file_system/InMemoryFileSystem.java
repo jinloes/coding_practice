@@ -17,7 +17,7 @@ public class InMemoryFileSystem {
   }
 
   public List<String> ls(String path) {
-    Optional<Node> opt = resolve(path, /* createDirs= */ false, /* createFile= */ false);
+    Optional<Node> opt = resolve(path, /* createDirs= */ false);
     if (opt.isEmpty()) {
       return Collections.emptyList();
     }
@@ -32,7 +32,7 @@ public class InMemoryFileSystem {
     if (path == null || path.isEmpty() || "/".equals(path)) {
       return;
     }
-    resolve(path, /* createDirs= */ true, /* createFile= */ false);
+    resolve(path, /* createDirs= */ true);
   }
 
   public void createFile(String filePath) {
@@ -68,7 +68,7 @@ public class InMemoryFileSystem {
   }
 
   public String readContentFromFile(String filePath) {
-    Optional<Node> opt = resolve(filePath, /* createDirs= */ false, /* createFile= */ false);
+    Optional<Node> opt = resolve(filePath, /* createDirs= */ false);
     if (opt.isEmpty() || !opt.get().isFile()) {
       throw new IllegalArgumentException("File not found: " + filePath);
     }
@@ -79,12 +79,9 @@ public class InMemoryFileSystem {
     if (path == null || path.isEmpty() || "/".equals(path)) {
       throw new IllegalArgumentException("Cannot delete root");
     }
-    Node node = resolve(path, /* createDirs= */ false, /* createFile= */ false)
+    Node node = resolve(path, /* createDirs= */ false)
         .orElseThrow(() -> new IllegalArgumentException("Path not found: " + path));
     DirectoryNode parent = node.getParent();
-    if (parent == null) {
-      throw new IllegalArgumentException("Cannot delete root");
-    }
     parent.removeChild(node.getName());
   }
 
@@ -92,14 +89,17 @@ public class InMemoryFileSystem {
     Objects.requireNonNull(srcPath, "srcPath");
     Objects.requireNonNull(destPath, "destPath");
 
-    Node src = resolve(srcPath, /* createDirs= */ false, /* createFile= */ false)
+    Node src = resolve(srcPath, /* createDirs= */ false)
         .orElseThrow(() -> new IllegalArgumentException("Source not found: " + srcPath));
     DirectoryNode srcParent = src.getParent();
     if (srcParent == null) {
       throw new IllegalArgumentException("Cannot move root");
     }
+    if (isSelfOrAncestor(src, destPath)) {
+      throw new IllegalArgumentException("Cannot move a directory into itself or a descendant: " + destPath);
+    }
 
-    Optional<Node> destOpt = resolve(destPath, /* createDirs= */ false, /* createFile= */ false);
+    Optional<Node> destOpt = resolve(destPath, /* createDirs= */ false);
     if (destOpt.isPresent()) {
       Node destNode = destOpt.get();
       if (!destNode.isFile()) {
@@ -126,14 +126,11 @@ public class InMemoryFileSystem {
     DirectoryNode destParent = createParentDirs(parts);
     String newName = parts[parts.length - 1];
     srcParent.removeChild(src.getName());
-    if (destParent.hasChild(newName)) {
-      destParent.removeChild(newName);
-    }
     renameNode(src, newName);
     destParent.addChild(src);
   }
 
-  private Optional<Node> resolve(String path, boolean createDirs, boolean createFile) {
+  private Optional<Node> resolve(String path, boolean createDirs) {
     if (path == null || path.isEmpty() || "/".equals(path)) {
       return Optional.of(root);
     }
@@ -148,11 +145,7 @@ public class InMemoryFileSystem {
       Node child = dir.getChild(p);
       boolean isLast = (i == parts.length - 1);
       if (child == null) {
-        if (isLast && createFile) {
-          FileNode fn = new FileNode(p, dir);
-          dir.addChild(fn);
-          return Optional.of(fn);
-        } else if (createDirs || !isLast) {
+        if (createDirs || !isLast) {
           DirectoryNode nd = new DirectoryNode(p, dir);
           dir.addChild(nd);
           cur = nd;
@@ -174,7 +167,7 @@ public class InMemoryFileSystem {
     for (int i = 0; i < parts.length - 1; i++) {
       sb.append("/").append(parts[i]);
     }
-    Node node = resolve(sb.toString(), /* createDirs= */ true, /* createFile= */ false)
+    Node node = resolve(sb.toString(), /* createDirs= */ true)
         .orElseThrow(() -> new IllegalArgumentException("Invalid parent path"));
     if (node.isFile()) {
       throw new IllegalArgumentException("Invalid parent path");
@@ -184,9 +177,6 @@ public class InMemoryFileSystem {
 
   private String[] split(String path) {
     String p = path.trim();
-    if (p.equals("/")) {
-      return new String[0];
-    }
     if (p.startsWith("/")) {
       p = p.substring(1);
     }
@@ -203,5 +193,23 @@ public class InMemoryFileSystem {
 
   private void renameNode(Node node, String newName) {
     node.setName(newName);
+  }
+
+  /**
+   * Returns true if {@code destPath} refers to {@code src} itself or a node nested inside it.
+   * Moving a directory into its own subtree would create a cycle.
+   */
+  private boolean isSelfOrAncestor(Node src, String destPath) {
+    String[] srcParts = split(src.getPath());
+    String[] destParts = split(destPath);
+    if (destParts.length < srcParts.length) {
+      return false;
+    }
+    for (int i = 0; i < srcParts.length; i++) {
+      if (!srcParts[i].equals(destParts[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 }

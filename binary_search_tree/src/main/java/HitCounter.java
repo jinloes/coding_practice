@@ -34,6 +34,8 @@ class HitCounter {
      * @param timestamp - The current timestamp (in seconds granularity).
      */
     public void hit(int timestamp) {
+        // Hits arrive in chronological order, so anything older than the window can be purged.
+        countMap.headMap(timestamp - SECONDS, true).clear();
         countMap.put(timestamp, countMap.getOrDefault(timestamp, 0) + 1);
     }
 

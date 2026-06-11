@@ -12,6 +12,7 @@ subprojects {
 
     pluginManager.withPlugin('java') {
         apply plugin: 'io.spring.dependency-management'
+        apply plugin: 'jacoco'
 
         java {
             sourceCompatibility = JavaVersion.VERSION_17
@@ -57,6 +58,15 @@ subprojects {
 
         test {
             useJUnitPlatform()
+            finalizedBy jacocoTestReport
+        }
+
+        jacocoTestReport {
+            dependsOn test
+            reports {
+                xml.required = true
+                html.required = true
+            }
         }
     }
 }

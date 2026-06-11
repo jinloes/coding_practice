@@ -11,6 +11,9 @@ import java.util.concurrent.BlockingQueue;
  */
 public class ProducerConsumer {
 
+    /** Sentinel value signalling the consumer that no more items will arrive. */
+    private static final Integer POISON_PILL = Integer.MIN_VALUE;
+
     static class Producer extends Thread {
         private final BlockingQueue<Integer> buffer;
 
@@ -20,8 +23,13 @@ public class ProducerConsumer {
 
         @Override
         public void run() {
-            for (int i = 0; i < 15; i++) {
-                buffer.add(i);
+            try {
+                for (int i = 0; i < 15; i++) {
+                    buffer.put(i);
+                }
+                buffer.put(POISON_PILL);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
 
@@ -36,8 +44,13 @@ public class ProducerConsumer {
 
         @Override
         public void run() {
-            while (!buffer.isEmpty()) {
-                System.out.println(buffer.poll());
+            try {
+                Integer value;
+                while ((value = buffer.take()) != POISON_PILL) {
+                    System.out.println(value);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -49,7 +62,9 @@ public class ProducerConsumer {
         Consumer consumer = new Consumer(buffer);
 
         producer.start();
-        Thread.sleep(100);
         consumer.start();
+
+        producer.join();
+        consumer.join();
     }
 }

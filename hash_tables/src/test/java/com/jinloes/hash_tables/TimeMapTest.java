@@ -28,4 +28,16 @@ public class TimeMapTest {
 
         assertThat(timeMap.get("foo", 5)).isEqualTo("bar2");
     }
+
+    @Test
+    public void unknownKeyReturnsEmptyString() {
+        assertThat(timeMap.get("missing", 1)).isEqualTo("");
+    }
+
+    @Test
+    public void timestampBeforeAnyValueReturnsEmptyString() {
+        timeMap.set("foo", "bar", 5);
+
+        assertThat(timeMap.get("foo", 1)).isEqualTo("");
+    }
 }

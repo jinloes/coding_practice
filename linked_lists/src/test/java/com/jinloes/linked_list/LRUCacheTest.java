@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class LRUCacheTest {
     private LRUCache lruCache;
@@ -94,5 +95,13 @@ class LRUCacheTest {
         assertThat(lruCache.get(4)).isEqualTo(-1);
         assertThat(lruCache.get(5)).isEqualTo(-1);
         assertThat(lruCache.get(6)).isEqualTo(6);
+    }
+
+    @Test
+    void nonPositiveCapacityThrows() {
+        assertThatThrownBy(() -> new LRUCache(0))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new LRUCache(-1))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

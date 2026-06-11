@@ -27,20 +27,15 @@ public class TimeMap {
     }
 
     public void set(String key, String value, int timestamp) {
-        delegate.putIfAbsent(key, new TreeMap<>());
-        delegate.get(key).put(timestamp, value);
+        delegate.computeIfAbsent(key, k -> new TreeMap<>()).put(timestamp, value);
     }
 
     public String get(String key, int timestamp) {
-        if (delegate.containsKey(key)) {
-            Map.Entry<Integer, String> entry = delegate.get(key).floorEntry(timestamp);
-            if (entry == null) {
-                return null;
-            } else {
-                return entry.getValue();
-            }
-        } else {
-            return null;
+        TreeMap<Integer, String> timestamps = delegate.get(key);
+        if (timestamps == null) {
+            return "";
         }
+        Map.Entry<Integer, String> entry = timestamps.floorEntry(timestamp);
+        return entry == null ? "" : entry.getValue();
     }
 }

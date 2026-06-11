@@ -20,4 +20,14 @@ class HitCounterTest {
 
         assertThat(hitCounter.getHits(300)).isEqualTo(4);
     }
+
+    @Test
+    void hitsOutsideWindowAreNotCounted() {
+        hitCounter.hit(1);
+        hitCounter.hit(2);
+        hitCounter.hit(3);
+
+        // 301 is 300 seconds after timestamp 1, so the hit at 1 falls outside the window.
+        assertThat(hitCounter.getHits(301)).isEqualTo(2);
+    }
 }
