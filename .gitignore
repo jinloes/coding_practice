@@ -12,3 +12,5 @@ gradlew*
 **/.settings
 **/.classpath
 **/.project
+.vscode/
+*.code-workspace
