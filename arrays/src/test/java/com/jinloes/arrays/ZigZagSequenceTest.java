@@ -12,6 +12,11 @@ class ZigZagSequenceTest {
     }
 
     @Test
+    void repeatedValues() {
+        assertThat(ZigZagSequence.findLongest(new int[]{1, 1, 1, 1})).isEqualTo(1);
+    }
+
+    @Test
     void complexArray() {
         assertThat(ZigZagSequence.findLongest(new int[]{1, 17, 5, 10, 13, 15, 10, 5, 16, 8})).isEqualTo(7);
         assertThat(ZigZagSequence.findLongest(new int[]{1, 7, 4, 9, 2, 5})).isEqualTo(6);

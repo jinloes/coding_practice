@@ -11,7 +11,7 @@ import java.util.Set;
  * that add up to value S.
  */
 public class TwoSum {
-    public record Pair(int v1, int v2){
+    public record Pair(int v1, int v2) {
         public static Pair of(int v1, int v2) {
             return new Pair(v1, v2);
         }
@@ -20,27 +20,23 @@ public class TwoSum {
         if (arr == null || arr.length < 2) {
             return new HashSet<>();
         }
-        Set<Pair> pairs = new HashSet<>();
-        Map<Integer, Integer> sumCount = new HashMap<>();
-        for (Integer val : arr) {
-            if (!sumCount.containsKey(val)) {
-                sumCount.put(val, 1);
-            } else {
-                sumCount.put(val, sumCount.get(val) + 1);
-            }
+
+        Map<Integer, Integer> counts = new HashMap<>();
+        for (int value : arr) {
+            counts.merge(value, 1, Integer::sum);
         }
-        for (Integer val : arr) {
-            int difference = sum - val;
-            if (sumCount.containsKey(difference) && difference != val) {
-                int min = Math.min(val, difference);
-                int max = Math.max(val, difference);
-                pairs.add(Pair.of(min, max));
-            } else if (sumCount.containsKey(difference)
-                    && difference == val
-                    && sumCount.get(difference) > 1) {
-                int min = Math.min(val, difference);
-                int max = Math.max(val, difference);
-                pairs.add(Pair.of(min, max));
+
+        Set<Pair> pairs = new HashSet<>();
+        for (int value : counts.keySet()) {
+            int complement = sum - value;
+            if (!counts.containsKey(complement)) {
+                continue;
+            }
+
+            if (value < complement) {
+                pairs.add(Pair.of(value, complement));
+            } else if (value == complement && counts.get(value) > 1) {
+                pairs.add(Pair.of(value, value));
             }
         }
         return pairs;

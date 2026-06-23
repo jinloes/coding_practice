@@ -20,5 +20,8 @@ public class MaxSlidingWindowTest {
 
         assertThat(maxSlidingWindow.maxSlidingWindow(new int[]{9, 10, 9, -7, -4, -8, 2, -6}, 5))
                 .containsExactly(10, 10, 9, 2);
+
+        assertThat(maxSlidingWindow.maxSlidingWindow(new int[]{1, 2, 3}, 1))
+                .containsExactly(1, 2, 3);
     }
 }

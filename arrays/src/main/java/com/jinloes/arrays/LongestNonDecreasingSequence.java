@@ -1,7 +1,6 @@
 package com.jinloes.arrays;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 /**
  * Calulcates longest increasing sequences in different ways.
@@ -14,24 +13,25 @@ public class LongestNonDecreasingSequence {
      * @return the length of the longest increasing sequence
      */
     public static int findLongestIncreasingSequence(int[] arr) {
-        Map<Integer, Integer> length = new HashMap<>();
-        int runningLargest = 0;
-        for (int val : arr) {
-            int largestLength = 0;
-            // Search for the entry that's less than the value and has the longest increasing
-            // sequence
-            for (Map.Entry<Integer, Integer> entry : length.entrySet()) {
-                if (entry.getKey() < val && entry.getValue() > largestLength) {
-                    largestLength = entry.getValue();
-                }
-            }
-            largestLength++;
-            if (largestLength > runningLargest) {
-                runningLargest = largestLength;
-            }
-            length.put(val, largestLength);
+        if (arr == null || arr.length == 0) {
+            return 0;
         }
-        return runningLargest;
+
+        int[] tails = new int[arr.length];
+        int size = 0;
+
+        for (int value : arr) {
+            int index = Arrays.binarySearch(tails, 0, size, value);
+            if (index < 0) {
+                index = -index - 1;
+            }
+            tails[index] = value;
+            if (index == size) {
+                size++;
+            }
+        }
+
+        return size;
     }
 
     /**
@@ -44,23 +44,19 @@ public class LongestNonDecreasingSequence {
         if (arr == null || arr.length == 0) {
             return 0;
         }
-        int longestNonDecreasingSequence = 0;
-        int currentLongestNonDecreasingSequence = 0;
-        int previous = arr[0];
-        for (int anArr : arr) {
-            if (anArr >= previous) {
-                currentLongestNonDecreasingSequence++;
+
+        int longest = 1;
+        int current = 1;
+
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] >= arr[i - 1]) {
+                current++;
             } else {
-                if (currentLongestNonDecreasingSequence > longestNonDecreasingSequence) {
-                    longestNonDecreasingSequence = currentLongestNonDecreasingSequence;
-                }
-                currentLongestNonDecreasingSequence = 1;
+                longest = Math.max(longest, current);
+                current = 1;
             }
-            previous = anArr;
         }
-        if (currentLongestNonDecreasingSequence > longestNonDecreasingSequence) {
-            longestNonDecreasingSequence = currentLongestNonDecreasingSequence;
-        }
-        return longestNonDecreasingSequence;
+
+        return Math.max(longest, current);
     }
 }

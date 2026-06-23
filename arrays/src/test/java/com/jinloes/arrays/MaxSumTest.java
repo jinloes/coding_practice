@@ -12,6 +12,11 @@ class MaxSumTest {
     }
 
     @Test
+    void maxSum1d_allNegative() {
+        assertThat(MaxSum.findMax(new int[]{-3, -1, -4})).isEqualTo(-1);
+    }
+
+    @Test
     void maxSum1d_complexArray() {
         assertThat(MaxSum.findMax(new int[]{1, -2, 3, 10, -4, 7, 2, -5})).isEqualTo(18);
     }

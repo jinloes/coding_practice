@@ -1,8 +1,7 @@
 package com.jinloes.arrays;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Deque;
 
 /**
  * You are given an array of integers nums, there is a sliding window of size k which is moving from the very left
@@ -13,34 +12,30 @@ import java.util.List;
 public class MaxSlidingWindow {
 
     public int[] maxSlidingWindow(int[] nums, int k) {
-        ArrayDeque<Integer> window = new ArrayDeque<>();
+        if (nums == null || nums.length == 0 || k <= 0) {
+            return new int[0];
+        }
 
-        List<Integer> maxVals = new ArrayList<>();
+        k = Math.min(k, nums.length);
+        Deque<Integer> window = new ArrayDeque<>();
+        int[] maxArr = new int[nums.length - k + 1];
 
         for (int i = 0; i < nums.length; i++) {
-            while (!window.isEmpty() && nums[window.peekLast()] < nums[i]) {
+            while (!window.isEmpty() && window.peekFirst() <= i - k) {
+                window.removeFirst();
+            }
+
+            while (!window.isEmpty() && nums[window.peekLast()] <= nums[i]) {
                 window.removeLast();
             }
 
             window.addLast(i);
 
-
-            if (!window.isEmpty() && window.getFirst() == i - k) {
-                window.removeFirst();
-            }
-
             if (i >= k - 1) {
-                maxVals.add(window.peekFirst());
+                maxArr[i - k + 1] = nums[window.peekFirst()];
             }
-
-
         }
 
-        int[] maxArr = new int[maxVals.size()];
-
-        for (int i = 0; i < maxVals.size(); i++) {
-            maxArr[i] = nums[maxVals.get(i)];
-        }
         return maxArr;
     }
 }

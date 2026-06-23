@@ -5,20 +5,17 @@ package com.jinloes.arrays;
  */
 public class MaxSum {
     public static int findMax(int[] arr) {
-        int maxSum = 0;
-        int runningSum = 0;
-        for (int i = 0; i < arr.length; i++) {
-            int currentVal = arr[i];
-            int currentSum = currentVal + runningSum;
-            if (currentSum > maxSum) {
-                maxSum = currentSum;
-            }
-            runningSum += currentVal;
-            if (runningSum < 0) {
-                runningSum = 0;
-            }
+        if (arr == null || arr.length == 0) {
+            return 0;
         }
-        return maxSum;
+
+        int maxEndingHere = arr[0];
+        int maxSoFar = arr[0];
+        for (int i = 1; i < arr.length; i++) {
+            maxEndingHere = Math.max(arr[i], maxEndingHere + arr[i]);
+            maxSoFar = Math.max(maxSoFar, maxEndingHere);
+        }
+        return maxSoFar;
     }
 
     /**
@@ -28,14 +25,29 @@ public class MaxSum {
      * @return max sum
      */
     public static int findMax(int[][] arr) {
-        Integer[][] maxArr = new Integer[arr.length][arr[0].length];
-        for (int i = 0; i < arr.length; i++) {
-            for (int j = 0; j < arr[i].length; j++) {
-                int previousTop = i != 0 ? maxArr[i - 1][j] : 0;
-                int previousLeft = j != 0 ? maxArr[i][j - 1] : 0;
-                maxArr[i][j] = Math.max(previousTop + arr[i][j], previousLeft + arr[i][j]);
+        if (arr == null || arr.length == 0 || arr[0].length == 0) {
+            return 0;
+        }
+
+        int rows = arr.length;
+        int cols = arr[0].length;
+        int[][] maxArr = new int[rows][cols];
+        maxArr[0][0] = arr[0][0];
+
+        for (int col = 1; col < cols; col++) {
+            maxArr[0][col] = maxArr[0][col - 1] + arr[0][col];
+        }
+
+        for (int row = 1; row < rows; row++) {
+            maxArr[row][0] = maxArr[row - 1][0] + arr[row][0];
+        }
+
+        for (int row = 1; row < rows; row++) {
+            for (int col = 1; col < cols; col++) {
+                maxArr[row][col] = Math.max(maxArr[row - 1][col], maxArr[row][col - 1]) + arr[row][col];
             }
         }
-        return maxArr[maxArr.length - 1][maxArr[0].length - 1];
+
+        return maxArr[rows - 1][cols - 1];
     }
 }

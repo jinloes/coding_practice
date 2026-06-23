@@ -26,7 +26,8 @@ class LongestSubarrayWithDiffTest {
             Arguments.of(new int[]{1, 5}, 10, 2),              // entire array within limit
             Arguments.of(new int[]{1, 100}, 0, 1),             // limit 0, no pair qualifies
             Arguments.of(new int[]{1}, 0, 1),                  // single element
-            Arguments.of(new int[]{2, 4, 6, 8}, 2, 2)         // stride of 2, window size 2
+            Arguments.of(new int[]{2, 4, 6, 8}, 2, 2),         // stride of 2, window size 2
+            Arguments.of(new int[]{4, 8, 5, 1, 7, 9}, 4, 3)    // shrinking and expanding window
         );
     }
 }

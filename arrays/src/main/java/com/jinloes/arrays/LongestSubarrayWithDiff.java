@@ -1,7 +1,7 @@
 package com.jinloes.arrays;
 
-import java.util.Collections;
-import java.util.PriorityQueue;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * Given an array of integers nums and an integer limit, return the size of the longest non-empty subarray such that
@@ -18,26 +18,42 @@ import java.util.PriorityQueue;
 public class LongestSubarrayWithDiff {
 
     public int longestSubarray(int[] nums, int limit) {
-        PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-        PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
-        int count = 0;
+        if (nums == null || nums.length == 0) {
+            return 0;
+        }
+
+        Deque<Integer> minDeque = new ArrayDeque<>();
+        Deque<Integer> maxDeque = new ArrayDeque<>();
+        int longest = 0;
         int left = 0;
 
-        for (int num : nums) {
-            // Expand the window by adding the new element to both heaps — O(log n)
-            minHeap.add(num);
-            maxHeap.add(num);
+        for (int right = 0; right < nums.length; right++) {
+            int num = nums[right];
 
-            // Check if the window is valid: max - min <= limit
-            if (maxHeap.peek() - minHeap.peek() <= limit) {
-                count++;
-            } else {
-                // Window is invalid; shrink from the left to restore the constraint — O(n) worst case
-                minHeap.remove(nums[left]);
-                maxHeap.remove(nums[left]);
+            while (!minDeque.isEmpty() && minDeque.peekLast() > num) {
+                minDeque.removeLast();
+            }
+            minDeque.addLast(num);
+
+            while (!maxDeque.isEmpty() && maxDeque.peekLast() < num) {
+                maxDeque.removeLast();
+            }
+            maxDeque.addLast(num);
+
+            while (maxDeque.peekFirst() - minDeque.peekFirst() > limit) {
+                int leftValue = nums[left];
+                if (leftValue == minDeque.peekFirst()) {
+                    minDeque.removeFirst();
+                }
+                if (leftValue == maxDeque.peekFirst()) {
+                    maxDeque.removeFirst();
+                }
                 left++;
             }
+
+            longest = Math.max(longest, right - left + 1);
         }
-        return count;
+
+        return longest;
     }
 }

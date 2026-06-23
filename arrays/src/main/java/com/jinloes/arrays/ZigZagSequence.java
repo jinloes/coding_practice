@@ -5,27 +5,21 @@ package com.jinloes.arrays;
  */
 public class ZigZagSequence {
     public static int findLongest(int[] arr) {
-        if (arr.length == 0) {
+        if (arr == null || arr.length == 0) {
             return 0;
         }
-        if (arr.length == 1) {
-            return 1;
-        }
-        if (arr.length == 2) {
-            return 2;
-        }
-        int[] diff = new int[arr.length - 1];
+
+        int length = 1;
+        int previousDiff = 0;
+
         for (int i = 1; i < arr.length; i++) {
-            diff[i - 1] = arr[i] - arr[i - 1];
-        }
-        int previousSign = diff[0];
-        int count = 1;
-        for (int sign : diff) {
-            if (previousSign * sign < 0) {
-                previousSign = sign;
-                count++;
+            int currentDiff = Integer.compare(arr[i], arr[i - 1]);
+            if (currentDiff != 0 && currentDiff != previousDiff) {
+                length++;
+                previousDiff = currentDiff;
             }
         }
-        return count + 1;
+
+        return length;
     }
 }

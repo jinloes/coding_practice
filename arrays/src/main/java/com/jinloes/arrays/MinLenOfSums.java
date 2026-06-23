@@ -1,6 +1,8 @@
 package com.jinloes.arrays;
 
-import java.util.PriorityQueue;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Given an array of integers arr and an integer target.
@@ -12,68 +14,35 @@ import java.util.PriorityQueue;
 public class MinLenOfSums {
 
     public int minSumOfLengths(int[] arr, int target) {
-        PriorityQueue<Interval> minHeap = new PriorityQueue<>();
+        if (arr == null || arr.length == 0) {
+            return -1;
+        }
 
-        int left = 0;
-        int sum = 0;
+        int[] best = new int[arr.length];
+        Arrays.fill(best, Integer.MAX_VALUE);
+
+        Map<Integer, Integer> prefixToIndex = new HashMap<>();
+        prefixToIndex.put(0, -1);
+
+        int prefix = 0;
+        int answer = Integer.MAX_VALUE;
 
         for (int i = 0; i < arr.length; i++) {
-            sum += arr[i];
+            prefix += arr[i];
+            best[i] = i > 0 ? best[i - 1] : Integer.MAX_VALUE;
 
-            while (sum > target) {
-                sum -= arr[left];
-                left++;
-            }
-
-            if (sum == target) {
-                Interval interval = new Interval(left, i);
-                minHeap.add(interval);
-            }
-
-        }
-
-        int minLength = Integer.MAX_VALUE;
-
-        PriorityQueue<Interval> nonMatches = new PriorityQueue<>();
-
-        while (!minHeap.isEmpty()) {
-            Interval first = minHeap.poll();
-            while (!minHeap.isEmpty()) {
-                Interval second = minHeap.poll();
-                if (first.intersects(second)) {
-                    nonMatches.add(second);
-                } else {
-                    minLength = Math.min(minLength, first.getLength() + second.getLength());
-                    break;
+            Integer start = prefixToIndex.get(prefix - target);
+            if (start != null) {
+                int currentLength = i - start;
+                best[i] = Math.min(best[i], currentLength);
+                if (start >= 0 && best[start] != Integer.MAX_VALUE) {
+                    answer = Math.min(answer, currentLength + best[start]);
                 }
             }
-            minHeap = nonMatches;
-            nonMatches = new PriorityQueue<>();
+
+            prefixToIndex.put(prefix, i);
         }
 
-
-        return minLength == Integer.MAX_VALUE ? -1 : minLength;
-    }
-
-    private class Interval implements Comparable<Interval> {
-        int start;
-        int end;
-
-        public Interval(int start, int end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        public boolean intersects(Interval other) {
-            return start <= other.end && end >= other.start;
-        }
-
-        public int getLength() {
-            return end - start + 1;
-        }
-
-        public int compareTo(Interval other) {
-            return getLength() - other.getLength();
-        }
+        return answer == Integer.MAX_VALUE ? -1 : answer;
     }
 }
