@@ -13,9 +13,9 @@ public class TaskScheduler {
     public int leastInterval(char[] tasks, int n) {
         Map<Character, Integer> countMap = new HashMap<>();
         TreeSet<List<Integer>> counts = new TreeSet<>((o1, o2) -> {
-            int compare = o2.get(1) - o1.get(1);
+            int compare = Integer.compare(o2.get(1), o1.get(1));
             if (compare == 0) {
-                return o1.get(0) - o2.get(0);
+                return Integer.compare(o1.get(0), o2.get(0));
             }
             return compare;
         });
@@ -29,16 +29,11 @@ public class TaskScheduler {
             counts.add(List.of((int) c, oldValue + 1));
         }
 
-        System.out.println(counts);
-
         List<Integer> maxEntry = counts.first();
-
-        System.out.println(maxEntry);
         int maxCount = maxEntry.get(1);
         int idleTime = (maxCount - 1) * n;
 
         Iterator<List<Integer>> it = counts.iterator();
-        // skip first entry
         it.next();
         while (it.hasNext()) {
             List<Integer> current = it.next();

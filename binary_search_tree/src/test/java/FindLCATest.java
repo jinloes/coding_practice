@@ -8,5 +8,6 @@ class FindLCATest extends BaseBSTTest {
     void compute() {
         assertThat(FindLCA.compute(root, l2a, l3d)).isEqualTo(l1a);
         assertThat(FindLCA.compute(root, l2a, l1a)).isEqualTo(l1a);
+        assertThat(FindLCA.compute(root, l1a, l2a)).isEqualTo(l1a);
     }
 }

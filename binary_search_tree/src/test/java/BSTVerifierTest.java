@@ -27,4 +27,13 @@ class BSTVerifierTest {
         BSTNode<Integer> root = new BSTNode<>(1, oneLeft, oneRight);
         assertThat(bstVerifier.isBST(root)).isFalse();
     }
+
+    @Test
+    void testVerifyFalseForDeepViolation() {
+        BSTNode<Integer> root = new BSTNode<>(10,
+                new BSTNode<>(5, null, new BSTNode<>(12)),
+                new BSTNode<>(15));
+
+        assertThat(bstVerifier.isBST(root)).isFalse();
+    }
 }

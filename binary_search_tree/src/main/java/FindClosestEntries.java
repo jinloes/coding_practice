@@ -14,9 +14,9 @@ public class FindClosestEntries {
     public static List<Integer> compute(List<List<Integer>> sortedLists) {
         TreeSet<Tuple3<Integer, Integer, Integer>> tupleSet = new TreeSet<>(
                 (o1, o2) -> {
-                    int compare = o1._1() - o2._1();
+                    int compare = Integer.compare(o1._1(), o2._1());
                     if (compare == 0) {
-                        return o1._2() - o2._2();
+                        return Integer.compare(o1._2(), o2._2());
                     }
                     return compare;
                 });
@@ -38,9 +38,6 @@ public class FindClosestEntries {
 
             if (intervalSize < minIntervalSize) {
                 minIntervalSize = intervalSize;
-                minInterval.clear();
-
-                // O(m) - total number of lists
                 minInterval = tupleSet.stream()
                         .map(Tuple3::_1)
                         .collect(Collectors.toList());

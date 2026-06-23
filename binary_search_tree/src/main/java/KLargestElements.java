@@ -1,4 +1,4 @@
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -7,7 +7,7 @@ import java.util.List;
  */
 public class KLargestElements {
     public static List<Integer> get(BSTNode<Integer> root, int k) {
-        List<Integer> result = new LinkedList<>();
+        List<Integer> result = new ArrayList<>(k);
 
         reverseInOrder(root, k, result);
 
@@ -15,16 +15,16 @@ public class KLargestElements {
     }
 
     private static void reverseInOrder(BSTNode<Integer> tree, int k, List<Integer> result) {
-        if (tree == null) {
+        if (tree == null || result.size() == k) {
             return;
         }
 
         reverseInOrder(tree.right, k, result);
-
-        if (result.size() < k) {
-            result.add(tree.data);
+        if (result.size() == k) {
+            return;
         }
 
+        result.add(tree.data);
         reverseInOrder(tree.left, k, result);
     }
 }

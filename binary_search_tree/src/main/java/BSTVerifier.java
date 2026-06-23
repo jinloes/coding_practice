@@ -4,15 +4,19 @@
 public class BSTVerifier {
 
     public boolean isBST(BSTNode<Integer> root) {
-        if (root == null) {
+        return isBST(root, Long.MIN_VALUE, Long.MAX_VALUE);
+    }
+
+    private boolean isBST(BSTNode<Integer> node, long min, long max) {
+        if (node == null) {
             return true;
         }
 
-        if ((root.left != null && root.left.data > root.data)
-                || (root.right != null && root.right.data < root.data)) {
+        if (node.data < min || node.data > max) {
             return false;
         }
 
-        return isBST(root.left) && isBST(root.right);
+        return isBST(node.left, min, node.data)
+                && isBST(node.right, node.data, max);
     }
 }

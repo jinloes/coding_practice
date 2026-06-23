@@ -7,14 +7,17 @@ public class FindLCA {
             return null;
         }
 
-        if ((tree.data > n1.data && tree.data < n2.data) || (tree.data.equals(n1.data) || tree.data.equals(n2.data))) {
+        int lower = Math.min(n1.data, n2.data);
+        int upper = Math.max(n1.data, n2.data);
+
+        if (tree.data >= lower && tree.data <= upper) {
             return tree;
         }
 
-        if (tree.data > n1.data) {
+        if (tree.data > upper) {
             return compute(tree.left, n1, n2);
-        } else {
-            return compute(tree.right, n1, n2);
         }
+
+        return compute(tree.right, n1, n2);
     }
 }

@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.BeforeEach;
 
-public abstract class BaseBSTTest {
+abstract class BaseBSTTest {
     protected BSTNode<Integer> root;
     protected BSTNode<Integer> l1a;
     protected BSTNode<Integer> l1b;
@@ -40,8 +40,8 @@ public abstract class BaseBSTTest {
         root.left = l1a;
         root.right = l1b;
 
-        l1a.left = l3a;
-        l1a.left = l3b;
+        l1a.left = l2a;
+        l1a.right = l2b;
 
         l1b.left = l2c;
         l1b.right = l2d;
@@ -61,5 +61,21 @@ public abstract class BaseBSTTest {
         l3f.right = l4k;
 
         l4j.right = l5l;
+
+        root.left.parent = root;
+        root.right.parent = root;
+        l1a.left.parent = l1a;
+        l1a.right.parent = l1a;
+        l1b.left.parent = l1b;
+        l1b.right.parent = l1b;
+        l2a.left.parent = l2a;
+        l2a.right.parent = l2a;
+        l2b.right.parent = l2b;
+        l2c.right.parent = l2c;
+        l2d.right.parent = l2d;
+        l3d.left.parent = l3d;
+        l3f.left.parent = l3f;
+        l3f.right.parent = l3f;
+        l4j.right.parent = l4j;
     }
 }

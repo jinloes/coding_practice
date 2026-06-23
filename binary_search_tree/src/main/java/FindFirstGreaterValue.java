@@ -9,21 +9,11 @@ public class FindFirstGreaterValue {
             return null;
         }
 
-        BSTNode<Integer> candidate = null;
-
         if (tree.data > k) {
-            candidate = tree;
-            BSTNode<Integer> next = findFirstGreaterThanK(tree.left, k);
-            if (next != null) {
-                candidate = next;
-            }
-        } else {
-            BSTNode<Integer> next = findFirstGreaterThanK(tree.right, k);
-            if (next != null) {
-                candidate = next;
-            }
+            BSTNode<Integer> leftCandidate = findFirstGreaterThanK(tree.left, k);
+            return leftCandidate != null ? leftCandidate : tree;
         }
 
-        return candidate;
+        return findFirstGreaterThanK(tree.right, k);
     }
 }

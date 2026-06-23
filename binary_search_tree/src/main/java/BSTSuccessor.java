@@ -1,7 +1,3 @@
-
-
-import java.util.Objects;
-
 public class BSTSuccessor {
 
     public BSTNode<Integer> getSuccessor(BSTNode<Integer> current) {
@@ -10,19 +6,20 @@ public class BSTSuccessor {
         }
 
         if (current.right != null) {
-            BSTNode<Integer> tmp = current.right;
-            while (tmp.left != null) {
-                tmp = tmp.left;
+            BSTNode<Integer> successor = current.right;
+            while (successor.left != null) {
+                successor = successor.left;
             }
-            return tmp;
-        } else {
-            BSTNode<Integer> parent = current.parent;
-            BSTNode<Integer> child = current;
-            while (parent != null && !Objects.equals(parent.left, child)) {
-                child = parent;
-                parent = parent.parent;
-            }
-            return parent;
+            return successor;
         }
+
+        BSTNode<Integer> parent = current.parent;
+        BSTNode<Integer> child = current;
+        while (parent != null && parent.left != child) {
+            child = parent;
+            parent = parent.parent;
+        }
+
+        return parent;
     }
 }

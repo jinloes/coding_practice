@@ -11,16 +11,16 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ArrayToBSTTest {
+class ArrayToBSTTest {
     private ArrayToBST arrayToBST;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() {
         arrayToBST = new ArrayToBST();
     }
 
     @Test
-    public void toBST() {
+    void toBST() {
         TreeNode<Integer> root = new ArrayMultiTreeNode<>(3);
         TreeNode<Integer> n1 = new ArrayMultiTreeNode<>(1);
         TreeNode<Integer> n2 = new ArrayMultiTreeNode<>(2);
@@ -31,7 +31,6 @@ public class ArrayToBSTTest {
         root.add(n3);
         n1.add(n2);
         n3.add(n4);
-
 
         List<Integer> values = arrayToBST.toBST(new int[]{1, 2, 3, 5, 7})
                 .preOrdered()
@@ -45,5 +44,10 @@ public class ArrayToBSTTest {
                 .collect(Collectors.toList());
 
         assertThat(values).isEqualTo(expected);
+    }
+
+    @Test
+    void toBSTReturnsNullForEmptyArray() {
+        assertThat(arrayToBST.toBST(new int[] {})).isNull();
     }
 }

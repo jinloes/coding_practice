@@ -5,13 +5,11 @@ import com.scalified.tree.multinode.ArrayMultiTreeNode;
 
 public class ArrayToBST {
     public TreeNode<Integer> toBST(int[] arr) {
-        int mid = (arr.length - 1) / 2;
+        if (arr == null || arr.length == 0) {
+            return null;
+        }
 
-        TreeNode<Integer> root = new ArrayMultiTreeNode<>(arr[mid]);
-        root.add(toBST(arr, 0, mid - 1));
-        root.add(toBST(arr, mid + 1, arr.length - 1));
-
-        return root;
+        return toBST(arr, 0, arr.length - 1);
     }
 
     private TreeNode<Integer> toBST(int[] arr, int start, int end) {
