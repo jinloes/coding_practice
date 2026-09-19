@@ -1,11 +1,13 @@
 # Algorithm Practice for IntelliJ IDEA
 
 A reusable Java practice plugin with original algorithm and data-structure
-exercises. Read a problem in the Practice tool window, implement its starter in
-the regular editor, debug examples, and run the supplied correctness cases.
+exercises. Read a problem in the Practice tool window, implement its durable Java
+scratch in the regular editor, debug examples, and run the supplied correctness
+cases.
 
-The plugin source lives here, but it creates a separate practice project. It does
-not depend on this repository's other modules or modify their exercises.
+The plugin source lives here, but learners do not need to create a project,
+module, folder, SDK, or Gradle import. It does not depend on this repository's
+other modules or modify their exercises.
 
 ## Build and install
 
@@ -44,20 +46,18 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
 ## Practice workflow
 
 1. Open **View > Tool Windows > Practice**.
-2. Choose **Create Practice Project**, select a parent folder, and give the new
-   directory a name. Existing directories are never overwritten. Reopen an
-   existing generated project with **Open Practice Project**.
-3. Set the practice project's SDK to a **JDK 17 or newer** under **File > Project
-   Structure**. Wait for Gradle import. **Reload Gradle** retries an import after
-   SDK or network problems.
-4. Choose a problem and **Start / Resume**. Each attempt is an independent Gradle
-   subproject. Use the attempt selector to revisit earlier work; **New Attempt**
-   preserves all earlier files.
-5. Write the solution in `src/main/java/com/jinloes/practice/Solution.java`.
-6. **Run Examples** executes just the example tests. **Debug Examples** creates a
-   native JUnit debug configuration: put a breakpoint in the solution and use
-   IntelliJ's usual stepping and variable inspection.
-7. **Check Solution** executes examples and additional correctness cases. Read
+2. Choose a problem and **Start / Resume**. The plugin creates
+   `Algorithm Practice/<exercise-id>/<attempt-id>/Solution.java` under IntelliJ
+   **Scratches and Consoles**, opens it, and remembers it from every host project.
+   **New Attempt** creates a distinct scratch and never overwrites an earlier one.
+3. Write the solution in the opened `Solution.java`. Each starter includes a small
+   JDK-only `main` method with the three documented examples.
+4. **Run Examples** runs that inline main, and **Debug Examples** creates a
+   temporary native Java Scratch configuration. Put a breakpoint in the solution
+   and use IntelliJ's usual stepping and variable inspection.
+5. **Check Solution** copies the saved scratch and bundled tests to a unique
+   plugin-owned workspace, then executes examples and additional correctness cases
+   with Java 17 compatibility. Read
    the **Results** tab for a summary and assertion details, or the native **Run**
    console for compiler diagnostics and process output.
 
@@ -80,9 +80,11 @@ three optional hints. The last hint discusses the intended complexity.
 
 ## Execution and storage
 
-Practice Run configurations launch the generated project's Gradle wrapper and
-target only the selected attempt. Learner code runs in child test JVMs, never
-inside the IDE. Debugging uses the native JUnit runner after Gradle import.
+Run and Debug use a temporary support module with a Java 17-or-newer SDK and a
+native Java Scratch configuration. The support module has no project content or
+plugin classpath and is disposed when the host project closes. Full checks run the
+saved scratch in a child Gradle process and child test JVMs; learner, build, and
+test code never run in the IDE process.
 
 Default limits are 5 seconds per test, 60 seconds for test execution, and a
 256 MiB test heap. Change these with **Limits** in the Practice tool window.
@@ -95,11 +97,18 @@ project build scripts run with your user permissions. Run only trusted local
 code. First use needs network access for Gradle and test dependencies; later
 runs can reuse their local caches.
 
-Solutions and tests live under `attempts/`. The project marker and each attempt's
-metadata identify plugin-created workspaces and catalog revisions. Progress,
-limits, selected attempts, and revealed hints are local IntelliJ workspace state
-in `.idea/workspace.xml`; they are not uploaded or synchronized. Per-run reports
-live under the ignored `.practice-results/` directory.
+Solutions live in IntelliJ's durable `Algorithm Practice/` scratch hierarchy.
+Scratch progress, limits, selected attempts, revealed hints, fingerprints, and
+historical passes are stored in a non-roaming application setting keyed by attempt
+ID; they are not uploaded or synchronized. Full-check workspaces, reports, and
+private Gradle homes are created below the IDE system path, marked for ownership,
+and removed after terminal runs. **Clean Support Artifacts** removes only marked,
+confirmed-inactive leftovers.
+
+Projects created by earlier plugin versions remain supported. Their attempts can
+still be listed, opened, run, and debugged after legacy Gradle import; use **Copy
+Legacy Attempt to Scratch** to create a new `NOT_RUN` scratch without changing
+the legacy files or progress.
 
 ## Development
 

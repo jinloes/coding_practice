@@ -1,8 +1,6 @@
 package com.jinloes.practice_plugin.ui;
 
 import com.intellij.execution.ExecutionException;
-import com.intellij.ide.impl.OpenProjectTask;
-import com.intellij.ide.impl.ProjectUtil;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.Disposable;
@@ -10,8 +8,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
-import com.intellij.openapi.fileChooser.FileChooser;
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -29,9 +25,11 @@ import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.run.PracticeRunner;
 import com.jinloes.practice_plugin.state.PracticeProgress;
+import com.jinloes.practice_plugin.state.ScratchPracticeProgress;
 import com.jinloes.practice_plugin.workspace.GradleWorkspaceImport;
+import com.jinloes.practice_plugin.workspace.PracticeSupportEnvironment;
 import com.jinloes.practice_plugin.workspace.PracticeWorkspace;
-import com.jinloes.practice_plugin.workspace.PracticeWorkspace.Attempt;
+import com.jinloes.practice_plugin.workspace.ScratchAttemptStore;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.DefaultListCellRenderer;
@@ -51,13 +49,28 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 final class PracticePanel extends JPanel implements Disposable {
+    private enum AttemptKind {
+        SCRATCH,
+        LEGACY
+    }
+
+    private record AttemptEntry(AttemptKind kind, String id, String exerciseId, Path solution, Path directory) {
+        private String displayName() {
+            return (kind == AttemptKind.SCRATCH ? "Scratch: " : "Legacy: ") + id;
+        }
+    }
+
     private final Project project;
-    private final PracticeProgress progress;
+    private final PracticeProgress legacyProgress;
+    private final ScratchPracticeProgress scratchProgress;
+    private final ScratchAttemptStore scratchAttempts;
     private final PracticeRunner runner;
     private final DefaultListModel<Exercise> model = new DefaultListModel<>();
     private final JBList<Exercise> exercises = new JBList<>(model);
@@ -65,7 +78,7 @@ final class PracticePanel extends JPanel implements Disposable {
     private final JComboBox<String> difficulty = new JComboBox<>();
     private final JComboBox<String> progressFilter = new JComboBox<>(new String[]{"All progress", "Passed before", "Not passed"});
     private final JBTextField search = new JBTextField();
-    private final JComboBox<Attempt> attempts = new JComboBox<>();
+    private final JComboBox<AttemptEntry> attempts = new JComboBox<>();
     private final JBTextArea statement = textArea();
     private final JBTextArea hints = textArea();
     private final JBTextArea results = textArea();
@@ -74,6 +87,7 @@ final class PracticePanel extends JPanel implements Disposable {
     private final JButton debugExamples = new JButton("Debug Examples");
     private final JButton check = new JButton("Check Solution");
     private final JButton stop = new JButton("Stop");
+    private final JButton copyLegacy = new JButton("Copy Legacy Attempt to Scratch");
     private boolean updatingAttempts;
     private boolean disposed;
     private int selectionGeneration;
@@ -81,17 +95,20 @@ final class PracticePanel extends JPanel implements Disposable {
     PracticePanel(Project project) {
         super(new BorderLayout(6, 6));
         this.project = project;
-        this.progress = PracticeProgress.get(project);
-        this.runner = project.getService(PracticeRunner.class);
+        legacyProgress = PracticeProgress.get(project);
+        scratchProgress = ScratchPracticeProgress.get();
+        scratchAttempts = new ScratchAttemptStore(project);
+        runner = project.getService(PracticeRunner.class);
         setBorder(JBUI.Borders.empty(8));
 
         JPanel header = new JPanel(new GridLayout(0, 1, 4, 4));
-        JPanel projects = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        button(projects, "Create Practice Project", this::createProject);
-        button(projects, "Open Practice Project", this::openProject);
-        button(projects, "Reload Gradle", this::reload);
-        button(projects, "Limits", this::configureLimits);
-        header.add(projects);
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        button(actions, "Limits", this::configureLimits);
+        button(actions, "Clean Support Artifacts", this::cleanSupportArtifacts);
+        if (isLegacyWorkspace()) {
+            button(actions, "Reload Legacy Gradle", this::reloadLegacy);
+        }
+        header.add(actions);
         search.getEmptyText().setText("Search exercises");
         search.getAccessibleContext().setAccessibleName("Search exercises");
         header.add(search);
@@ -113,7 +130,7 @@ final class PracticePanel extends JPanel implements Disposable {
         exercises.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                          boolean selected, boolean focus) {
+                                                           boolean selected, boolean focus) {
                 super.getListCellRendererComponent(list, value, index, selected, focus);
                 if (value instanceof Exercise exercise) {
                     setText(exercise.title() + "  [" + exercise.difficulty() + "]");
@@ -137,10 +154,10 @@ final class PracticePanel extends JPanel implements Disposable {
         attempts.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                          boolean selected, boolean focus) {
+                                                           boolean selected, boolean focus) {
                 super.getListCellRendererComponent(list, value, index, selected, focus);
-                if (value instanceof Attempt attempt) {
-                    setText(attempt.id());
+                if (value instanceof AttemptEntry attempt) {
+                    setText(attempt.displayName());
                 }
                 return this;
             }
@@ -150,24 +167,27 @@ final class PracticePanel extends JPanel implements Disposable {
         JPanel editing = new JPanel(new FlowLayout(FlowLayout.LEFT));
         button(editing, "Start / Resume", this::startOrResume);
         button(editing, "New Attempt", this::newAttempt);
+        copyLegacy.addActionListener(event -> guarded(this::copyLegacyAttempt));
+        copyLegacy.setVisible(isLegacyWorkspace());
+        editing.add(copyLegacy);
         footer.add(editing);
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        actions.add(runExamples);
-        actions.add(debugExamples);
-        actions.add(check);
-        actions.add(stop);
-        footer.add(actions);
+        JPanel executions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        executions.add(runExamples);
+        executions.add(debugExamples);
+        executions.add(check);
+        executions.add(stop);
+        footer.add(executions);
         footer.add(status);
         add(footer, BorderLayout.SOUTH);
 
-        runExamples.addActionListener(event -> guarded(() -> runner.run(selectedAttempt().id(), false)));
-        debugExamples.addActionListener(event -> guarded(() -> runner.debug(selectedAttempt().id())));
-        check.addActionListener(event -> guarded(() -> runner.run(selectedAttempt().id(), true)));
+        runExamples.addActionListener(event -> guarded(() -> runSelected(false)));
+        debugExamples.addActionListener(event -> guarded(this::debugSelected));
+        check.addActionListener(event -> guarded(() -> runSelected(true)));
         stop.addActionListener(event -> runner.stop());
         runner.setListener(text -> {
             if (!disposed) {
                 results.setText(text);
-                if (hasUnsavedAttemptFiles()) {
+                if (hasUnsavedAttemptFile()) {
                     results.append("\nSTALE: there are unsaved changes. Check again after saving.");
                 }
                 results.setCaretPosition(0);
@@ -189,15 +209,18 @@ final class PracticePanel extends JPanel implements Disposable {
         difficulty.addActionListener(event -> filter());
         progressFilter.addActionListener(event -> filter());
         search.getDocument().addDocumentListener(new DocumentAdapter() {
-            @Override protected void textChanged(@NotNull javax.swing.event.DocumentEvent event) {
+            @Override
+            protected void textChanged(@NotNull javax.swing.event.DocumentEvent event) {
                 filter();
             }
         });
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
-            @Override public void documentChanged(@NotNull DocumentEvent event) {
-                Attempt attempt = (Attempt) attempts.getSelectedItem();
+            @Override
+            public void documentChanged(@NotNull DocumentEvent event) {
+                AttemptEntry attempt = selectedAttemptOrNull();
                 var file = FileDocumentManager.getInstance().getFile(event.getDocument());
-                if (attempt != null && file != null && relevantFile(Path.of(file.getPath()), attempt)) {
+                if (attempt != null && file != null
+                        && Path.of(file.getPath()).toAbsolutePath().normalize().equals(attempt.solution())) {
                     status.setText("Edited since displayed result; check again.");
                 }
             }
@@ -210,8 +233,7 @@ final class PracticePanel extends JPanel implements Disposable {
         model.clear();
         String query = search.getText().toLowerCase(Locale.ROOT);
         for (Exercise exercise : ExerciseCatalog.all()) {
-            boolean passed = progress.getState().attempts.values().stream()
-                    .anyMatch(entry -> entry.exerciseId.equals(exercise.id()) && !entry.lastPassedAt.isEmpty());
+            boolean passed = hasHistoricalPass(exercise.id());
             if ((topic.getSelectedIndex() == 0 || exercise.topic().equals(topic.getSelectedItem()))
                     && (difficulty.getSelectedIndex() == 0 || exercise.difficulty().equals(difficulty.getSelectedItem()))
                     && (progressFilter.getSelectedIndex() == 0 || passed == (progressFilter.getSelectedIndex() == 1))
@@ -226,6 +248,13 @@ final class PracticePanel extends JPanel implements Disposable {
         }
     }
 
+    private boolean hasHistoricalPass(String exerciseId) {
+        return scratchProgress.getState().attempts.values().stream()
+                .anyMatch(entry -> entry.exerciseId.equals(exerciseId) && !entry.lastPassedAt.isEmpty())
+                || legacyProgress.getState().attempts.values().stream()
+                .anyMatch(entry -> entry.exerciseId.equals(exerciseId) && !entry.lastPassedAt.isEmpty());
+    }
+
     private void showExercise() {
         int generation = ++selectionGeneration;
         Exercise exercise = exercises.getSelectedValue();
@@ -237,45 +266,65 @@ final class PracticePanel extends JPanel implements Disposable {
         hints.setText("Start or resume an attempt to reveal hints.");
         results.setText("");
         updateButtons();
-        if (exercise != null && isWorkspace()) {
-            background("Loading practice attempts", () -> PracticeWorkspace.attempts(root(), exercise.id()), loaded -> {
+        if (exercise != null) {
+            background("Loading practice attempts", () -> loadAttempts(exercise), loaded -> {
                 if (generation == selectionGeneration && exercise.equals(exercises.getSelectedValue())) {
                     updatingAttempts = true;
                     loaded.forEach(attempts::addItem);
-                    String selected = progress.getState().selectedAttempts.get(exercise.id());
-                    loaded.stream().filter(attempt -> attempt.id().equals(selected)).findFirst()
+                    String selected = scratchProgress.getState().selectedAttempts.get(exercise.id());
+                    if (selected == null) {
+                        selected = legacyProgress.getState().selectedAttempts.get(exercise.id());
+                    }
+                    String selectedId = selected;
+                    loaded.stream().filter(attempt -> attempt.id().equals(selectedId)).findFirst()
                             .ifPresent(attempts::setSelectedItem);
                     updatingAttempts = false;
                     showAttempt();
                 }
             });
-        } else {
-            status.setText("Create or open a dedicated practice project to begin.");
         }
     }
 
+    private List<AttemptEntry> loadAttempts(Exercise exercise) throws IOException {
+        List<AttemptEntry> loaded = new ArrayList<>();
+        for (ScratchAttemptStore.Attempt attempt : scratchAttempts.attempts(exercise.id())) {
+            loaded.add(new AttemptEntry(AttemptKind.SCRATCH, attempt.id(), attempt.exerciseId(),
+                    attempt.solution(), attempt.directory()));
+        }
+        if (isLegacyWorkspace()) {
+            for (PracticeWorkspace.Attempt attempt : PracticeWorkspace.attempts(root(), exercise.id())) {
+                loaded.add(new AttemptEntry(AttemptKind.LEGACY, attempt.id(), attempt.exerciseId(),
+                        attempt.solution(), attempt.directory()));
+            }
+        }
+        return List.copyOf(loaded);
+    }
+
     private void showAttempt() {
-        Attempt attempt = (Attempt) attempts.getSelectedItem();
+        AttemptEntry attempt = selectedAttemptOrNull();
         Exercise exercise = exercises.getSelectedValue();
         updateButtons();
         if (attempt == null || exercise == null) {
-            status.setText("Choose Start / Resume to create your first attempt.");
+            status.setText("Choose Start / Resume to create your first scratch attempt.");
             return;
         }
-        progress.getState().selectedAttempts.put(exercise.id(), attempt.id());
-        var entry = progress.entry(attempt.id(), exercise.id());
+        selectAttempt(attempt, exercise);
+        int hintsRevealed = hintsRevealed(attempt, exercise);
         hints.setText(String.join("\n\n", exercise.hints().subList(0,
-                Math.min(entry.hintsRevealed, exercise.hints().size()))));
+                Math.min(hintsRevealed, exercise.hints().size()))));
         if (hints.getText().isEmpty()) {
             hints.setText("Hints are optional. Reveal one only when you want help.");
         }
-        status.setText("Attempt ready. " + entry.status);
-        results.setText(entry.status + "\n" + entry.details + "\nLast full check: " + entry.checkedAt
-                + "\nMost recent pass: " + entry.lastPassedAt);
-        if (!entry.checkedFingerprint.isEmpty()) {
-            background("Checking result freshness", () -> PracticeWorkspace.fingerprint(root(), attempt), hash -> {
-                if (attempt.equals(attempts.getSelectedItem())
-                        && (!hash.equals(entry.checkedFingerprint) || hasUnsavedAttemptFiles())) {
+        status.setText((attempt.kind() == AttemptKind.SCRATCH ? "Scratch" : "Legacy") + " attempt ready. "
+                + status(attempt, exercise));
+        results.setText(status(attempt, exercise) + "\n" + details(attempt, exercise)
+                + "\nLast full check: " + checkedAt(attempt, exercise)
+                + "\nMost recent pass: " + lastPassedAt(attempt, exercise));
+        String checkedFingerprint = checkedFingerprint(attempt, exercise);
+        if (!checkedFingerprint.isEmpty()) {
+            background("Checking result freshness", () -> fingerprint(attempt), hash -> {
+                if (attempt.equals(selectedAttemptOrNull())
+                        && (!hash.equals(checkedFingerprint) || hasUnsavedAttemptFile())) {
                     status.setText("Edited since last check; previous result is stale.");
                     results.append("\nSTALE: check the current files again.");
                 }
@@ -284,8 +333,7 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private void startOrResume() throws IOException {
-        requireWorkspace();
-        Attempt selected = (Attempt) attempts.getSelectedItem();
+        AttemptEntry selected = selectedAttemptOrNull();
         if (selected == null) {
             newAttempt();
         } else {
@@ -294,7 +342,6 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private void newAttempt() throws IOException {
-        requireWorkspace();
         if (runner.isRunning()) {
             throw new IOException("Stop the active run before creating another attempt.");
         }
@@ -302,19 +349,43 @@ final class PracticePanel extends JPanel implements Disposable {
         if (exercise == null) {
             throw new IOException("Select an exercise first.");
         }
-        background("Creating practice attempt", () -> PracticeWorkspace.createAttempt(root(), exercise), attempt -> {
-            progress.getState().selectedAttempts.put(exercise.id(), attempt.id());
+        background("Creating scratch attempt", () -> scratchAttempts.create(exercise), attempt -> {
+            AttemptEntry entry = scratchEntry(attempt);
+            scratchProgress.getState().selectedAttempts.put(exercise.id(), attempt.id());
             if (exercise.equals(exercises.getSelectedValue())) {
-                attempts.addItem(attempt);
-                attempts.setSelectedItem(attempt);
+                attempts.addItem(entry);
+                attempts.setSelectedItem(entry);
             }
-            openSolution(attempt);
-            reload();
+            openSolution(entry);
         });
     }
 
-    private void openSolution(Attempt attempt) {
+    private void copyLegacyAttempt() throws IOException {
+        AttemptEntry selected = selectedAttempt();
+        if (selected.kind() != AttemptKind.LEGACY) {
+            throw new IOException("Select a legacy attempt to copy it to a scratch.");
+        }
+        Exercise exercise = exercises.getSelectedValue();
+        PracticeWorkspace.Attempt legacy = PracticeWorkspace.readAttempt(root(), selected.id());
+        background("Copying legacy attempt to scratch", () -> scratchAttempts.copyLegacy(root(), legacy), copied -> {
+            AttemptEntry entry = scratchEntry(copied);
+            scratchProgress.getState().selectedAttempts.put(exercise.id(), copied.id());
+            attempts.insertItemAt(entry, 0);
+            attempts.setSelectedItem(entry);
+            openSolution(entry);
+        });
+    }
+
+    private void openSolution(AttemptEntry attempt) {
         background("Opening solution", () -> {
+            if (attempt.kind() == AttemptKind.SCRATCH) {
+                try {
+                    PracticeSupportEnvironment.get(project).module();
+                } catch (ExecutionException exception) {
+                    throw new IOException("Cannot prepare Java support for the scratch: "
+                            + exception.getMessage(), exception);
+                }
+            }
             var file = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(attempt.solution());
             if (file == null) {
                 throw new IOException("Solution file is missing: " + attempt.solution());
@@ -324,87 +395,72 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private void revealHint() throws IOException {
-        Attempt attempt = selectedAttempt();
+        AttemptEntry attempt = selectedAttempt();
         Exercise exercise = exercises.getSelectedValue();
-        var entry = progress.entry(attempt.id(), exercise.id());
-        entry.hintsRevealed = Math.min(entry.hintsRevealed + 1, exercise.hints().size());
+        if (attempt.kind() == AttemptKind.SCRATCH) {
+            var entry = scratchProgress.entry(attempt.id(), exercise.id());
+            entry.hintsRevealed = Math.min(entry.hintsRevealed + 1, exercise.hints().size());
+        } else {
+            var entry = legacyProgress.entry(attempt.id(), exercise.id());
+            entry.hintsRevealed = Math.min(entry.hintsRevealed + 1, exercise.hints().size());
+        }
         showAttempt();
     }
 
-    private void createProject() {
-        var parent = FileChooser.chooseFile(FileChooserDescriptorFactory.createSingleFolderDescriptor()
-                .withTitle("Choose Parent Directory for New Practice Project"), project, null);
-        if (parent == null) {
-            return;
-        }
-        String name = Messages.showInputDialog(project, "New directory name:", "Create Practice Project",
-                null, "algorithm-practice", null);
-        if (name == null) {
-            return;
-        }
-        if (!name.matches("[a-zA-Z0-9][a-zA-Z0-9_-]*")) {
-            error("Use a directory name containing letters, digits, hyphens, or underscores.");
-            return;
-        }
-        Path destination = Path.of(parent.getPath()).resolve(name);
-        background("Creating practice project", () -> {
-            PracticeWorkspace.create(destination);
-            return destination;
-        }, this::openPracticeProject);
-    }
-
-    private void openProject() {
-        var folder = FileChooser.chooseFile(FileChooserDescriptorFactory.createSingleFolderDescriptor()
-                .withTitle("Open Plugin-Created Practice Project"), project, null);
-        if (folder != null) {
-            Path destination = Path.of(folder.getPath());
-            if (!PracticeWorkspace.isWorkspace(destination)) {
-                error("This is not a plugin-created practice project.");
-            } else {
-                openPracticeProject(destination);
-            }
+    private void runSelected(boolean full) throws IOException, ExecutionException {
+        AttemptEntry attempt = selectedAttempt();
+        if (attempt.kind() == AttemptKind.SCRATCH) {
+            runner.runScratch(attempt.id(), full);
+        } else {
+            runner.runLegacy(attempt.id(), full);
         }
     }
 
-    private void openPracticeProject(Path path) {
-        background("Opening practice project", () -> {
-            Project opened = ProjectUtil.openOrImport(path.toRealPath(), OpenProjectTask.build().withForceOpenInNewFrame(true));
-            if (opened == null) {
-                throw new IOException("Project opening was cancelled or failed. Open " + path + " from File > Open.");
-            }
-            return opened;
-        }, opened -> GradleWorkspaceImport.refresh(opened, success -> {
-            if (!success) {
-                NotificationGroupManager.getInstance().getNotificationGroup("Algorithm Practice")
-                        .createNotification("Gradle import failed. Configure a JDK 17+ and retry Reload Gradle.",
-                                NotificationType.ERROR).notify(opened);
-            }
-        }));
+    private void debugSelected() throws IOException, ExecutionException {
+        AttemptEntry attempt = selectedAttempt();
+        if (attempt.kind() == AttemptKind.SCRATCH) {
+            runner.debugScratch(attempt.id());
+        } else {
+            runner.debugLegacy(attempt.id());
+        }
     }
 
-    private void reload() {
-        if (!isWorkspace()) {
-            error("Open a plugin-created practice project first.");
+    private void reloadLegacy() {
+        if (!isLegacyWorkspace()) {
             return;
         }
         if (runner.isRunning()) {
             error("Stop the active practice run before reloading Gradle.");
             return;
         }
-        status.setText("Importing Gradle project...");
+        status.setText("Importing legacy Gradle project...");
         GradleWorkspaceImport.refresh(project, success -> ApplicationManager.getApplication().invokeLater(() -> {
             if (!disposed) {
-                status.setText(success ? "Gradle imported. Ready to code and debug."
-                        : "Import failed. See Build output; configure a JDK 17+ and retry.");
+                status.setText(success ? "Legacy Gradle project imported."
+                        : "Legacy import failed. See Build output and retry.");
             }
         }));
     }
 
+    private void cleanSupportArtifacts() {
+        if (PracticeSupportEnvironment.get(project).cleanupAbandonedArtifacts()) {
+            status.setText("Removed inactive verification support artifacts.");
+        } else {
+            error("Stop the active practice run before cleaning support artifacts.");
+        }
+    }
+
     private void configureLimits() {
-        var data = progress.getState();
-        JSpinner perTest = new JSpinner(new SpinnerNumberModel(data.testSeconds, 1, 300, 1));
-        JSpinner perSuite = new JSpinner(new SpinnerNumberModel(data.suiteSeconds, 1, 1800, 5));
-        JSpinner heap = new JSpinner(new SpinnerNumberModel(data.heapMb, 64, 2048, 64));
+        AttemptEntry selected = selectedAttemptOrNull();
+        int testSeconds = selected != null && selected.kind() == AttemptKind.LEGACY
+                ? legacyProgress.getState().testSeconds : scratchProgress.getState().testSeconds;
+        int suiteSeconds = selected != null && selected.kind() == AttemptKind.LEGACY
+                ? legacyProgress.getState().suiteSeconds : scratchProgress.getState().suiteSeconds;
+        int heapMb = selected != null && selected.kind() == AttemptKind.LEGACY
+                ? legacyProgress.getState().heapMb : scratchProgress.getState().heapMb;
+        JSpinner perTest = new JSpinner(new SpinnerNumberModel(testSeconds, 1, 300, 1));
+        JSpinner perSuite = new JSpinner(new SpinnerNumberModel(suiteSeconds, 1, 1800, 5));
+        JSpinner heap = new JSpinner(new SpinnerNumberModel(heapMb, 64, 2048, 64));
         JPanel fields = new JPanel(new GridLayout(0, 2, 8, 8));
         fields.add(new JLabel("Seconds per test")); fields.add(perTest);
         fields.add(new JLabel("Seconds per suite")); fields.add(perSuite);
@@ -419,55 +475,114 @@ final class PracticePanel extends JPanel implements Disposable {
             }
         };
         if (dialog.showAndGet()) {
-            data.testSeconds = (int) perTest.getValue();
-            data.suiteSeconds = (int) perSuite.getValue();
-            data.heapMb = (int) heap.getValue();
+            if (selected != null && selected.kind() == AttemptKind.LEGACY) {
+                legacyProgress.getState().testSeconds = (int) perTest.getValue();
+                legacyProgress.getState().suiteSeconds = (int) perSuite.getValue();
+                legacyProgress.getState().heapMb = (int) heap.getValue();
+            } else {
+                scratchProgress.getState().testSeconds = (int) perTest.getValue();
+                scratchProgress.getState().suiteSeconds = (int) perSuite.getValue();
+                scratchProgress.getState().heapMb = (int) heap.getValue();
+            }
         }
     }
 
     private void updateButtons() {
-        boolean ready = attempts.getSelectedItem() != null && !runner.isRunning();
+        AttemptEntry attempt = selectedAttemptOrNull();
+        boolean ready = attempt != null && !runner.isRunning();
         runExamples.setEnabled(ready);
         debugExamples.setEnabled(ready);
         check.setEnabled(ready);
         stop.setEnabled(runner.isRunning());
+        copyLegacy.setEnabled(ready && attempt.kind() == AttemptKind.LEGACY);
     }
 
-    private boolean hasUnsavedAttemptFiles() {
-        Attempt attempt = (Attempt) attempts.getSelectedItem();
+    private boolean hasUnsavedAttemptFile() {
+        AttemptEntry attempt = selectedAttemptOrNull();
         if (attempt == null) {
             return false;
         }
         for (var document : FileDocumentManager.getInstance().getUnsavedDocuments()) {
             var file = FileDocumentManager.getInstance().getFile(document);
-            if (file != null && relevantFile(Path.of(file.getPath()), attempt)) {
+            if (file != null && Path.of(file.getPath()).toAbsolutePath().normalize().equals(attempt.solution())) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean relevantFile(Path file, Attempt attempt) {
-        return file.startsWith(attempt.directory()) || file.equals(root().resolve("build.gradle"))
-                || file.equals(root().resolve("settings.gradle"));
-    }
-
-    private Attempt selectedAttempt() throws IOException {
-        Attempt attempt = (Attempt) attempts.getSelectedItem();
+    private AttemptEntry selectedAttempt() throws IOException {
+        AttemptEntry attempt = selectedAttemptOrNull();
         if (attempt == null) {
             throw new IOException("Start or resume an attempt first.");
         }
         return attempt;
     }
 
-    private boolean isWorkspace() {
-        return project.getBasePath() != null && PracticeWorkspace.isWorkspace(root());
+    private AttemptEntry selectedAttemptOrNull() {
+        return (AttemptEntry) attempts.getSelectedItem();
     }
 
-    private void requireWorkspace() throws IOException {
-        if (!isWorkspace()) {
-            throw new IOException("Create or open a dedicated practice project first.");
+    private void selectAttempt(AttemptEntry attempt, Exercise exercise) {
+        if (attempt.kind() == AttemptKind.SCRATCH) {
+            scratchProgress.getState().selectedAttempts.put(exercise.id(), attempt.id());
+        } else {
+            legacyProgress.getState().selectedAttempts.put(exercise.id(), attempt.id());
         }
+    }
+
+    private int hintsRevealed(AttemptEntry attempt, Exercise exercise) {
+        return attempt.kind() == AttemptKind.SCRATCH
+                ? scratchProgress.entry(attempt.id(), exercise.id()).hintsRevealed
+                : legacyProgress.entry(attempt.id(), exercise.id()).hintsRevealed;
+    }
+
+    private String status(AttemptEntry attempt, Exercise exercise) {
+        return attempt.kind() == AttemptKind.SCRATCH
+                ? scratchProgress.entry(attempt.id(), exercise.id()).status
+                : legacyProgress.entry(attempt.id(), exercise.id()).status;
+    }
+
+    private String details(AttemptEntry attempt, Exercise exercise) {
+        return attempt.kind() == AttemptKind.SCRATCH
+                ? scratchProgress.entry(attempt.id(), exercise.id()).details
+                : legacyProgress.entry(attempt.id(), exercise.id()).details;
+    }
+
+    private String checkedAt(AttemptEntry attempt, Exercise exercise) {
+        return attempt.kind() == AttemptKind.SCRATCH
+                ? scratchProgress.entry(attempt.id(), exercise.id()).checkedAt
+                : legacyProgress.entry(attempt.id(), exercise.id()).checkedAt;
+    }
+
+    private String lastPassedAt(AttemptEntry attempt, Exercise exercise) {
+        return attempt.kind() == AttemptKind.SCRATCH
+                ? scratchProgress.entry(attempt.id(), exercise.id()).lastPassedAt
+                : legacyProgress.entry(attempt.id(), exercise.id()).lastPassedAt;
+    }
+
+    private String checkedFingerprint(AttemptEntry attempt, Exercise exercise) {
+        return attempt.kind() == AttemptKind.SCRATCH
+                ? scratchProgress.entry(attempt.id(), exercise.id()).checkedFingerprint
+                : legacyProgress.entry(attempt.id(), exercise.id()).checkedFingerprint;
+    }
+
+    private String fingerprint(AttemptEntry attempt) throws IOException {
+        if (attempt.kind() == AttemptKind.SCRATCH) {
+            return scratchAttempts.fingerprint(new ScratchAttemptStore.Attempt(
+                    attempt.id(), attempt.exerciseId(), ScratchAttemptStore.REVISION, attempt.solution()));
+        }
+        return PracticeWorkspace.fingerprint(root(), new PracticeWorkspace.Attempt(
+                attempt.id(), attempt.exerciseId(), PracticeWorkspace.REVISION, attempt.directory()));
+    }
+
+    private AttemptEntry scratchEntry(ScratchAttemptStore.Attempt attempt) {
+        return new AttemptEntry(AttemptKind.SCRATCH, attempt.id(), attempt.exerciseId(),
+                attempt.solution(), attempt.directory());
+    }
+
+    private boolean isLegacyWorkspace() {
+        return project.getBasePath() != null && PracticeWorkspace.isWorkspace(root());
     }
 
     private Path root() {
@@ -529,16 +644,19 @@ final class PracticePanel extends JPanel implements Disposable {
                 .createNotification(text, NotificationType.ERROR).notify(project);
     }
 
-    @Override public void dispose() {
+    @Override
+    public void dispose() {
         disposed = true;
         runner.setListener(ignored -> {});
     }
 
-    @FunctionalInterface private interface Action {
+    @FunctionalInterface
+    private interface Action {
         void run() throws IOException, ExecutionException;
     }
 
-    @FunctionalInterface private interface IoTask<T> {
+    @FunctionalInterface
+    private interface IoTask<T> {
         T run() throws IOException;
     }
 }

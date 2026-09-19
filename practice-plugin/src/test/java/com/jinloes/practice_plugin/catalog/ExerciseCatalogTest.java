@@ -138,6 +138,27 @@ class ExerciseCatalogTest {
         }
     }
 
+    @Test
+    void starterMainsCompileWithRelease17AndDescribeThreeInlineExamples() throws Exception {
+        for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
+            Path root = Files.createTempDirectory(Path.of("build"), "catalog-main-" + exercise.id() + "-");
+            try {
+                Path sourceRoot = root.resolve("src/com/jinloes/practice");
+                Path classes = root.resolve("classes");
+                Files.createDirectories(sourceRoot);
+                Files.createDirectories(classes);
+                String source = ExerciseCatalog.resource(exercise, "Solution.java");
+                Files.writeString(sourceRoot.resolve("Solution.java"), source, StandardCharsets.UTF_8);
+
+                compile(List.of(sourceRoot.resolve("Solution.java")), classes, exercise.id() + " starter main");
+
+                assertThat(source).contains("public static void main(String[] args)", "Examples passed: 3");
+            } finally {
+                deleteTree(root);
+            }
+        }
+    }
+
     private static String referenceSource(ExerciseCatalog.Exercise exercise) throws IOException {
         String path = "/reference/" + exercise.id() + "/Solution.java";
         try (var input = ExerciseCatalogTest.class.getResourceAsStream(path)) {
