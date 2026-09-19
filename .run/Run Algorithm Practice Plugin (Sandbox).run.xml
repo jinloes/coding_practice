@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Algorithm Practice Plugin (Sandbox)" type="ShConfigurationType">
+    <option name="SCRIPT_TEXT" value="" />
+    <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/practice-plugin/gradlew" />
+    <option name="SCRIPT_OPTIONS" value="-p &quot;$PROJECT_DIR$/practice-plugin&quot; -Dorg.gradle.java.home=&quot;/Applications/IntelliJ IDEA.app/Contents/jbr/Contents/Home&quot; -PidePath=&quot;/Applications/IntelliJ IDEA.app&quot; runIde --console=plain" />
+    <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$/practice-plugin" />
+    <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+    <option name="INTERPRETER_PATH" value="/bin/zsh" />
+    <option name="EXECUTE_IN_TERMINAL" value="false" />
+    <option name="EXECUTE_SCRIPT_FILE" value="true" />
+    <envs>
+      <env name="JAVA_HOME" value="/Applications/IntelliJ IDEA.app/Contents/jbr/Contents/Home" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

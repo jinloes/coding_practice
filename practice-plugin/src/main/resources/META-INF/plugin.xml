@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>com.jinloes.practice</id>
+    <name>Algorithm Practice</name>
+    <vendor>jinloes</vendor>
+    <description><![CDATA[
+      Practice original algorithm and data-structure exercises in Java, with local
+      correctness checks, native debugging, progressive hints, and saved progress.
+      Runs trusted learner code locally; not a security sandbox or online judge.
+    ]]></description>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+    <depends>com.intellij.gradle</depends>
+    <depends>org.jetbrains.plugins.gradle</depends>
+    <depends>JUnit</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Practice" anchor="right"
+                    factoryClass="com.jinloes.practice_plugin.ui.PracticeToolWindowFactory"/>
+        <notificationGroup id="Algorithm Practice" displayType="BALLOON"/>
+        <configurationType implementation="com.jinloes.practice_plugin.run.PracticeConfigurationType"/>
+    </extensions>
+</idea-plugin>

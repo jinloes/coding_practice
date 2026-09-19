@@ -14,3 +14,8 @@ gradlew*
 **/.project
 .vscode/
 *.code-workspace
+!practice-plugin/gradlew
+!practice-plugin/gradlew.bat
+!practice-plugin/gradle/
+!practice-plugin/src/main/java/com/jinloes/practice_plugin/workspace/GradleWorkspaceImport.java
+practice-plugin/.intellijPlatform/

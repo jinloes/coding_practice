@@ -68,6 +68,14 @@ gradle :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
 - On macOS, tests expect `libpcre2-8.dylib` from Homebrew
 - The module includes a `checkPcre2` task to verify or install `pcre2` before tests run
 
+## IntelliJ Practice Plugin
+
+[`practice-plugin/`](practice-plugin/README.md) is an independent IntelliJ IDEA
+plugin build for practicing original Java algorithm and data-structure exercises.
+It presents problems and hints, creates a separate practice project, and supports
+local correctness checks, native debugging, and saved progress. It is intentionally
+not included in the root multi-module build.
+
 ## Project Layout
 
 - Root `build.gradle` centralizes shared dependency management and test configuration

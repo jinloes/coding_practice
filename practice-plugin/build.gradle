@@ -1,0 +1,72 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij.platform' version '2.19.0'
+}
+
+group = 'com.jinloes.coding_practice'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+dependencies {
+    intellijPlatform {
+        if (providers.gradleProperty('idePath').isPresent()) {
+            local(providers.gradleProperty('idePath').get())
+        } else {
+            intellijIdea('2026.2.3')
+        }
+        bundledPlugins('com.intellij.java', 'com.intellij.gradle', 'org.jetbrains.plugins.gradle', 'JUnit')
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform.INSTANCE)
+    }
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
+    // The IDE fixture bootstrap references legacy TestCase; authored tests remain Jupiter.
+    testRuntimeOnly('junit:junit:4.13.2') {
+        transitive = false
+    }
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        name = 'Algorithm Practice'
+        ideaVersion {
+            sinceBuild = '262.10968.63'
+            untilBuild = '262.*'
+        }
+        pluginVerification {
+            ides {
+                current()
+            }
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty 'practice.test.classpath', sourceSets.test.runtimeClasspath.asPath
+    systemProperty 'idea.load.plugins.id', 'com.jinloes.practice'
+}
+
+tasks.named('wrapper') {
+    gradleVersion = '9.3.1'
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+tasks.named('processResources') {
+    from('gradlew') { into 'bootstrap' }
+    from('gradlew.bat') { into 'bootstrap' }
+    from('gradle/wrapper') { into 'bootstrap/gradle/wrapper' }
+}
