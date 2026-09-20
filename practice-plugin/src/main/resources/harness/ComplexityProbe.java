@@ -37,6 +37,7 @@ public final class ComplexityProbe {
                 measurements.append("size=").append(size)
                         .append(" nanos=").append(measurement.nanos())
                         .append(" bytes=").append(measurement.bytes())
+                        .append(" rawNanos=").append(measurement.rawNanos())
                         .append("\n");
                 completed++;
             }
@@ -66,6 +67,7 @@ public final class ComplexityProbe {
     private static Measurement measure(int size) {
         long units = Math.max(1, Workload.units(size));
         List<Long> times = new ArrayList<>();
+        List<Long> rawTimes = new ArrayList<>();
         List<Long> allocations = new ArrayList<>();
         for (int repetition = 0; repetition < MEASURED_REPETITIONS; repetition++) {
             Object state = Workload.prepare(size);
@@ -75,10 +77,11 @@ public final class ComplexityProbe {
             long elapsed = System.nanoTime() - started;
             long allocatedAfter = allocatedBytes();
             times.add(elapsed / units);
+            rawTimes.add(elapsed);
             allocations.add(allocatedBefore < 0 || allocatedAfter < 0
                     ? -1 : Math.max(0, allocatedAfter - allocatedBefore) / units);
         }
-        return new Measurement(median(times), median(allocations));
+        return new Measurement(median(times), median(allocations), median(rawTimes));
     }
 
     private static long median(List<Long> values) {
@@ -100,6 +103,6 @@ public final class ComplexityProbe {
         return -1;
     }
 
-    private record Measurement(long nanos, long bytes) {
+    private record Measurement(long nanos, long bytes, long rawNanos) {
     }
 }

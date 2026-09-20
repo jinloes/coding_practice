@@ -17,8 +17,14 @@ public final class ComplexityAnalysis {
     private static final String SCHEMA = "1";
     private static final long MAX_FILE_BYTES = 64_000;
     private static final int MIN_SAMPLES = 3;
-    /** Below this, per-unit timings are dominated by call overhead and timer granularity. */
-    private static final long MIN_TRUSTED_NANOS = 2_000;
+    /**
+     * Below this <em>total</em> measured wall-clock time for one call, timer resolution and
+     * scheduling jitter dominate the reading. A tiny per-unit value is trustworthy once the raw
+     * call it was divided down from cleared this bar; dividing a reliably measured call by a large
+     * unit count can legitimately produce a small per-unit number, and that is not the same failure
+     * as the call itself being too brief to time.
+     */
+    private static final long MIN_TRUSTED_RAW_NANOS = 50_000;
     /** Below this, allocation is bookkeeping noise rather than a data structure. */
     private static final long CONSTANT_SPACE_BYTES = 8_192;
 
@@ -71,8 +77,10 @@ public final class ComplexityAnalysis {
 
     static ComplexityReport classify(String unit, List<ComplexityReport.Sample> samples, String message) {
         List<Long> times = samples.stream().map(ComplexityReport.Sample::nanos).toList();
+        List<Long> rawTimes = samples.stream().map(ComplexityReport.Sample::rawNanos).toList();
         List<Long> allocations = samples.stream().map(ComplexityReport.Sample::bytes).toList();
-        String timeClass = samples.size() < MIN_SAMPLES || max(times) < MIN_TRUSTED_NANOS
+        boolean tooBriefToTrust = samples.size() < MIN_SAMPLES || max(rawTimes) < MIN_TRUSTED_RAW_NANOS;
+        String timeClass = tooBriefToTrust
                 ? ComplexityReport.INCONCLUSIVE
                 : growth(doublingRatios(samples, times));
         String spaceClass;
@@ -87,8 +95,8 @@ public final class ComplexityAnalysis {
         }
         String note = message;
         if (ComplexityReport.INCONCLUSIVE.equals(timeClass) && samples.size() >= MIN_SAMPLES
-                && max(times) < MIN_TRUSTED_NANOS) {
-            note = join(note, "Each unit of work was too fast to time reliably.");
+                && max(rawTimes) < MIN_TRUSTED_RAW_NANOS) {
+            note = join(note, "Each measured call was too brief to time reliably.");
         }
         return new ComplexityReport(unit, timeClass, spaceClass, samples, note);
     }
@@ -147,6 +155,7 @@ public final class ComplexityAnalysis {
         int size = 0;
         long nanos = -1;
         long bytes = -1;
+        long rawNanos = -1;
         for (String field : line.split("\\s+")) {
             int split = field.indexOf('=');
             if (split < 0) {
@@ -159,15 +168,16 @@ public final class ComplexityAnalysis {
                     case "size" -> size = Integer.parseInt(raw);
                     case "nanos" -> nanos = Long.parseLong(raw);
                     case "bytes" -> bytes = Long.parseLong(raw);
+                    case "rawNanos" -> rawNanos = Long.parseLong(raw);
                     default -> { }
                 }
             } catch (NumberFormatException exception) {
                 throw new IOException("Invalid complexity measurement: " + line, exception);
             }
         }
-        if (size <= 0 || nanos < 0) {
+        if (size <= 0 || nanos < 0 || rawNanos < 0) {
             throw new IOException("Incomplete complexity measurement: " + line);
         }
-        return new ComplexityReport.Sample(size, nanos, bytes);
+        return new ComplexityReport.Sample(size, nanos, bytes, rawNanos);
     }
 }

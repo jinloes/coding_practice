@@ -98,8 +98,10 @@ three optional hints. The last hint discusses the intended complexity.
   times the solution on doubling inputs and counts bytes allocated, so it
   describes observed growth on this machine under its current load, not a proof
   of complexity. Timing at these sizes cannot separate O(1) from O(log n) or
-  O(n) from O(n log n), so those are reported as one range. Noisy or
-  sub-microsecond measurements are reported as inconclusive rather than guessed.
+  O(n) from O(n log n), so those are reported as one range. A per-operation
+  time can be legitimately tiny for a fast solution; only a measured call whose
+  own total wall-clock time was too brief for the timer to trust is reported
+  as inconclusive rather than guessed, and the same applies to noisy readings.
 - No LeetCode account, scraping, remote submission, AI service, or telemetry is
   involved. Statements and tests are original content bundled with the plugin.
 

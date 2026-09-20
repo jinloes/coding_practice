@@ -14,10 +14,10 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=call
-                size=1000 nanos=100000 bytes=40000
-                size=2000 nanos=200000 bytes=80000
-                size=4000 nanos=400000 bytes=160000
-                size=8000 nanos=800000 bytes=320000
+                size=1000 nanos=100000 bytes=40000 rawNanos=100000
+                size=2000 nanos=200000 bytes=80000 rawNanos=200000
+                size=4000 nanos=400000 bytes=160000 rawNanos=400000
+                size=8000 nanos=800000 bytes=320000 rawNanos=800000
                 message=
                 status=ok
                 """);
@@ -35,10 +35,10 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=call
-                size=1000 nanos=1000000 bytes=0
-                size=2000 nanos=4000000 bytes=0
-                size=4000 nanos=16000000 bytes=0
-                size=8000 nanos=64000000 bytes=0
+                size=1000 nanos=1000000 bytes=0 rawNanos=1000000
+                size=2000 nanos=4000000 bytes=0 rawNanos=4000000
+                size=4000 nanos=16000000 bytes=0 rawNanos=16000000
+                size=8000 nanos=64000000 bytes=0 rawNanos=64000000
                 status=ok
                 """);
 
@@ -52,10 +52,10 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=search
-                size=4096 nanos=20000 bytes=0
-                size=8192 nanos=21000 bytes=0
-                size=16384 nanos=22000 bytes=0
-                size=32768 nanos=23000 bytes=0
+                size=4096 nanos=20000 bytes=0 rawNanos=200000
+                size=8192 nanos=21000 bytes=0 rawNanos=210000
+                size=16384 nanos=22000 bytes=0 rawNanos=220000
+                size=32768 nanos=23000 bytes=0 rawNanos=230000
                 status=ok
                 """);
 
@@ -69,14 +69,32 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=operation
-                size=1000 nanos=30 bytes=0
-                size=2000 nanos=31 bytes=0
-                size=4000 nanos=90 bytes=0
+                size=1000 nanos=30 bytes=0 rawNanos=30
+                size=2000 nanos=31 bytes=0 rawNanos=31
+                size=4000 nanos=90 bytes=0 rawNanos=90
                 status=ok
                 """);
 
         assertThat(report.timeClass()).isEqualTo(ComplexityReport.INCONCLUSIVE);
-        assertThat(report.note()).contains("too fast to time reliably");
+        assertThat(report.note()).contains("too brief to time reliably");
+    }
+
+    @Test
+    void aTinyPerUnitValueFromALargeUnitCountIsNotTreatedAsUnreliable() throws Exception {
+        ComplexityReport report = parse("""
+                schema=1
+                unit=operation
+                size=4096 nanos=2 bytes=0 rawNanos=100000
+                size=8192 nanos=2 bytes=0 rawNanos=200000
+                size=16384 nanos=2 bytes=0 rawNanos=400000
+                size=32768 nanos=2 bytes=0 rawNanos=800000
+                status=ok
+                """);
+
+        assertThat(report.timeClass())
+                .as("a call that ran long enough to trust must not be inconclusive just because "
+                        + "dividing by a large unit count made the per-unit value tiny")
+                .isEqualTo("O(1) or O(log n)");
     }
 
     @Test
@@ -84,10 +102,10 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=call
-                size=1000 nanos=1000000 bytes=0
-                size=2000 nanos=20000000 bytes=0
-                size=4000 nanos=22000000 bytes=0
-                size=8000 nanos=25000000 bytes=0
+                size=1000 nanos=1000000 bytes=0 rawNanos=1000000
+                size=2000 nanos=20000000 bytes=0 rawNanos=20000000
+                size=4000 nanos=22000000 bytes=0 rawNanos=22000000
+                size=8000 nanos=25000000 bytes=0 rawNanos=25000000
                 status=ok
                 """);
 
@@ -101,9 +119,9 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=call
-                size=1000 nanos=1000000 bytes=0
-                size=1500 nanos=2000000 bytes=0
-                size=9000 nanos=4000000 bytes=0
+                size=1000 nanos=1000000 bytes=0 rawNanos=1000000
+                size=1500 nanos=2000000 bytes=0 rawNanos=2000000
+                size=9000 nanos=4000000 bytes=0 rawNanos=4000000
                 status=ok
                 """);
 
@@ -117,7 +135,7 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=call
-                size=1000 nanos=1000000 bytes=0
+                size=1000 nanos=1000000 bytes=0 rawNanos=1000000
                 message=OutOfMemoryError
                 status=failed
                 """);
@@ -132,9 +150,9 @@ class ComplexityAnalysisTest {
         ComplexityReport report = parse("""
                 schema=1
                 unit=call
-                size=1000 nanos=1000000 bytes=-1
-                size=2000 nanos=2000000 bytes=-1
-                size=4000 nanos=4000000 bytes=-1
+                size=1000 nanos=1000000 bytes=-1 rawNanos=1000000
+                size=2000 nanos=2000000 bytes=-1 rawNanos=2000000
+                size=4000 nanos=4000000 bytes=-1 rawNanos=4000000
                 status=ok
                 """);
 
@@ -157,7 +175,7 @@ class ComplexityAnalysisTest {
     @Test
     void renderingComparesTheMeasurementWithTheIntendedComplexity() {
         ComplexityReport report = new ComplexityReport("call", "O(n) or O(n log n)", "O(1)",
-                List.of(new ComplexityReport.Sample(1000, 250_000, 512)), "");
+                List.of(new ComplexityReport.Sample(1000, 250_000, 512, 250_000)), "");
 
         String linear = report.render("O(n)", "O(1)");
         assertThat(linear).as("a matching measurement should say so")

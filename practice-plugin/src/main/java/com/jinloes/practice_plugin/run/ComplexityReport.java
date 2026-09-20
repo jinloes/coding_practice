@@ -16,7 +16,14 @@ public record ComplexityReport(
 ) {
     public static final String INCONCLUSIVE = "inconclusive";
 
-    public record Sample(int size, long nanos, long bytes) {
+    /**
+     * @param nanos time per {@link #unit}, for display; can be legitimately tiny for fast operations
+     * @param rawNanos the total wall-clock time this sample's measured call actually took, before
+     *     dividing by its unit count; used only to judge whether {@code nanos} is trustworthy, since
+     *     a tiny {@code nanos} value is fine when {@code rawNanos} was comfortably above timer
+     *     resolution, and unreliable when it was not
+     */
+    public record Sample(int size, long nanos, long bytes, long rawNanos) {
         public Sample {
             if (size <= 0) {
                 throw new IllegalArgumentException("Sample size must be positive: " + size);
