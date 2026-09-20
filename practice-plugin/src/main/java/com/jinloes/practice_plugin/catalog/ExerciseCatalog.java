@@ -31,6 +31,11 @@ public final class ExerciseCatalog {
                     - `findPair(new int[]{1, 2, 3}, 7)` returns `{}`.
                     """,
                     List.of(
+                            new Example("numbers = [2, 7, 11, 15], target = 9", "Any valid pair, such as [0, 1]"),
+                            new Example("numbers = [3, 3], target = 6", "[0, 1]"),
+                            new Example("numbers = [1, 2, 3], target = 7", "[]")
+                    ),
+                    List.of(
                             "Try every pair of indices and first make the validity rules explicit.",
                             "A value seen earlier can be paired with the target complement; remember its index.",
                             "Use a single pass with a map and long arithmetic for complements. "
@@ -59,6 +64,11 @@ public final class ExerciseCatalog {
                     - `search(new int[]{1, 4, 7}, 5)` returns `-1`.
                     """,
                     List.of(
+                            new Example("sorted = [-4, -1, 0, 6, 9], target = 6", "3"),
+                            new Example("sorted = [1, 2, 2, 2, 8], target = 2", "Any of 1, 2, or 3"),
+                            new Example("sorted = [1, 4, 7], target = 5", "-1")
+                    ),
+                    List.of(
                             "Keep an inclusive search interval and decide what happens when it becomes empty.",
                             "Compare the target with the middle value to discard one half of the interval.",
                             "Compute the midpoint as low + (high - low) / 2 and update the bounds after every comparison. "
@@ -86,6 +96,11 @@ public final class ExerciseCatalog {
                     - `isBalanced("([]{})")` returns `true`.
                     - `isBalanced("([)]")` returns `false`.
                     """,
+                    List.of(
+                            new Example("input = \"{[()]}\"", "true"),
+                            new Example("input = \"([]{})\"", "true"),
+                            new Example("input = \"([)]\"", "false")
+                    ),
                     List.of(
                             "An empty input has no unmatched opening delimiters.",
                             "Push opening delimiters and compare each closing delimiter with the most recent opening one.",
@@ -116,6 +131,11 @@ public final class ExerciseCatalog {
                     - Reversing an empty list returns `null`.
                     """,
                     List.of(
+                            new Example("head = 1 -> 2 -> 3", "3 -> 2 -> 1"),
+                            new Example("head = 8", "8 (the same node)"),
+                            new Example("head = null", "null")
+                    ),
+                    List.of(
                             "Keep the already-reversed prefix, the current node, and the not-yet-visited suffix.",
                             "Before changing current.next, save the suffix so it is not lost.",
                             "Advance the two pointers until current is null; the prefix pointer is the new head. "
@@ -144,6 +164,11 @@ public final class ExerciseCatalog {
                     - `peek()` observes the top while leaving the size unchanged.
                     - A new stack is empty and `pop()`/`peek()` throw `NoSuchElementException`.
                     """,
+                    List.of(
+                            new Example("push(4), push(9), pop(), pop()", "9, then 4"),
+                            new Example("push(12), peek(), size()", "12, then 1"),
+                            new Example("new stack; pop() and peek()", "Empty; both operations throw NoSuchElementException")
+                    ),
                     List.of(
                             "Track the number of elements and treat the next free array slot as the top.",
                             "Growing needs a larger array before writing when the current storage is full.",
@@ -174,6 +199,13 @@ public final class ExerciseCatalog {
                     - A new heap is empty and `removeMin()`/`peek()` throw `NoSuchElementException`.
                     """,
                     List.of(
+                            new Example("add(7), add(2), add(5); peek(); removeMin() three times",
+                                    "2; then 2, 5, 7"),
+                            new Example("add(4), add(1), add(1); removeMin() twice", "1, then 1"),
+                            new Example("new heap; removeMin() and peek()",
+                                    "Empty; both operations throw NoSuchElementException")
+                    ),
+                    List.of(
                             "Store the complete tree in an array; for index i, children are at 2*i+1 and 2*i+2.",
                             "After adding at the end, repeatedly swap upward while the child is smaller than its parent.",
                             "After removing the root, move the last value to the root and swap downward with the smaller child. "
@@ -197,6 +229,7 @@ public final class ExerciseCatalog {
             String topic,
             String difficulty,
             String statement,
+            List<Example> examples,
             List<String> hints,
             int exampleCount,
             int fullCount
@@ -207,9 +240,20 @@ public final class ExerciseCatalog {
             topic = Objects.requireNonNull(topic, "topic");
             difficulty = Objects.requireNonNull(difficulty, "difficulty");
             statement = Objects.requireNonNull(statement, "statement");
+            examples = List.copyOf(Objects.requireNonNull(examples, "examples"));
             hints = List.copyOf(Objects.requireNonNull(hints, "hints"));
-            if (exampleCount < 0 || fullCount < exampleCount) {
+            if (exampleCount < 0 || fullCount < exampleCount || examples.size() != exampleCount) {
                 throw new IllegalArgumentException("Invalid exercise test counts");
+            }
+        }
+    }
+
+    public record Example(String input, String output) {
+        public Example {
+            input = Objects.requireNonNull(input, "input");
+            output = Objects.requireNonNull(output, "output");
+            if (input.isBlank() || output.isBlank()) {
+                throw new IllegalArgumentException("Example input and output must not be blank");
             }
         }
     }

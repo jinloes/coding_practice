@@ -1,43 +1,30 @@
 package com.jinloes.practice_plugin.integration;
 
-import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl;
-import com.intellij.execution.ExecutionListener;
-import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.RuntimeConfigurationError;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.impl.ConsoleViewImpl;
-import com.intellij.execution.process.ProcessAdapter;
-import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessHandler;
-import com.intellij.execution.process.OSProcessHandler;
-import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.compiler.CompilerManager;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.project.DumbService;
-import com.intellij.openapi.util.Disposer;
-import com.intellij.openapi.util.Key;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.extensions.PluginId;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.testFramework.EdtTestUtil;
-import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
+import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.run.PracticeConfigurationType;
 import com.jinloes.practice_plugin.run.PracticeRunConfiguration;
 import com.jinloes.practice_plugin.run.PracticeRunner;
+import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import com.jinloes.practice_plugin.state.PracticeProgress;
-import com.jinloes.practice_plugin.state.ScratchPracticeProgress;
 import com.jinloes.practice_plugin.ui.PracticeToolWindowFactory;
-import com.jinloes.practice_plugin.workspace.PracticeSupportEnvironment;
-import com.jinloes.practice_plugin.workspace.ScratchAttemptStore;
+import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
+import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
+import com.jinloes.practice_plugin.workspace.PracticeWorkspace;
 import org.jdom.Element;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,22 +33,21 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PluginIntegrationTest {
-    @TempDir
-    Path temporary;
+    @TempDir Path temporary;
     private IdeaProjectTestFixture fixture;
+    private Path host;
 
     @BeforeEach
     void setUp() throws Exception {
-        Path host = temporary.resolve("host");
+        host = temporary.resolve("host");
         Files.createDirectories(host);
         EdtTestUtil.runInEdtAndWait(() -> {
             fixture = IdeaTestFixtureFactory.getFixtureFactory()
@@ -73,53 +59,50 @@ class PluginIntegrationTest {
     @AfterEach
     void tearDown() throws Exception {
         if (fixture != null) {
-            try {
-                quiesceTestProject();
-            } finally {
-                EdtTestUtil.runInEdtAndWait(fixture::tearDown);
-                fixture = null;
-            }
+            fixture.getProject().getService(PracticeRunner.class).stop();
+            EdtTestUtil.runInEdtAndWait(() -> {
+                PracticeModuleWorkspace.get(fixture.getProject()).dispose();
+                fixture.tearDown();
+            });
         }
     }
 
     @Test
-    void pluginLoadsAndProjectServicesResolve() throws Exception {
+    void pluginLoadsAndManagedServicesResolve() throws Exception {
         EdtTestUtil.runInEdtAndWait(() -> {
             assertThat(PluginManagerCore.getPlugin(PluginId.getId("com.jinloes.practice"))).isNotNull();
-            assertThat(PracticeProgress.get(fixture.getProject())).isNotNull();
-            assertThat(ScratchPracticeProgress.get()).isNotNull();
+            assertThat(ManagedPracticeProgress.get()).isNotNull();
+            assertThat(PracticeModuleWorkspace.get(fixture.getProject())).isNotNull();
             assertThat(fixture.getProject().getService(PracticeRunner.class).isRunning()).isFalse();
         });
     }
 
     @Test
-    void nativeRunConfigurationRoundTripsAndFindsItsExecutor() throws Exception {
+    void checkConfigurationRoundTripsAndRejectsUnsafeAttemptIds() throws Exception {
+        var attempt = new ManagedPracticeWorkspace().create(ExerciseCatalog.find("pair-sum"));
         EdtTestUtil.runInEdtAndWait(() -> {
             var type = ConfigurationTypeUtil.findConfigurationType(PracticeConfigurationType.class);
             var settings = RunManager.getInstance(fixture.getProject())
                     .createConfiguration("Check attempt", type.getConfigurationFactories()[0]);
             var configuration = (PracticeRunConfiguration) settings.getConfiguration();
-            configuration.attemptId = "pair-sum-abc123";
-            configuration.full = false;
-            configuration.kind = PracticeRunConfiguration.Kind.SCRATCH;
+            configuration.attemptId = attempt.id();
             Element serialized = new Element("configuration");
             configuration.writeExternal(serialized);
             var restored = (PracticeRunConfiguration) type.getConfigurationFactories()[0]
                     .createTemplateConfiguration(fixture.getProject());
             restored.readExternal(serialized);
             assertThat(restored.attemptId).isEqualTo(configuration.attemptId);
-            assertThat(restored.full).isFalse();
-            assertThat(restored.kind).isEqualTo(PracticeRunConfiguration.Kind.SCRATCH);
             assertThat(ProgramRunner.getRunner(DefaultRunExecutor.EXECUTOR_ID, restored)).isNotNull();
-            restored.readExternal(new Element("configuration"));
-            assertThat(restored.kind).isEqualTo(PracticeRunConfiguration.Kind.LEGACY);
             restored.attemptId = "../outside";
             assertThatThrownBy(restored::checkConfiguration).isInstanceOf(RuntimeConfigurationError.class);
         });
     }
 
     @Test
-    void toolWindowCreatesAndDisposesNativeContent() throws Exception {
+    void toolWindowCreatesManagedUiWithoutMutatingHostProjectMetadata() throws Exception {
+        Set<String> before = Files.list(host).map(path -> path.getFileName().toString())
+                .collect(java.util.stream.Collectors.toSet());
+        var originalSdk = ProjectRootManager.getInstance(fixture.getProject()).getProjectSdk();
         EdtTestUtil.runInEdtAndWait(() -> {
             var manager = ToolWindowManager.getInstance(fixture.getProject());
             var window = manager.registerToolWindow("Practice integration", true, ToolWindowAnchor.RIGHT);
@@ -132,149 +115,124 @@ class PluginIntegrationTest {
                 manager.unregisterToolWindow("Practice integration");
             }
         });
+        assertThat(ProjectRootManager.getInstance(fixture.getProject()).getProjectSdk()).isSameAs(originalSdk);
+        assertThat(Files.list(host).map(path -> path.getFileName().toString())
+                .collect(java.util.stream.Collectors.toSet())).isEqualTo(before);
     }
 
     @Test
-    void userFacingCleanupRefusesDuringAScratchRunAndSucceedsWhenIdle() throws Exception {
-        ScratchAttemptStore store = new ScratchAttemptStore(fixture.getProject());
-        var attempt = store.create(com.jinloes.practice_plugin.catalog.ExerciseCatalog.find("pair-sum"));
-        var scratchFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(attempt.solution());
-        assertThat(scratchFile).isNotNull();
-        EdtTestUtil.runInEdtAndWait(() ->
-                assertThat(FileEditorManager.getInstance(fixture.getProject()).openFile(scratchFile, true)).isNotEmpty());
-
-        PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        PracticeSupportEnvironment support = PracticeSupportEnvironment.get(fixture.getProject());
-        CountDownLatch started = new CountDownLatch(1);
-        CountDownLatch terminated = new CountDownLatch(1);
-        CountDownLatch completed = new CountDownLatch(1);
-        AtomicReference<ProcessHandler> process = new AtomicReference<>();
-        AtomicReference<Boolean> activeDuringCallback = new AtomicReference<>();
-        AtomicReference<Boolean> cleanupDuringCallback = new AtomicReference<>();
-        AtomicReference<Throwable> callbackFailure = new AtomicReference<>();
-        AtomicReference<String> commandLine = new AtomicReference<>("");
-        AtomicReference<String> handlerType = new AtomicReference<>("");
-        AtomicReference<String> status = new AtomicReference<>("");
-        StringBuffer processOutput = new StringBuffer();
-        Disposable executionSubscription = Disposer.newDisposable("scratch cleanup integration run");
-        Disposer.register(fixture.getTestRootDisposable(), executionSubscription);
-        fixture.getProject().getMessageBus().connect(executionSubscription).subscribe(
-                ExecutionManager.EXECUTION_TOPIC, new ExecutionListener() {
-                    @Override
-                    public void processStarted(String executorId, ExecutionEnvironment environment,
-                                               ProcessHandler handler) {
-                        if (environment.getRunProfile() instanceof PracticeRunConfiguration configuration
-                                && configuration.kind == PracticeRunConfiguration.Kind.SCRATCH) {
-                            process.set(handler);
-                            handlerType.set(handler.getClass().getName());
-                            if (handler instanceof OSProcessHandler osProcess) {
-                                commandLine.set(osProcess.getProcess().info().commandLine().orElse(""));
-                            }
-                            handler.addProcessListener(new ProcessAdapter() {
-                                @Override
-                                public void onTextAvailable(ProcessEvent event, Key outputType) {
-                                    processOutput.append(event.getText());
-                                }
-                            });
-                            try {
-                                activeDuringCallback.set(runner.isRunning() && !handler.isProcessTerminated());
-                                cleanupDuringCallback.set(ApplicationManager.getApplication().isDispatchThread()
-                                        ? support.cleanupAbandonedArtifacts()
-                                        : EdtTestUtil.runInEdtAndGet(support::cleanupAbandonedArtifacts));
-                            } catch (Throwable failure) {
-                                callbackFailure.set(failure);
-                            }
-                            started.countDown();
-                        }
-                    }
-
-                    @Override
-                    public void processTerminated(String executorId, ExecutionEnvironment environment,
-                                                  ProcessHandler handler, int exitCode) {
-                        if (handler == process.get()) {
-                            terminated.countDown();
-                        }
-                    }
-                });
-        runner.setListener(text -> {
-            status.set(text);
-            if (text.contains("Full check:")) {
-                completed.countDown();
-            }
+    void openingManagedAttemptUsesCurrentProjectAndLeavesDurableFileOutsideHost() throws Exception {
+        var attempt = new ManagedPracticeWorkspace().create(ExerciseCatalog.find("binary-search"));
+        var file = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(attempt.solution());
+        assertThat(file).isNotNull();
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticeModuleWorkspace.get(fixture.getProject()).open(attempt);
+            assertThat(FileEditorManager.getInstance(fixture.getProject()).openFile(file, true)).isNotEmpty();
         });
-
-        try {
-            EdtTestUtil.runInEdtAndWait(() -> runner.runScratch(attempt.id(), true));
-            assertThat(started.await(90, TimeUnit.SECONDS)).isTrue();
-            assertThat(process.get()).isNotNull();
-            assertThat(callbackFailure.get()).isNull();
-            runner.stop();
-            assertThat(terminated.await(90, TimeUnit.SECONDS)).isTrue();
-            assertThat(completed.await(90, TimeUnit.SECONDS)).isTrue();
-            String consoleText = EdtTestUtil.runInEdtAndGet(() -> {
-                for (var descriptor : ExecutionManager.getInstance(fixture.getProject())
-                        .getContentManager().getAllDescriptors()) {
-                    if (descriptor.getExecutionConsole() instanceof ConsoleViewImpl console) {
-                        console.flushDeferredText();
-                        return console.getEditor().getDocument().getText();
-                    }
-                }
-                return "";
-            });
-            assertThat(activeDuringCallback.get())
-                    .as("handler=%s%ncommand=%s%nstatus=%s%noutput=%s%nconsole=%s",
-                            handlerType.get(), commandLine.get(), status.get(), processOutput, consoleText)
-                    .isTrue();
-            assertThat(cleanupDuringCallback.get())
-                    .as("command=%s%nstatus=%s%noutput=%s", commandLine.get(), status.get(), processOutput)
-                    .isFalse();
-
-            assertThat(runner.isRunning()).isFalse();
-            assertThat(process.get().isProcessTerminated()).isTrue();
-            assertThat(EdtTestUtil.runInEdtAndGet(support::cleanupAbandonedArtifacts)).isTrue();
-        } finally {
-            Disposer.dispose(executionSubscription);
-        }
+        assertThat(attempt.solution()).isRegularFile();
+        assertThat(attempt.solution()).isNotIn(host);
+        assertThat(host.resolve("attempts")).doesNotExist();
+        assertThat(host.resolve("build.gradle")).doesNotExist();
+        assertThat(host.resolve(".idea/modules.xml")).doesNotExist();
     }
 
-    private void quiesceTestProject() throws Exception {
-        var project = fixture.getProject();
-        PracticeRunner runner = project.getService(PracticeRunner.class);
-        runner.stop();
-        EdtTestUtil.runInEdtAndWait(() -> PlatformTestUtil.waitWithEventsDispatching(
-                "scratch execution and compilation to finish",
-                () -> !runner.isRunning()
-                        && ExecutionManager.getInstance(project).getRunningProcesses().length == 0
-                        && !CompilerManager.getInstance(project).isCompilationActive(),
-                90_000));
+    @Test
+    void legacyImportIsIdempotentAndSafelySkipsInvalidEntries() throws Exception {
+        Path legacyRoot = temporary.resolve("legacy");
+        PracticeWorkspace.create(legacyRoot);
+        var legacy = PracticeWorkspace.createAttempt(legacyRoot, ExerciseCatalog.find("pair-sum"));
+        Files.writeString(legacy.solution(), "learner-owned legacy solution");
+        PracticeProgress legacyProgress = PracticeProgress.get(fixture.getProject());
+        var legacyEntry = legacyProgress.entry(legacy.id(), legacy.exerciseId());
+        legacyEntry.status = "PASSED";
+        legacyEntry.checkedFingerprint = "old-fingerprint";
+        legacyEntry.checkedAt = "2025-01-02T03:04:05Z";
+        legacyEntry.lastPassedAt = "2025-01-02T03:04:05Z";
+        legacyEntry.details = "historical pass";
+        legacyEntry.hintsRevealed = 2;
+        legacyEntry.tests = 11;
+        legacyEntry.failures = 0;
+        legacyProgress.getState().selectedAttempts.put(legacy.exerciseId(), legacy.id());
+        legacyProgress.getState().testSeconds = 9;
+        legacyProgress.getState().suiteSeconds = 90;
+        legacyProgress.getState().heapMb = 384;
+        addInvalidLegacyEntries(legacyRoot);
+        String originalsBefore = treeFingerprint(legacyRoot);
 
-        EdtTestUtil.runInEdtAndWait(() -> {
-            ((DaemonCodeAnalyzerImpl) DaemonCodeAnalyzerImpl.getInstance(project)).setUpdateByTimerEnabled(false);
-            var fileEditorManager = FileEditorManager.getInstance(project);
-            for (var file : fileEditorManager.getOpenFiles()) {
-                fileEditorManager.closeFile(file);
-            }
-            var executionManager = ExecutionManager.getInstance(project);
-            var contentManager = executionManager.getContentManager();
-            for (var descriptor : new ArrayList<>(contentManager.getAllDescriptors())) {
-                for (var executor : executionManager.getExecutors(descriptor)) {
-                    contentManager.removeRunContent(executor, descriptor);
+        ManagedPracticeWorkspace managed = new ManagedPracticeWorkspace();
+        ManagedPracticeProgress progress = ManagedPracticeProgress.get();
+        int managedBefore = managed.attempts("pair-sum").size();
+
+        var first = managed.importLegacy(legacyRoot, legacyProgress, progress);
+        var second = managed.importLegacy(legacyRoot, legacyProgress, progress);
+
+        String managedId = progress.importedAttempt(legacyRoot.toRealPath().toString(), legacy.id());
+        assertThat(first.imported()).isEqualTo(1);
+        assertThat(first.skipped()).isGreaterThanOrEqualTo(5);
+        assertThat(first.summary()).contains("Originals were unchanged");
+        assertThat(second.imported()).isZero();
+        assertThat(second.skipped()).isGreaterThan(first.skipped());
+        assertThat(managed.attempts("pair-sum")).hasSize(managedBefore + 1);
+        assertThat(managed.read(managedId).solution()).hasContent("learner-owned legacy solution");
+        assertThat(progress.importedAttempt(legacyRoot.toRealPath().toString(), legacy.id()))
+                .isEqualTo(managedId);
+        var migrated = progress.entry(managedId, "pair-sum");
+        assertThat(migrated.status).isEqualTo("NOT_RUN");
+        assertThat(migrated.checkedFingerprint).isEmpty();
+        assertThat(migrated.checkedAt).isEmpty();
+        assertThat(migrated.lastPassedAt).isEqualTo(legacyEntry.lastPassedAt);
+        assertThat(migrated.hintsRevealed).isEqualTo(2);
+        assertThat(migrated.tests).isZero();
+        assertThat(migrated.failures).isZero();
+        assertThat(progress.getState().selectedAttempts).containsEntry("pair-sum", managedId);
+        assertThat(progress.getState().testSeconds).isEqualTo(9);
+        assertThat(progress.getState().suiteSeconds).isEqualTo(90);
+        assertThat(progress.getState().heapMb).isEqualTo(384);
+        assertThat(treeFingerprint(legacyRoot)).isEqualTo(originalsBefore);
+    }
+
+    private void addInvalidLegacyEntries(Path legacyRoot) throws Exception {
+        Path attempts = legacyRoot.resolve("attempts");
+        Files.createDirectories(attempts.resolve("foreign-entry"));
+        Files.writeString(attempts.resolve("foreign-entry/keep"), "foreign");
+
+        Path malformed = attempts.resolve("malformed-entry");
+        Files.createDirectories(malformed);
+        Files.writeString(malformed.resolve(".practice-attempt"), "exercise=not-real\nrevision=1\n");
+
+        Path missing = attempts.resolve("missing-entry");
+        Files.createDirectories(missing);
+        Files.writeString(missing.resolve(".practice-attempt"), "exercise=pair-sum\nrevision=1\n");
+
+        Path outside = temporary.resolve("outside-entry");
+        Files.createDirectories(outside);
+        Files.writeString(outside.resolve(".practice-attempt"), "exercise=pair-sum\nrevision=1\n");
+        Files.createSymbolicLink(attempts.resolve("redirecting-entry"), outside);
+
+        Path redirectingSolution = attempts.resolve("redirecting-solution");
+        Files.createDirectories(redirectingSolution.resolve("src/main/java/com/jinloes/practice"));
+        Files.writeString(redirectingSolution.resolve(".practice-attempt"),
+                "exercise=pair-sum\nrevision=1\n");
+        Path outsideSolution = temporary.resolve("outside-Solution.java");
+        Files.writeString(outsideSolution, "outside");
+        Files.createSymbolicLink(
+                redirectingSolution.resolve("src/main/java/com/jinloes/practice/Solution.java"),
+                outsideSolution);
+    }
+
+    private static String treeFingerprint(Path root) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (var paths = Files.walk(root)) {
+            for (Path path : paths.sorted().toList()) {
+                digest.update(root.relativize(path).toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                if (Files.isSymbolicLink(path)) {
+                    digest.update(Files.readSymbolicLink(path).toString()
+                            .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                } else if (Files.isRegularFile(path)) {
+                    digest.update(Files.readAllBytes(path));
                 }
             }
-            runner.setListener(ignored -> {});
-            PracticeSupportEnvironment.get(project).dispose();
-        });
-
-        DumbService.getInstance(project).waitForSmartMode();
-        EdtTestUtil.runInEdtAndWait(PlatformTestUtil::dispatchAllInvocationEventsInIdeEventQueue);
-        EdtTestUtil.runInEdtAndWait(() -> PlatformTestUtil.waitWithEventsDispatching(
-                "editor daemon and execution follow-up work to finish",
-                () -> !CompilerManager.getInstance(project).isCompilationActive()
-                        && !((DaemonCodeAnalyzerImpl) DaemonCodeAnalyzerImpl.getInstance(project)).isRunningOrPending()
-                        && ExecutionManager.getInstance(project).getRunningProcesses().length == 0
-                        && ExecutionManager.getInstance(project).getContentManager().getAllDescriptors().isEmpty(),
-                90_000));
-        PlatformTestUtil.waitForAllBackgroundActivityToCalmDown();
-        EdtTestUtil.runInEdtAndWait(PlatformTestUtil::dispatchAllInvocationEventsInIdeEventQueue);
+        }
+        return HexFormat.of().formatHex(digest.digest());
     }
 }

@@ -2,7 +2,7 @@
 
 A reusable Java practice plugin with original algorithm and data-structure
 exercises. Read a problem in the Practice tool window, implement its durable Java
-scratch in the regular editor, debug examples, and run the supplied correctness
+attempt in the regular editor, debug examples, and run the supplied correctness
 cases.
 
 The plugin source lives here, but learners do not need to create a project,
@@ -47,15 +47,18 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
 
 1. Open **View > Tool Windows > Practice**.
 2. Choose a problem and **Start / Resume**. The plugin creates
-   `Algorithm Practice/<exercise-id>/<attempt-id>/Solution.java` under IntelliJ
-   **Scratches and Consoles**, opens it, and remembers it from every host project.
-   **New Attempt** creates a distinct scratch and never overwrites an earlier one.
-3. Write the solution in the opened `Solution.java`. Each starter includes a small
-   JDK-only `main` method with the three documented examples.
-4. **Run Examples** runs that inline main, and **Debug Examples** creates a
-   temporary native Java Scratch configuration. Put a breakpoint in the solution
+   `algorithm-practice/attempts/<exercise-id>/<attempt-id>/src/main/java/`
+   `com/jinloes/practice/Solution.java` below the IDE configuration directory,
+   opens it, and remembers it from every host project. **New Attempt** creates a
+   distinct attempt and never overwrites an earlier one.
+3. Write only the requested API in the opened `Solution.java`. Starters contain
+   no main method, assertions, or test harness. The Problem tab shows three
+   structured input/output examples.
+4. **Run Examples** generates a temporary JDK-only `ExampleRunner.java` outside
+   durable storage. **Debug Examples** launches the same entry point through a
+   temporary native Application configuration. Put a breakpoint in the solution
    and use IntelliJ's usual stepping and variable inspection.
-5. **Check Solution** copies the saved scratch and bundled tests to a unique
+5. **Check Solution** copies the saved solution and bundled tests to a unique
    plugin-owned workspace, then executes examples and additional correctness cases
    with Java 17 compatibility. Read
    the **Results** tab for a summary and assertion details, or the native **Run**
@@ -80,10 +83,12 @@ three optional hints. The last hint discusses the intended complexity.
 
 ## Execution and storage
 
-Run and Debug use a temporary support module with a Java 17-or-newer SDK and a
-native Java Scratch configuration. The support module has no project content or
-plugin classpath and is disposed when the host project closes. Full checks run the
-saved scratch in a child Gradle process and child test JVMs; learner, build, and
+Each opened attempt receives its own non-persistent Java module with real content
+and source roots, Java 17 language/API level, and a usable JDK 17 or newer. The
+plugin prefers the host project SDK, then another registered JDK, then a temporary
+SDK backed by the full IDE runtime. It never changes the host project SDK, roots,
+build files, or persistent module metadata. Full checks run the saved solution in
+a child Gradle process and child test JVMs; learner, build, and
 test code never run in the IDE process.
 
 Default limits are 5 seconds per test, 60 seconds for test execution, and a
@@ -97,18 +102,21 @@ project build scripts run with your user permissions. Run only trusted local
 code. First use needs network access for Gradle and test dependencies; later
 runs can reuse their local caches.
 
-Solutions live in IntelliJ's durable `Algorithm Practice/` scratch hierarchy.
-Scratch progress, limits, selected attempts, revealed hints, fingerprints, and
+Solutions live below the IDE configuration path in the durable
+`algorithm-practice/attempts/` hierarchy. Progress, limits, selected attempts,
+revealed hints, fingerprints, and
 historical passes are stored in a non-roaming application setting keyed by attempt
 ID; they are not uploaded or synchronized. Full-check workspaces, reports, and
 private Gradle homes are created below the IDE system path, marked for ownership,
-and removed after terminal runs. **Clean Support Artifacts** removes only marked,
-confirmed-inactive leftovers.
+and removed after terminal runs. **Clean Generated Artifacts** removes only
+marked, confirmed-inactive harness, output, verification, and private-cache
+leftovers; attempts and host or legacy files are never cleanup targets.
 
-Projects created by earlier plugin versions remain supported. Their attempts can
-still be listed, opened, run, and debugged after legacy Gradle import; use **Copy
-Legacy Attempt to Scratch** to create a new `NOT_RUN` scratch without changing
-the legacy files or progress.
+When the current project is a marked project created by an earlier plugin
+version, **Import Legacy Attempts** validates and copies each valid attempt once.
+Originals remain untouched. Selections, hints, limits, and historical-pass dates
+are migrated, while every imported attempt starts at `NOT_RUN` and requires a
+fresh full check. Invalid, missing, foreign, or redirecting entries are skipped.
 
 ## Development
 
@@ -128,8 +136,9 @@ tests are authored with Jupiter, and neither generated projects nor the shipped
 plugin depend on JUnit 4.
 
 To add content, extend `ExerciseCatalog` with a stable ID, original statement,
-three hints, and exact example/full test counts. Add `Solution.java`,
-`ExamplesTest.java`, and `CorrectnessTest.java` under `resources/exercises/<id>/`.
+three hints, structured visible examples, and exact example/full test counts. Add
+`Solution.java`, `ExampleRunner.java`, `ExamplesTest.java`, and
+`CorrectnessTest.java` under `resources/exercises/<id>/`.
 Keep tests deterministic, use individual `@Test` methods, validate equivalent
 legal answers rather than one particular implementation, and add an author-only
 reference fixture plus an incorrect candidate to the content tests.

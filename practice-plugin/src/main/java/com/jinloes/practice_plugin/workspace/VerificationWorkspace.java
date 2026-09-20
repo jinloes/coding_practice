@@ -27,7 +27,7 @@ public final class VerificationWorkspace {
     private final Path resultDirectory;
 
     public static VerificationWorkspace create(
-            ScratchAttemptStore.Attempt attempt,
+            ManagedPracticeWorkspace.Attempt attempt,
             ExerciseCatalog.Exercise exercise,
             String fingerprint
     ) throws IOException {
@@ -36,7 +36,7 @@ public final class VerificationWorkspace {
 
     static VerificationWorkspace createAt(
             Path base,
-            ScratchAttemptStore.Attempt attempt,
+            ManagedPracticeWorkspace.Attempt attempt,
             ExerciseCatalog.Exercise exercise,
             String fingerprint
     ) throws IOException {
@@ -135,7 +135,8 @@ public final class VerificationWorkspace {
         }
     }
 
-    private void writeProject(ScratchAttemptStore.Attempt attempt, ExerciseCatalog.Exercise exercise) throws IOException {
+    private void writeProject(ManagedPracticeWorkspace.Attempt attempt, ExerciseCatalog.Exercise exercise)
+            throws IOException {
         Path source = root.resolve("src/main/java/com/jinloes/practice/Solution.java");
         Path tests = root.resolve("src/test/java/com/jinloes/practice");
         Files.createDirectories(source.getParent());

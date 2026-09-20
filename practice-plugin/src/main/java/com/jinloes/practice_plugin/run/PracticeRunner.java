@@ -5,13 +5,12 @@ import com.intellij.execution.ExecutionListener;
 import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
+import com.intellij.execution.application.ApplicationConfiguration;
+import com.intellij.execution.application.ApplicationConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.junit.JUnitConfiguration;
-import com.intellij.execution.junit.JUnitConfigurationType;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessEvent;
@@ -19,33 +18,26 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.execution.runners.ExecutionUtil;
-import com.intellij.execution.scratch.JavaScratchConfiguration;
-import com.intellij.execution.scratch.JavaScratchConfigurationType;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.WriteIntentReadAction;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ProjectFileIndex;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
-import com.jinloes.practice_plugin.state.PracticeProgress;
-import com.jinloes.practice_plugin.state.ScratchPracticeProgress;
-import com.jinloes.practice_plugin.workspace.PracticeSupportEnvironment;
-import com.jinloes.practice_plugin.workspace.PracticeWorkspace;
-import com.jinloes.practice_plugin.workspace.ScratchAttemptStore;
+import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
+import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
+import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 import com.jinloes.practice_plugin.workspace.VerificationWorkspace;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -59,11 +51,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import static com.jinloes.practice_plugin.run.CheckResult.Status.*;
+import static com.jinloes.practice_plugin.run.CheckResult.Status.CANCELLED;
+import static com.jinloes.practice_plugin.run.CheckResult.Status.COMPILATION_FAILED;
+import static com.jinloes.practice_plugin.run.CheckResult.Status.RUNNER_ERROR;
+import static com.jinloes.practice_plugin.run.CheckResult.Status.TIMED_OUT;
 
 @Service(Service.Level.PROJECT)
 public final class PracticeRunner implements Disposable {
     private final Project project;
+    private final ManagedPracticeWorkspace attempts = new ManagedPracticeWorkspace();
     private final AtomicBoolean running = new AtomicBoolean();
     private final Map<Long, ProcessHandle> ownedProcesses = new ConcurrentHashMap<>();
     private volatile ProcessHandler active;
@@ -71,9 +67,13 @@ public final class PracticeRunner implements Disposable {
     private volatile String stopDetails;
     private volatile ScheduledFuture<?> watchdog;
     private volatile Consumer<String> listener = ignored -> {};
-    private volatile RunConfiguration nativeScratchConfiguration;
-    private volatile JUnitConfiguration legacyDebugging;
+    private volatile ApplicationConfiguration nativeExamples;
+    private volatile RunnerAndConfigurationSettings nativeSettings;
+    private volatile RunnerAndConfigurationSettings checkSettings;
+    private volatile ManagedPracticeWorkspace.Attempt nativeAttempt;
+    private volatile String nativeFingerprint;
     private volatile VerificationWorkspace verificationWorkspace;
+    private static volatile Consumer<Runnable> continuationDispatcherForTests;
 
     public PracticeRunner(Project project) {
         this.project = project;
@@ -81,8 +81,7 @@ public final class PracticeRunner implements Disposable {
             @Override
             public void processStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment,
                                        @NotNull ProcessHandler handler) {
-                if (environment.getRunProfile() == nativeScratchConfiguration
-                        || environment.getRunProfile() == legacyDebugging) {
+                if (environment.getRunProfile() == nativeExamples) {
                     active = handler;
                     if (stopReason == CANCELLED) {
                         captureOwnedChildren(handler);
@@ -90,31 +89,24 @@ public final class PracticeRunner implements Disposable {
                         handler.destroyProcess();
                         return;
                     }
-                    message(environment.getRunProfile() == legacyDebugging
-                            ? "Debugging legacy examples. Timeouts are disabled; use Stop to terminate."
-                            : executorId.equals(DefaultDebugExecutor.EXECUTOR_ID)
-                                    ? "Debugging scratch examples. Timeouts are disabled; use Stop to terminate."
-                                    : "Running the three inline scratch examples.");
+                    message(executorId.equals(DefaultDebugExecutor.EXECUTOR_ID)
+                            ? "Debugging visible examples. Timeouts are disabled; use Stop to terminate."
+                            : "Running visible examples.");
                 }
             }
 
             @Override
             public void processNotStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment) {
-                if (environment.getRunProfile() == nativeScratchConfiguration) {
-                    finishScratchNative("Scratch launch did not complete. See the IDE notification and Run console.");
-                } else if (environment.getRunProfile() == legacyDebugging) {
-                    finishLegacyDebug("Debug launch did not complete. See the IDE notification and Run console.");
+                if (environment.getRunProfile() == nativeExamples) {
+                    finishExamples("Example launch did not complete. See the IDE notification and Run console.");
                 }
             }
 
             @Override
             public void processTerminated(@NotNull String executorId, @NotNull ExecutionEnvironment environment,
                                           @NotNull ProcessHandler handler, int exitCode) {
-                if (environment.getRunProfile() == nativeScratchConfiguration) {
-                    finishScratchNative("Scratch example session finished (exit " + exitCode
-                            + "). Use Check Solution to update correctness progress.");
-                } else if (environment.getRunProfile() == legacyDebugging) {
-                    finishLegacyDebug("Debug session finished (exit " + exitCode
+                if (environment.getRunProfile() == nativeExamples) {
+                    finishExamples("Example session finished (exit " + exitCode
                             + "). Use Check Solution to update correctness progress.");
                 }
             }
@@ -129,138 +121,32 @@ public final class PracticeRunner implements Disposable {
         return running.get();
     }
 
-    public void run(String attemptId, boolean full) throws ExecutionException {
-        runLegacy(attemptId, full);
+    public void runExamples(String attemptId) throws ExecutionException {
+        launchExamples(attemptId, DefaultRunExecutor.getRunExecutorInstance());
     }
 
-    public void runLegacy(String attemptId, boolean full) throws ExecutionException {
+    public void debugExamples(String attemptId) throws ExecutionException {
+        launchExamples(attemptId, DefaultDebugExecutor.getDebugExecutorInstance());
+    }
+
+    public void check(String attemptId) throws ExecutionException {
         ensureIdle();
-        javaHome(project);
-        PracticeProgress.get(project).validateLimits();
-        FileDocumentManager.getInstance().saveAllDocuments();
-        RunManager manager = RunManager.getInstance(project);
-        var type = ConfigurationTypeUtil.findConfigurationType(PracticeConfigurationType.class);
-        String name = (full ? "Check " : "Examples ") + attemptId;
-        RunnerAndConfigurationSettings settings = manager.findConfigurationByName(name);
-        if (settings == null || !(settings.getConfiguration() instanceof PracticeRunConfiguration configuration)
-                || configuration.kind != PracticeRunConfiguration.Kind.LEGACY) {
-            settings = manager.createConfiguration(name, type.getConfigurationFactories()[0]);
-            manager.addConfiguration(settings);
-        }
-        var configuration = (PracticeRunConfiguration) settings.getConfiguration();
-        configuration.attemptId = attemptId;
-        configuration.full = full;
-        configuration.kind = PracticeRunConfiguration.Kind.LEGACY;
-        manager.setSelectedConfiguration(settings);
-        ExecutionUtil.runConfiguration(settings, DefaultRunExecutor.getRunExecutorInstance());
+        runAfterSavingDocuments(() -> {
+            RunManager manager = RunManager.getInstance(project);
+            var type = ConfigurationTypeUtil.findConfigurationType(PracticeConfigurationType.class);
+            RunnerAndConfigurationSettings settings = manager.createConfiguration(
+                    "Check " + attemptId, type.getConfigurationFactories()[0]);
+            var configuration = (PracticeRunConfiguration) settings.getConfiguration();
+            configuration.attemptId = attemptId;
+            manager.setTemporaryConfiguration(settings);
+            PracticeModuleWorkspace.get(project).track(settings);
+            checkSettings = settings;
+            manager.setSelectedConfiguration(settings);
+            ExecutionUtil.runConfiguration(settings, DefaultRunExecutor.getRunExecutorInstance());
+        });
     }
 
-    public void runScratch(String attemptId, boolean full) throws ExecutionException {
-        if (full) {
-            launchScratchCheck(attemptId);
-        } else {
-            launchScratchNative(attemptId, DefaultRunExecutor.getRunExecutorInstance());
-        }
-    }
-
-    public void debugScratch(String attemptId) throws ExecutionException {
-        launchScratchNative(attemptId, DefaultDebugExecutor.getDebugExecutorInstance());
-    }
-
-    ProcessHandler start(String attemptId, boolean full, PracticeRunConfiguration.Kind kind) throws ExecutionException {
-        return kind == PracticeRunConfiguration.Kind.SCRATCH
-                ? startScratchCheck(attemptId, full)
-                : startLegacy(attemptId, full);
-    }
-
-    private ProcessHandler startLegacy(String attemptId, boolean full) throws ExecutionException {
-        if (!running.compareAndSet(false, true)) {
-            throw new ExecutionException("A practice run is already active. Stop it before starting another.");
-        }
-        stopReason = null;
-        stopDetails = null;
-        ownedProcesses.clear();
-        try {
-            Path root = Path.of(java.util.Objects.requireNonNull(project.getBasePath()));
-            var attempt = PracticeWorkspace.readAttempt(root, attemptId);
-            var exercise = ExerciseCatalog.find(attempt.exerciseId());
-            String fingerprint = PracticeWorkspace.fingerprint(root, attempt);
-            var progress = PracticeProgress.get(project);
-            progress.validateLimits();
-            int testSeconds = progress.getState().testSeconds;
-            int suiteSeconds = progress.getState().suiteSeconds;
-            int heapMb = progress.getState().heapMb;
-            Path home = javaHome(project);
-            String runId = UUID.randomUUID().toString();
-            Path resultRoot = root.resolve(".practice-results").resolve(runId);
-            var command = new GeneralCommandLine(
-                    home.resolve("bin").resolve(isWindows() ? "java.exe" : "java").toString(),
-                    "-classpath", root.resolve("gradle/wrapper/gradle-wrapper.jar").toString(),
-                    "org.gradle.wrapper.GradleWrapperMain",
-                    ":" + attemptId + ":test", "--no-daemon", "--console=plain", "--rerun-tasks",
-                    "--no-build-cache", "--no-configuration-cache",
-                    "-Dorg.gradle.java.home=" + home,
-                    "-PpracticeRun=" + runId, "-PpracticeTestSeconds=" + testSeconds,
-                    "-PpracticeHeapMb=" + heapMb)
-                    .withWorkingDirectory(root).withEnvironment("JAVA_HOME", home.toString());
-            if (!full) {
-                command.addParameters("--tests", "com.jinloes.practice.ExamplesTest");
-            }
-            var handler = new BoundedProcessHandler(command, () -> {
-                if (stopReason == null) {
-                    stopReason = CANCELLED;
-                }
-                terminateOwnedChildren();
-            });
-            handler.setShouldKillProcessSoftly(false);
-            active = handler;
-            long setupStarted = System.nanoTime();
-            handler.addProcessListener(new ProcessListener() {
-                @Override
-                public void processTerminated(@NotNull ProcessEvent event) {
-                    cancelWatchdog();
-                    terminateOwnedChildren();
-                    AppExecutorUtil.getAppExecutorService().execute(() -> {
-                        CheckResult result = new CheckResult(RUNNER_ERROR, 0, 0,
-                                "Result processing failed. See the IDE log for diagnostics.");
-                        try {
-                            if (stopReason != null) {
-                                result = stoppedResult();
-                            } else {
-                                String phase = Files.isRegularFile(resultRoot.resolve("phase"))
-                                        ? Files.readString(resultRoot.resolve("phase")) : "setup";
-                                result = event.getExitCode() != 0 && phase.equals("compiling")
-                                        ? new CheckResult(COMPILATION_FAILED, 0, 0,
-                                        "Compilation failed. See the Run console for file and line diagnostics.")
-                                        : TestReports.read(resultRoot.resolve(attemptId),
-                                        full ? exercise.fullCount() : exercise.exampleCount(), full, event.getExitCode());
-                            }
-                            if (!fingerprint.equals(PracticeWorkspace.fingerprint(root, attempt))) {
-                                result = staleResult(result);
-                            }
-                        } catch (IOException | UncheckedIOException | IllegalArgumentException e) {
-                            result = new CheckResult(RUNNER_ERROR, 0, 0, e.getMessage());
-                        } finally {
-                            finishLegacyRun(full, attemptId, exercise.id(), fingerprint, result);
-                        }
-                    });
-                }
-            });
-            scheduleWatchdog(handler, resultRoot, setupStarted, suiteSeconds);
-            message("Attempt: " + attemptId + "\nRunning " + (full ? "full correctness suite" : "examples")
-                    + ". First setup may download Gradle and test dependencies.\n"
-                    + "Setup limit: 5 minutes; test execution limit: " + suiteSeconds + " seconds.");
-            return handler;
-        } catch (IOException | ExecutionException | IllegalArgumentException e) {
-            running.set(false);
-            throw new ExecutionException("Cannot start practice run: " + e.getMessage(), e);
-        }
-    }
-
-    private ProcessHandler startScratchCheck(String attemptId, boolean full) throws ExecutionException {
-        if (!full) {
-            throw new ExecutionException("Scratch examples use the native Java scratch runner.");
-        }
+    ProcessHandler startCheck(String attemptId) throws ExecutionException {
         if (!running.compareAndSet(false, true)) {
             throw new ExecutionException("A practice run is already active. Stop it before starting another.");
         }
@@ -270,19 +156,16 @@ public final class PracticeRunner implements Disposable {
         VerificationWorkspace workspace = null;
         try {
             FileDocumentManager.getInstance().saveAllDocuments();
-            ScratchAttemptStore store = new ScratchAttemptStore(project);
-            var attempt = store.read(attemptId);
+            ManagedPracticeWorkspace.Attempt attempt = attempts.read(attemptId);
             var exercise = ExerciseCatalog.find(attempt.exerciseId());
-            String fingerprint = store.fingerprint(attempt);
-            ScratchPracticeProgress progress = ScratchPracticeProgress.get();
+            String fingerprint = attempts.fingerprint(attempt);
+            ManagedPracticeProgress progress = ManagedPracticeProgress.get();
             progress.validateLimits();
-            int testSeconds = progress.getState().testSeconds;
-            int suiteSeconds = progress.getState().suiteSeconds;
-            int heapMb = progress.getState().heapMb;
-            Path home = PracticeSupportEnvironment.get(project).javaHome();
+            Path home = PracticeModuleWorkspace.get(project).javaHome();
             workspace = VerificationWorkspace.create(attempt, exercise, fingerprint);
             verificationWorkspace = workspace;
-            var command = new GeneralCommandLine(workspace.command(home, testSeconds, heapMb))
+            var command = new GeneralCommandLine(workspace.command(
+                    home, progress.getState().testSeconds, progress.getState().heapMb))
                     .withWorkingDirectory(workspace.root())
                     .withEnvironment("JAVA_HOME", home.toString())
                     .withEnvironment("GRADLE_USER_HOME", workspace.gradleHome().toString());
@@ -302,162 +185,154 @@ public final class PracticeRunner implements Disposable {
                 public void processTerminated(@NotNull ProcessEvent event) {
                     cancelWatchdog();
                     terminateOwnedChildren();
-                    AppExecutorUtil.getAppExecutorService().execute(() -> {
-                        CheckResult result = new CheckResult(RUNNER_ERROR, 0, 0,
-                                "Result processing failed. See the IDE log for diagnostics.");
-                        try {
-                            if (stopReason != null) {
-                                result = stoppedResult();
-                            } else {
-                                String phase = Files.isRegularFile(currentWorkspace.resultDirectory().resolve("phase"))
-                                        ? Files.readString(currentWorkspace.resultDirectory().resolve("phase")) : "setup";
-                                result = event.getExitCode() != 0 && phase.equals("compiling")
-                                        ? new CheckResult(COMPILATION_FAILED, 0, 0,
-                                        "Compilation failed. See the Run console for file and line diagnostics.")
-                                        : TestReports.read(currentWorkspace.resultDirectory(), exercise.fullCount(), true,
-                                        event.getExitCode());
-                            }
-                            if (!fingerprint.equals(store.fingerprint(attempt))) {
-                                result = staleResult(result);
-                            }
-                        } catch (IOException | UncheckedIOException | IllegalArgumentException e) {
-                            result = new CheckResult(RUNNER_ERROR, 0, 0, e.getMessage());
-                        } finally {
-                            try {
-                                currentWorkspace.markFinished(fingerprint);
-                                currentWorkspace.cleanupAfterRun();
-                            } catch (IOException cleanupFailure) {
-                                result = new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
-                                        "Verification cleanup failed: " + cleanupFailure.getMessage());
-                            }
-                            finishScratchCheck(attempt, fingerprint, result);
-                        }
-                    });
+                    AppExecutorUtil.getAppExecutorService().execute(() ->
+                            finishCheckProcess(attempt, exercise, fingerprint, currentWorkspace, event.getExitCode()));
                 }
             });
-            scheduleWatchdog(handler, currentWorkspace.resultDirectory(), setupStarted, suiteSeconds);
-            message("Scratch attempt: " + attemptId + "\nRunning the isolated full correctness suite.\n"
-                    + "Setup limit: 5 minutes; test execution limit: " + suiteSeconds + " seconds.");
+            scheduleWatchdog(handler, currentWorkspace.resultDirectory(), setupStarted,
+                    progress.getState().suiteSeconds);
+            message("Managed attempt: " + attemptId + "\nRunning the isolated full correctness suite.\n"
+                    + "Setup limit: 5 minutes; test execution limit: "
+                    + progress.getState().suiteSeconds + " seconds.");
             return handler;
-        } catch (IOException | ExecutionException | IllegalArgumentException e) {
+        } catch (IOException | ExecutionException | IllegalArgumentException exception) {
             if (workspace != null) {
                 try {
                     workspace.markFinished("launch-failed");
                     workspace.cleanupAfterRun();
                 } catch (IOException ignored) {
-                    // Recovery preserves uncertain workspaces instead of deleting them.
+                    // Preserve uncertain workspaces.
                 }
             }
             verificationWorkspace = null;
             active = null;
             running.set(false);
-            throw new ExecutionException("Cannot start scratch check: " + e.getMessage(), e);
+            throw new ExecutionException("Cannot start managed check: " + exception.getMessage(), exception);
         }
     }
 
-    public void debug(String attemptId) throws ExecutionException {
-        debugLegacy(attemptId);
-    }
-
-    public void debugLegacy(String attemptId) throws ExecutionException {
-        ensureIdle();
-        javaHome(project);
-        if (DumbService.isDumb(project)) {
-            throw new ExecutionException("Wait for indexing and Gradle import to finish before debugging.");
-        }
-        FileDocumentManager.getInstance().saveAllDocuments();
-        Path file = Path.of(project.getBasePath(), "attempts", attemptId,
-                "src/test/java/com/jinloes/practice/ExamplesTest.java");
-        var virtualFile = LocalFileSystem.getInstance().findFileByNioFile(file);
-        if (virtualFile == null || !(PsiManager.getInstance(project).findFile(virtualFile) instanceof PsiJavaFile javaFile)
-                || javaFile.getClasses().length != 1 || ModuleUtilCore.findModuleForFile(virtualFile, project) == null
-                || !ProjectFileIndex.getInstance(project).isInTestSourceContent(virtualFile)) {
-            throw new ExecutionException("The attempt is not imported yet. Use Reload Gradle, wait for import, then retry.");
-        }
-        RunManager manager = RunManager.getInstance(project);
-        var settings = manager.createConfiguration("Debug examples " + attemptId,
-                JUnitConfigurationType.getInstance().getFactory());
-        var configuration = (JUnitConfiguration) settings.getConfiguration();
-        configuration.beClassConfiguration(javaFile.getClasses()[0]);
-        configuration.setModule(ModuleUtilCore.findModuleForFile(virtualFile, project));
-        configuration.setWorkingDirectory(project.getBasePath());
-        configuration.setVMParameters("-Xmx" + PracticeProgress.get(project).getState().heapMb
-                + "m -Djunit.jupiter.execution.timeout.mode=disabled");
-        manager.setTemporaryConfiguration(settings);
-        manager.setSelectedConfiguration(settings);
-        var environment = ExecutionEnvironmentBuilder.create(
-                DefaultDebugExecutor.getDebugExecutorInstance(), settings).activeTarget().build();
-        stopReason = null;
-        legacyDebugging = configuration;
-        running.set(true);
-        message("Starting native legacy example debugger. Compilation/import may take a moment.");
-        boolean submitted = false;
+    private void finishCheckProcess(
+            ManagedPracticeWorkspace.Attempt attempt,
+            ExerciseCatalog.Exercise exercise,
+            String fingerprint,
+            VerificationWorkspace workspace,
+            int exitCode
+    ) {
+        CheckResult result = new CheckResult(RUNNER_ERROR, 0, 0,
+                "Result processing failed. See the IDE log for diagnostics.");
         try {
-            ExecutionManager.getInstance(project).restartRunProfile(environment);
-            submitted = true;
-        } finally {
-            if (!submitted) {
-                finishLegacyDebug("Debug launch failed before execution. See the IDE error for details.");
+            if (stopReason != null) {
+                result = stoppedResult();
+            } else {
+                String phase = Files.isRegularFile(workspace.resultDirectory().resolve("phase"))
+                        ? Files.readString(workspace.resultDirectory().resolve("phase")) : "setup";
+                result = exitCode != 0 && phase.equals("compiling")
+                        ? new CheckResult(COMPILATION_FAILED, 0, 0,
+                        "Compilation failed. See the Run console for file and line diagnostics.")
+                        : TestReports.read(workspace.resultDirectory(), exercise.fullCount(), true, exitCode);
             }
+            if (!fingerprint.equals(attempts.fingerprint(attempt))) {
+                result = staleResult(result);
+            }
+        } catch (IOException | UncheckedIOException | IllegalArgumentException exception) {
+            result = new CheckResult(RUNNER_ERROR, 0, 0, exception.getMessage());
+        } finally {
+            try {
+                workspace.markFinished(fingerprint);
+                workspace.cleanupAfterRun();
+            } catch (IOException cleanupFailure) {
+                result = new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
+                        "Verification cleanup failed: " + cleanupFailure.getMessage());
+            }
+            finishCheck(attempt, fingerprint, result);
         }
     }
 
-    private void launchScratchCheck(String attemptId) throws ExecutionException {
+    private void launchExamples(String attemptId, com.intellij.execution.Executor executor) throws ExecutionException {
         ensureIdle();
-        FileDocumentManager.getInstance().saveAllDocuments();
-        RunManager manager = RunManager.getInstance(project);
-        var type = ConfigurationTypeUtil.findConfigurationType(PracticeConfigurationType.class);
-        RunnerAndConfigurationSettings settings = manager.createConfiguration(
-                "Check scratch " + attemptId, type.getConfigurationFactories()[0]);
-        var configuration = (PracticeRunConfiguration) settings.getConfiguration();
-        configuration.attemptId = attemptId;
-        configuration.full = true;
-        configuration.kind = PracticeRunConfiguration.Kind.SCRATCH;
-        manager.setTemporaryConfiguration(settings);
-        PracticeSupportEnvironment.get(project).track(settings);
-        manager.setSelectedConfiguration(settings);
-        ExecutionUtil.runConfiguration(settings, DefaultRunExecutor.getRunExecutorInstance());
+        runAfterSavingDocuments(() -> launchExamplesAfterSave(attemptId, executor));
     }
 
-    private void launchScratchNative(String attemptId, com.intellij.execution.Executor executor) throws ExecutionException {
-        ensureIdle();
-        FileDocumentManager.getInstance().saveAllDocuments();
-        ScratchAttemptStore store = new ScratchAttemptStore(project);
-        ScratchAttemptStore.Attempt attempt;
+    private void launchExamplesAfterSave(String attemptId, com.intellij.execution.Executor executor)
+            throws ExecutionException {
+        ManagedPracticeWorkspace.Attempt attempt;
         try {
-            attempt = store.read(attemptId);
+            attempt = attempts.read(attemptId);
         } catch (IOException exception) {
             throw new ExecutionException(exception.getMessage(), exception);
         }
-        PracticeSupportEnvironment support = PracticeSupportEnvironment.get(project);
-        var module = support.module();
-        var file = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(attempt.solution());
-        if (file == null) {
-            throw new ExecutionException("Scratch solution is missing: " + attempt.solution());
-        }
-        RunManager manager = RunManager.getInstance(project);
-        RunnerAndConfigurationSettings settings = manager.createConfiguration(
-                (executor == DefaultDebugExecutor.getDebugExecutorInstance() ? "Debug " : "Run ") + attemptId,
-                JavaScratchConfigurationType.getInstance());
-        var configuration = (JavaScratchConfiguration) settings.getConfiguration();
-        configuration.setScratchFileUrl(file.getUrl());
-        configuration.setMainClassName("com.jinloes.practice.Solution");
-        configuration.setModule(module);
-        configuration.setWorkingDirectory(attempt.directory().toString());
-        manager.setTemporaryConfiguration(settings);
-        support.track(settings);
-        manager.setSelectedConfiguration(settings);
+        PracticeModuleWorkspace modules = PracticeModuleWorkspace.get(project);
+        modules.open(attempt);
+        Path runner = modules.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId()));
         stopReason = null;
-        nativeScratchConfiguration = configuration;
-        running.set(true);
-        boolean submitted = false;
+        nativeAttempt = attempt;
         try {
-            ExecutionUtil.runConfiguration(settings, executor);
-            submitted = true;
-        } finally {
-            if (!submitted) {
-                finishScratchNative("Scratch launch failed before execution. See the IDE error for details.");
+            nativeFingerprint = attempts.fingerprint(attempt);
+        } catch (IOException exception) {
+            modules.clearExampleHarness(attempt);
+            nativeAttempt = null;
+            throw new ExecutionException(exception.getMessage(), exception);
+        }
+        if (!running.compareAndSet(false, true)) {
+            modules.clearExampleHarness(attempt);
+            nativeAttempt = null;
+            throw new ExecutionException("A practice run is already active. Stop it before starting another.");
+        }
+        AppExecutorUtil.getAppExecutorService().execute(() -> {
+            try {
+                modules.compileExamples(attempt, runner);
+            } catch (ExecutionException exception) {
+                finishExamples(exception.getMessage());
+                return;
             }
+            ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
+                    installExampleConfiguration(attempt, attemptId, runner, executor));
+        });
+    }
+
+    private void installExampleConfiguration(
+            ManagedPracticeWorkspace.Attempt attempt,
+            String attemptId,
+            Path runner,
+            com.intellij.execution.Executor executor
+    ) {
+        try {
+            WriteIntentReadAction.runThrowable(() -> {
+                if (project.isDisposed() || stopReason == CANCELLED) {
+                    finishExamples("Example launch cancelled.");
+                    return;
+                }
+                requireModelAccess();
+                var expectedModule = PracticeModuleWorkspace.get(project).open(attempt);
+                var runnerFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(runner);
+                var psiFile = runnerFile == null ? null : PsiManager.getInstance(project).findFile(runnerFile);
+                var module = runnerFile == null ? null : ModuleUtilCore.findModuleForFile(runnerFile, project);
+                if (!(psiFile instanceof PsiJavaFile javaFile) || javaFile.getClasses().length != 1
+                        || module == null || module.isDisposed() || module != expectedModule) {
+                    finishExamples("Generated example runner is not owned by the attempt module.");
+                    return;
+                }
+                RunManager manager = RunManager.getInstance(project);
+                RunnerAndConfigurationSettings settings = manager.createConfiguration(
+                        (executor == DefaultDebugExecutor.getDebugExecutorInstance() ? "Debug " : "Run ") + attemptId,
+                        ApplicationConfigurationType.getInstance().getConfigurationFactories()[0]);
+                var configuration = (ApplicationConfiguration) settings.getConfiguration();
+                configuration.setMainClass(javaFile.getClasses()[0]);
+                configuration.setModule(module);
+                configuration.setWorkingDirectory(attempt.directory().toString());
+                manager.setTemporaryConfiguration(settings);
+                manager.setSelectedConfiguration(settings);
+                nativeExamples = configuration;
+                nativeSettings = settings;
+                try {
+                    ExecutionUtil.runConfiguration(settings, executor);
+                } catch (RuntimeException failure) {
+                    finishExamples("Example launch failed before execution: " + failure.getMessage());
+                    throw failure;
+                }
+            });
+        } catch (ExecutionException exception) {
+            finishExamples("Example launch failed before execution: " + exception.getMessage());
         }
     }
 
@@ -491,9 +366,9 @@ public final class PracticeRunner implements Disposable {
                             : "Setup/compilation exceeded five minutes. Check SDK, network, and Run output.";
                     stop();
                 }
-            } catch (IOException e) {
+            } catch (IOException exception) {
                 stopReason = RUNNER_ERROR;
-                stopDetails = "Cannot inspect execution timer: " + e.getMessage();
+                stopDetails = "Cannot inspect execution timer: " + exception.getMessage();
                 stop();
             }
         }, 0, 250, TimeUnit.MILLISECONDS);
@@ -502,34 +377,61 @@ public final class PracticeRunner implements Disposable {
         }
     }
 
-    private void finishLegacyRun(boolean full, String attemptId, String exerciseId, String fingerprint, CheckResult result) {
+    private void finishCheck(ManagedPracticeWorkspace.Attempt attempt, String fingerprint, CheckResult result) {
         CheckResult completed = result;
-        ApplicationManager.getApplication().invokeLater(() -> {
-            active = null;
-            running.set(false);
-            if (!project.isDisposed()) {
-                if (full) {
-                    PracticeProgress.get(project).record(attemptId, exerciseId, fingerprint, completed);
-                }
-                message("Attempt: " + attemptId + "\n"
-                        + (full ? "Full check: " : "Examples: ") + completed.status()
-                        + "\n" + completed.details());
-            }
-        });
+        ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
+                WriteIntentReadAction.run(() -> {
+                    RunnerAndConfigurationSettings settings = checkSettings;
+                    checkSettings = null;
+                    if (settings != null && !project.isDisposed()) {
+                        requireModelAccess();
+                        RunManager.getInstance(project).removeConfiguration(settings);
+                        PracticeModuleWorkspace.get(project).untrack(settings);
+                    }
+                    verificationWorkspace = null;
+                    active = null;
+                    running.set(false);
+                    if (!project.isDisposed()) {
+                        ManagedPracticeProgress.get().record(
+                                attempt.id(), attempt.exerciseId(), fingerprint, completed);
+                        message("Managed attempt: " + attempt.id() + "\nFull check: " + completed.status()
+                                + "\n" + completed.details());
+                    }
+                }));
     }
 
-    private void finishScratchCheck(ScratchAttemptStore.Attempt attempt, String fingerprint, CheckResult result) {
-        CheckResult completed = result;
-        ApplicationManager.getApplication().invokeLater(() -> {
-            verificationWorkspace = null;
-            active = null;
-            running.set(false);
-            if (!project.isDisposed()) {
-                ScratchPracticeProgress.get().record(attempt.id(), attempt.exerciseId(), fingerprint, completed);
-                message("Scratch attempt: " + attempt.id() + "\nFull check: " + completed.status()
-                        + "\n" + completed.details());
-            }
-        });
+    private void finishExamples(String text) {
+        ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
+                WriteIntentReadAction.run(() -> {
+                    String resultText = text;
+                    ManagedPracticeWorkspace.Attempt attempt = nativeAttempt;
+                    String fingerprint = nativeFingerprint;
+                    RunnerAndConfigurationSettings settings = nativeSettings;
+                    nativeExamples = null;
+                    nativeSettings = null;
+                    nativeAttempt = null;
+                    nativeFingerprint = null;
+                    active = null;
+                    running.set(false);
+                    if (settings != null && !project.isDisposed()) {
+                        requireModelAccess();
+                        RunManager.getInstance(project).removeConfiguration(settings);
+                    }
+                    if (attempt != null && !project.isDisposed()) {
+                        PracticeModuleWorkspace.get(project).clearExampleHarness(attempt);
+                        if (fingerprint != null && resultText.startsWith("Example session finished (exit 0)")) {
+                            try {
+                                if (!fingerprint.equals(attempts.fingerprint(attempt))) {
+                                    resultText = "STALE: files changed during the example run; run the current solution again.";
+                                }
+                            } catch (IOException exception) {
+                                resultText = "Example result is unavailable: " + exception.getMessage();
+                            }
+                        }
+                    }
+                    message(resultText);
+                }
+        ));
     }
 
     private CheckResult stoppedResult() {
@@ -558,10 +460,11 @@ public final class PracticeRunner implements Disposable {
     }
 
     private void cancelWatchdog() {
-        ScheduledFuture<?> currentWatchdog = watchdog;
-        if (currentWatchdog != null) {
-            currentWatchdog.cancel(false);
+        ScheduledFuture<?> current = watchdog;
+        if (current != null) {
+            current.cancel(false);
         }
+        watchdog = null;
     }
 
     private void ensureIdle() throws ExecutionException {
@@ -570,18 +473,58 @@ public final class PracticeRunner implements Disposable {
         }
     }
 
-    private void finishScratchNative(String text) {
-        active = null;
-        nativeScratchConfiguration = null;
-        running.set(false);
-        message(text);
+    private void runAfterSavingDocuments(ExecutionAction action) throws ExecutionException {
+        Consumer<Runnable> testDispatcher = continuationDispatcherForTests;
+        if (testDispatcher != null) {
+            ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
+                    WriteIntentReadAction.run(() -> {
+                        FileDocumentManager.getInstance().saveAllDocuments();
+                        testDispatcher.accept(() -> continueWithWriteIntent(action));
+                    }));
+            return;
+        }
+        if (ApplicationManager.getApplication().isDispatchThread()
+                && ApplicationManager.getApplication().isWriteIntentLockAcquired()) {
+            saveAndContinueWithWriteIntent(action);
+            return;
+        }
+        ApplicationManager.getApplication().invokeLaterOnWriteThread(() -> {
+            try {
+                saveAndContinueWithWriteIntent(action);
+            } catch (ExecutionException exception) {
+                message("Cannot start practice execution: " + exception.getMessage());
+            }
+        });
     }
 
-    private void finishLegacyDebug(String text) {
-        active = null;
-        legacyDebugging = null;
-        running.set(false);
-        message(text);
+    private static void saveAndContinueWithWriteIntent(ExecutionAction action) throws ExecutionException {
+        WriteIntentReadAction.runThrowable(() -> {
+            FileDocumentManager.getInstance().saveAllDocuments();
+            action.run();
+        });
+    }
+
+    private void continueWithWriteIntent(ExecutionAction action) {
+        try {
+            WriteIntentReadAction.runThrowable(action::run);
+        } catch (ExecutionException exception) {
+            message("Cannot start practice execution: " + exception.getMessage());
+        }
+    }
+
+    private static void requireModelAccess() {
+        ApplicationManager.getApplication().assertReadAccessAllowed();
+        ApplicationManager.getApplication().assertWriteIntentLockAcquired();
+    }
+
+    @TestOnly
+    static void setContinuationDispatcherForTests(Consumer<Runnable> dispatcher) {
+        continuationDispatcherForTests = dispatcher;
+    }
+
+    @FunctionalInterface
+    private interface ExecutionAction {
+        void run() throws ExecutionException;
     }
 
     private void message(String text) {
@@ -590,32 +533,6 @@ public final class PracticeRunner implements Disposable {
                 listener.accept(text);
             }
         });
-    }
-
-    public static Path javaHome(Project project) throws ExecutionException {
-        Sdk sdk = ProjectRootManager.getInstance(project).getProjectSdk();
-        if (sdk == null || sdk.getHomePath() == null) {
-            throw new ExecutionException("Set a JDK 17 or newer in File > Project Structure > Project SDK, then retry.");
-        }
-        Path home = Path.of(sdk.getHomePath());
-        if (!Files.isRegularFile(home.resolve("bin").resolve(isWindows() ? "java.exe" : "java"))
-                || !Files.isRegularFile(home.resolve("release"))) {
-            throw new ExecutionException("The project SDK is not a usable JDK. Select a JDK 17 or newer.");
-        }
-        try {
-            var properties = new java.util.Properties();
-            try (var reader = Files.newBufferedReader(home.resolve("release"))) {
-                properties.load(reader);
-            }
-            String version = properties.getProperty("JAVA_VERSION", "").replace("\"", "");
-            int major = Runtime.Version.parse(version).feature();
-            if (major < 17) {
-                throw new ExecutionException("Gradle requires JDK 17 or newer; selected SDK is Java " + major + ".");
-            }
-        } catch (IOException | IllegalArgumentException e) {
-            throw new ExecutionException("Cannot read the selected JDK version: " + e.getMessage(), e);
-        }
-        return home;
     }
 
     private static boolean isWindows() {

@@ -26,7 +26,7 @@ class VerificationWorkspaceTest {
 
     @Test
     void createsAnOwnedIsolatedProjectWithFreshReportsAndPrivateGradleHome() throws Exception {
-        ScratchAttemptStore store = new ScratchAttemptStore(temporary.resolve("scratches"));
+        ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
         var attempt = store.create(ExerciseCatalog.find("pair-sum"));
         String fingerprint = store.fingerprint(attempt);
 
@@ -76,7 +76,7 @@ class VerificationWorkspaceTest {
 
     @Test
     void recoveryDeletesOnlyMarkedInactiveWorkspaces() throws Exception {
-        ScratchAttemptStore store = new ScratchAttemptStore(temporary.resolve("scratches"));
+        ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
         var attempt = store.create(ExerciseCatalog.find("pair-sum"));
         String fingerprint = store.fingerprint(attempt);
         Path system = temporary.resolve("system");
@@ -124,7 +124,7 @@ class VerificationWorkspaceTest {
                     ProjectJdkTable.getInstance().addJdk(staleSdk)));
             assertThat(ProjectJdkTable.getInstance().findJdk(sdkName)).isSameAs(staleSdk);
 
-            assertThat(PracticeSupportEnvironment.get(fixture.getProject()).cleanupAbandonedArtifacts()).isTrue();
+            assertThat(PracticeModuleWorkspace.get(fixture.getProject()).cleanupGeneratedArtifacts()).isTrue();
 
             assertThat(ProjectJdkTable.getInstance().findJdk(sdkName)).isNull();
         } finally {

@@ -21,14 +21,7 @@ import javax.swing.JLabel;
 public final class PracticeRunConfiguration extends RunConfigurationBase<PracticeRunConfiguration.Options> {
     public static final class Options extends com.intellij.execution.configurations.RunConfigurationOptions {}
 
-    public enum Kind {
-        LEGACY,
-        SCRATCH
-    }
-
     public String attemptId = "";
-    public boolean full = true;
-    public Kind kind = Kind.LEGACY;
 
     public PracticeRunConfiguration(Project project, ConfigurationFactory factory, String name) {
         super(project, factory, name);
@@ -51,14 +44,8 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
             throw new RuntimeConfigurationError("Select an attempt in the Practice tool window.");
         }
         try {
-            if (kind == Kind.SCRATCH) {
-                new com.jinloes.practice_plugin.workspace.ScratchAttemptStore(getProject()).read(attemptId);
-            } else {
-                PracticeRunner.javaHome(getProject());
-            }
+            new com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace().read(attemptId);
         } catch (java.io.IOException e) {
-            throw new RuntimeConfigurationError(e.getMessage());
-        } catch (ExecutionException e) {
             throw new RuntimeConfigurationError(e.getMessage());
         }
     }
@@ -72,7 +59,7 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
         return new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-                return getProject().getService(PracticeRunner.class).start(attemptId, full, kind);
+                return getProject().getService(PracticeRunner.class).startCheck(attemptId);
             }
         };
     }
@@ -81,19 +68,11 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
     public void readExternal(@NotNull Element element) throws com.intellij.openapi.util.InvalidDataException {
         super.readExternal(element);
         attemptId = element.getAttributeValue("attempt", "");
-        full = Boolean.parseBoolean(element.getAttributeValue("full", "true"));
-        try {
-            kind = Kind.valueOf(element.getAttributeValue("kind", Kind.LEGACY.name()));
-        } catch (IllegalArgumentException ignored) {
-            kind = Kind.LEGACY;
-        }
     }
 
     @Override
     public void writeExternal(@NotNull Element element) throws com.intellij.openapi.util.WriteExternalException {
         super.writeExternal(element);
         element.setAttribute("attempt", attemptId);
-        element.setAttribute("full", Boolean.toString(full));
-        element.setAttribute("kind", kind.name());
     }
 }

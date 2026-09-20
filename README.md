@@ -72,10 +72,11 @@ gradle :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
 
 [`practice-plugin/`](practice-plugin/README.md) is an independent IntelliJ IDEA
 plugin build for practicing original Java algorithm and data-structure exercises.
-It presents problems and hints, creates durable Java scratches that work from any
-open project, and supports local correctness checks, native debugging, and saved
-progress. Existing plugin-created practice projects remain available as legacy
-attempts. It is intentionally not included in the root multi-module build.
+It presents problems and hints, creates durable managed Java attempts that work
+from any open project, and supports local correctness checks, native debugging,
+and saved progress. Existing plugin-created practice projects can be imported
+without changing their files. It is intentionally not included in the root
+multi-module build.
 
 ## Project Layout
 

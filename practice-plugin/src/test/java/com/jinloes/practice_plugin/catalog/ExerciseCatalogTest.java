@@ -57,6 +57,11 @@ class ExerciseCatalogTest {
                 "binary-min-heap", 12);
         for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
             assertThat(exercise.exampleCount()).isEqualTo(expectedExamples.get(exercise.id()));
+            assertThat(exercise.examples()).hasSize(exercise.exampleCount())
+                    .allSatisfy(example -> {
+                        assertThat(example.input()).isNotBlank();
+                        assertThat(example.output()).isNotBlank();
+                    });
             assertThat(exercise.fullCount()).isEqualTo(expectedFull.get(exercise.id()));
             assertThat(exercise.hints()).hasSize(3).allSatisfy(hint -> assertThat(hint).isNotBlank());
             assertThat(exercise.statement()).contains("Contract", "Examples");
@@ -79,6 +84,9 @@ class ExerciseCatalogTest {
             }
             assertThat(ExerciseCatalog.resource(exercise, "Solution.java"))
                     .contains("UnsupportedOperationException(\"Implement ");
+            assertThat(ExerciseCatalog.resource(exercise, "ExampleRunner.java"))
+                    .contains("class ExampleRunner", "public static void main(String[] args)")
+                    .doesNotContain("org.junit", "org.assertj");
             assertThat(ExerciseCatalog.resource(exercise, "ExamplesTest.java"))
                     .doesNotContain("public class ExamplesTest");
             assertThat(ExerciseCatalog.resource(exercise, "CorrectnessTest.java"))
@@ -100,7 +108,8 @@ class ExerciseCatalogTest {
         assertThatThrownBy(() -> ExerciseCatalog.resource(pairSum, null))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ExerciseCatalog.resource(
-                new ExerciseCatalog.Exercise("unknown", "Unknown", "Test", "Easy", "Statement", List.of(), 0, 0),
+                new ExerciseCatalog.Exercise("unknown", "Unknown", "Test", "Easy", "Statement",
+                        List.of(), List.of(), 0, 0),
                 "Solution.java"))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ExerciseCatalog.resource(pairSum, "missing.txt"))
@@ -139,20 +148,33 @@ class ExerciseCatalogTest {
     }
 
     @Test
-    void starterMainsCompileWithRelease17AndDescribeThreeInlineExamples() throws Exception {
+    void startersContainOnlyLearnerApiAndGeneratedRunnersPassVisibleExamples() throws Exception {
         for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
-            Path root = Files.createTempDirectory(Path.of("build"), "catalog-main-" + exercise.id() + "-");
+            Path root = Files.createTempDirectory(Path.of("build"), "catalog-runner-" + exercise.id() + "-");
             try {
                 Path sourceRoot = root.resolve("src/com/jinloes/practice");
                 Path classes = root.resolve("classes");
                 Files.createDirectories(sourceRoot);
                 Files.createDirectories(classes);
-                String source = ExerciseCatalog.resource(exercise, "Solution.java");
-                Files.writeString(sourceRoot.resolve("Solution.java"), source, StandardCharsets.UTF_8);
+                String starter = ExerciseCatalog.resource(exercise, "Solution.java");
+                assertThat(starter).doesNotContain(
+                        "static void main", "@Test", "assertEquals", "assertPair", "assertValues");
+                Files.writeString(sourceRoot.resolve("Solution.java"), referenceSource(exercise), StandardCharsets.UTF_8);
+                Files.writeString(sourceRoot.resolve("ExampleRunner.java"),
+                        ExerciseCatalog.resource(exercise, "ExampleRunner.java"), StandardCharsets.UTF_8);
 
-                compile(List.of(sourceRoot.resolve("Solution.java")), classes, exercise.id() + " starter main");
+                compile(List.of(sourceRoot.resolve("Solution.java"), sourceRoot.resolve("ExampleRunner.java")),
+                        classes, exercise.id() + " generated runner");
 
-                assertThat(source).contains("public static void main(String[] args)", "Examples passed: 3");
+                Process process = new ProcessBuilder(
+                        Path.of(System.getProperty("java.home"), "bin",
+                                System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString(),
+                        "-classpath", classes.toString(), "com.jinloes.practice.ExampleRunner")
+                        .redirectErrorStream(true).start();
+                assertThat(process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                assertThat(new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8))
+                        .contains("Examples passed: " + exercise.exampleCount());
+                assertThat(process.exitValue()).isZero();
             } finally {
                 deleteTree(root);
             }

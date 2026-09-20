@@ -14,12 +14,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service(Service.Level.APP)
-@State(name = "AlgorithmPracticeScratch", storages = @Storage(value = "algorithm-practice-scratches.xml",
-        roamingType = RoamingType.DISABLED))
-public final class ScratchPracticeProgress implements PersistentStateComponent<ScratchPracticeProgress.Data> {
+@State(name = "AlgorithmPracticeManaged", storages = @Storage(
+        value = "algorithm-practice-managed.xml", roamingType = RoamingType.DISABLED))
+public final class ManagedPracticeProgress implements PersistentStateComponent<ManagedPracticeProgress.Data> {
     public static final class Data {
         public Map<String, Entry> attempts = new LinkedHashMap<>();
         public Map<String, String> selectedAttempts = new LinkedHashMap<>();
+        public Map<String, String> legacyMappings = new LinkedHashMap<>();
         public int testSeconds = 5;
         public int suiteSeconds = 60;
         public int heapMb = 256;
@@ -40,8 +41,8 @@ public final class ScratchPracticeProgress implements PersistentStateComponent<S
 
     private Data data = new Data();
 
-    public static ScratchPracticeProgress get() {
-        return ApplicationManager.getApplication().getService(ScratchPracticeProgress.class);
+    public static ManagedPracticeProgress get() {
+        return ApplicationManager.getApplication().getService(ManagedPracticeProgress.class);
     }
 
     @Override
@@ -57,15 +58,22 @@ public final class ScratchPracticeProgress implements PersistentStateComponent<S
         if (state.selectedAttempts == null) {
             state.selectedAttempts = new LinkedHashMap<>();
         }
+        if (state.legacyMappings == null) {
+            state.legacyMappings = new LinkedHashMap<>();
+        }
         data = state;
     }
 
     public Entry entry(String attemptId, String exerciseId) {
-        return data.attempts.computeIfAbsent(attemptId, ignored -> {
-            Entry entry = new Entry();
-            entry.exerciseId = exerciseId;
-            return entry;
+        Entry entry = data.attempts.computeIfAbsent(attemptId, ignored -> {
+            Entry created = new Entry();
+            created.exerciseId = exerciseId;
+            return created;
         });
+        if (!entry.exerciseId.equals(exerciseId)) {
+            throw new IllegalArgumentException("Attempt is already associated with another exercise.");
+        }
+        return entry;
     }
 
     public void record(String attemptId, String exerciseId, String fingerprint, CheckResult result) {
@@ -81,6 +89,14 @@ public final class ScratchPracticeProgress implements PersistentStateComponent<S
         }
     }
 
+    public String importedAttempt(String legacyRoot, String legacyAttemptId) {
+        return data.legacyMappings.get(legacyKey(legacyRoot, legacyAttemptId));
+    }
+
+    public void recordImport(String legacyRoot, String legacyAttemptId, String managedAttemptId) {
+        data.legacyMappings.putIfAbsent(legacyKey(legacyRoot, legacyAttemptId), managedAttemptId);
+    }
+
     public void validateLimits() {
         if (data.testSeconds < 1 || data.testSeconds > 300
                 || data.suiteSeconds < data.testSeconds || data.suiteSeconds > 1800
@@ -88,5 +104,9 @@ public final class ScratchPracticeProgress implements PersistentStateComponent<S
             throw new IllegalArgumentException(
                     "Use 1-300 seconds per test, at least that long and at most 1800 seconds per suite, and 64-2048 MiB.");
         }
+    }
+
+    private static String legacyKey(String legacyRoot, String legacyAttemptId) {
+        return legacyRoot + "\n" + legacyAttemptId;
     }
 }
