@@ -1,0 +1,30 @@
+{
+  "id": "reverse-linked-list",
+  "title": "Reverse Linked List",
+  "topic": "Linked Lists",
+  "difficulty": "Easy",
+  "statement": "Reverse a singly linked list in place.\n\nContract\n- `head` may be null or may point to the first node of an acyclic list. Each node\n  has an integer `value` and a mutable `next` reference.\n- Return the new head after reversing every link. Reuse exactly the nodes supplied:\n  do not allocate replacement nodes and do not change node values.\n- A one-node list remains the same node and a null list returns null.\n\nExamples\n- A list `1 -> 2 -> 3` becomes `3 -> 2 -> 1`.\n- A one-node list containing `8` returns that same node.\n- Reversing an empty list returns `null`.\n",
+  "examples": [
+    {
+      "input": "head = 1 -> 2 -> 3",
+      "output": "3 -> 2 -> 1"
+    },
+    {
+      "input": "head = 8",
+      "output": "8 (the same node)"
+    },
+    {
+      "input": "head = null",
+      "output": "null"
+    }
+  ],
+  "hints": [
+    "Keep the already-reversed prefix, the current node, and the not-yet-visited suffix.",
+    "Before changing current.next, save the suffix so it is not lost.",
+    "Advance the two pointers until current is null; the prefix pointer is the new head. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the list values in order, for example: [1, 2, 3]",
+  "sampleInput": "[1, 2, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

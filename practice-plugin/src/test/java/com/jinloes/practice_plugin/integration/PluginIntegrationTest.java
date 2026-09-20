@@ -15,6 +15,7 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.testFramework.EdtTestUtil;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
+import com.jinloes.practice_plugin.app.LegacyImportService;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.run.PracticeConfigurationType;
 import com.jinloes.practice_plugin.run.PracticeRunConfiguration;
@@ -22,6 +23,7 @@ import com.jinloes.practice_plugin.run.PracticeRunner;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import com.jinloes.practice_plugin.state.PracticeProgress;
 import com.jinloes.practice_plugin.ui.PracticeToolWindowFactory;
+import com.jinloes.practice_plugin.workspace.LegacyWorkspaceFixture;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeWorkspace;
@@ -139,8 +141,8 @@ class PluginIntegrationTest {
     @Test
     void legacyImportIsIdempotentAndSafelySkipsInvalidEntries() throws Exception {
         Path legacyRoot = temporary.resolve("legacy");
-        PracticeWorkspace.create(legacyRoot);
-        var legacy = PracticeWorkspace.createAttempt(legacyRoot, ExerciseCatalog.find("pair-sum"));
+        LegacyWorkspaceFixture.create(legacyRoot);
+        var legacy = LegacyWorkspaceFixture.createAttempt(legacyRoot, ExerciseCatalog.find("pair-sum"));
         Files.writeString(legacy.solution(), "learner-owned legacy solution");
         PracticeProgress legacyProgress = PracticeProgress.get(fixture.getProject());
         var legacyEntry = legacyProgress.entry(legacy.id(), legacy.exerciseId());
@@ -160,11 +162,12 @@ class PluginIntegrationTest {
         String originalsBefore = treeFingerprint(legacyRoot);
 
         ManagedPracticeWorkspace managed = new ManagedPracticeWorkspace();
+        LegacyImportService legacyImport = new LegacyImportService(managed);
         ManagedPracticeProgress progress = ManagedPracticeProgress.get();
         int managedBefore = managed.attempts("pair-sum").size();
 
-        var first = managed.importLegacy(legacyRoot, legacyProgress, progress);
-        var second = managed.importLegacy(legacyRoot, legacyProgress, progress);
+        var first = legacyImport.importLegacy(legacyRoot, legacyProgress, progress);
+        var second = legacyImport.importLegacy(legacyRoot, legacyProgress, progress);
 
         String managedId = progress.importedAttempt(legacyRoot.toRealPath().toString(), legacy.id());
         assertThat(first.imported()).isEqualTo(1);

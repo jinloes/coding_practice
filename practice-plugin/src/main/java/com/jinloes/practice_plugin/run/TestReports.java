@@ -17,7 +17,7 @@ import static com.jinloes.practice_plugin.run.CheckResult.Status.*;
 public final class TestReports {
     private TestReports() {}
 
-    public static CheckResult read(Path reportDirectory, int expectedTests, boolean full, int exitCode)
+    public static CheckResult read(Path reportDirectory, int expectedTests, int exitCode)
             throws IOException {
         int tests = 0;
         int failures = 0;
@@ -73,9 +73,8 @@ public final class TestReports {
         } catch (ParserConfigurationException | SAXException e) {
             throw new IOException("Invalid test report", e);
         }
-        Set<String> expectedClasses = full
-                ? Set.of("com.jinloes.practice.ExamplesTest", "com.jinloes.practice.CorrectnessTest")
-                : Set.of("com.jinloes.practice.ExamplesTest");
+        Set<String> expectedClasses =
+                Set.of("com.jinloes.practice.ExamplesTest", "com.jinloes.practice.CorrectnessTest");
         if (tests != expectedTests || skipped > 0 || !classes.equals(expectedClasses)) {
             return new CheckResult(RUNNER_ERROR, tests, failures,
                     "Incomplete test run: expected " + expectedTests + " tests in " + expectedClasses

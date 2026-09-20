@@ -30,7 +30,7 @@ class PracticeWorkspaceTest {
     void createsWorkspaceWithPackagedGradleBootstrap() throws Exception {
         Path root = tempDir.resolve("practice");
 
-        PracticeWorkspace.create(root);
+        LegacyWorkspaceFixture.create(root);
 
         assertThat(PracticeWorkspace.isWorkspace(root)).isTrue();
         assertThat(Files.readString(root.resolve(PracticeWorkspace.MARKER))).isEqualTo("schema=1\n");
@@ -58,7 +58,7 @@ class PracticeWorkspaceTest {
         Files.createDirectories(solution.getParent());
         Files.writeString(solution, "keep this solution");
 
-        assertThatThrownBy(() -> PracticeWorkspace.create(root))
+        assertThatThrownBy(() -> LegacyWorkspaceFixture.create(root))
                 .isInstanceOf(IOException.class);
 
         assertThat(Files.readString(solution)).isEqualTo("keep this solution");
@@ -70,8 +70,8 @@ class PracticeWorkspaceTest {
     @Test
     void createsIsolatedAttemptsAndDoesNotReplaceTheirSolutions() throws Exception {
         Path root = createWorkspace();
-        PracticeWorkspace.Attempt first = PracticeWorkspace.createAttempt(root, PAIR_SUM);
-        PracticeWorkspace.Attempt second = PracticeWorkspace.createAttempt(root, PAIR_SUM);
+        PracticeWorkspace.Attempt first = LegacyWorkspaceFixture.createAttempt(root, PAIR_SUM);
+        PracticeWorkspace.Attempt second = LegacyWorkspaceFixture.createAttempt(root, PAIR_SUM);
         String originalSecondSolution = Files.readString(second.solution());
         Files.writeString(first.solution(), "custom first solution");
 
@@ -87,11 +87,11 @@ class PracticeWorkspaceTest {
     }
 
     @Test
-    void resumesAnAttemptAndListsOnlyMatchingMarkedAttempts() throws Exception {
+    void resumesEachMarkedAttemptWithItsOwnExercise() throws Exception {
         Path root = createWorkspace();
-        PracticeWorkspace.Attempt pairSum = PracticeWorkspace.createAttempt(root, PAIR_SUM);
+        PracticeWorkspace.Attempt pairSum = LegacyWorkspaceFixture.createAttempt(root, PAIR_SUM);
         PracticeWorkspace.Attempt binarySearch =
-                PracticeWorkspace.createAttempt(root, ExerciseCatalog.find("binary-search"));
+                LegacyWorkspaceFixture.createAttempt(root, ExerciseCatalog.find("binary-search"));
         Files.createDirectories(root.resolve("attempts/ignored-directory"));
         String editedSolution = "edited while the IDE was closed";
         Files.writeString(pairSum.solution(), editedSolution);
@@ -100,12 +100,12 @@ class PracticeWorkspaceTest {
 
         assertThat(resumed).isEqualTo(pairSum);
         assertThat(Files.readString(resumed.solution())).isEqualTo(editedSolution);
-        assertThat(PracticeWorkspace.attempts(root, PAIR_SUM.id()))
-                .extracting(PracticeWorkspace.Attempt::id)
-                .containsExactly(pairSum.id());
-        assertThat(PracticeWorkspace.attempts(root, binarySearch.exerciseId()))
-                .extracting(PracticeWorkspace.Attempt::id)
-                .containsExactly(binarySearch.id());
+        assertThat(PracticeWorkspace.readAttempt(root, binarySearch.id()))
+                .as("each attempt resolves to its own exercise")
+                .isEqualTo(binarySearch);
+        assertThatThrownBy(() -> PracticeWorkspace.readAttempt(root, "ignored-directory"))
+                .as("directories without an attempt marker are not readable attempts")
+                .isInstanceOf(IOException.class);
     }
 
     @Test
@@ -116,9 +116,7 @@ class PracticeWorkspaceTest {
         Files.delete(root.resolve("attempts"));
         Files.createSymbolicLink(root.resolve("attempts"), outside);
 
-        assertThatThrownBy(() -> PracticeWorkspace.createAttempt(root, PAIR_SUM))
-                .isInstanceOf(IOException.class);
-        assertThatThrownBy(() -> PracticeWorkspace.attempts(root, PAIR_SUM.id()))
+        assertThatThrownBy(() -> PracticeWorkspace.readAttempt(root, "pair-sum-anything"))
                 .isInstanceOf(IOException.class);
         try (var entries = Files.list(outside)) {
             assertThat(entries.toList()).isEmpty();
@@ -141,65 +139,22 @@ class PracticeWorkspaceTest {
     }
 
     @Test
-    void rejectsFingerprintingAnAttemptOutsideTheWorkspace() throws Exception {
-        Path root = createWorkspace();
-        Path outside = tempDir.resolve("foreign-attempt");
-        Files.createDirectories(outside.resolve("src"));
-        Files.writeString(outside.resolve("src/Solution.java"), "foreign source");
-        Files.writeString(outside.resolve("build.gradle"), "foreign build");
-        Files.writeString(outside.resolve(".practice-attempt"),
-                "exercise=pair-sum\nrevision=1\ncreated=2026-01-01T00:00:00Z\n");
-        PracticeWorkspace.Attempt foreign =
-                new PracticeWorkspace.Attempt("pair-sum-foreign", PAIR_SUM.id(),
-                        PracticeWorkspace.REVISION, outside);
-
-        assertThatThrownBy(() -> PracticeWorkspace.fingerprint(root, foreign))
-                .isInstanceOf(IOException.class);
-    }
-
-    @Test
     void rejectsWorkspaceWithAnUnsupportedMarkerSchema() throws Exception {
         Path root = tempDir.resolve("not-a-workspace");
         Files.createDirectories(root.resolve("attempts"));
         Files.writeString(root.resolve(PracticeWorkspace.MARKER), "schema=2\n");
 
         assertThat(PracticeWorkspace.isWorkspace(root)).isFalse();
-        assertThatThrownBy(() -> PracticeWorkspace.attempts(root, PAIR_SUM.id()))
+        assertThatThrownBy(() -> PracticeWorkspace.readAttempt(root, "pair-sum-anything"))
                 .isInstanceOf(IOException.class);
-        assertThatThrownBy(() -> PracticeWorkspace.createAttempt(root, PAIR_SUM))
-                .isInstanceOf(IOException.class);
-    }
-
-    @Test
-    void fingerprintChangesWhenSourceTestsOrBuildInputsChange() throws Exception {
-        Path root = createWorkspace();
-        PracticeWorkspace.Attempt attempt = PracticeWorkspace.createAttempt(root, PAIR_SUM);
-        String baseline = PracticeWorkspace.fingerprint(root, attempt);
-
-        Files.writeString(attempt.solution(), Files.readString(attempt.solution()) + "\n// changed\n");
-        assertThat(PracticeWorkspace.fingerprint(root, attempt)).isNotEqualTo(baseline);
-
-        Files.writeString(
-                attempt.directory().resolve("src/test/java/com/jinloes/practice/ExamplesTest.java"),
-                Files.readString(attempt.directory().resolve("src/test/java/com/jinloes/practice/ExamplesTest.java"))
-                        + "\n// changed\n");
-        assertThat(PracticeWorkspace.fingerprint(root, attempt)).isNotEqualTo(baseline);
-
-        Files.writeString(root.resolve("build.gradle"), Files.readString(root.resolve("build.gradle"))
-                + "\n// changed\n");
-        assertThat(PracticeWorkspace.fingerprint(root, attempt)).isNotEqualTo(baseline);
-
-        Files.writeString(attempt.directory().resolve("build.gradle"),
-                Files.readString(attempt.directory().resolve("build.gradle")) + "\n// changed\n");
-        assertThat(PracticeWorkspace.fingerprint(root, attempt)).isNotEqualTo(baseline);
     }
 
     @Test
     @Tag("gradle-integration")
     void generatedWorkspaceRunsOnlyTheSelectedAttemptAndRejectsAStalePass() throws Exception {
         Path root = createWorkspace();
-        PracticeWorkspace.Attempt passing = PracticeWorkspace.createAttempt(root, PAIR_SUM);
-        PracticeWorkspace.Attempt compilingFailure = PracticeWorkspace.createAttempt(root, PAIR_SUM);
+        PracticeWorkspace.Attempt passing = LegacyWorkspaceFixture.createAttempt(root, PAIR_SUM);
+        PracticeWorkspace.Attempt compilingFailure = LegacyWorkspaceFixture.createAttempt(root, PAIR_SUM);
         try (InputStream input = getClass().getResourceAsStream("/reference/pair-sum/Solution.java")) {
             assertThat(input).isNotNull();
             Files.writeString(passing.solution(),
@@ -212,7 +167,7 @@ class PracticeWorkspaceTest {
 
         assertThat(passingExit).isZero();
         CheckResult passingResult =
-                TestReports.read(results, PAIR_SUM.fullCount(), true, passingExit);
+                TestReports.read(results, PAIR_SUM.fullCount(), passingExit);
         assertThat(passingResult.status()).isEqualTo(CheckResult.Status.PASSED);
         assertThat(passingResult.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(passingResult.failures()).isZero();
@@ -226,7 +181,7 @@ class PracticeWorkspaceTest {
         assertThat(Files.readString(root.resolve(".practice-results/unique/phase")))
                 .isEqualTo("compiling");
         CheckResult staleReport =
-                TestReports.read(results, PAIR_SUM.fullCount(), true, compilationExit);
+                TestReports.read(results, PAIR_SUM.fullCount(), compilationExit);
         assertThat(staleReport.status()).isEqualTo(CheckResult.Status.RUNNER_ERROR);
     }
 
@@ -274,7 +229,7 @@ class PracticeWorkspaceTest {
 
     private Path createWorkspace() throws IOException {
         Path root = tempDir.resolve("workspace-" + System.nanoTime());
-        PracticeWorkspace.create(root);
+        LegacyWorkspaceFixture.create(root);
         return root;
     }
 }

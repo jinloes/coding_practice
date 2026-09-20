@@ -1,0 +1,30 @@
+{
+  "id": "array-stack",
+  "title": "Array Stack",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Implement a last-in-first-out stack of integers backed by a growable array.\n\nContract\n- `push` adds one value to the top. The stack has no fixed capacity and accepts\n  every `int`, including duplicates and negative values.\n- `pop` removes and returns the newest value; `peek` returns it without removing it.\n  Both methods throw `NoSuchElementException` when the stack is empty.\n- `size` reports the number of stored values and `isEmpty` is equivalent to `size() == 0`.\n\nExamples\n- Pushing `4`, then `9`, makes `pop()` return `9` and then `4`.\n- `peek()` observes the top while leaving the size unchanged.\n- A new stack is empty and `pop()`/`peek()` throw `NoSuchElementException`.\n",
+  "examples": [
+    {
+      "input": "push(4), push(9), pop(), pop()",
+      "output": "9, then 4"
+    },
+    {
+      "input": "push(12), peek(), size()",
+      "output": "12, then 1"
+    },
+    {
+      "input": "new stack; pop() and peek()",
+      "output": "Empty; both operations throw NoSuchElementException"
+    }
+  ],
+  "hints": [
+    "Track the number of elements and treat the next free array slot as the top.",
+    "Growing needs a larger array before writing when the current storage is full.",
+    "On pop, read the last element and decrement the size. Double array capacity when growing. Intended complexity: amortized O(1) push, O(1) pop/peek/size/isEmpty, and O(n) space."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: push 4, push 9, pop, peek, size",
+  "sampleInput": "push 4, push 9, pop, peek, size",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

@@ -49,4 +49,42 @@ class ManagedPracticeProgressTest {
         progress.getState().heapMb = 63;
         assertThatThrownBy(progress::validateLimits).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void acceptsTheDocumentedLimitBoundaries() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        ManagedPracticeProgress.Data state = progress.getState();
+
+        state.testSeconds = 1;
+        state.suiteSeconds = 1;
+        state.heapMb = 64;
+        progress.validateLimits();
+
+        state.testSeconds = 300;
+        state.suiteSeconds = 1800;
+        state.heapMb = 2048;
+        progress.validateLimits();
+    }
+
+    @Test
+    void rejectsEveryLimitOutsideItsDocumentedRange() {
+        assertInvalid(0, 5, 256);
+        assertInvalid(301, 301, 256);
+        assertInvalid(5, 4, 256);
+        assertInvalid(5, 1801, 256);
+        assertInvalid(5, 60, 63);
+        assertInvalid(5, 60, 2049);
+    }
+
+    private static void assertInvalid(int testSeconds, int suiteSeconds, int heapMb) {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        ManagedPracticeProgress.Data state = progress.getState();
+        state.testSeconds = testSeconds;
+        state.suiteSeconds = suiteSeconds;
+        state.heapMb = heapMb;
+
+        assertThatThrownBy(progress::validateLimits)
+                .as("limits %d/%d/%d are rejected", testSeconds, suiteSeconds, heapMb)
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

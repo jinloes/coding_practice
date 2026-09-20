@@ -6,6 +6,10 @@ build
 out
 gradlew*
 **/gradle
+# ...except the plugin's build-fed verification script, which is a source resource,
+# not a Gradle wrapper directory.
+!practice-plugin/src/main/resources/gradle/
+!practice-plugin/src/main/resources/gradle/**
 **/cmake-build-debug/**
 **/.DS_Store
 **/bin

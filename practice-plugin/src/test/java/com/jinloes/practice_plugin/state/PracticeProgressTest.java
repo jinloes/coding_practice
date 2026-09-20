@@ -1,14 +1,12 @@
 package com.jinloes.practice_plugin.state;
 
-import com.jinloes.practice_plugin.run.CheckResult;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PracticeProgressTest {
     @Test
-    void recordsResultsAndLoadsThePersistedStateIntoAnotherBean() {
+    void readsBackThePersistedLegacyStateInAnotherBean() {
         PracticeProgress progress = new PracticeProgress();
         PracticeProgress.Data state = progress.getState();
         state.selectedAttempts.put("pair-sum", "pair-sum-first");
@@ -16,12 +14,14 @@ class PracticeProgressTest {
         state.suiteSeconds = 90;
         state.heapMb = 512;
 
-        progress.record(
-                "pair-sum-first",
-                "pair-sum",
-                "fingerprint-1",
-                new CheckResult(CheckResult.Status.ASSERTION_FAILED, 11, 2, "bad pair"));
-        state.attempts.get("pair-sum-first").hintsRevealed = 2;
+        PracticeProgress.Entry recorded = progress.entry("pair-sum-first", "pair-sum");
+        recorded.status = "ASSERTION_FAILED";
+        recorded.checkedFingerprint = "fingerprint-1";
+        recorded.checkedAt = "2025-01-02T03:04:05Z";
+        recorded.details = "bad pair";
+        recorded.hintsRevealed = 2;
+        recorded.tests = 11;
+        recorded.failures = 2;
 
         PracticeProgress restored = new PracticeProgress();
         restored.loadState(copyOf(progress.getState()));
@@ -32,7 +32,7 @@ class PracticeProgressTest {
         assertThat(entry.revision).isEqualTo("1");
         assertThat(entry.status).isEqualTo("ASSERTION_FAILED");
         assertThat(entry.checkedFingerprint).isEqualTo("fingerprint-1");
-        assertThat(entry.checkedAt).isNotBlank();
+        assertThat(entry.checkedAt).isEqualTo("2025-01-02T03:04:05Z");
         assertThat(entry.details).isEqualTo("bad pair");
         assertThat(entry.hintsRevealed).isEqualTo(2);
         assertThat(entry.tests).isEqualTo(11);
@@ -45,64 +45,16 @@ class PracticeProgressTest {
     }
 
     @Test
-    void retainsTheMostRecentHistoricalPassWhenALaterCheckFails() {
+    void reusesAnExistingEntryForTheSameAttempt() {
         PracticeProgress progress = new PracticeProgress();
 
-        progress.record(
-                "pair-sum-first",
-                "pair-sum",
-                "passing-fingerprint",
-                new CheckResult(CheckResult.Status.PASSED, 11, 0, "passed"));
-        String lastPassedAt = progress.getState().attempts.get("pair-sum-first").lastPassedAt;
+        PracticeProgress.Entry first = progress.entry("pair-sum-first", "pair-sum");
+        first.hintsRevealed = 3;
 
-        progress.record(
-                "pair-sum-first",
-                "pair-sum",
-                "failing-fingerprint",
-                new CheckResult(CheckResult.Status.RUNTIME_ERROR, 11, 1, "runtime error"));
-
-        PracticeProgress.Entry entry = progress.getState().attempts.get("pair-sum-first");
-        assertThat(lastPassedAt).isNotBlank();
-        assertThat(entry.status).isEqualTo("RUNTIME_ERROR");
-        assertThat(entry.checkedFingerprint).isEqualTo("failing-fingerprint");
-        assertThat(entry.lastPassedAt).isEqualTo(lastPassedAt);
-    }
-
-    @Test
-    void acceptsTheDocumentedLimitBoundaries() {
-        PracticeProgress progress = new PracticeProgress();
-        PracticeProgress.Data state = progress.getState();
-
-        state.testSeconds = 1;
-        state.suiteSeconds = 1;
-        state.heapMb = 64;
-        progress.validateLimits();
-
-        state.testSeconds = 300;
-        state.suiteSeconds = 1800;
-        state.heapMb = 2048;
-        progress.validateLimits();
-    }
-
-    @Test
-    void rejectsEveryLimitOutsideItsDocumentedRange() {
-        assertInvalid(0, 5, 256);
-        assertInvalid(301, 301, 256);
-        assertInvalid(5, 4, 256);
-        assertInvalid(5, 1801, 256);
-        assertInvalid(5, 60, 63);
-        assertInvalid(5, 60, 2049);
-    }
-
-    private static void assertInvalid(int testSeconds, int suiteSeconds, int heapMb) {
-        PracticeProgress progress = new PracticeProgress();
-        PracticeProgress.Data state = progress.getState();
-        state.testSeconds = testSeconds;
-        state.suiteSeconds = suiteSeconds;
-        state.heapMb = heapMb;
-
-        assertThatThrownBy(progress::validateLimits)
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(progress.entry("pair-sum-first", "pair-sum"))
+                .as("the same attempt keeps its recorded history")
+                .isSameAs(first);
+        assertThat(progress.getState().attempts).hasSize(1);
     }
 
     private static PracticeProgress.Data copyOf(PracticeProgress.Data source) {

@@ -1,0 +1,30 @@
+{
+  "id": "pair-sum",
+  "title": "Pair Sum",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Find any valid pair of distinct indices whose values add to a target.\n\nContract\n- `numbers` is non-null and may be empty. Its values and `target` may be any `int`.\n- Return either an empty array when no pair exists, or an array of exactly two\n  distinct, in-bounds indices. The values at those indices must add to `target`\n  using mathematical integer addition (use `long` when adding).\n- Any valid pair is accepted; the order of the two indices does not matter.\n  Do not mutate `numbers`.\n\nExamples\n- `findPair(new int[]{2, 7, 11, 15}, 9)` may return `{0, 1}`.\n- `findPair(new int[]{3, 3}, 6)` returns `{0, 1}`.\n- `findPair(new int[]{1, 2, 3}, 7)` returns `{}`.\n",
+  "examples": [
+    {
+      "input": "numbers = [2, 7, 11, 15], target = 9",
+      "output": "Any valid pair, such as [0, 1]"
+    },
+    {
+      "input": "numbers = [3, 3], target = 6",
+      "output": "[0, 1]"
+    },
+    {
+      "input": "numbers = [1, 2, 3], target = 7",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Try every pair of indices and first make the validity rules explicit.",
+    "A value seen earlier can be paired with the target complement; remember its index.",
+    "Use a single pass with a map and long arithmetic for complements. Intended complexity: expected O(n) time and O(n) extra space."
+  ],
+  "inputSyntax": "Input: the array values followed by the target, for example: [2, 7, 11, 15] 9",
+  "sampleInput": "[2, 7, 11, 15] 9",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

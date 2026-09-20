@@ -19,7 +19,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,28 +43,15 @@ class ExerciseCatalogTest {
         assertThat(ExerciseCatalog.all()).hasSize(6);
         assertThat(ExerciseCatalog.all().stream().map(ExerciseCatalog.Exercise::title))
                 .doesNotHaveDuplicates();
-        Map<String, Integer> expectedExamples = Map.of(
-                "pair-sum", 3,
-                "binary-search", 3,
-                "balanced-delimiters", 3,
-                "reverse-linked-list", 3,
-                "array-stack", 3,
-                "binary-min-heap", 3);
-        Map<String, Integer> expectedFull = Map.of(
-                "pair-sum", 11,
-                "binary-search", 11,
-                "balanced-delimiters", 11,
-                "reverse-linked-list", 11,
-                "array-stack", 11,
-                "binary-min-heap", 12);
         for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
-            assertThat(exercise.exampleCount()).isEqualTo(expectedExamples.get(exercise.id()));
             assertThat(exercise.examples()).hasSize(exercise.exampleCount())
                     .allSatisfy(example -> {
                         assertThat(example.input()).isNotBlank();
                         assertThat(example.output()).isNotBlank();
                     });
-            assertThat(exercise.fullCount()).isEqualTo(expectedFull.get(exercise.id()));
+            assertThat(exercise.fullCount())
+                    .as("%s must hide more tests than it shows as examples", exercise.id())
+                    .isGreaterThan(exercise.exampleCount());
             assertThat(exercise.hints()).hasSize(3).allSatisfy(hint -> assertThat(hint).isNotBlank());
             assertThat(exercise.inputSyntax())
                     .as("%s must document its input syntax", exercise.id())

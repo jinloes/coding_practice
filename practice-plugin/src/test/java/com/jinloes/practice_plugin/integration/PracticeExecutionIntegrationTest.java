@@ -40,6 +40,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.swing.SwingUtilities;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -74,7 +75,7 @@ class PracticeExecutionIntegrationTest {
             fixture.setUp();
             WriteAction.run(() -> ProjectRootManager.getInstance(fixture.getProject()).setProjectSdk(null));
         });
-        workspace = new ManagedPracticeWorkspace();
+        workspace = ManagedPracticeWorkspace.get();
         attempt = workspace.create(ExerciseCatalog.find("pair-sum"));
         Files.writeString(attempt.solution(), referencePairSum(), StandardCharsets.UTF_8);
         var limits = ManagedPracticeProgress.get().getState();
@@ -99,7 +100,7 @@ class PracticeExecutionIntegrationTest {
         CountDownLatch completed = new CountDownLatch(1);
         AtomicReference<String> result = new AtomicReference<>("");
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.setListener(text -> {
+        runner.addListener(text -> {
             result.set(text);
             if (text.startsWith("Example session finished")) {
                 completed.countDown();
@@ -120,7 +121,7 @@ class PracticeExecutionIntegrationTest {
         CountDownLatch completed = new CountDownLatch(1);
         AtomicReference<String> result = new AtomicReference<>("");
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.setListener(text -> {
+        runner.addListener(text -> {
             result.set(text);
             if (text.startsWith("Managed attempt:") && text.contains("Full check:")) {
                 completed.countDown();
@@ -140,7 +141,6 @@ class PracticeExecutionIntegrationTest {
 
     @Test
     void savedDocumentContinuationRetainsReadAndWriteIntentAccess() throws Exception {
-        PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
         CountDownLatch completed = new CountDownLatch(1);
         AtomicReference<Boolean> readAccess = new AtomicReference<>();
         AtomicReference<Boolean> writeIntent = new AtomicReference<>();
@@ -148,9 +148,9 @@ class PracticeExecutionIntegrationTest {
         Method runAfterSavingDocuments = PracticeRunner.class.getDeclaredMethod(
                 "runAfterSavingDocuments", actionType);
         runAfterSavingDocuments.setAccessible(true);
-        Method setDispatcher = PracticeRunner.class.getDeclaredMethod(
-                "setContinuationDispatcherForTests", java.util.function.Consumer.class);
-        setDispatcher.setAccessible(true);
+        Constructor<PracticeRunner> injecting = PracticeRunner.class.getDeclaredConstructor(
+                com.intellij.openapi.project.Project.class, java.util.function.Consumer.class);
+        injecting.setAccessible(true);
         Object continuation = Proxy.newProxyInstance(
                 actionType.getClassLoader(),
                 new Class<?>[]{actionType},
@@ -164,7 +164,9 @@ class PracticeExecutionIntegrationTest {
                 });
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        invoke(setDispatcher, null, (java.util.function.Consumer<Runnable>) executor::execute);
+        PracticeRunner runner = injecting.newInstance(
+                fixture.getProject(), (java.util.function.Consumer<Runnable>) executor::execute);
+        Disposer.register(fixture.getTestRootDisposable(), runner);
         try {
             runOnPlainSwingEdt(() -> invoke(runAfterSavingDocuments, runner, continuation));
 
@@ -172,7 +174,6 @@ class PracticeExecutionIntegrationTest {
             assertThat(readAccess.get()).isTrue();
             assertThat(writeIntent.get()).isTrue();
         } finally {
-            invoke(setDispatcher, null, null);
             executor.shutdownNow();
             assertThat(executor.awaitTermination(30, TimeUnit.SECONDS)).isTrue();
         }
@@ -206,7 +207,7 @@ class PracticeExecutionIntegrationTest {
                     }
                 });
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.setListener(text -> {
+        runner.addListener(text -> {
             result.set(text);
             if (text.startsWith("Example session finished")) {
                 completed.countDown();
@@ -258,7 +259,7 @@ class PracticeExecutionIntegrationTest {
                     }
                 });
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.setListener(text -> {
+        runner.addListener(text -> {
             result.set(text);
             if (text.startsWith("Input session finished")) {
                 completed.countDown();
@@ -372,7 +373,7 @@ class PracticeExecutionIntegrationTest {
                         }
                     });
             PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-            runner.setListener(text -> {
+            runner.addListener(text -> {
                 result.set(text);
                 if (text.startsWith("STALE:")) {
                     completed.countDown();
@@ -396,7 +397,7 @@ class PracticeExecutionIntegrationTest {
             CountDownLatch completed = new CountDownLatch(1);
             AtomicReference<String> result = new AtomicReference<>("");
             PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-            runner.setListener(text -> {
+            runner.addListener(text -> {
                 result.set(text);
                 if (text.startsWith("Example compilation failed:")) {
                     completed.countDown();
@@ -491,7 +492,7 @@ class PracticeExecutionIntegrationTest {
     private ManagedCheck launchFullCheck() throws Exception {
         ManagedCheck check = new ManagedCheck();
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.setListener(text -> {
+        runner.addListener(text -> {
             check.status.set(text);
             if (text.startsWith("Managed attempt:") && text.contains("Full check:")) {
                 check.completed.countDown();

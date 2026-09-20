@@ -6,7 +6,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
-import com.jinloes.practice_plugin.run.CheckResult;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
@@ -58,27 +57,5 @@ public final class PracticeProgress implements PersistentStateComponent<Practice
             entry.exerciseId = exerciseId;
             return entry;
         });
-    }
-
-    public void record(String attemptId, String exerciseId, String fingerprint, CheckResult result) {
-        Entry entry = entry(attemptId, exerciseId);
-        entry.checkedFingerprint = fingerprint;
-        entry.checkedAt = java.time.Instant.now().toString();
-        entry.status = result.status().name();
-        entry.details = result.details();
-        entry.tests = result.tests();
-        entry.failures = result.failures();
-        if (result.status() == CheckResult.Status.PASSED) {
-            entry.lastPassedAt = entry.checkedAt;
-        }
-    }
-
-    public void validateLimits() {
-        if (data.testSeconds < 1 || data.testSeconds > 300
-                || data.suiteSeconds < data.testSeconds || data.suiteSeconds > 1800
-                || data.heapMb < 64 || data.heapMb > 2048) {
-            throw new IllegalArgumentException(
-                    "Use 1-300 seconds per test, at least that long and at most 1800 seconds per suite, and 64-2048 MiB.");
-        }
     }
 }

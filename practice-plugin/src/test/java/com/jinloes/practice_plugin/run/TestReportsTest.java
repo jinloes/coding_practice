@@ -26,30 +26,16 @@ class TestReportsTest {
     Path tempDir;
 
     @Test
-    void acceptsAnExamplesReportUsingTheCatalogCount() throws Exception {
-        Path reports = reportDirectory();
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES, passingCases(PAIR_SUM.exampleCount()));
-
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), false, 0);
-
-        assertThat(result.status()).isEqualTo(PASSED);
-        assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
-        assertThat(result.failures()).isZero();
-        assertThat(result.details()).contains("All " + PAIR_SUM.exampleCount() + " supplied cases passed");
-    }
-
-    @Test
     void acceptsAFullReportUsingTheCatalogCountAndExpectedClasses() throws Exception {
         Path reports = reportDirectory();
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES, passingCases(PAIR_SUM.exampleCount()));
-        writeSuite(reports, "TEST-Correctness.xml", CORRECTNESS,
-                passingCases(PAIR_SUM.fullCount() - PAIR_SUM.exampleCount()));
+        writeFullReport(reports, passingCases(PAIR_SUM.exampleCount()));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), true, 0);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
 
         assertThat(result.status()).isEqualTo(PASSED);
         assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isZero();
+        assertThat(result.details()).contains("All " + PAIR_SUM.fullCount() + " supplied cases passed");
     }
 
     @Test
@@ -60,13 +46,12 @@ class TestReportsTest {
                 "<failure type=\"org.opentest4j.AssertionFailedError\" message=\"expected pair\">"
                         + "at com.jinloes.practice.ExamplesTest.findsTypicalPair(ExamplesTest.java:12)"
                         + "</failure>");
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES,
-                failure + passingCases(PAIR_SUM.exampleCount() - 1));
+        writeFullReport(reports, failure + passingCases(PAIR_SUM.exampleCount() - 1));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), false, 0);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
 
         assertThat(result.status()).isEqualTo(ASSERTION_FAILED);
-        assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
+        assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isEqualTo(1);
         assertThat(result.details())
                 .contains(EXAMPLES + ".findsTypicalPair", "expected pair", "ExamplesTest.java:12");
@@ -80,13 +65,12 @@ class TestReportsTest {
                 "<error type=\"java.lang.IllegalStateException\" message=\"broken setup\">"
                         + "java.lang.IllegalStateException: broken setup"
                         + "</error>");
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES,
-                error + passingCases(PAIR_SUM.exampleCount() - 1));
+        writeFullReport(reports, error + passingCases(PAIR_SUM.exampleCount() - 1));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), false, 0);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
 
         assertThat(result.status()).isEqualTo(RUNTIME_ERROR);
-        assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
+        assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isEqualTo(1);
         assertThat(result.details()).contains(EXAMPLES + ".failsAtRuntime", "broken setup");
     }
@@ -99,13 +83,12 @@ class TestReportsTest {
                 "<error type=\"java.util.concurrent.TimeoutException\" message=\"5 seconds\">"
                         + "test exceeded its deadline"
                         + "</error>");
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES,
-                timeout + passingCases(PAIR_SUM.exampleCount() - 1));
+        writeFullReport(reports, timeout + passingCases(PAIR_SUM.exampleCount() - 1));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), false, 0);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
 
         assertThat(result.status()).isEqualTo(TIMED_OUT);
-        assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
+        assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isEqualTo(1);
     }
 
@@ -113,24 +96,19 @@ class TestReportsTest {
     void rejectsAReportContainingSkippedTests() throws Exception {
         Path reports = reportDirectory();
         String skipped = caseXml("skippedCase", "<skipped/>");
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES,
-                skipped + passingCases(PAIR_SUM.exampleCount() - 1));
+        writeFullReport(reports, skipped + passingCases(PAIR_SUM.exampleCount() - 1));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), false, 0);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
 
         assertThat(result.status()).isEqualTo(RUNNER_ERROR);
-        assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
+        assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isZero();
         assertThat(result.details()).contains("Incomplete test run", "skipped 1");
     }
 
     @Test
     void rejectsAReportMissingFromTheExpectedDirectory() throws Exception {
-        CheckResult result = TestReports.read(
-                tempDir.resolve("missing-reports"),
-                PAIR_SUM.exampleCount(),
-                false,
-                0);
+        CheckResult result = TestReports.read(tempDir.resolve("missing-reports"), PAIR_SUM.fullCount(), 0);
 
         assertThat(result.status()).isEqualTo(RUNNER_ERROR);
         assertThat(result.tests()).isZero();
@@ -144,19 +122,19 @@ class TestReportsTest {
         writeSuite(reports, "TEST-first.xml", EXAMPLES, passingCases(1));
         writeSuite(reports, "TEST-second.xml", EXAMPLES, passingCases(1));
 
-        assertThatThrownBy(() -> TestReports.read(reports, 2, false, 0))
+        assertThatThrownBy(() -> TestReports.read(reports, 2, 0))
                 .isInstanceOf(IOException.class);
     }
 
     @Test
     void rejectsReportsWithTheWrongTestCount() throws Exception {
         Path reports = reportDirectory();
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES, passingCases(PAIR_SUM.exampleCount()));
+        writeFullReport(reports, passingCases(PAIR_SUM.exampleCount()));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount() + 1, false, 0);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount() + 1, 0);
 
         assertThat(result.status()).isEqualTo(RUNNER_ERROR);
-        assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
+        assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isZero();
         assertThat(result.details()).contains("Incomplete test run");
     }
@@ -166,7 +144,7 @@ class TestReportsTest {
         Path reports = reportDirectory();
         writeSuite(reports, "TEST-Examples.xml", EXAMPLES, passingCases(PAIR_SUM.exampleCount()));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), true, 0);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), 0);
 
         assertThat(result.status()).isEqualTo(RUNNER_ERROR);
         assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
@@ -176,12 +154,12 @@ class TestReportsTest {
     @Test
     void rejectsAValidReportWhenGradleExitsNonzero() throws Exception {
         Path reports = reportDirectory();
-        writeSuite(reports, "TEST-Examples.xml", EXAMPLES, passingCases(PAIR_SUM.exampleCount()));
+        writeFullReport(reports, passingCases(PAIR_SUM.exampleCount()));
 
-        CheckResult result = TestReports.read(reports, PAIR_SUM.exampleCount(), false, 7);
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 7);
 
         assertThat(result.status()).isEqualTo(RUNNER_ERROR);
-        assertThat(result.tests()).isEqualTo(PAIR_SUM.exampleCount());
+        assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isZero();
         assertThat(result.details()).contains("code 7");
     }
@@ -197,13 +175,20 @@ class TestReportsTest {
                   <testcase name="one">&injected;</testcase>
                 </testsuite>
                 """);
-        assertThatThrownBy(() -> TestReports.read(reports, 1, false, 0)).isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> TestReports.read(reports, 1, 0)).isInstanceOf(IOException.class);
     }
 
     private Path reportDirectory() throws IOException {
         Path reports = tempDir.resolve("reports-" + System.nanoTime());
         Files.createDirectories(reports);
         return reports;
+    }
+
+    /** Writes the two-suite report shape production always produces. */
+    private static void writeFullReport(Path reports, String exampleCases) throws IOException {
+        writeSuite(reports, "TEST-Examples.xml", EXAMPLES, exampleCases);
+        writeSuite(reports, "TEST-Correctness.xml", CORRECTNESS,
+                passingCases(PAIR_SUM.fullCount() - PAIR_SUM.exampleCount()));
     }
 
     private static String passingCases(int count) {

@@ -1,0 +1,30 @@
+{
+  "id": "binary-min-heap",
+  "title": "Binary Min Heap",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Implement a growable binary min-heap of integers.\n\nContract\n- `add` inserts any `int`, including duplicates and negative values. The heap has\n  no fixed capacity and must grow as needed.\n- `removeMin` removes and returns the smallest stored value. `peek` returns the\n  smallest value without removing it. Both throw `NoSuchElementException` when empty.\n- `size` reports the number of elements and `isEmpty` is equivalent to `size() == 0`.\n\nExamples\n- Adding `7`, `2`, and `5` makes `peek()` return `2`, then removals return `2`, `5`, `7`.\n- Duplicate minima are returned one at a time.\n- A new heap is empty and `removeMin()`/`peek()` throw `NoSuchElementException`.\n",
+  "examples": [
+    {
+      "input": "add(7), add(2), add(5); peek(); removeMin() three times",
+      "output": "2; then 2, 5, 7"
+    },
+    {
+      "input": "add(4), add(1), add(1); removeMin() twice",
+      "output": "1, then 1"
+    },
+    {
+      "input": "new heap; removeMin() and peek()",
+      "output": "Empty; both operations throw NoSuchElementException"
+    }
+  ],
+  "hints": [
+    "Store the complete tree in an array; for index i, children are at 2*i+1 and 2*i+2.",
+    "After adding at the end, repeatedly swap upward while the child is smaller than its parent.",
+    "After removing the root, move the last value to the root and swap downward with the smaller child. Intended complexity: amortized O(log n) add, O(log n) removeMin, O(1) peek/size/isEmpty, and O(n) space."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: add 7, add 2, removeMin, peek, size",
+  "sampleInput": "add 7, add 2, removeMin, peek, size",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

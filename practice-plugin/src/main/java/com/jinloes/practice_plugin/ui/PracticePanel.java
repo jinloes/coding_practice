@@ -21,6 +21,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
+import com.jinloes.practice_plugin.app.LegacyImportService;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.run.PracticeRunner;
@@ -58,6 +59,7 @@ final class PracticePanel extends JPanel implements Disposable {
     private final Project project;
     private final ManagedPracticeProgress progress;
     private final ManagedPracticeWorkspace workspace;
+    private final LegacyImportService legacyImport;
     private final PracticeRunner runner;
     private final DefaultListModel<Exercise> model = new DefaultListModel<>();
     private final JBList<Exercise> exercises = new JBList<>(model);
@@ -81,11 +83,18 @@ final class PracticePanel extends JPanel implements Disposable {
     private boolean disposed;
     private int selectionGeneration;
 
+    /**
+     * Held as a field so {@link #dispose()} can remove exactly this registration. The runner
+     * outlives the panel, so a lambda created inline could never be removed.
+     */
+    private final Consumer<String> runOutput = this::showRunOutput;
+
     PracticePanel(Project project) {
         super(new BorderLayout(6, 6));
         this.project = project;
         progress = ManagedPracticeProgress.get();
-        workspace = new ManagedPracticeWorkspace();
+        workspace = ManagedPracticeWorkspace.get();
+        legacyImport = new LegacyImportService(workspace);
         runner = project.getService(PracticeRunner.class);
         setBorder(JBUI.Borders.empty(8));
 
@@ -173,17 +182,7 @@ final class PracticePanel extends JPanel implements Disposable {
         debugWithInput.addActionListener(event -> promptForInput(true));
         check.addActionListener(event -> guarded(() -> runner.check(selectedAttempt().id())));
         stop.addActionListener(event -> runner.stop());
-        runner.setListener(text -> {
-            if (!disposed) {
-                results.setText(text);
-                if (hasUnsavedAttemptFile()) {
-                    results.append("\nSTALE: there are unsaved changes. Check again after saving.");
-                }
-                results.setCaretPosition(0);
-                status.setText(runner.isRunning() ? "Running..." : "Run finished; see Results.");
-                updateButtons();
-            }
-        });
+        runner.addListener(runOutput);
         exercises.addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting()) {
                 showExercise();
@@ -327,7 +326,7 @@ final class PracticePanel extends JPanel implements Disposable {
             throw new IOException("The current project is not a marked legacy practice project.");
         }
         Path legacyRoot = root().toRealPath();
-        background("Importing legacy attempts", () -> workspace.importLegacy(
+        background("Importing legacy attempts", () -> legacyImport.importLegacy(
                 legacyRoot, PracticeProgress.get(project), progress), imported -> {
             results.setText(imported.summary());
             showExercise();
@@ -387,11 +386,12 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private void cleanGeneratedArtifacts() {
-        if (PracticeModuleWorkspace.get(project).cleanupGeneratedArtifacts()) {
-            status.setText("Removed inactive generated practice artifacts.");
-        } else {
+        if (runner.isRunning()) {
             error("Stop the active practice run before cleaning generated artifacts.");
+            return;
         }
+        PracticeModuleWorkspace.get(project).cleanupGeneratedArtifacts();
+        status.setText("Removed inactive generated practice artifacts.");
     }
 
     private void configureLimits() {
@@ -528,10 +528,23 @@ final class PracticePanel extends JPanel implements Disposable {
                 .createNotification(text, NotificationType.ERROR).notify(project);
     }
 
+    private void showRunOutput(String text) {
+        if (disposed) {
+            return;
+        }
+        results.setText(text);
+        if (hasUnsavedAttemptFile()) {
+            results.append("\nSTALE: there are unsaved changes. Check again after saving.");
+        }
+        results.setCaretPosition(0);
+        status.setText(runner.isRunning() ? "Running..." : "Run finished; see Results.");
+        updateButtons();
+    }
+
     @Override
     public void dispose() {
         disposed = true;
-        runner.setListener(ignored -> {});
+        runner.removeListener(runOutput);
     }
 
     @FunctionalInterface

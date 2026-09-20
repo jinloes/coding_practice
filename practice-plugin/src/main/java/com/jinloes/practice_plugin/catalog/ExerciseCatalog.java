@@ -1,245 +1,33 @@
 package com.jinloes.practice_plugin.catalog;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public final class ExerciseCatalog {
-    private static final List<Exercise> EXERCISES = List.of(
-            new Exercise(
-                    "pair-sum",
-                    "Pair Sum",
-                    "Arrays",
-                    "Easy",
-                    """
-                    Find any valid pair of distinct indices whose values add to a target.
+    /** Which exercises exist, in the order the UI lists them. */
+    private static final List<String> IDS = List.of(
+            "pair-sum",
+            "binary-search",
+            "balanced-delimiters",
+            "reverse-linked-list",
+            "array-stack",
+            "binary-min-heap");
 
-                    Contract
-                    - `numbers` is non-null and may be empty. Its values and `target` may be any `int`.
-                    - Return either an empty array when no pair exists, or an array of exactly two
-                      distinct, in-bounds indices. The values at those indices must add to `target`
-                      using mathematical integer addition (use `long` when adding).
-                    - Any valid pair is accepted; the order of the two indices does not matter.
-                      Do not mutate `numbers`.
+    private static final Pattern TEST_ANNOTATION = Pattern.compile("@Test\\b");
 
-                    Examples
-                    - `findPair(new int[]{2, 7, 11, 15}, 9)` may return `{0, 1}`.
-                    - `findPair(new int[]{3, 3}, 6)` returns `{0, 1}`.
-                    - `findPair(new int[]{1, 2, 3}, 7)` returns `{}`.
-                    """,
-                    List.of(
-                            new Example("numbers = [2, 7, 11, 15], target = 9", "Any valid pair, such as [0, 1]"),
-                            new Example("numbers = [3, 3], target = 6", "[0, 1]"),
-                            new Example("numbers = [1, 2, 3], target = 7", "[]")
-                    ),
-                    List.of(
-                            "Try every pair of indices and first make the validity rules explicit.",
-                            "A value seen earlier can be paired with the target complement; remember its index.",
-                            "Use a single pass with a map and long arithmetic for complements. "
-                                    + "Intended complexity: expected O(n) time and O(n) extra space."
-                    ),
-                    "Input: the array values followed by the target, for example: [2, 7, 11, 15] 9",
-                    "[2, 7, 11, 15] 9",
-                    "O(n)",
-                    "O(n)",
-                    3,
-                    11
-            ),
-            new Exercise(
-                    "binary-search",
-                    "Binary Search",
-                    "Searching",
-                    "Easy",
-                    """
-                    Search a sorted array for a target value.
-
-                    Contract
-                    - `sorted` is non-null and sorted in nondecreasing order; it may be empty.
-                    - Return any in-bounds index whose value equals `target`, or `-1` when the
-                      target is absent. Duplicate values may therefore produce any matching index.
-                    - Do not mutate the input array.
-
-                    Examples
-                    - `search(new int[]{-4, -1, 0, 6, 9}, 6)` returns `3`.
-                    - `search(new int[]{1, 2, 2, 2, 8}, 2)` may return `1`, `2`, or `3`.
-                    - `search(new int[]{1, 4, 7}, 5)` returns `-1`.
-                    """,
-                    List.of(
-                            new Example("sorted = [-4, -1, 0, 6, 9], target = 6", "3"),
-                            new Example("sorted = [1, 2, 2, 2, 8], target = 2", "Any of 1, 2, or 3"),
-                            new Example("sorted = [1, 4, 7], target = 5", "-1")
-                    ),
-                    List.of(
-                            "Keep an inclusive search interval and decide what happens when it becomes empty.",
-                            "Compare the target with the middle value to discard one half of the interval.",
-                            "Compute the midpoint as low + (high - low) / 2 and update the bounds after every comparison. "
-                                    + "Intended complexity: O(log n) time and O(1) extra space."
-                    ),
-                    "Input: the sorted values followed by the target, for example: [-4, -1, 0, 6, 9] 6",
-                    "[-4, -1, 0, 6, 9] 6",
-                    "O(log n)",
-                    "O(1)",
-                    3,
-                    11
-            ),
-            new Exercise(
-                    "balanced-delimiters",
-                    "Balanced Delimiters",
-                    "Stacks",
-                    "Easy",
-                    """
-                    Decide whether a string of delimiters is properly balanced and nested.
-
-                    Contract
-                    - `input` is non-null and contains only the six characters `(`, `)`, `[`, `]`,
-                      `{`, and `}`. The empty string is valid.
-                    - Return true exactly when every opening delimiter is closed by the same kind
-                      in last-in-first-out order, with no unmatched delimiters left over.
-
-                    Examples
-                    - `isBalanced("{[()]}")` returns `true`.
-                    - `isBalanced("([]{})")` returns `true`.
-                    - `isBalanced("([)]")` returns `false`.
-                    """,
-                    List.of(
-                            new Example("input = \"{[()]}\"", "true"),
-                            new Example("input = \"([]{})\"", "true"),
-                            new Example("input = \"([)]\"", "false")
-                    ),
-                    List.of(
-                            "An empty input has no unmatched opening delimiters.",
-                            "Push opening delimiters and compare each closing delimiter with the most recent opening one.",
-                            "Reject a closing delimiter when the stack is empty or its partner does not match; accept only an empty stack at the end. "
-                                    + "Intended complexity: O(n) time and O(n) extra space in the worst case."
-                    ),
-                    "Input: a delimiter string, for example: {[()]}",
-                    "{[()]}",
-                    "O(n)",
-                    "O(n)",
-                    3,
-                    11
-            ),
-            new Exercise(
-                    "reverse-linked-list",
-                    "Reverse Linked List",
-                    "Linked Lists",
-                    "Easy",
-                    """
-                    Reverse a singly linked list in place.
-
-                    Contract
-                    - `head` may be null or may point to the first node of an acyclic list. Each node
-                      has an integer `value` and a mutable `next` reference.
-                    - Return the new head after reversing every link. Reuse exactly the nodes supplied:
-                      do not allocate replacement nodes and do not change node values.
-                    - A one-node list remains the same node and a null list returns null.
-
-                    Examples
-                    - A list `1 -> 2 -> 3` becomes `3 -> 2 -> 1`.
-                    - A one-node list containing `8` returns that same node.
-                    - Reversing an empty list returns `null`.
-                    """,
-                    List.of(
-                            new Example("head = 1 -> 2 -> 3", "3 -> 2 -> 1"),
-                            new Example("head = 8", "8 (the same node)"),
-                            new Example("head = null", "null")
-                    ),
-                    List.of(
-                            "Keep the already-reversed prefix, the current node, and the not-yet-visited suffix.",
-                            "Before changing current.next, save the suffix so it is not lost.",
-                            "Advance the two pointers until current is null; the prefix pointer is the new head. "
-                                    + "Intended complexity: O(n) time and O(1) extra space."
-                    ),
-                    "Input: the list values in order, for example: [1, 2, 3]",
-                    "[1, 2, 3]",
-                    "O(n)",
-                    "O(1)",
-                    3,
-                    11
-            ),
-            new Exercise(
-                    "array-stack",
-                    "Array Stack",
-                    "Data Structures",
-                    "Medium",
-                    """
-                    Implement a last-in-first-out stack of integers backed by a growable array.
-
-                    Contract
-                    - `push` adds one value to the top. The stack has no fixed capacity and accepts
-                      every `int`, including duplicates and negative values.
-                    - `pop` removes and returns the newest value; `peek` returns it without removing it.
-                      Both methods throw `NoSuchElementException` when the stack is empty.
-                    - `size` reports the number of stored values and `isEmpty` is equivalent to `size() == 0`.
-
-                    Examples
-                    - Pushing `4`, then `9`, makes `pop()` return `9` and then `4`.
-                    - `peek()` observes the top while leaving the size unchanged.
-                    - A new stack is empty and `pop()`/`peek()` throw `NoSuchElementException`.
-                    """,
-                    List.of(
-                            new Example("push(4), push(9), pop(), pop()", "9, then 4"),
-                            new Example("push(12), peek(), size()", "12, then 1"),
-                            new Example("new stack; pop() and peek()", "Empty; both operations throw NoSuchElementException")
-                    ),
-                    List.of(
-                            "Track the number of elements and treat the next free array slot as the top.",
-                            "Growing needs a larger array before writing when the current storage is full.",
-                            "On pop, read the last element and decrement the size. Double array capacity when growing. "
-                                    + "Intended complexity: amortized O(1) push, O(1) pop/peek/size/isEmpty, and O(n) space."
-                    ),
-                    "Input: operations separated by commas, for example: push 4, push 9, pop, peek, size",
-                    "push 4, push 9, pop, peek, size",
-                    "O(1)",
-                    "O(1)",
-                    3,
-                    11
-            ),
-            new Exercise(
-                    "binary-min-heap",
-                    "Binary Min Heap",
-                    "Heaps",
-                    "Medium",
-                    """
-                    Implement a growable binary min-heap of integers.
-
-                    Contract
-                    - `add` inserts any `int`, including duplicates and negative values. The heap has
-                      no fixed capacity and must grow as needed.
-                    - `removeMin` removes and returns the smallest stored value. `peek` returns the
-                      smallest value without removing it. Both throw `NoSuchElementException` when empty.
-                    - `size` reports the number of elements and `isEmpty` is equivalent to `size() == 0`.
-
-                    Examples
-                    - Adding `7`, `2`, and `5` makes `peek()` return `2`, then removals return `2`, `5`, `7`.
-                    - Duplicate minima are returned one at a time.
-                    - A new heap is empty and `removeMin()`/`peek()` throw `NoSuchElementException`.
-                    """,
-                    List.of(
-                            new Example("add(7), add(2), add(5); peek(); removeMin() three times",
-                                    "2; then 2, 5, 7"),
-                            new Example("add(4), add(1), add(1); removeMin() twice", "1, then 1"),
-                            new Example("new heap; removeMin() and peek()",
-                                    "Empty; both operations throw NoSuchElementException")
-                    ),
-                    List.of(
-                            "Store the complete tree in an array; for index i, children are at 2*i+1 and 2*i+2.",
-                            "After adding at the end, repeatedly swap upward while the child is smaller than its parent.",
-                            "After removing the root, move the last value to the root and swap downward with the smaller child. "
-                                    + "Intended complexity: amortized O(log n) add, O(log n) removeMin, "
-                                    + "O(1) peek/size/isEmpty, and O(n) space."
-                    ),
-                    "Input: operations separated by commas, for example: add 7, add 2, removeMin, peek, size",
-                    "add 7, add 2, removeMin, peek, size",
-                    "O(log n)",
-                    "O(1)",
-                    3,
-                    12
-            )
-    );
+    private static final List<Exercise> EXERCISES = loadFromManifests();
 
     private static final Map<String, Exercise> BY_ID = EXERCISES.stream()
             .collect(java.util.stream.Collectors.toUnmodifiableMap(Exercise::id, exercise -> exercise));
@@ -336,5 +124,154 @@ public final class ExerciseCatalog {
         } catch (IOException exception) {
             throw new IllegalStateException("Could not read exercise resource: " + path, exception);
         }
+    }
+
+    /**
+     * Loads every exercise from its manifest, in the order the UI shows them. The ID list is the
+     * one place that says which exercises exist and in what order; a classpath directory cannot be
+     * listed reliably from inside a packaged plugin.
+     */
+    private static List<Exercise> loadFromManifests() {
+        return IDS.stream().map(ExerciseCatalog::loadExercise).toList();
+    }
+
+    private static Exercise loadExercise(String id) {
+        JsonObject manifest;
+        try {
+            manifest = JsonParser.parseString(read("/exercises/" + id + "/exercise.json")).getAsJsonObject();
+        } catch (JsonParseException | IllegalStateException exception) {
+            throw new IllegalStateException("Malformed exercise manifest for " + id, exception);
+        }
+        if (!id.equals(text(manifest, id, "id"))) {
+            throw new IllegalStateException("Exercise manifest ID does not match its directory: " + id);
+        }
+        String inputSyntax = text(manifest, id, "inputSyntax");
+        String runner = read("/exercises/" + id + "/ExampleRunner.java");
+        if (!runner.contains(inputSyntax)) {
+            throw new IllegalStateException(
+                    "Exercise " + id + " documents input syntax its ExampleRunner usage text does not show");
+        }
+        int exampleCount = countTests(read("/exercises/" + id + "/ExamplesTest.java"), id + "/ExamplesTest.java");
+        int fullCount = exampleCount
+                + countTests(read("/exercises/" + id + "/CorrectnessTest.java"), id + "/CorrectnessTest.java");
+        return new Exercise(
+                id,
+                text(manifest, id, "title"),
+                text(manifest, id, "topic"),
+                text(manifest, id, "difficulty"),
+                text(manifest, id, "statement"),
+                array(manifest, id, "examples").asList().stream()
+                        .map(element -> {
+                            JsonObject example = object(element, id, "examples");
+                            return new Example(text(example, id, "input"), text(example, id, "output"));
+                        })
+                        .toList(),
+                array(manifest, id, "hints").asList().stream()
+                        .map(element -> string(element, id, "hints"))
+                        .toList(),
+                inputSyntax,
+                text(manifest, id, "sampleInput"),
+                text(manifest, id, "intendedTime"),
+                text(manifest, id, "intendedSpace"),
+                exampleCount,
+                fullCount);
+    }
+
+    private static String text(JsonObject manifest, String id, String member) {
+        if (!manifest.has(member)) {
+            throw new IllegalStateException("Exercise manifest " + id + " is missing '" + member + "'");
+        }
+        return string(manifest.get(member), id, member);
+    }
+
+    private static String string(JsonElement element, String id, String member) {
+        if (!(element instanceof JsonPrimitive primitive) || !primitive.isString()) {
+            throw new IllegalStateException("Exercise manifest " + id + " member '" + member + "' is not a string");
+        }
+        return primitive.getAsString();
+    }
+
+    private static JsonArray array(JsonObject manifest, String id, String member) {
+        if (!(manifest.get(member) instanceof JsonArray values)) {
+            throw new IllegalStateException("Exercise manifest " + id + " member '" + member + "' is not an array");
+        }
+        return values;
+    }
+
+    private static JsonObject object(JsonElement element, String id, String member) {
+        if (!(element instanceof JsonObject value)) {
+            throw new IllegalStateException(
+                    "Exercise manifest " + id + " member '" + member + "' must hold objects");
+        }
+        return value;
+    }
+
+    /**
+     * Counts the test methods a template declares. Comments and literals are removed first, so a
+     * commented-out test does not count and an annotation argument does not hide one. Anything the
+     * stripper cannot classify fails the load rather than producing a count the UI would show to a
+     * learner as the number of hidden tests.
+     */
+    private static int countTests(String source, String label) {
+        int count = 0;
+        var matcher = TEST_ANNOTATION.matcher(stripCommentsAndLiterals(source, label));
+        while (matcher.find()) {
+            count++;
+        }
+        if (count == 0) {
+            throw new IllegalStateException("No test methods found in " + label);
+        }
+        return count;
+    }
+
+    private static String stripCommentsAndLiterals(String source, String label) {
+        StringBuilder code = new StringBuilder(source.length());
+        int index = 0;
+        while (index < source.length()) {
+            char current = source.charAt(index);
+            if (current == '/' && index + 1 < source.length() && source.charAt(index + 1) == '/') {
+                int newline = source.indexOf('\n', index);
+                index = newline < 0 ? source.length() : newline;
+                continue;
+            }
+            if (current == '/' && index + 1 < source.length() && source.charAt(index + 1) == '*') {
+                int end = source.indexOf("*/", index + 2);
+                if (end < 0) {
+                    throw new IllegalStateException("Unterminated block comment in " + label);
+                }
+                index = end + 2;
+                continue;
+            }
+            if (current == '"' && source.startsWith("\"\"\"", index)) {
+                throw new IllegalStateException("Text blocks are not supported in " + label);
+            }
+            if (current == '"' || current == '\'') {
+                index = skipLiteral(source, index, label);
+                continue;
+            }
+            code.append(current);
+            index++;
+        }
+        return code.toString();
+    }
+
+    private static int skipLiteral(String source, int start, String label) {
+        char quote = source.charAt(start);
+        int index = start + 1;
+        while (index < source.length()) {
+            char current = source.charAt(index);
+            if (current == '\\') {
+                index += 2;
+                continue;
+            }
+            if (current == '\n') {
+                break;
+            }
+            if (current == quote) {
+                return index + 1;
+            }
+            index++;
+        }
+        throw new IllegalStateException("Unterminated literal in " + label);
     }
 }

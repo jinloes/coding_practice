@@ -15,6 +15,13 @@ class ManagedPracticeWorkspaceTest {
     @TempDir Path temporary;
 
     @Test
+    void pinsTheGeneratedSolutionPathEveryStoredAttemptDependsOn() {
+        assertThat(ManagedPracticeWorkspace.SOLUTION_PATH)
+                .as("existing attempt directories on disk use this exact path")
+                .isEqualTo("src/main/java/com/jinloes/practice/Solution.java");
+    }
+
+    @Test
     void createsDistinctDurableAttemptsWithoutOverwritingEarlierFiles() throws Exception {
         ManagedPracticeWorkspace workspace = new ManagedPracticeWorkspace(temporary.resolve("config"));
         var first = workspace.create(ExerciseCatalog.find("pair-sum"));
@@ -66,8 +73,8 @@ class ManagedPracticeWorkspaceTest {
     @Test
     void copiesAValidatedLegacyAttemptWithoutChangingOriginals() throws Exception {
         Path legacyRoot = temporary.resolve("legacy");
-        PracticeWorkspace.create(legacyRoot);
-        var legacy = PracticeWorkspace.createAttempt(legacyRoot, ExerciseCatalog.find("pair-sum"));
+        LegacyWorkspaceFixture.create(legacyRoot);
+        var legacy = LegacyWorkspaceFixture.createAttempt(legacyRoot, ExerciseCatalog.find("pair-sum"));
         Files.writeString(legacy.solution(), "legacy solution");
         ManagedPracticeWorkspace workspace = new ManagedPracticeWorkspace(temporary.resolve("config"));
 

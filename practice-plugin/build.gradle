@@ -23,8 +23,15 @@ configurations {
     exampleLibraries
 }
 
+ext {
+    // Single declaration shared by this build and the generated verification script resource.
+    junitBomVersion = '5.11.4'
+    assertjVersion = '3.26.3'
+    verificationRelease = '17'
+}
+
 dependencies {
-    exampleLibraries 'org.assertj:assertj-core:3.26.3'
+    exampleLibraries "org.assertj:assertj-core:$assertjVersion"
     intellijPlatform {
         if (providers.gradleProperty('idePath').isPresent()) {
             local(providers.gradleProperty('idePath').get())
@@ -34,10 +41,10 @@ dependencies {
         bundledPlugins('com.intellij.java', 'com.intellij.gradle', 'org.jetbrains.plugins.gradle', 'JUnit')
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform.INSTANCE)
     }
-    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation platform("org.junit:junit-bom:$junitBomVersion")
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'org.assertj:assertj-core:3.26.3'
+    testImplementation "org.assertj:assertj-core:$assertjVersion"
     // The IDE fixture bootstrap references legacy TestCase; authored tests remain Jupiter.
     testRuntimeOnly('junit:junit:4.13.2') {
         transitive = false
@@ -88,4 +95,14 @@ tasks.named('processResources') {
     from('gradle/wrapper') { into 'bootstrap/gradle/wrapper' }
     from(configurations.exampleLibraries) { into 'example-libraries' }
     from(exampleLibrariesIndex) { into 'example-libraries' }
+    inputs.property('junitBomVersion', junitBomVersion)
+    inputs.property('assertjVersion', assertjVersion)
+    inputs.property('verificationRelease', verificationRelease)
+    filesMatching('gradle/verification-build.gradle') {
+        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: [
+                JUNIT_BOM: junitBomVersion,
+                ASSERTJ  : assertjVersion,
+                RELEASE  : verificationRelease
+        ])
+    }
 }

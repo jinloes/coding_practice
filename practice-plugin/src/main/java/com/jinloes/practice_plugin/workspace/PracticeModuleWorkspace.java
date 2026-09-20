@@ -31,6 +31,8 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.pom.java.LanguageLevel;
 import com.jinloes.practice_plugin.catalog.ExampleLibraries;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
+import com.jinloes.practice_plugin.platform.Os;
+import com.jinloes.practice_plugin.platform.OwnedDirectory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,7 +40,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -173,8 +174,7 @@ public final class PracticeModuleWorkspace implements Disposable {
 
     public void compileExamples(ManagedPracticeWorkspace.Attempt attempt, Path runner) throws ExecutionException {
         Path output = generatedBase("module-output").resolve(attempt.id()).normalize();
-        Path compiler = javaHome().resolve("bin").resolve(
-                System.getProperty("os.name").startsWith("Windows") ? "javac.exe" : "javac");
+        Path compiler = javaHome().resolve("bin").resolve(Os.IS_WINDOWS ? "javac.exe" : "javac");
         Path diagnostics = output.resolve("compiler.log");
         Process process = null;
         try {
@@ -229,10 +229,14 @@ public final class PracticeModuleWorkspace implements Disposable {
         temporaryConfigurations.remove(settings);
     }
 
+    /**
+     * Removes inactive generated artifacts. The caller owns the busy-state decision: this must not
+     * be invoked while a practice run is active, because the run owns the modules and temporary
+     * configurations removed here.
+     *
+     * @return always {@code true}; cleanup is unconditional once the caller has decided to run it
+     */
     public synchronized boolean cleanupGeneratedArtifacts() {
-        if (project.getService(com.jinloes.practice_plugin.run.PracticeRunner.class).isRunning()) {
-            return false;
-        }
         ApplicationManager.getApplication().runWriteAction(() -> {
             RunManager manager = RunManager.getInstance(project);
             temporaryConfigurations.forEach(manager::removeConfiguration);
@@ -335,15 +339,8 @@ public final class PracticeModuleWorkspace implements Disposable {
     }
 
     private void createMarkedDirectory(Path directory, String kind, String attemptId) throws IOException {
-        String baseKind = switch (kind) {
-            case "harness" -> "harnesses";
-            case "output" -> "module-output";
-            default -> throw new IOException("Unknown generated-directory kind.");
-        };
-        Path base = generatedBase(baseKind);
-        if (!directory.startsWith(base) || directory.equals(base) || Files.isSymbolicLink(directory)) {
-            throw new IOException("Generated path escapes the plugin-owned root.");
-        }
+        OwnedDirectory owned = owned(kind);
+        owned.requireOwned(directory);
         if (!attemptId.matches(ATTEMPT_ID_PATTERN)
                 || !attemptId.equals(directory.getFileName().toString())) {
             throw new IOException("Generated path does not match its managed attempt.");
@@ -356,67 +353,53 @@ public final class PracticeModuleWorkspace implements Disposable {
             }
             deleteMarkedTree(directory);
         }
-        Files.createDirectories(directory);
-        Files.writeString(directory.resolve(MARKER), """
+        owned.create(directory, markerText(kind, attemptId));
+        ownedDirectories.add(directory);
+    }
+
+    private static String markerText(String kind, String attemptId) {
+        return """
                 schema=1
                 kind=%s
                 attempt=%s
                 pid=%s
-                """.formatted(kind, attemptId, ProcessHandle.current().pid()), StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE_NEW);
-        ownedDirectories.add(directory);
+                """.formatted(kind, attemptId, ProcessHandle.current().pid());
     }
 
-    private void cleanupGenerated(String kind, boolean includeCurrentProcess) {
-        Path base = generatedBase(kind);
-        if (!Files.isDirectory(base, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(base)) {
-            return;
-        }
-        try (var entries = Files.list(base)) {
-            for (Path candidate : entries.toList()) {
-                try {
-                    Marker marker = readMarker(candidate);
-                    if ((includeCurrentProcess && marker.pid() == ProcessHandle.current().pid())
-                            || isInactive(marker.pid())) {
-                        deleteMarkedTree(candidate);
-                    }
-                } catch (IOException | SecurityException ignored) {
-                    // Unmarked, malformed, active, and uncertain paths remain untouched.
-                }
-            }
-        } catch (IOException ignored) {
-            // A later explicit cleanup can retry.
-        }
+    private void cleanupGenerated(String baseName, boolean includeCurrentProcess) {
+        String kind = kindOf(baseName);
+        OwnedDirectory.under(generatedBase(baseName), MARKER).cleanupAbandoned((candidate, properties) -> {
+            Marker marker = parseMarker(candidate, properties, kind);
+            return (includeCurrentProcess && marker.pid() == ProcessHandle.current().pid())
+                    || isInactive(marker.pid());
+        });
+        ownedDirectories.removeIf(path -> !Files.exists(path, LinkOption.NOFOLLOW_LINKS));
     }
 
     private void deleteMarkedTree(Path root) throws IOException {
-        readMarker(root);
-        try (var paths = Files.walk(root)) {
-            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
-                Files.delete(path);
-            }
-        }
+        Marker marker = readMarker(root);
+        owned(marker.kind()).deleteTree(root);
         ownedDirectories.remove(root);
     }
 
     private Marker readMarker(Path root) throws IOException {
-        Path actualBase = root.getParent().toRealPath();
-        Path expectedHarness = generatedBase("harnesses");
-        Path expectedOutput = generatedBase("module-output");
-        if ((!actualBase.equals(expectedHarness) && !actualBase.equals(expectedOutput))
-                || !Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(root)
-                || !Files.isRegularFile(root.resolve(MARKER), LinkOption.NOFOLLOW_LINKS)
-                || Files.isSymbolicLink(root.resolve(MARKER))) {
+        Path parent = root.toAbsolutePath().normalize().getParent();
+        String baseName;
+        if (generatedBase("harnesses").equals(parent)) {
+            baseName = "harnesses";
+        } else if (generatedBase("module-output").equals(parent)) {
+            baseName = "module-output";
+        } else {
             throw new IOException("Refusing to modify an unmarked generated directory.");
         }
-        Properties properties = new Properties();
-        try (var reader = Files.newBufferedReader(root.resolve(MARKER), StandardCharsets.UTF_8)) {
-            properties.load(reader);
-        }
+        OwnedDirectory owned = OwnedDirectory.under(generatedBase(baseName), MARKER);
+        return parseMarker(root, owned.readMarker(root), kindOf(baseName));
+    }
+
+    private static Marker parseMarker(Path root, Properties properties, String expectedKind) throws IOException {
         String kind = properties.getProperty("kind", "");
         String attemptId = properties.getProperty("attempt", "");
         String pidText = properties.getProperty("pid", "");
-        String expectedKind = actualBase.equals(expectedHarness) ? "harness" : "output";
         if (!"1".equals(properties.getProperty("schema"))
                 || !expectedKind.equals(kind)
                 || !attemptId.matches(ATTEMPT_ID_PATTERN)
@@ -429,6 +412,18 @@ public final class PracticeModuleWorkspace implements Disposable {
         } catch (NumberFormatException exception) {
             throw new IOException("Invalid generated-directory marker.", exception);
         }
+    }
+
+    private OwnedDirectory owned(String kind) throws IOException {
+        return OwnedDirectory.under(generatedBase(switch (kind) {
+            case "harness" -> "harnesses";
+            case "output" -> "module-output";
+            default -> throw new IOException("Unknown generated-directory kind.");
+        }), MARKER);
+    }
+
+    private static String kindOf(String baseName) {
+        return "harnesses".equals(baseName) ? "harness" : "output";
     }
 
     private static boolean isInactive(long pid) {

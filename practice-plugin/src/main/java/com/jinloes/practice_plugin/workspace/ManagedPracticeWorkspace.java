@@ -1,11 +1,10 @@
 package com.jinloes.practice_plugin.workspace;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
+import com.intellij.openapi.components.Service;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
-import com.jinloes.practice_plugin.run.CheckResult;
-import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
-import com.jinloes.practice_plugin.state.PracticeProgress;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,10 +21,19 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
+@Service(Service.Level.APP)
 public final class ManagedPracticeWorkspace {
     public static final String REVISION = "1";
-    private static final Path SOLUTION_SUFFIX =
-            Path.of("src/main/java/com/jinloes/practice/Solution.java");
+
+    /**
+     * Where the generated practice project keeps the learner's solution, relative to the project
+     * root. This string is on disk in every attempt directory a learner has ever created, so it is
+     * effectively a storage format: changing it silently orphans existing attempts. One constant
+     * makes that consequence visible at the single point where a change would be made.
+     */
+    public static final String SOLUTION_PATH = "src/main/java/com/jinloes/practice/Solution.java";
+
+    private static final Path SOLUTION_SUFFIX = Path.of(SOLUTION_PATH);
     private final Path configRoot;
 
     public record Attempt(String id, String exerciseId, String revision, Path solution) {
@@ -38,7 +46,13 @@ public final class ManagedPracticeWorkspace {
         }
     }
 
-    public record LegacyImportResult(int imported, int skipped, String summary) {}
+    /**
+     * The one workspace every caller shares. Two instances would each hand out attempt directories
+     * under the same config root while caching nothing about the other's writes.
+     */
+    public static ManagedPracticeWorkspace get() {
+        return ApplicationManager.getApplication().getService(ManagedPracticeWorkspace.class);
+    }
 
     public ManagedPracticeWorkspace() {
         this(Path.of(PathManager.getConfigPath()));
@@ -87,75 +101,6 @@ public final class ManagedPracticeWorkspace {
             Files.deleteIfExists(temporary);
         }
         return copy;
-    }
-
-    public LegacyImportResult importLegacy(
-            Path legacyRoot,
-            PracticeProgress legacyProgress,
-            ManagedPracticeProgress progress
-    ) throws IOException {
-        if (Files.isSymbolicLink(legacyRoot)) {
-            throw new IOException("The legacy practice root must not redirect.");
-        }
-        Path root = legacyRoot.toRealPath();
-        if (!PracticeWorkspace.isWorkspace(root)) {
-            throw new IOException("The current project is not a marked legacy practice project.");
-        }
-        Path attemptsRoot = root.resolve("attempts");
-        if (!Files.isDirectory(attemptsRoot, LinkOption.NOFOLLOW_LINKS)
-                || Files.isSymbolicLink(attemptsRoot)
-                || !attemptsRoot.toRealPath().equals(root.resolve("attempts"))) {
-            throw new IOException("The legacy attempts directory must not redirect.");
-        }
-
-        int imported = 0;
-        int skipped = 0;
-        try (var entries = Files.list(attemptsRoot)) {
-            for (Path entry : entries.sorted(Comparator.comparing(Path::toString)).toList()) {
-                if (!Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS)
-                        || Files.isSymbolicLink(entry)
-                        || !Files.isRegularFile(entry.resolve(".practice-attempt"), LinkOption.NOFOLLOW_LINKS)
-                        || Files.isSymbolicLink(entry.resolve(".practice-attempt"))) {
-                    skipped++;
-                    continue;
-                }
-                try {
-                    PracticeWorkspace.Attempt legacy =
-                            PracticeWorkspace.readAttempt(root, entry.getFileName().toString());
-                    String mapped = progress.importedAttempt(root.toString(), legacy.id());
-                    if (mapped != null) {
-                        skipped++;
-                        continue;
-                    }
-                    Attempt copy = copyLegacy(root, legacy);
-                    progress.recordImport(root.toString(), legacy.id(), copy.id());
-                    PracticeProgress.Entry old = legacyProgress.entry(legacy.id(), legacy.exerciseId());
-                    ManagedPracticeProgress.Entry migrated = progress.entry(copy.id(), legacy.exerciseId());
-                    migrated.status = CheckResult.Status.NOT_RUN.name();
-                    migrated.checkedFingerprint = "";
-                    migrated.checkedAt = "";
-                    migrated.lastPassedAt = old.lastPassedAt;
-                    migrated.details = "Imported from legacy attempt " + legacy.id()
-                            + "; run a new full check for a current result.";
-                    migrated.hintsRevealed = old.hintsRevealed;
-                    migrated.tests = 0;
-                    migrated.failures = 0;
-                    if (legacy.id().equals(
-                            legacyProgress.getState().selectedAttempts.get(legacy.exerciseId()))) {
-                        progress.getState().selectedAttempts.put(legacy.exerciseId(), copy.id());
-                    }
-                    imported++;
-                } catch (IOException | IllegalArgumentException exception) {
-                    skipped++;
-                }
-            }
-        }
-        progress.getState().testSeconds = legacyProgress.getState().testSeconds;
-        progress.getState().suiteSeconds = legacyProgress.getState().suiteSeconds;
-        progress.getState().heapMb = legacyProgress.getState().heapMb;
-        String summary = "Imported " + imported + " legacy attempt(s); skipped " + skipped
-                + " already imported or invalid entry/entries. Originals were unchanged.";
-        return new LegacyImportResult(imported, skipped, summary);
     }
 
     public List<Attempt> attempts(String exerciseId) throws IOException {

@@ -1,0 +1,30 @@
+{
+  "id": "binary-search",
+  "title": "Binary Search",
+  "topic": "Searching",
+  "difficulty": "Easy",
+  "statement": "Search a sorted array for a target value.\n\nContract\n- `sorted` is non-null and sorted in nondecreasing order; it may be empty.\n- Return any in-bounds index whose value equals `target`, or `-1` when the\n  target is absent. Duplicate values may therefore produce any matching index.\n- Do not mutate the input array.\n\nExamples\n- `search(new int[]{-4, -1, 0, 6, 9}, 6)` returns `3`.\n- `search(new int[]{1, 2, 2, 2, 8}, 2)` may return `1`, `2`, or `3`.\n- `search(new int[]{1, 4, 7}, 5)` returns `-1`.\n",
+  "examples": [
+    {
+      "input": "sorted = [-4, -1, 0, 6, 9], target = 6",
+      "output": "3"
+    },
+    {
+      "input": "sorted = [1, 2, 2, 2, 8], target = 2",
+      "output": "Any of 1, 2, or 3"
+    },
+    {
+      "input": "sorted = [1, 4, 7], target = 5",
+      "output": "-1"
+    }
+  ],
+  "hints": [
+    "Keep an inclusive search interval and decide what happens when it becomes empty.",
+    "Compare the target with the middle value to discard one half of the interval.",
+    "Compute the midpoint as low + (high - low) / 2 and update the bounds after every comparison. Intended complexity: O(log n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the sorted values followed by the target, for example: [-4, -1, 0, 6, 9] 6",
+  "sampleInput": "[-4, -1, 0, 6, 9] 6",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

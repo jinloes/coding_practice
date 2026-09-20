@@ -40,7 +40,11 @@ class VerificationWorkspaceTest {
         assertThat(workspace.root().resolve("src/test/java/com/jinloes/practice/CorrectnessTest.java")).isRegularFile();
         String buildScript = Files.readString(workspace.root().resolve("build.gradle"));
         assertThat(buildScript)
-                .contains("options.release = 17", "reports.junitXml.outputLocation");
+                .as("the packaged script resource is fully substituted before a learner ever runs Gradle")
+                .doesNotContainPattern("@[A-Z_]+@");
+        assertThat(buildScript)
+                .contains("options.release = 17", "reports.junitXml.outputLocation",
+                        "org.junit:junit-bom:5.11.4", "org.assertj:assertj-core:3.26.3");
         assertMirrorBeforeCentral(buildScript);
         assertThat(workspace.command(Path.of(System.getProperty("java.home")), 5, 256))
                 .contains("--rerun-tasks", "--no-build-cache", "--no-configuration-cache",
