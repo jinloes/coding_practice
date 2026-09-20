@@ -130,11 +130,16 @@ Solutions live below the IDE configuration path in the durable
 `algorithm-practice/attempts/` hierarchy. Progress, limits, selected attempts,
 revealed hints, fingerprints, and
 historical passes are stored in a non-roaming application setting keyed by attempt
-ID; they are not uploaded or synchronized. Full-check workspaces, reports, and
-private Gradle homes are created below the IDE system path, marked for ownership,
-and removed after terminal runs. **Clean Generated Artifacts** removes only
-marked, confirmed-inactive harness, output, verification, and private-cache
-leftovers; attempts and host or legacy files are never cleanup targets.
+ID; they are not uploaded or synchronized. Full-check workspaces and reports are
+created below the IDE system path, marked for ownership, and removed after
+terminal runs. The Gradle home beside them is not: every check under the same
+IDE system path shares one `algorithm-practice/gradle-home`, so the downloaded
+Gradle distribution and test dependencies are fetched once and reused by later
+checks instead of being deleted with each finished workspace. **Clean Generated
+Artifacts** removes only marked, confirmed-inactive harness, output, and
+verification
+leftovers; attempts, the shared Gradle home, and host or legacy files are
+never cleanup targets.
 
 When the current project is a marked project created by an earlier plugin
 version, **Import Legacy Attempts** validates and copies each valid attempt once.

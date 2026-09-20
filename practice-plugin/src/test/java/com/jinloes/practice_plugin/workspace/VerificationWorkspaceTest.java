@@ -25,13 +25,14 @@ class VerificationWorkspaceTest {
     Path temporary;
 
     @Test
-    void createsAnOwnedIsolatedProjectWithFreshReportsAndPrivateGradleHome() throws Exception {
+    void createsAnOwnedIsolatedProjectWithFreshReportsAndASharedGradleHome() throws Exception {
         ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
         var attempt = store.create(ExerciseCatalog.find("pair-sum"));
         String fingerprint = store.fingerprint(attempt);
+        Path system = temporary.resolve("system");
 
         VerificationWorkspace workspace = VerificationWorkspace.createAt(
-                temporary.resolve("system"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint);
+                system, attempt, ExerciseCatalog.find("pair-sum"), fingerprint);
 
         assertThat(workspace.root().resolve(".algorithm-practice-verification")).isRegularFile();
         assertThat(workspace.root().resolve("src/main/java/com/jinloes/practice/Solution.java")).hasContent(
@@ -49,10 +50,28 @@ class VerificationWorkspaceTest {
         assertThat(workspace.command(Path.of(System.getProperty("java.home")), 5, 256))
                 .contains("--rerun-tasks", "--no-build-cache", "--no-configuration-cache",
                         "--gradle-user-home", workspace.gradleHome().toString());
+        assertThat(workspace.gradleHome())
+                .as("the Gradle home lives beside, not inside, the per-attempt workspace root")
+                .isEqualTo(system.resolve("algorithm-practice/gradle-home"))
+                .isNotEqualTo(workspace.root().resolve("gradle-home"));
+
+        Files.createDirectories(workspace.gradleHome());
+        Files.writeString(workspace.gradleHome().resolve("caches-.marker"), "downloaded distribution");
 
         workspace.markFinished(fingerprint);
         workspace.cleanupAfterRun();
         assertThat(workspace.root()).doesNotExist();
+        assertThat(workspace.gradleHome().resolve("caches-.marker"))
+                .as("a later check must reuse this run's downloaded Gradle distribution and dependency caches")
+                .hasContent("downloaded distribution");
+
+        VerificationWorkspace later = VerificationWorkspace.createAt(
+                system, attempt, ExerciseCatalog.find("pair-sum"), fingerprint);
+        assertThat(later.gradleHome())
+                .as("every verification workspace under the same base shares one Gradle home")
+                .isEqualTo(workspace.gradleHome());
+        later.markFinished(fingerprint);
+        later.cleanupAfterRun();
     }
 
     @Test

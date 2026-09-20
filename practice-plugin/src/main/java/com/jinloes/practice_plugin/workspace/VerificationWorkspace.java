@@ -73,8 +73,15 @@ public final class VerificationWorkspace {
         return resultDirectory;
     }
 
+    /**
+     * A Gradle user home shared by every verification workspace under this base, so the downloaded
+     * Gradle distribution and dependency caches survive from one check to the next. It sits beside,
+     * not inside, the per-attempt {@link #root()}: {@link #cleanupAfterRun()} and
+     * {@link #cleanupAbandoned()} only ever delete children of the {@code verification} directory,
+     * so this directory is never a cleanup target.
+     */
     public Path gradleHome() {
-        return root.resolve("gradle-home");
+        return base.resolve("algorithm-practice/gradle-home").normalize();
     }
 
     public List<String> command(Path javaHome, int testSeconds, int heapMb) {
