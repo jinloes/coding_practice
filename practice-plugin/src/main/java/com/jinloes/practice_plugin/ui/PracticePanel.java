@@ -13,6 +13,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.JBList;
@@ -47,7 +48,9 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -69,9 +72,11 @@ final class PracticePanel extends JPanel implements Disposable {
     private final JBTextArea results = textArea();
     private final JLabel status = new JLabel("Choose an exercise.");
     private final JButton runExamples = new JButton("Run Examples");
-    private final JButton debugExamples = new JButton("Debug Examples");
+    private final JButton runWithInput = new JButton("Run With Input...");
+    private final JButton debugWithInput = new JButton("Debug With Input...");
     private final JButton check = new JButton("Check Solution");
     private final JButton stop = new JButton("Stop");
+    private final Map<String, String> lastInput = new HashMap<>();
     private boolean updatingAttempts;
     private boolean disposed;
     private int selectionGeneration;
@@ -155,7 +160,8 @@ final class PracticePanel extends JPanel implements Disposable {
         footer.add(editing);
         JPanel executions = new JPanel(new FlowLayout(FlowLayout.LEFT));
         executions.add(runExamples);
-        executions.add(debugExamples);
+        executions.add(runWithInput);
+        executions.add(debugWithInput);
         executions.add(check);
         executions.add(stop);
         footer.add(executions);
@@ -163,7 +169,8 @@ final class PracticePanel extends JPanel implements Disposable {
         add(footer, BorderLayout.SOUTH);
 
         runExamples.addActionListener(event -> guarded(() -> runner.runExamples(selectedAttempt().id())));
-        debugExamples.addActionListener(event -> guarded(() -> runner.debugExamples(selectedAttempt().id())));
+        runWithInput.addActionListener(event -> promptForInput(false));
+        debugWithInput.addActionListener(event -> promptForInput(true));
         check.addActionListener(event -> guarded(() -> runner.check(selectedAttempt().id())));
         stop.addActionListener(event -> runner.stop());
         runner.setListener(text -> {
@@ -274,7 +281,9 @@ final class PracticePanel extends JPanel implements Disposable {
         }
         status.setText("Managed attempt ready. " + entry.status);
         results.setText(entry.status + "\n" + entry.details + "\nLast full check: " + entry.checkedAt
-                + "\nMost recent pass: " + entry.lastPassedAt);
+                + "\nMost recent pass: " + entry.lastPassedAt
+                + (entry.complexity == null || entry.complexity.isBlank()
+                        ? "" : "\n\n" + entry.complexity));
         if (!entry.checkedFingerprint.isEmpty()) {
             background("Checking result freshness", () -> workspace.fingerprint(attempt), hash -> {
                 if (attempt.equals(selectedAttemptOrNull())
@@ -340,6 +349,35 @@ final class PracticePanel extends JPanel implements Disposable {
         }, file -> FileEditorManager.getInstance(project).openFile(file, true));
     }
 
+    private void promptForInput(boolean debug) {
+        ManagedPracticeWorkspace.Attempt attempt = selectedAttemptOrNull();
+        if (attempt == null) {
+            error("Start or resume an attempt first.");
+            return;
+        }
+        Exercise exercise = ExerciseCatalog.find(attempt.exerciseId());
+        String previous = lastInput.getOrDefault(exercise.id(), exercise.sampleInput());
+        String input = Messages.showInputDialog(
+                project,
+                exercise.inputSyntax(),
+                (debug ? "Debug " : "Run ") + exercise.title() + " With Input",
+                null,
+                previous,
+                null);
+        if (input == null || input.isBlank()) {
+            return;
+        }
+        String trimmed = input.trim();
+        lastInput.put(exercise.id(), trimmed);
+        guarded(() -> {
+            if (debug) {
+                runner.debugExamples(attempt.id(), trimmed);
+            } else {
+                runner.runExamples(attempt.id(), trimmed);
+            }
+        });
+    }
+
     private void revealHint() throws IOException {
         var attempt = selectedAttempt();
         Exercise exercise = Objects.requireNonNull(exercises.getSelectedValue());
@@ -383,7 +421,8 @@ final class PracticePanel extends JPanel implements Disposable {
     private void updateButtons() {
         boolean ready = selectedAttemptOrNull() != null && !runner.isRunning();
         runExamples.setEnabled(ready);
-        debugExamples.setEnabled(ready);
+        runWithInput.setEnabled(ready);
+        debugWithInput.setEnabled(ready);
         check.setEnabled(ready);
         stop.setEnabled(runner.isRunning());
     }

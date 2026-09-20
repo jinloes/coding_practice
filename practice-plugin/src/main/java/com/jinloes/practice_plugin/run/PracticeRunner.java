@@ -68,6 +68,8 @@ public final class PracticeRunner implements Disposable {
     private volatile ScheduledFuture<?> watchdog;
     private volatile Consumer<String> listener = ignored -> {};
     private volatile ApplicationConfiguration nativeExamples;
+    private volatile String nativeInput = "";
+    private volatile boolean nativeDebug;
     private volatile RunnerAndConfigurationSettings nativeSettings;
     private volatile RunnerAndConfigurationSettings checkSettings;
     private volatile ManagedPracticeWorkspace.Attempt nativeAttempt;
@@ -89,9 +91,10 @@ public final class PracticeRunner implements Disposable {
                         handler.destroyProcess();
                         return;
                     }
-                    message(executorId.equals(DefaultDebugExecutor.EXECUTOR_ID)
-                            ? "Debugging visible examples. Timeouts are disabled; use Stop to terminate."
-                            : "Running visible examples.");
+                    String verb = nativeDebug ? "Debugging" : "Running";
+                    message(nativeInput.isEmpty()
+                            ? verb + " visible examples."
+                            : verb + " the solution on: " + nativeInput);
                 }
             }
 
@@ -106,7 +109,8 @@ public final class PracticeRunner implements Disposable {
             public void processTerminated(@NotNull String executorId, @NotNull ExecutionEnvironment environment,
                                           @NotNull ProcessHandler handler, int exitCode) {
                 if (environment.getRunProfile() == nativeExamples) {
-                    finishExamples("Example session finished (exit " + exitCode
+                    finishExamples((nativeInput.isEmpty() ? "Example session" : "Input session")
+                            + " finished (exit " + exitCode
                             + "). Use Check Solution to update correctness progress.");
                 }
             }
@@ -122,11 +126,19 @@ public final class PracticeRunner implements Disposable {
     }
 
     public void runExamples(String attemptId) throws ExecutionException {
-        launchExamples(attemptId, DefaultRunExecutor.getRunExecutorInstance());
+        launchExamples(attemptId, "", false);
+    }
+
+    public void runExamples(String attemptId, String input) throws ExecutionException {
+        launchExamples(attemptId, input, false);
     }
 
     public void debugExamples(String attemptId) throws ExecutionException {
-        launchExamples(attemptId, DefaultDebugExecutor.getDebugExecutorInstance());
+        launchExamples(attemptId, "", true);
+    }
+
+    public void debugExamples(String attemptId, String input) throws ExecutionException {
+        launchExamples(attemptId, input, true);
     }
 
     public void check(String attemptId) throws ExecutionException {
@@ -211,6 +223,28 @@ public final class PracticeRunner implements Disposable {
         }
     }
 
+    /**
+     * Attaches the scaling measurement to a passing result. The probe only runs after the suite
+     * passes, and a missing or unreadable report never changes the verdict.
+     */
+    private static CheckResult withMeasuredComplexity(
+            CheckResult result,
+            ExerciseCatalog.Exercise exercise,
+            VerificationWorkspace workspace
+    ) {
+        if (result.status() != CheckResult.Status.PASSED) {
+            return result;
+        }
+        try {
+            return ComplexityAnalysis.read(workspace.resultDirectory())
+                    .map(report -> result.withComplexity(
+                            report.render(exercise.intendedTime(), exercise.intendedSpace())))
+                    .orElse(result);
+        } catch (IOException | RuntimeException failure) {
+            return result.withComplexity("Scaling measurement unavailable: " + failure.getMessage());
+        }
+    }
+
     private void finishCheckProcess(
             ManagedPracticeWorkspace.Attempt attempt,
             ExerciseCatalog.Exercise exercise,
@@ -230,6 +264,7 @@ public final class PracticeRunner implements Disposable {
                         ? new CheckResult(COMPILATION_FAILED, 0, 0,
                         "Compilation failed. See the Run console for file and line diagnostics.")
                         : TestReports.read(workspace.resultDirectory(), exercise.fullCount(), true, exitCode);
+                result = withMeasuredComplexity(result, exercise, workspace);
             }
             if (!fingerprint.equals(attempts.fingerprint(attempt))) {
                 result = staleResult(result);
@@ -248,12 +283,13 @@ public final class PracticeRunner implements Disposable {
         }
     }
 
-    private void launchExamples(String attemptId, com.intellij.execution.Executor executor) throws ExecutionException {
+    private void launchExamples(String attemptId, String input, boolean debug) throws ExecutionException {
         ensureIdle();
-        runAfterSavingDocuments(() -> launchExamplesAfterSave(attemptId, executor));
+        String argument = input == null ? "" : input.trim();
+        runAfterSavingDocuments(() -> launchExamplesAfterSave(attemptId, argument, debug));
     }
 
-    private void launchExamplesAfterSave(String attemptId, com.intellij.execution.Executor executor)
+    private void launchExamplesAfterSave(String attemptId, String input, boolean debug)
             throws ExecutionException {
         ManagedPracticeWorkspace.Attempt attempt;
         try {
@@ -266,6 +302,8 @@ public final class PracticeRunner implements Disposable {
         Path runner = modules.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId()));
         stopReason = null;
         nativeAttempt = attempt;
+        nativeInput = input;
+        nativeDebug = debug;
         try {
             nativeFingerprint = attempts.fingerprint(attempt);
         } catch (IOException exception) {
@@ -286,7 +324,7 @@ public final class PracticeRunner implements Disposable {
                 return;
             }
             ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
-                    installExampleConfiguration(attempt, attemptId, runner, executor));
+                    installExampleConfiguration(attempt, attemptId, runner, input, debug));
         });
     }
 
@@ -294,7 +332,8 @@ public final class PracticeRunner implements Disposable {
             ManagedPracticeWorkspace.Attempt attempt,
             String attemptId,
             Path runner,
-            com.intellij.execution.Executor executor
+            String input,
+            boolean debug
     ) {
         try {
             WriteIntentReadAction.runThrowable(() -> {
@@ -314,18 +353,21 @@ public final class PracticeRunner implements Disposable {
                 }
                 RunManager manager = RunManager.getInstance(project);
                 RunnerAndConfigurationSettings settings = manager.createConfiguration(
-                        (executor == DefaultDebugExecutor.getDebugExecutorInstance() ? "Debug " : "Run ") + attemptId,
+                        (debug ? "Debug " : "Run ") + (input.isEmpty() ? "" : "input ") + attemptId,
                         ApplicationConfigurationType.getInstance().getConfigurationFactories()[0]);
                 var configuration = (ApplicationConfiguration) settings.getConfiguration();
                 configuration.setMainClass(javaFile.getClasses()[0]);
                 configuration.setModule(module);
                 configuration.setWorkingDirectory(attempt.directory().toString());
+                configuration.setProgramParameters(input.isEmpty() ? null : quoteArgument(input));
                 manager.setTemporaryConfiguration(settings);
                 manager.setSelectedConfiguration(settings);
                 nativeExamples = configuration;
                 nativeSettings = settings;
                 try {
-                    ExecutionUtil.runConfiguration(settings, executor);
+                    ExecutionUtil.runConfiguration(settings, debug
+                            ? DefaultDebugExecutor.getDebugExecutorInstance()
+                            : DefaultRunExecutor.getRunExecutorInstance());
                 } catch (RuntimeException failure) {
                     finishExamples("Example launch failed before execution: " + failure.getMessage());
                     throw failure;
@@ -395,7 +437,8 @@ public final class PracticeRunner implements Disposable {
                         ManagedPracticeProgress.get().record(
                                 attempt.id(), attempt.exerciseId(), fingerprint, completed);
                         message("Managed attempt: " + attempt.id() + "\nFull check: " + completed.status()
-                                + "\n" + completed.details());
+                                + "\n" + completed.details()
+                                + (completed.complexity().isBlank() ? "" : "\n\n" + completed.complexity()));
                     }
                 }));
     }
@@ -411,6 +454,8 @@ public final class PracticeRunner implements Disposable {
                     nativeSettings = null;
                     nativeAttempt = null;
                     nativeFingerprint = null;
+                    nativeInput = "";
+                    nativeDebug = false;
                     active = null;
                     running.set(false);
                     if (settings != null && !project.isDisposed()) {
@@ -419,7 +464,7 @@ public final class PracticeRunner implements Disposable {
                     }
                     if (attempt != null && !project.isDisposed()) {
                         PracticeModuleWorkspace.get(project).clearExampleHarness(attempt);
-                        if (fingerprint != null && resultText.startsWith("Example session finished (exit 0)")) {
+                        if (fingerprint != null && resultText.contains("session finished (exit 0)")) {
                             try {
                                 if (!fingerprint.equals(attempts.fingerprint(attempt))) {
                                     resultText = "STALE: files changed during the example run; run the current solution again.";
@@ -432,6 +477,10 @@ public final class PracticeRunner implements Disposable {
                     message(resultText);
                 }
         ));
+    }
+
+    private static String quoteArgument(String input) {
+        return '"' + input.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
     }
 
     private CheckResult stoppedResult() {

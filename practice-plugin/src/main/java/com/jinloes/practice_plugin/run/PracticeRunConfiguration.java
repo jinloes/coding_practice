@@ -54,7 +54,7 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
     public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment)
             throws ExecutionException {
         if (!com.intellij.execution.executors.DefaultRunExecutor.EXECUTOR_ID.equals(executor.getId())) {
-            throw new ExecutionException("Use Debug Examples in the Practice tool window for native Java debugging.");
+            throw new ExecutionException("Use Debug With Input... in the Practice tool window for native Java debugging.");
         }
         return new CommandLineState(environment) {
             @Override

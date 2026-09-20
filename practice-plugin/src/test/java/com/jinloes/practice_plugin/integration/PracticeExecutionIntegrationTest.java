@@ -132,6 +132,10 @@ class PracticeExecutionIntegrationTest {
         assertThat(completed.await(360, TimeUnit.SECONDS)).as(result.get()).isTrue();
         ManagedPracticeProgress.Entry entry = ManagedPracticeProgress.get().entry(attempt.id(), attempt.exerciseId());
         assertThat(entry.status).as(entry.details).isEqualTo("PASSED");
+        assertThat(entry.complexity)
+                .as("a passing check reports how the solution scaled: %s", entry.details)
+                .contains("intended")
+                .contains("not proof of complexity");
     }
 
     @Test
@@ -227,12 +231,80 @@ class PracticeExecutionIntegrationTest {
     }
 
     @Test
-    void nativeDebugPausesAtABreakpointInDurableSolution() throws Exception {
+    void customInputRunsTheSolutionOnTheGivenArgumentsWithoutUpdatingProgress() throws Exception {
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch completed = new CountDownLatch(1);
+        AtomicReference<ApplicationConfiguration> configuration = new AtomicReference<>();
+        AtomicReference<String> result = new AtomicReference<>("");
+        StringBuffer output = new StringBuffer();
+        fixture.getProject().getMessageBus().connect(fixture.getTestRootDisposable()).subscribe(
+                ExecutionManager.EXECUTION_TOPIC, new ExecutionListener() {
+                    @Override
+                    public void processStarted(String executorId, ExecutionEnvironment environment,
+                                               ProcessHandler handler) {
+                        if (environment.getRunProfile() instanceof ApplicationConfiguration application) {
+                            configuration.set(application);
+                            handler.addProcessListener(new com.intellij.execution.process.ProcessAdapter() {
+                                @Override
+                                public void onTextAvailable(
+                                        com.intellij.execution.process.ProcessEvent event,
+                                        com.intellij.openapi.util.Key outputType
+                                ) {
+                                    output.append(event.getText());
+                                }
+                            });
+                            started.countDown();
+                        }
+                    }
+                });
+        PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
+        runner.setListener(text -> {
+            result.set(text);
+            if (text.startsWith("Input session finished")) {
+                completed.countDown();
+            }
+        });
+
+        EdtTestUtil.runInEdtAndWait(() -> {
+            ((com.intellij.execution.impl.ExecutionManagerImpl) ExecutionManager
+                    .getInstance(fixture.getProject())).setForceCompilationInTests(true);
+            runner.runExamples(attempt.id(), "[2, 7, 11, 15] 9");
+        });
+
+        assertThat(started.await(90, TimeUnit.SECONDS)).isTrue();
+        assertThat(completed.await(90, TimeUnit.SECONDS)).isTrue();
+        assertThat(configuration.get()).isNotNull();
+        assertThat(configuration.get().getProgramParameters())
+                .as("the typed input must reach the generated runner as one argument")
+                .isEqualTo("\"[2, 7, 11, 15] 9\"");
+        assertThat(output.toString())
+                .as("custom input must report the call and skip the visible examples")
+                .contains("findPair([2, 7, 11, 15], 9) =")
+                .doesNotContain("Examples passed:");
+        assertThat(result.get()).as(output.toString()).contains("exit 0");
+        assertThat(ManagedPracticeProgress.get().entry(attempt.id(), attempt.exerciseId()).status)
+                .isEqualTo("NOT_RUN");
+        assertThat(attempt.directory().resolve("ExampleRunner.java")).doesNotExist();
+    }
+
+    @Test
+    void customInputCanBeDebuggedAndPausesAtABreakpointInDurableSolution() throws Exception {
         var solution = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(attempt.solution());
         assertThat(solution).isNotNull();
         CountDownLatch paused = new CountDownLatch(1);
         CountDownLatch stopped = new CountDownLatch(1);
         AtomicReference<com.intellij.xdebugger.XDebugSession> session = new AtomicReference<>();
+        AtomicReference<ApplicationConfiguration> configuration = new AtomicReference<>();
+        fixture.getProject().getMessageBus().connect(fixture.getTestRootDisposable()).subscribe(
+                ExecutionManager.EXECUTION_TOPIC, new ExecutionListener() {
+                    @Override
+                    public void processStarted(String executorId, ExecutionEnvironment environment,
+                                               ProcessHandler handler) {
+                        if (environment.getRunProfile() instanceof ApplicationConfiguration application) {
+                            configuration.set(application);
+                        }
+                    }
+                });
         fixture.getProject().getMessageBus().connect(fixture.getTestRootDisposable()).subscribe(
                 com.intellij.xdebugger.XDebuggerManager.TOPIC,
                 new com.intellij.xdebugger.XDebuggerManagerListener() {
@@ -257,13 +329,17 @@ class PracticeExecutionIntegrationTest {
             EdtTestUtil.runInEdtAndWait(() -> {
                 ((com.intellij.execution.impl.ExecutionManagerImpl) ExecutionManager
                         .getInstance(fixture.getProject())).setForceCompilationInTests(true);
-                runner.debugExamples(attempt.id());
+                runner.debugExamples(attempt.id(), "[2, 7, 11, 15] 9");
             });
             assertThat(paused.await(180, TimeUnit.SECONDS)).isTrue();
             assertThat(session.get()).isNotNull();
             EdtTestUtil.runInEdtAndWait(() -> {
                 assertThat(session.get().isSuspended()).isTrue();
                 assertThat(session.get().getCurrentPosition().getFile()).isEqualTo(solution);
+                assertThat(configuration.get()).isNotNull();
+                assertThat(configuration.get().getProgramParameters())
+                        .as("debugging custom input must pass the typed case to the runner")
+                        .isEqualTo("\"[2, 7, 11, 15] 9\"");
                 assertThat(ManagedPracticeProgress.get().entry(attempt.id(), attempt.exerciseId()).status)
                         .isEqualTo("NOT_RUN");
             });

@@ -19,7 +19,12 @@ java {
     }
 }
 
+configurations {
+    exampleLibraries
+}
+
 dependencies {
+    exampleLibraries 'org.assertj:assertj-core:3.26.3'
     intellijPlatform {
         if (providers.gradleProperty('idePath').isPresent()) {
             local(providers.gradleProperty('idePath').get())
@@ -65,8 +70,22 @@ tasks.named('wrapper') {
     distributionType = Wrapper.DistributionType.BIN
 }
 
+def exampleLibrariesIndex = tasks.register('exampleLibrariesIndex') {
+    def jars = configurations.exampleLibraries
+    def index = layout.buildDirectory.file('example-libraries/index.txt')
+    inputs.files(jars)
+    outputs.file(index)
+    doLast {
+        def file = index.get().asFile
+        file.parentFile.mkdirs()
+        file.text = jars.files.collect { it.name }.sort().join('\n') + '\n'
+    }
+}
+
 tasks.named('processResources') {
     from('gradlew') { into 'bootstrap' }
     from('gradlew.bat') { into 'bootstrap' }
     from('gradle/wrapper') { into 'bootstrap/gradle/wrapper' }
+    from(configurations.exampleLibraries) { into 'example-libraries' }
+    from(exampleLibrariesIndex) { into 'example-libraries' }
 }

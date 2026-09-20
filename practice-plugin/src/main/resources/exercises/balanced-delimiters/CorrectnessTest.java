@@ -7,32 +7,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CorrectnessTest {
     @Test
     void acceptsEmptyInput() {
-        assertThat(Solution.isBalanced("")).isTrue();
+        assertBalanced("");
     }
 
     @Test
     void handlesEachPairType() {
-        assertThat(Solution.isBalanced("()")).isTrue();
-        assertThat(Solution.isBalanced("[]")).isTrue();
-        assertThat(Solution.isBalanced("{}")).isTrue();
+        assertBalanced("()");
+        assertBalanced("[]");
+        assertBalanced("{}");
     }
 
     @Test
     void rejectsAClosingDelimiterWithoutAnOpeningOne() {
-        assertThat(Solution.isBalanced("]")).isFalse();
-        assertThat(Solution.isBalanced("())")).isFalse();
+        assertUnbalanced("]");
+        assertUnbalanced("())");
     }
 
     @Test
     void rejectsAnUnclosedOpeningDelimiter() {
-        assertThat(Solution.isBalanced("{{")).isFalse();
-        assertThat(Solution.isBalanced("[{()}")).isFalse();
+        assertUnbalanced("{{");
+        assertUnbalanced("[{()}");
     }
 
     @Test
     void distinguishesDifferentDelimiterKinds() {
-        assertThat(Solution.isBalanced("(]")).isFalse();
-        assertThat(Solution.isBalanced("{[}]")).isFalse();
+        assertUnbalanced("(]");
+        assertUnbalanced("{[}]");
     }
 
     @Test
@@ -44,12 +44,12 @@ class CorrectnessTest {
         for (int i = 127; i >= 0; i--) {
             input.append(")]}".charAt(i % 3));
         }
-        assertThat(Solution.isBalanced(input.toString())).isTrue();
+        assertBalanced(input.toString());
     }
 
     @Test
     void rejectsADeepSequenceWithOneWrongCloser() {
-        assertThat(Solution.isBalanced("{{[()]}}]")).isFalse();
+        assertUnbalanced("{{[()]}}]");
     }
 
     @Test
@@ -58,6 +58,24 @@ class CorrectnessTest {
         for (int i = 0; i < 100; i++) {
             input.append("()");
         }
-        assertThat(Solution.isBalanced(input.toString())).isTrue();
+        assertBalanced(input.toString());
+    }
+
+    private static void assertBalanced(String input) {
+        assertThat(Solution.isBalanced(input))
+                .as("isBalanced(%s) must accept this balanced input", quote(input))
+                .isTrue();
+    }
+
+    private static void assertUnbalanced(String input) {
+        assertThat(Solution.isBalanced(input))
+                .as("isBalanced(%s) must reject this unbalanced input", quote(input))
+                .isFalse();
+    }
+
+    private static String quote(String input) {
+        return input.length() <= 60
+                ? "\"" + input + "\""
+                : "\"" + input.substring(0, 60) + "...\" (length " + input.length() + ")";
     }
 }

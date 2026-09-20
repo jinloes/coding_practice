@@ -17,11 +17,19 @@ import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.LanguageLevelModuleExtension;
+import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.roots.libraries.Library;
+import com.intellij.openapi.roots.libraries.LibraryTable;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.JarFileSystem;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtilCore;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.pom.java.LanguageLevel;
+import com.jinloes.practice_plugin.catalog.ExampleLibraries;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 
 import java.io.IOException;
@@ -33,6 +41,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -42,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 public final class PracticeModuleWorkspace implements Disposable {
     private static final String OWNED_SDK_PREFIX = "Algorithm Practice IDE JDK ";
     private static final String MARKER = ".algorithm-practice-generated";
+    private static final String EXAMPLE_LIBRARY = "algorithm-practice-example-libraries";
     private static final String ATTEMPT_ID_PATTERN = "[a-z][a-z0-9-]*-[a-f0-9]{32}";
     private final Project project;
     private final Set<RunnerAndConfigurationSettings> temporaryConfigurations = new LinkedHashSet<>();
@@ -112,6 +122,7 @@ public final class PracticeModuleWorkspace implements Disposable {
             }
             createMarkedDirectory(harness, "harness", attempt.id());
             Path sourceRoot = harness.resolve("src");
+            List<Path> libraries = ExampleLibraries.extractTo(harness.resolve("libs"));
             Path runner = sourceRoot.resolve("com/jinloes/practice/ExampleRunner.java");
             Files.createDirectories(runner.getParent());
             Files.writeString(runner, ExerciseCatalog.resource(exercise, "ExampleRunner.java"),
@@ -126,6 +137,7 @@ public final class PracticeModuleWorkspace implements Disposable {
                 }
                 var entry = model.addContentEntry(root);
                 entry.addSourceFolder(source, false);
+                attachExampleLibraries(model, libraries);
                 model.commit();
             });
             return runner;
@@ -146,6 +158,7 @@ public final class PracticeModuleWorkspace implements Disposable {
                         model.removeContentEntry(entry);
                     }
                 }
+                detachExampleLibraries(model);
                 model.commit();
             });
         }
@@ -170,6 +183,7 @@ public final class PracticeModuleWorkspace implements Disposable {
                     "--release", "17",
                     "-encoding", "UTF-8",
                     "-g",
+                    "-classpath", ExampleLibraries.classpath(exampleLibraries(attempt)),
                     "-d", output.toString(),
                     attempt.solution().toString(),
                     runner.toString())
@@ -285,6 +299,39 @@ public final class PracticeModuleWorkspace implements Disposable {
                 () -> ProjectJdkTable.getInstance().addJdk(fallback));
         ownedFallbackSdk = fallback;
         return fallback;
+    }
+
+    private List<Path> exampleLibraries(ManagedPracticeWorkspace.Attempt attempt) throws ExecutionException {
+        Path libs = generatedBase("harnesses").resolve(attempt.id()).resolve("libs").normalize();
+        List<Path> jars = ExampleLibraries.names().stream().map(libs::resolve).toList();
+        for (Path jar : jars) {
+            if (!Files.isRegularFile(jar, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(jar)) {
+                throw new ExecutionException("Bundled example libraries are missing from the generated harness.");
+            }
+        }
+        return jars;
+    }
+
+    private static void attachExampleLibraries(ModifiableRootModel model, List<Path> jars) {
+        detachExampleLibraries(model);
+        Library library = model.getModuleLibraryTable().createLibrary(EXAMPLE_LIBRARY);
+        Library.ModifiableModel libraryModel = library.getModifiableModel();
+        for (Path jar : jars) {
+            LocalFileSystem.getInstance().refreshAndFindFileByNioFile(jar);
+            libraryModel.addRoot(VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL,
+                    FileUtil.toSystemIndependentName(jar.toString()) + JarFileSystem.JAR_SEPARATOR),
+                    OrderRootType.CLASSES);
+        }
+        libraryModel.commit();
+    }
+
+    private static void detachExampleLibraries(ModifiableRootModel model) {
+        LibraryTable table = model.getModuleLibraryTable();
+        for (Library library : table.getLibraries()) {
+            if (EXAMPLE_LIBRARY.equals(library.getName())) {
+                table.removeLibrary(library);
+            }
+        }
     }
 
     private void createMarkedDirectory(Path directory, String kind, String attemptId) throws IOException {

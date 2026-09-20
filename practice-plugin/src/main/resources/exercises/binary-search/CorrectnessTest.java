@@ -2,18 +2,20 @@ package com.jinloes.practice;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CorrectnessTest {
     @Test
     void handlesAnEmptyArray() {
-        assertThat(Solution.search(new int[0], 10)).isEqualTo(-1);
+        assertAbsent(new int[0], 10);
     }
 
     @Test
     void handlesAOneElementArray() {
-        assertThat(Solution.search(new int[]{8}, 8)).isEqualTo(0);
-        assertThat(Solution.search(new int[]{8}, 2)).isEqualTo(-1);
+        assertValidIndex(new int[]{8}, 8);
+        assertAbsent(new int[]{8}, 2);
     }
 
     @Test
@@ -33,15 +35,15 @@ class CorrectnessTest {
     @Test
     void reportsTargetsBetweenValues() {
         int[] sorted = {-9, -2, 4, 10};
-        assertThat(Solution.search(sorted, -8)).isEqualTo(-1);
-        assertThat(Solution.search(sorted, 5)).isEqualTo(-1);
+        assertAbsent(sorted, -8);
+        assertAbsent(sorted, 5);
     }
 
     @Test
     void reportsTargetsOutsideBothEnds() {
         int[] sorted = {-9, -2, 4, 10};
-        assertThat(Solution.search(sorted, -100)).isEqualTo(-1);
-        assertThat(Solution.search(sorted, 100)).isEqualTo(-1);
+        assertAbsent(sorted, -100);
+        assertAbsent(sorted, 100);
     }
 
     @Test
@@ -49,18 +51,30 @@ class CorrectnessTest {
         int[] sorted = {-8, -1, 2, 7, 13};
         int[] before = sorted.clone();
         Solution.search(sorted, 2);
-        assertThat(sorted).containsExactly(before);
+        assertThat(sorted).as("search must not mutate %s", Arrays.toString(before))
+                .containsExactly(before);
     }
 
     @Test
     void handlesAWideSearchInterval() {
-        int[] sorted = {-1_000_000, -100, 0, 100, 1_000_000};
-        assertValidIndex(sorted, 1_000_000);
+        assertValidIndex(new int[]{-1_000_000, -100, 0, 100, 1_000_000}, 1_000_000);
+    }
+
+    private static void assertAbsent(int[] sorted, int target) {
+        assertThat(Solution.search(sorted, target))
+                .as("%s must return -1 because the target is absent", call(sorted, target))
+                .isEqualTo(-1);
     }
 
     private static void assertValidIndex(int[] sorted, int target) {
+        String call = call(sorted, target);
         int index = Solution.search(sorted, target);
-        assertThat(index).isBetween(0, sorted.length - 1);
-        assertThat(sorted[index]).isEqualTo(target);
+        assertThat(index).as("%s must return an in-bounds index", call)
+                .isBetween(0, sorted.length - 1);
+        assertThat(sorted[index]).as("%s returned index %d", call, index).isEqualTo(target);
+    }
+
+    private static String call(int[] sorted, int target) {
+        return "search(%s, %d)".formatted(Arrays.toString(sorted), target);
     }
 }

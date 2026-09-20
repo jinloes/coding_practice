@@ -81,6 +81,7 @@ public final class VerificationWorkspace {
                 "-classpath", root.resolve("gradle/wrapper/gradle-wrapper.jar").toString(),
                 "org.gradle.wrapper.GradleWrapperMain",
                 "test",
+                "probe",
                 "--no-daemon",
                 "--console=plain",
                 "--rerun-tasks",
@@ -142,6 +143,10 @@ public final class VerificationWorkspace {
         Files.createDirectories(source.getParent());
         Files.createDirectories(tests);
         Files.copy(attempt.solution(), source);
+        Files.writeString(source.resolveSibling("Workload.java"),
+                ExerciseCatalog.resource(exercise, "Workload.java"), StandardCharsets.UTF_8);
+        Files.writeString(source.resolveSibling("ComplexityProbe.java"),
+                ExerciseCatalog.harness("ComplexityProbe.java"), StandardCharsets.UTF_8);
         Files.writeString(tests.resolve("ExamplesTest.java"),
                 ExerciseCatalog.resource(exercise, "ExamplesTest.java"), StandardCharsets.UTF_8);
         Files.writeString(tests.resolve("CorrectnessTest.java"),
@@ -286,10 +291,27 @@ public final class VerificationWorkspace {
                     reports.junitXml.outputLocation = layout.projectDirectory.dir('.practice-results')
                     reports.junitXml.includeSystemOutLog = false
                     reports.junitXml.includeSystemErrLog = false
+                    testLogging {
+                        events 'failed', 'skipped'
+                        exceptionFormat 'full'
+                    }
                     doFirst {
                         file('.practice-results').mkdirs()
                         file('.practice-results/phase').text = 'testing'
                         file('.practice-results/started').text = System.currentTimeMillis().toString()
+                    }
+                }
+
+                tasks.register('probe', JavaExec) {
+                    dependsOn tasks.named('test')
+                    mainClass = 'com.jinloes.practice.ComplexityProbe'
+                    classpath = sourceSets.main.runtimeClasspath
+                    args '.practice-results'
+                    maxHeapSize = providers.gradleProperty('practiceHeapMb').orElse('256').get() + 'm'
+                    ignoreExitValue = true
+                    doFirst {
+                        file('.practice-results').mkdirs()
+                        file('.practice-results/phase').text = 'probing'
                     }
                 }
                 """;

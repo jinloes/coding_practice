@@ -34,6 +34,7 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
         public String checkedAt = "";
         public String lastPassedAt = "";
         public String details = "";
+        public String complexity = "";
         public int hintsRevealed;
         public int tests;
         public int failures;
@@ -82,6 +83,9 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
         entry.checkedAt = Instant.now().toString();
         entry.status = result.status().name();
         entry.details = result.details();
+        if (!result.complexity().isBlank()) {
+            entry.complexity = result.complexity();
+        }
         entry.tests = result.tests();
         entry.failures = result.failures();
         if (result.status() == CheckResult.Status.PASSED) {

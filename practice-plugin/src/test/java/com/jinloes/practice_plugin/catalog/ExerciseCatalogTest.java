@@ -1,5 +1,7 @@
 package com.jinloes.practice_plugin.catalog;
 
+import com.jinloes.practice_plugin.run.ComplexityAnalysis;
+import com.jinloes.practice_plugin.run.ComplexityReport;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
@@ -7,6 +9,7 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -64,6 +67,12 @@ class ExerciseCatalogTest {
                     });
             assertThat(exercise.fullCount()).isEqualTo(expectedFull.get(exercise.id()));
             assertThat(exercise.hints()).hasSize(3).allSatisfy(hint -> assertThat(hint).isNotBlank());
+            assertThat(exercise.inputSyntax())
+                    .as("%s must document its input syntax", exercise.id())
+                    .startsWith("Input: ").contains("for example: ").endsWith(exercise.sampleInput());
+            assertThat(ExerciseCatalog.resource(exercise, "ExampleRunner.java"))
+                    .as("%s/ExampleRunner.java usage text must match the catalog input syntax", exercise.id())
+                    .contains(exercise.inputSyntax());
             assertThat(exercise.statement()).contains("Contract", "Examples");
             assertThat(ExerciseCatalog.find(exercise.id())).isSameAs(exercise);
         }
@@ -81,12 +90,22 @@ class ExerciseCatalogTest {
                 assertThat(source).contains("package com.jinloes.practice;");
                 assertThat(source).contains(name.equals("Solution.java") ? "class Solution" : "@Test");
                 assertThat(source).doesNotContain("@Timeout", "@ParameterizedTest", "@TestFactory");
+                if (!name.equals("Solution.java")) {
+                    assertThat(source)
+                            .as("%s/%s must assert with AssertJ", exercise.id(), name)
+                            .contains("import static org.assertj.core.api.Assertions.assertThat")
+                            .doesNotContain("org.junit.jupiter.api.Assertions", "org.hamcrest",
+                                    "throw new AssertionError");
+                }
             }
             assertThat(ExerciseCatalog.resource(exercise, "Solution.java"))
                     .contains("UnsupportedOperationException(\"Implement ");
             assertThat(ExerciseCatalog.resource(exercise, "ExampleRunner.java"))
-                    .contains("class ExampleRunner", "public static void main(String[] args)")
-                    .doesNotContain("org.junit", "org.assertj");
+                    .as("%s/ExampleRunner.java must assert with AssertJ", exercise.id())
+                    .contains("class ExampleRunner", "public static void main(String[] args)",
+                            "import static org.assertj.core.api.Assertions.assertThat",
+                            "if (args.length > 0) {", "private static void runInput(String input)")
+                    .doesNotContain("org.junit", "org.hamcrest", "throw new AssertionError");
             assertThat(ExerciseCatalog.resource(exercise, "ExamplesTest.java"))
                     .doesNotContain("public class ExamplesTest");
             assertThat(ExerciseCatalog.resource(exercise, "CorrectnessTest.java"))
@@ -109,11 +128,58 @@ class ExerciseCatalogTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ExerciseCatalog.resource(
                 new ExerciseCatalog.Exercise("unknown", "Unknown", "Test", "Easy", "Statement",
-                        List.of(), List.of(), 0, 0),
+                        List.of(), List.of(), "Input: none, for example: x", "x",
+                        "O(n)", "O(1)", 0, 0),
                 "Solution.java"))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ExerciseCatalog.resource(pairSum, "missing.txt"))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void complexityProbeMeasuresEachReferenceSolutionAsItsIntendedComplexity() throws Exception {
+        for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
+            Path root = Files.createTempDirectory(Path.of("build"), "catalog-probe-" + exercise.id() + "-");
+            try {
+                Path sourceRoot = root.resolve("src/com/jinloes/practice");
+                Path classes = root.resolve("classes");
+                Path results = root.resolve("results");
+                Files.createDirectories(sourceRoot);
+                Files.createDirectories(classes);
+                Files.createDirectories(results);
+                Files.writeString(sourceRoot.resolve("Solution.java"), referenceSource(exercise),
+                        StandardCharsets.UTF_8);
+                Files.writeString(sourceRoot.resolve("Workload.java"),
+                        ExerciseCatalog.resource(exercise, "Workload.java"), StandardCharsets.UTF_8);
+                Files.writeString(sourceRoot.resolve("ComplexityProbe.java"),
+                        ExerciseCatalog.harness("ComplexityProbe.java"), StandardCharsets.UTF_8);
+
+                compile(List.of(sourceRoot.resolve("Solution.java"), sourceRoot.resolve("Workload.java"),
+                        sourceRoot.resolve("ComplexityProbe.java")), classes, exercise.id() + " probe");
+                launchProbe(classes.toString(), results.toString());
+
+                ComplexityReport report = ComplexityAnalysis.read(results).orElseThrow(
+                        () -> new AssertionError(exercise.id() + " probe wrote no measurement"));
+                assertThat(report.samples())
+                        .as("%s probe must measure several input sizes", exercise.id())
+                        .hasSizeGreaterThanOrEqualTo(3);
+                assertThat(report.note())
+                        .as("%s probe must not fail while measuring the reference solution", exercise.id())
+                        .doesNotContain("Error", "Exception");
+                assertThat(report.timeClass())
+                        .as("%s reference solution measured as %s, intended %s", exercise.id(),
+                                report.timeClass(), exercise.intendedTime())
+                        .matches(measured -> measured.equals(ComplexityReport.INCONCLUSIVE)
+                                || measured.contains(exercise.intendedTime()));
+                assertThat(report.spaceClass())
+                        .as("%s reference solution allocated as %s, intended %s", exercise.id(),
+                                report.spaceClass(), exercise.intendedSpace())
+                        .matches(measured -> measured.equals(ComplexityReport.INCONCLUSIVE)
+                                || measured.contains(exercise.intendedSpace()));
+            } finally {
+                deleteTree(root);
+            }
+        }
     }
 
     @Test
@@ -166,17 +232,47 @@ class ExerciseCatalogTest {
                 compile(List.of(sourceRoot.resolve("Solution.java"), sourceRoot.resolve("ExampleRunner.java")),
                         classes, exercise.id() + " generated runner");
 
-                Process process = new ProcessBuilder(
-                        Path.of(System.getProperty("java.home"), "bin",
-                                System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString(),
-                        "-classpath", classes.toString(), "com.jinloes.practice.ExampleRunner")
-                        .redirectErrorStream(true).start();
-                assertThat(process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
-                assertThat(new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8))
+                List<Path> libraries = ExampleLibraries.extractTo(root.resolve("libs"));
+                String runtimeClasspath = classes + File.pathSeparator + ExampleLibraries.classpath(libraries);
+                assertThat(launchRunner(runtimeClasspath))
+                        .as("%s runner without arguments must run the visible examples", exercise.id())
                         .contains("Examples passed: " + exercise.exampleCount());
-                assertThat(process.exitValue()).isZero();
+
+                String custom = launchRunner(runtimeClasspath, exercise.sampleInput());
+                assertThat(custom)
+                        .as("%s runner must accept its documented sample input", exercise.id())
+                        .isNotBlank()
+                        .doesNotContain("Examples passed:", "Exception in thread", exercise.inputSyntax());
+
+                assertThat(launchRunner(runtimeClasspath, "definitely not valid input"))
+                        .as("%s runner must explain its input syntax when the input is unusable", exercise.id())
+                        .contains(exercise.inputSyntax());
             } finally {
                 deleteTree(root);
+            }
+        }
+    }
+
+    private static String launchRunner(String classpath, String... arguments) throws Exception {
+        List<String> command = new ArrayList<>(List.of(
+                Path.of(System.getProperty("java.home"), "bin",
+                        System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString(),
+                "-classpath", classpath,
+                "com.jinloes.practice.ExampleRunner"));
+        command.addAll(List.of(arguments));
+        Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        try {
+            assertThat(process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS))
+                    .as("example runner finished for arguments %s", List.of(arguments)).isTrue();
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            assertThat(process.exitValue())
+                    .as("example runner exit code for arguments %s: %s", List.of(arguments), output)
+                    .isZero();
+            return output;
+        } finally {
+            if (process.isAlive()) {
+                process.destroyForcibly();
+                process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
             }
         }
     }
@@ -227,6 +323,26 @@ class ExerciseCatalogTest {
             return execute(classes);
         } finally {
             deleteTree(root);
+        }
+    }
+
+    private static void launchProbe(String classpath, String results) throws Exception {
+        Process process = new ProcessBuilder(
+                Path.of(System.getProperty("java.home"), "bin",
+                        System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString(),
+                "-classpath", classpath,
+                "com.jinloes.practice.ComplexityProbe", results)
+                .redirectErrorStream(true).start();
+        try {
+            assertThat(process.waitFor(90, java.util.concurrent.TimeUnit.SECONDS))
+                    .as("complexity probe finished").isTrue();
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            assertThat(process.exitValue()).as("complexity probe exit code: %s", output).isZero();
+        } finally {
+            if (process.isAlive()) {
+                process.destroyForcibly();
+                process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
+            }
         }
     }
 

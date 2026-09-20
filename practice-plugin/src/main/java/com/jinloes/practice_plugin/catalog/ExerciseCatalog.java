@@ -41,6 +41,10 @@ public final class ExerciseCatalog {
                             "Use a single pass with a map and long arithmetic for complements. "
                                     + "Intended complexity: expected O(n) time and O(n) extra space."
                     ),
+                    "Input: the array values followed by the target, for example: [2, 7, 11, 15] 9",
+                    "[2, 7, 11, 15] 9",
+                    "O(n)",
+                    "O(n)",
                     3,
                     11
             ),
@@ -74,6 +78,10 @@ public final class ExerciseCatalog {
                             "Compute the midpoint as low + (high - low) / 2 and update the bounds after every comparison. "
                                     + "Intended complexity: O(log n) time and O(1) extra space."
                     ),
+                    "Input: the sorted values followed by the target, for example: [-4, -1, 0, 6, 9] 6",
+                    "[-4, -1, 0, 6, 9] 6",
+                    "O(log n)",
+                    "O(1)",
                     3,
                     11
             ),
@@ -107,6 +115,10 @@ public final class ExerciseCatalog {
                             "Reject a closing delimiter when the stack is empty or its partner does not match; accept only an empty stack at the end. "
                                     + "Intended complexity: O(n) time and O(n) extra space in the worst case."
                     ),
+                    "Input: a delimiter string, for example: {[()]}",
+                    "{[()]}",
+                    "O(n)",
+                    "O(n)",
                     3,
                     11
             ),
@@ -141,6 +153,10 @@ public final class ExerciseCatalog {
                             "Advance the two pointers until current is null; the prefix pointer is the new head. "
                                     + "Intended complexity: O(n) time and O(1) extra space."
                     ),
+                    "Input: the list values in order, for example: [1, 2, 3]",
+                    "[1, 2, 3]",
+                    "O(n)",
+                    "O(1)",
                     3,
                     11
             ),
@@ -175,6 +191,10 @@ public final class ExerciseCatalog {
                             "On pop, read the last element and decrement the size. Double array capacity when growing. "
                                     + "Intended complexity: amortized O(1) push, O(1) pop/peek/size/isEmpty, and O(n) space."
                     ),
+                    "Input: operations separated by commas, for example: push 4, push 9, pop, peek, size",
+                    "push 4, push 9, pop, peek, size",
+                    "O(1)",
+                    "O(1)",
                     3,
                     11
             ),
@@ -212,6 +232,10 @@ public final class ExerciseCatalog {
                                     + "Intended complexity: amortized O(log n) add, O(log n) removeMin, "
                                     + "O(1) peek/size/isEmpty, and O(n) space."
                     ),
+                    "Input: operations separated by commas, for example: add 7, add 2, removeMin, peek, size",
+                    "add 7, add 2, removeMin, peek, size",
+                    "O(log n)",
+                    "O(1)",
                     3,
                     12
             )
@@ -231,6 +255,10 @@ public final class ExerciseCatalog {
             String statement,
             List<Example> examples,
             List<String> hints,
+            String inputSyntax,
+            String sampleInput,
+            String intendedTime,
+            String intendedSpace,
             int exampleCount,
             int fullCount
     ) {
@@ -242,6 +270,15 @@ public final class ExerciseCatalog {
             statement = Objects.requireNonNull(statement, "statement");
             examples = List.copyOf(Objects.requireNonNull(examples, "examples"));
             hints = List.copyOf(Objects.requireNonNull(hints, "hints"));
+            inputSyntax = Objects.requireNonNull(inputSyntax, "inputSyntax");
+            sampleInput = Objects.requireNonNull(sampleInput, "sampleInput");
+            intendedTime = Objects.requireNonNull(intendedTime, "intendedTime");
+            intendedSpace = Objects.requireNonNull(intendedSpace, "intendedSpace");
+            if (inputSyntax.isBlank() || sampleInput.isBlank()
+                    || intendedTime.isBlank() || intendedSpace.isBlank()) {
+                throw new IllegalArgumentException(
+                        "Exercise input syntax, sample, and intended complexity must not be blank");
+            }
             if (exampleCount < 0 || fullCount < exampleCount || examples.size() != exampleCount) {
                 throw new IllegalArgumentException("Invalid exercise test counts");
             }
@@ -270,6 +307,13 @@ public final class ExerciseCatalog {
         return exercise;
     }
 
+    public static String harness(String filename) {
+        if (!"ComplexityProbe.java".equals(filename)) {
+            throw new IllegalArgumentException("Unknown harness resource: " + filename);
+        }
+        return read("/harness/" + filename);
+    }
+
     public static String resource(Exercise exercise, String filename) {
         Objects.requireNonNull(exercise, "exercise");
         if (!BY_ID.containsKey(exercise.id())) {
@@ -280,10 +324,13 @@ public final class ExerciseCatalog {
                 || filename.contains("..")) {
             throw new IllegalArgumentException("Unsafe resource filename: " + filename);
         }
-        String path = "/exercises/" + exercise.id() + "/" + filename;
+        return read("/exercises/" + exercise.id() + "/" + filename);
+    }
+
+    private static String read(String path) {
         try (InputStream input = ExerciseCatalog.class.getResourceAsStream(path)) {
             if (input == null) {
-                throw new IllegalArgumentException("Unknown exercise resource: " + filename);
+                throw new IllegalArgumentException("Unknown exercise resource: " + path);
             }
             return new String(input.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException exception) {
