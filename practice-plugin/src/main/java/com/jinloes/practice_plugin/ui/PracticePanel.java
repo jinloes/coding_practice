@@ -15,12 +15,14 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.ui.ColorUtil;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.app.LegacyImportService;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
@@ -36,6 +38,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -43,9 +46,12 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,7 +75,7 @@ final class PracticePanel extends JPanel implements Disposable {
             new JComboBox<>(new String[]{"All progress", "Passed before", "Not passed"});
     private final JBTextField search = new JBTextField();
     private final JComboBox<ManagedPracticeWorkspace.Attempt> attempts = new JComboBox<>();
-    private final JBTextArea statement = textArea();
+    private final JEditorPane statement = htmlPane();
     private final JBTextArea hints = textArea();
     private final JBTextArea results = textArea();
     private final JLabel status = new JLabel("Choose an exercise.");
@@ -243,8 +249,9 @@ final class PracticePanel extends JPanel implements Disposable {
         updatingAttempts = true;
         attempts.removeAllItems();
         updatingAttempts = false;
-        statement.setText(exercise == null ? "No exercises match these filters." : problemText(exercise));
-        statement.setCaretPosition(0);
+        showStatement(exercise == null
+                ? "<p>No exercises match these filters.</p>"
+                : problemText(exercise));
         hints.setText("Start or resume an attempt to reveal hints.");
         results.setText("");
         updateButtons();
@@ -462,14 +469,46 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private static String problemText(Exercise exercise) {
-        StringBuilder text = new StringBuilder(exercise.statement().strip());
-        text.append("\n\nVisible examples\n");
+        StringBuilder html = new StringBuilder(MarkdownHtml.toHtml(exercise.statement()));
+        html.append("<p>Visible examples</p><ul>");
         for (int index = 0; index < exercise.examples().size(); index++) {
             var example = exercise.examples().get(index);
-            text.append("\nExample ").append(index + 1).append("\nInput: ")
-                    .append(example.input()).append("\nOutput: ").append(example.output()).append('\n');
+            html.append("<li>Example ").append(index + 1)
+                    .append("<br>Input: <code>").append(MarkdownHtml.inline(example.input()))
+                    .append("</code><br>Output: <code>").append(MarkdownHtml.inline(example.output()))
+                    .append("</code></li>");
         }
-        return text.toString();
+        return html.append("</ul>").toString();
+    }
+
+    /**
+     * Renders the Problem tab, whose statements are Markdown. Uses Swing's own HTML kit rather than
+     * a platform-specific pane so the rendering does not depend on an IDE version's HTML API.
+     */
+    private static JEditorPane htmlPane() {
+        HTMLEditorKit kit = new HTMLEditorKit();
+        Font font = UIUtil.getLabelFont();
+        String body = ColorUtil.toHex(UIUtil.getLabelForeground());
+        StyleSheet css = kit.getStyleSheet();
+        css.addRule("body { font-family: \"" + font.getFamily() + "\"; font-size: " + font.getSize()
+                + "pt; color: #" + body + "; margin: 8px; }");
+        css.addRule("p { margin: 0 0 10px 0; }");
+        css.addRule("ul { margin: 0 0 10px 0; }");
+        css.addRule("li { margin: 0 0 6px 0; }");
+        css.addRule("code { font-family: monospace; }");
+
+        JEditorPane pane = new JEditorPane();
+        pane.setEditorKit(kit);
+        pane.setEditable(false);
+        pane.setOpaque(true);
+        pane.setBackground(UIUtil.getPanelBackground());
+        pane.setBorder(JBUI.Borders.empty());
+        return pane;
+    }
+
+    private void showStatement(String html) {
+        statement.setText("<html><body>" + html + "</body></html>");
+        statement.setCaretPosition(0);
     }
 
     private static JBTextArea textArea() {
