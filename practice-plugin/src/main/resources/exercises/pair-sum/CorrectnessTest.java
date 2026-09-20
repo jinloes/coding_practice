@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 class CorrectnessTest {
     @Test
@@ -16,27 +17,27 @@ class CorrectnessTest {
     @Test
     void handlesNegativeAndZeroValues() {
         int[] numbers = {-8, 0, 3, 8};
-        assertValid(numbers, 0, Solution.findPair(numbers, 0));
+        assertValid(numbers, 0);
     }
 
     @Test
     void usesLongArithmeticAtIntegerBoundaries() {
         int[] numbers = {Integer.MAX_VALUE, Integer.MAX_VALUE, -1, -2};
         assertEmpty(numbers, -2);
-        assertValid(numbers, -3, Solution.findPair(numbers, -3));
+        assertValid(numbers, -3);
     }
 
     @Test
     void acceptsAnyValidPairWhenManyPairsExist() {
         int[] numbers = {1, 4, 1, 4, 1};
-        assertValid(numbers, 5, Solution.findPair(numbers, 5));
+        assertValid(numbers, 5);
     }
 
     @Test
     void doesNotMutateTheInput() {
         int[] numbers = {9, -2, 6, 11, -5};
         int[] before = numbers.clone();
-        Solution.findPair(numbers, 4);
+        findPair(numbers, 4);
         assertThat(numbers).as("findPair must not mutate %s", Arrays.toString(before))
                 .containsExactly(before);
     }
@@ -49,7 +50,7 @@ class CorrectnessTest {
     @Test
     void findsPairAtTheArrayBoundaries() {
         int[] numbers = {12, 5, 0, -7};
-        assertValid(numbers, 5, Solution.findPair(numbers, 5));
+        assertValid(numbers, 5);
     }
 
     @Test
@@ -58,13 +59,14 @@ class CorrectnessTest {
     }
 
     private static void assertEmpty(int[] numbers, int target) {
-        assertThat(Solution.findPair(numbers, target))
+        assertThat(findPair(numbers, target))
                 .as("%s must report that no pair exists", call(numbers, target))
                 .isEmpty();
     }
 
-    private static void assertValid(int[] numbers, int target, int[] result) {
+    private static void assertValid(int[] numbers, int target) {
         String call = call(numbers, target);
+        int[] result = findPair(numbers, target);
         assertThat(result).as("%s must not return null", call).isNotNull();
         if (result.length == 0) {
             return;
@@ -79,6 +81,14 @@ class CorrectnessTest {
                 .as("%s returned indices %s selecting values %d and %d", call,
                         Arrays.toString(result), numbers[result[0]], numbers[result[1]])
                 .isEqualTo(target);
+    }
+
+    private static int[] findPair(int[] numbers, int target) {
+        try {
+            return Solution.findPair(numbers, target);
+        } catch (Throwable thrown) {
+            return fail("%s threw %s".formatted(call(numbers, target), thrown), thrown);
+        }
     }
 
     private static String call(int[] numbers, int target) {

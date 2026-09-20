@@ -54,7 +54,7 @@ class TestReportsTest {
         assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isEqualTo(1);
         assertThat(result.details())
-                .contains(EXAMPLES + ".findsTypicalPair", "expected pair", "ExamplesTest.java:12");
+                .contains("Visible example: finds typical pair", "expected pair", "ExamplesTest.java:12");
     }
 
     @Test
@@ -72,7 +72,30 @@ class TestReportsTest {
         assertThat(result.status()).isEqualTo(RUNTIME_ERROR);
         assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isEqualTo(1);
-        assertThat(result.details()).contains(EXAMPLES + ".failsAtRuntime", "broken setup");
+        assertThat(result.details()).contains("Visible example: fails at runtime", "broken setup");
+    }
+
+    @Test
+    void classifiesAWrappedCrashAsARuntimeErrorRatherThanAWrongAnswer() throws Exception {
+        Path reports = reportDirectory();
+        String failure = caseXml(
+                "findsTypicalPair",
+                "<failure type=\"java.lang.AssertionError\" "
+                        + "message=\"findPair([1], 2) threw java.util.EmptyStackException\">"
+                        + "java.lang.AssertionError: findPair([1], 2) threw java.util.EmptyStackException\n"
+                        + "Caused by: java.util.EmptyStackException\n"
+                        + "\tat com.jinloes.practice.Solution.findPair(Solution.java:9)"
+                        + "</failure>");
+        writeFullReport(reports, failure + passingCases(PAIR_SUM.exampleCount() - 1));
+
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
+
+        assertThat(result.status())
+                .as("reporting the input must not disguise a crash as a wrong answer")
+                .isEqualTo(RUNTIME_ERROR);
+        assertThat(result.details())
+                .contains("findPair([1], 2) threw java.util.EmptyStackException",
+                        "at Solution.findPair(Solution.java:9)");
     }
 
     @Test

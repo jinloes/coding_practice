@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 class CorrectnessTest {
     @Test
@@ -61,17 +62,25 @@ class CorrectnessTest {
     }
 
     private static void assertAbsent(int[] sorted, int target) {
-        assertThat(Solution.search(sorted, target))
+        assertThat(search(sorted, target))
                 .as("%s must return -1 because the target is absent", call(sorted, target))
                 .isEqualTo(-1);
     }
 
     private static void assertValidIndex(int[] sorted, int target) {
         String call = call(sorted, target);
-        int index = Solution.search(sorted, target);
+        int index = search(sorted, target);
         assertThat(index).as("%s must return an in-bounds index", call)
                 .isBetween(0, sorted.length - 1);
         assertThat(sorted[index]).as("%s returned index %d", call, index).isEqualTo(target);
+    }
+
+    private static int search(int[] sorted, int target) {
+        try {
+            return Solution.search(sorted, target);
+        } catch (Throwable thrown) {
+            return fail("%s threw %s".formatted(call(sorted, target), thrown), thrown);
+        }
     }
 
     private static String call(int[] sorted, int target) {

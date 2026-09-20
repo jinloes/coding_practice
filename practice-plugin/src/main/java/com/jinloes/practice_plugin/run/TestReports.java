@@ -59,11 +59,13 @@ public final class TestReports {
                         if (failure != null) {
                             failures++;
                             String type = failure.getAttribute("type");
-                            timedOut |= type.contains("TimeoutException");
-                            runtimeError |= !type.contains("Assertion") && !type.contains("TimeoutException");
+                            String trace = failure.getTextContent();
+                            String cause = FailureText.causeType(trace);
+                            timedOut |= type.contains("TimeoutException") || cause.contains("TimeoutException");
+                            runtimeError |= isCrash(type) || (type.contains("Assertion") && isCrash(cause));
                             if (details.length() < 24_000) {
-                                String text = className + "." + test.getAttribute("name") + "\n"
-                                        + failure.getAttribute("message") + "\n" + failure.getTextContent() + "\n\n";
+                                String text = FailureText.render(className, test.getAttribute("name"),
+                                        type, failure.getAttribute("message"), trace);
                                 details.append(text, 0, Math.min(text.length(), 24_000 - details.length()));
                             }
                         }
@@ -90,5 +92,10 @@ public final class TestReports {
         }
         return new CheckResult(PASSED, tests, 0,
                 "All " + tests + " supplied cases passed. This does not prove optimal complexity.");
+    }
+
+    /** A throwable that is neither an assertion nor a timeout means the solution crashed. */
+    private static boolean isCrash(String type) {
+        return !type.isEmpty() && !type.contains("Assertion") && !type.contains("TimeoutException");
     }
 }

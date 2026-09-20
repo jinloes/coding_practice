@@ -3,6 +3,7 @@ package com.jinloes.practice;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 class CorrectnessTest {
     @Test
@@ -62,15 +63,23 @@ class CorrectnessTest {
     }
 
     private static void assertBalanced(String input) {
-        assertThat(Solution.isBalanced(input))
+        assertThat(isBalanced(input))
                 .as("isBalanced(%s) must accept this balanced input", quote(input))
                 .isTrue();
     }
 
     private static void assertUnbalanced(String input) {
-        assertThat(Solution.isBalanced(input))
+        assertThat(isBalanced(input))
                 .as("isBalanced(%s) must reject this unbalanced input", quote(input))
                 .isFalse();
+    }
+
+    private static boolean isBalanced(String input) {
+        try {
+            return Solution.isBalanced(input);
+        } catch (Throwable thrown) {
+            return fail("isBalanced(%s) threw %s".formatted(quote(input), thrown), thrown);
+        }
     }
 
     private static String quote(String input) {
