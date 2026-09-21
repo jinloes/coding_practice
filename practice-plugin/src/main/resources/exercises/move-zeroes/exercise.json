@@ -1,0 +1,30 @@
+{
+  "id": "move-zeroes",
+  "title": "Move Zeroes",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Push every zero to the end of an array without reordering the rest.\n\nContract\n- `numbers` is non-null and may be empty.\n- Rearrange the array in place so that every zero sits after every nonzero\n  value. The nonzero values must keep their original relative order.\n- Work on the given array: do not return a new one and do not change its length.\n  The method returns nothing.\n\nExamples\n- `moveZeroes(new int[]{0, 1, 0, 3, 12})` leaves `[1, 3, 12, 0, 0]`.\n- `moveZeroes(new int[]{0, 0})` leaves `[0, 0]`.\n- `moveZeroes(new int[]{1, 2})` leaves `[1, 2]`.\n",
+  "examples": [
+    {
+      "input": "numbers = [0, 1, 0, 3, 12]",
+      "output": "[1, 3, 12, 0, 0]"
+    },
+    {
+      "input": "numbers = [0, 0]",
+      "output": "[0, 0]"
+    },
+    {
+      "input": "numbers = [1, 2]",
+      "output": "[1, 2]"
+    }
+  ],
+  "hints": [
+    "Sorting or building a second array both work, but neither is needed: the answer is a rearrangement of what is already there.",
+    "Keep one index for the next slot a nonzero value belongs in, and scan with a second index.",
+    "Copy each nonzero value to the write index and advance it, then fill everything from the write index to the end with zeros. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the values to rearrange, for example: [0, 1, 0, 3, 12]",
+  "sampleInput": "[0, 1, 0, 3, 12]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

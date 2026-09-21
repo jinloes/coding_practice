@@ -1,0 +1,30 @@
+{
+  "id": "max-stock-profit",
+  "title": "Max Stock Profit",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Find the best profit from one buy and one later sell.\n\nContract\n- `prices` is non-null and holds one price per day, in day order. It may be\n  empty.\n- You may buy on one day and sell on a strictly later day, at most once. Return\n  the largest profit available, or `0` when no profitable pair exists.\n- Selling on the buying day is not allowed, so an array shorter than two days\n  returns `0`.\n- Do not mutate the input array.\n\nExamples\n- `maxProfit(new int[]{7, 1, 5, 3, 6, 4})` returns `5` (buy at 1, sell at 6).\n- `maxProfit(new int[]{7, 6, 4, 3, 1})` returns `0` because prices only fall.\n- `maxProfit(new int[]{})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "prices = [7, 1, 5, 3, 6, 4]",
+      "output": "5"
+    },
+    {
+      "input": "prices = [7, 6, 4, 3, 1]",
+      "output": "0"
+    },
+    {
+      "input": "prices = []",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Comparing every buying day with every selling day answers the question, but it rereads the same days over and over.",
+    "Walk the days once and keep the cheapest price seen so far to the left of the current day.",
+    "At each day, the best sale ending today is today's price minus that running minimum; keep the largest such value and never let it drop below zero. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the daily prices in day order, for example: [7, 1, 5, 3, 6, 4]",
+  "sampleInput": "[7, 1, 5, 3, 6, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

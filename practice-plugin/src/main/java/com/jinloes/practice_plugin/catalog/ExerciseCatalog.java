@@ -23,7 +23,12 @@ public final class ExerciseCatalog {
             "balanced-delimiters",
             "reverse-linked-list",
             "array-stack",
-            "binary-min-heap");
+            "binary-min-heap",
+            "valid-anagram",
+            "first-unique-character",
+            "max-stock-profit",
+            "move-zeroes",
+            "merge-sorted-lists");
 
     private static final Pattern TEST_ANNOTATION = Pattern.compile("@Test\\b");
 

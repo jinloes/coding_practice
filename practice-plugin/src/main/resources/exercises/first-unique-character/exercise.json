@@ -1,0 +1,30 @@
+{
+  "id": "first-unique-character",
+  "title": "First Unique Character",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Find the first character in a word that never repeats.\n\nContract\n- `word` is non-null and contains only the lowercase letters `a` through `z`.\n  The empty word is allowed.\n- Return the index of the leftmost character that occurs exactly once in the\n  whole word, or `-1` when every character repeats.\n- Do not mutate the input.\n\nExamples\n- `firstUniqueIndex(\"leetcode\")` returns `0`.\n- `firstUniqueIndex(\"loveleetcode\")` returns `2`.\n- `firstUniqueIndex(\"aabb\")` returns `-1`.\n",
+  "examples": [
+    {
+      "input": "word = \"leetcode\"",
+      "output": "0"
+    },
+    {
+      "input": "word = \"loveleetcode\"",
+      "output": "2"
+    },
+    {
+      "input": "word = \"aabb\"",
+      "output": "-1"
+    }
+  ],
+  "hints": [
+    "A character is unique only when you know how often it appears in the whole word, so one left-to-right pass is not enough on its own.",
+    "Count how often each letter occurs first, then walk the word again and return the first index whose count is one.",
+    "The alphabet has a fixed size, so an int[26] of counts holds everything the second pass needs. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: one lowercase word, for example: loveleetcode",
+  "sampleInput": "loveleetcode",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

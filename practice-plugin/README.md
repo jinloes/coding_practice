@@ -81,8 +81,10 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    the result alongside the exercise's intended complexity.
 
 The catalog includes Pair Sum, Binary Search, Balanced Delimiters, Reverse
-Linked List, Array Stack, and Binary Min Heap. Each has an explicit contract and
-three optional hints. The last hint discusses the intended complexity.
+Linked List, Array Stack, Binary Min Heap, Valid Anagram, First Unique
+Character, Max Stock Profit, Move Zeroes, and Merge Sorted Lists. Each has an
+explicit contract and three optional hints. The last hint discusses the intended
+complexity.
 
 ## What a passing result means
 
@@ -150,6 +152,12 @@ are migrated, while every imported attempt starts at `NOT_RUN` and requires a
 fresh full check. Invalid, missing, foreign, or redirecting entries are skipped.
 
 ## Development
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for component boundaries, runtime flows,
+storage, lifecycle, and security assumptions. See [CODE-MAP.md](CODE-MAP.md) for the
+package map, coding conventions, exercise extension procedure, and validation
+checklists. Both documents are maintained as part of code changes that affect
+their contents.
 
 ```bash
 ./practice-plugin/gradlew -p practice-plugin \

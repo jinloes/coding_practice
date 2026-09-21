@@ -39,8 +39,13 @@ class ExerciseCatalogTest {
                         "balanced-delimiters",
                         "reverse-linked-list",
                         "array-stack",
-                        "binary-min-heap");
-        assertThat(ExerciseCatalog.all()).hasSize(6);
+                        "binary-min-heap",
+                        "valid-anagram",
+                        "first-unique-character",
+                        "max-stock-profit",
+                        "move-zeroes",
+                        "merge-sorted-lists");
+        assertThat(ExerciseCatalog.all()).hasSize(11);
         assertThat(ExerciseCatalog.all().stream().map(ExerciseCatalog.Exercise::title))
                 .doesNotHaveDuplicates();
         for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
@@ -461,6 +466,55 @@ class ExerciseCatalogTest {
                         public int peek() { return values.getFirst(); }
                         public int size() { return values.size(); }
                         public boolean isEmpty() { return values.isEmpty(); }
+                    }
+                    """;
+            case "valid-anagram" -> """
+                    package com.jinloes.practice;
+                    public class Solution {
+                        public static boolean isAnagram(String first, String second) {
+                            return first.length() == second.length();
+                        }
+                    }
+                    """;
+            case "first-unique-character" -> """
+                    package com.jinloes.practice;
+                    public class Solution {
+                        public static int firstUniqueIndex(String word) {
+                            return word.isEmpty() ? -1 : 0;
+                        }
+                    }
+                    """;
+            case "max-stock-profit" -> """
+                    package com.jinloes.practice;
+                    public class Solution {
+                        public static int maxProfit(int[] prices) {
+                            return prices.length < 2 ? 0 : prices[prices.length - 1] - prices[0];
+                        }
+                    }
+                    """;
+            case "move-zeroes" -> """
+                    package com.jinloes.practice;
+                    import java.util.Arrays;
+                    public class Solution {
+                        public static void moveZeroes(int[] numbers) {
+                            Arrays.sort(numbers);
+                        }
+                    }
+                    """;
+            case "merge-sorted-lists" -> """
+                    package com.jinloes.practice;
+                    public class Solution {
+                        public static class Node {
+                            public int value;
+                            public Node next;
+                            public Node(int value, Node next) {
+                                this.value = value;
+                                this.next = next;
+                            }
+                        }
+                        public static Node merge(Node first, Node second) {
+                            return first != null ? first : second;
+                        }
                     }
                     """;
             default -> throw new IllegalArgumentException("No known wrong source for " + exercise.id());

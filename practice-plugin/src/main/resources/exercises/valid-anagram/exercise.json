@@ -1,0 +1,30 @@
+{
+  "id": "valid-anagram",
+  "title": "Valid Anagram",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Decide whether two words are anagrams of each other.\n\nContract\n- `first` and `second` are non-null and contain only the lowercase letters `a`\n  through `z`. Either may be empty.\n- Return true exactly when the two words use the same letters the same number of\n  times. Order does not matter, so a word is an anagram of itself.\n- Words of different lengths are never anagrams.\n- Do not mutate the inputs.\n\nExamples\n- `isAnagram(\"listen\", \"silent\")` returns `true`.\n- `isAnagram(\"rat\", \"car\")` returns `false`.\n- `isAnagram(\"aacc\", \"ccac\")` returns `false`.\n",
+  "examples": [
+    {
+      "input": "first = \"listen\", second = \"silent\"",
+      "output": "true"
+    },
+    {
+      "input": "first = \"rat\", second = \"car\"",
+      "output": "false"
+    },
+    {
+      "input": "first = \"aacc\", second = \"ccac\"",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Two words of different lengths cannot use the same letters the same number of times.",
+    "Sorting both words works, but counting each letter avoids the sort entirely.",
+    "The alphabet has a fixed size, so one int[26] of counts is enough: add for the first word, subtract for the second, and reject any nonzero count. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the two words separated by a space, for example: listen silent",
+  "sampleInput": "listen silent",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "merge-sorted-lists",
+  "title": "Merge Sorted Lists",
+  "topic": "Linked Lists",
+  "difficulty": "Easy",
+  "statement": "Merge two sorted linked lists into one sorted list.\n\nContract\n- `first` and `second` may each be null or point to the head of an acyclic list\n  whose values are already in nondecreasing order. Each node has an integer\n  `value` and a mutable `next` reference.\n- Return the head of a single list holding every node from both inputs, in\n  nondecreasing order.\n- Splice the given nodes together: do not allocate replacement nodes and do not\n  change any node value. The result must contain exactly the nodes supplied.\n- Merging two empty lists returns null.\n\nExamples\n- Merging `1 -> 2 -> 4` with `1 -> 3 -> 4` gives `1 -> 1 -> 2 -> 3 -> 4 -> 4`.\n- Merging an empty list with `0` returns that same node.\n- Merging two empty lists returns `null`.\n",
+  "examples": [
+    {
+      "input": "first = 1 -> 2 -> 4, second = 1 -> 3 -> 4",
+      "output": "1 -> 1 -> 2 -> 3 -> 4 -> 4"
+    },
+    {
+      "input": "first = null, second = 0",
+      "output": "0 (the same node)"
+    },
+    {
+      "input": "first = null, second = null",
+      "output": "null"
+    }
+  ],
+  "hints": [
+    "Both lists are already sorted, so the next node of the answer is always the smaller of the two current heads.",
+    "A throwaway head node you never return spares you from special-casing the very first link.",
+    "Advance only the list you took a node from, then attach whichever list still has nodes left and return the node after the throwaway head. Intended complexity: O(n) time in the combined length and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the two sorted lists separated by a semicolon, for example: [1, 2, 4]; [1, 3, 4]",
+  "sampleInput": "[1, 2, 4]; [1, 3, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}
