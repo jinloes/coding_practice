@@ -36,10 +36,10 @@ practice-plugin/
 | `app` | Cross-package application use cases | `LegacyImportService` |
 | `catalog` | Exercise registry, manifest parsing, bundled example libraries | `ExerciseCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
-| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunSession`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
+| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI and rendering | `PracticePanel`, `PracticeToolWindowFactory`, `MarkdownHtml` |
-| `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `VerificationWorkspace`, `PracticeWorkspace` |
+| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `LimitsDialog`, `PracticeViews`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
 cross-package orchestration in `app`, `run`, or `ui`; do not make filesystem
@@ -79,12 +79,18 @@ properties to use a local IDE. Never commit a real machine path.
   `ManagedPracticeWorkspace.SOLUTION_PATH` as compatibility contracts.
 - Keep user-facing errors actionable, bounded, and suitable for display in the
   tool window.
+- Keep each source and test file under about 20 KB so agent tooling can read it
+  in one pass. Split by responsibility (for example, `FullCheck` out of
+  `PracticeRunner`) rather than by arbitrary line ranges.
 
 ## Test Conventions
 
 - Use JUnit Jupiter and AssertJ only for authored tests.
 - Keep test classes and methods package-private.
-- Use plain `@Test`; the harness provides execution limits.
+- Exercise test templates (`ExamplesTest.java`, `CorrectnessTest.java`) use
+  only plain `@Test`: counts are derived from those annotations and the
+  verification build supplies the timeout. Plugin tests may use any JUnit
+  Jupiter feature.
 - Prefer behavior-level tests through public or package-visible seams.
 - Add regression tests for lifecycle, cleanup, persistence, path safety, report
   parsing, and generated source behavior when changing those areas.
@@ -112,7 +118,8 @@ properties to use a local IDE. Never commit a real machine path.
 4. Add the author-only reference implementation at
    `src/test/resources/reference/<id>/Solution.java`.
 5. Add a compile-compatible known-wrong implementation to
-   `ExerciseCatalogTest.wrongSource`.
+   `KnownWrongSolutions.source` (catalog test package).
+   `ExerciseCatalogTest` compiles and runs it through `CatalogSandbox`.
 6. Update user-facing catalog documentation if it enumerates exercises.
 7. Run the catalog test, then the full plugin suite.
 
@@ -162,21 +169,40 @@ operations represented by one run so measurements can be normalized.
 
 The probe is advisory and must not fail a correctness check.
 
+Before measuring, the probe runs the smallest size until its timing settles
+(at least 300 ms, at most 2 s), so JIT compilation and CPU clock ramp-up do not
+inflate the first measurement. When writing a workload:
+
+- keep the largest size's working set small enough to stay in CPU cache;
+  crossing a cache boundary between sizes looks like superlinear growth;
+- make the largest size's raw run take well over 50 µs, repeating the call
+  inside `run` if a single call is too brief, so its timing is trusted;
+- check each reference with several probe runs, not just one.
+
 ## Changing Execution
 
 When modifying example or full-check execution, inspect these surfaces
 together:
 
 - `PracticeRunner` and `RunSession` for ownership and state transitions;
+- `FullCheck` and `BoundedProcessHandler` for full-check launch, watchdog
+  limits, output bounds, and result translation;
+- `ExampleRunConfigurations` for the temporary example/input run
+  configuration;
 - `PracticeModuleWorkspace` for module, SDK, harness, compilation, and native
-  run integration;
+  run integration, with `GeneratedDirectories` for marked harness and output
+  directories;
 - `VerificationWorkspace` and `verification-build.gradle` for generated checks;
 - `ManagedPracticeProgress` for persisted result semantics;
 - `PracticePanel` for controls, status, and stale-result presentation;
-- integration tests for cancellation, timeout, cleanup, and report freshness.
+- integration tests for cancellation, timeout, cleanup, and report freshness:
+  `ExampleExecutionIntegrationTest` and `FullCheckIntegrationTest`, which share
+  the fixture in `PracticeExecutionTestBase`.
 
 Do not introduce a second independent run-state flag. The atomic `RunSession`
-is the source of truth.
+is the source of truth. `FullCheck` holds no guard state: `PracticeRunner`
+claims the guard before starting it and releases it from the completion
+callback.
 
 ## Changing Storage Or Cleanup
 

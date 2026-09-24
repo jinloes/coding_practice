@@ -1,0 +1,30 @@
+{
+  "id": "majority-element",
+  "title": "Majority Element",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Find the value that fills more than half of an array.\n\nContract\n- `numbers` is non-null and non-empty. Values may be any `int`, including\n  negative values.\n- One value appears more than `numbers.length / 2` times, which means strictly\n  more than half of the entries. Return that value.\n- Do not mutate the array.\n\nExamples\n- `majorityElement(new int[]{3, 2, 3})` returns `3`.\n- `majorityElement(new int[]{2, 2, 1, 1, 1, 2, 2})` returns `2`.\n- `majorityElement(new int[]{7})` returns `7`.\n",
+  "examples": [
+    {
+      "input": "numbers = [3, 2, 3]",
+      "output": "3"
+    },
+    {
+      "input": "numbers = [2, 2, 1, 1, 1, 2, 2]",
+      "output": "2"
+    },
+    {
+      "input": "numbers = [7]",
+      "output": "7"
+    }
+  ],
+  "hints": [
+    "Counting every value in a HashMap works, but it needs O(n) extra space.",
+    "Pair each occurrence of the majority value with a different value and cancel both: because the majority fills more than half, some of its occurrences are always left over.",
+    "Keep one candidate and a count. When the count is zero, adopt the current value; otherwise add one for a match and subtract one for a mismatch. The final candidate is the answer. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the values, one of which fills more than half of them, for example: [2, 2, 1, 1, 1, 2, 2]",
+  "sampleInput": "[2, 2, 1, 1, 1, 2, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

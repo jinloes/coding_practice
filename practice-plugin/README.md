@@ -82,9 +82,10 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
 
 The catalog includes Pair Sum, Binary Search, Balanced Delimiters, Reverse
 Linked List, Array Stack, Binary Min Heap, Valid Anagram, First Unique
-Character, Max Stock Profit, Move Zeroes, and Merge Sorted Lists. Each has an
-explicit contract and three optional hints. The last hint discusses the intended
-complexity.
+Character, Max Stock Profit, Move Zeroes, Merge Sorted Lists, Valid Palindrome,
+Add Strings, Roman to Integer, Longest Common Prefix, Missing Number, and
+Majority Element. Each has an explicit contract and three optional hints. The
+last hint discusses the intended complexity.
 
 ## What a passing result means
 

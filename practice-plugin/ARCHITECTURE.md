@@ -87,7 +87,9 @@ starters.
 - stale-result feedback when the selected solution changes.
 
 The panel delegates storage, execution, and migration work. It does not own
-their persistence or process lifecycle.
+their persistence or process lifecycle. `ExerciseFilters` holds the search and
+filter controls, `LimitsDialog` edits execution limits, and `PracticeViews`
+provides stateless Swing building blocks; none of them hold panel state.
 
 ### `workspace`
 
@@ -99,7 +101,9 @@ tests.
 `PracticeModuleWorkspace` projects a managed attempt into the current IDE as a
 non-persistent Java module. It selects a usable JDK, applies Java 17 language
 level, manages compiler output, extracts example libraries, creates temporary
-example harnesses, and tracks temporary run configurations.
+example harnesses, and tracks temporary run configurations. It delegates
+marker-based ownership of harness and module-output directories to
+`GeneratedDirectories`, which it guards with its own monitor.
 
 `VerificationWorkspace` creates a marked, per-run Gradle project below the IDE
 system path. It copies the saved solution, tests, workload, complexity probe,
@@ -115,6 +119,14 @@ project-based storage format. New attempts never use it.
 It allows one active practice run per project, saves documents before launch,
 publishes status to UI listeners, owns cancellation and watchdog behavior, and
 records full-check results.
+
+`FullCheck` launches one full check on behalf of the runner: it builds the
+verification process, enforces setup and suite limits with a watchdog, bounds
+console output through `BoundedProcessHandler`, and translates the finished
+process into a `CheckResult`. It never touches the run guard; the runner claims
+the guard first and releases it when `FullCheck` reports completion.
+`ExampleRunConfigurations` builds the temporary native Application
+configuration for example and custom-input runs.
 
 `RunSession` models the lifecycle as one atomic idle-or-active state. Mutable
 signals such as the live process, watchdog, cancellation reason, and child

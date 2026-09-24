@@ -45,8 +45,7 @@ finishing a code change.
 
 - Plugin development uses JDK 25. Generated learner code and verification use
   Java 17 (`--release 17`).
-- Use JUnit Jupiter with plain `@Test` methods. Do not add JUnit 4 assertions,
-  Hamcrest, `@Timeout`, `@ParameterizedTest`, or `@TestFactory`.
+- Use JUnit Jupiter. Do not add JUnit 4 assertions or Hamcrest.
 - The runtime-only JUnit 4 dependency in `build.gradle` is permitted only for
   IntelliJ fixture bootstrap compatibility.
 - Use AssertJ for every authored assertion, including generated
@@ -70,10 +69,17 @@ src/main/resources/exercises/<id>/
 src/test/resources/reference/<id>/Solution.java
 ```
 
-Also add a known-wrong candidate to `ExerciseCatalogTest`.
+Also add a known-wrong candidate to `KnownWrongSolutions` in the catalog test
+package.
 
 - Starters contain only the learner API, no `main`, assertions, or harness, and
   throw `UnsupportedOperationException("Implement <method>")`.
+- `ExamplesTest.java` and `CorrectnessTest.java` use one plain `@Test` per
+  case. Do not use `@ParameterizedTest`, `@TestFactory`, or `@Timeout` there:
+  expected test counts come from counting `@Test` annotations, and a
+  parameterized or dynamic test runs more tests than it declares, so the check
+  reports an incomplete run. The verification build already applies the
+  learner's per-test timeout. Plugin tests under `src/test/` are not affected.
 - Test counts must match the manifest-derived `exampleCount()` and
   `fullCount()`.
 - Assert any legal answer when the contract permits multiple results.

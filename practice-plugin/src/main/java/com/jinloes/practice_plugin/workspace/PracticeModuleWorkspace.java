@@ -5,7 +5,6 @@ import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -32,7 +31,6 @@ import com.intellij.pom.java.LanguageLevel;
 import com.jinloes.practice_plugin.catalog.ExampleLibraries;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.platform.Os;
-import com.jinloes.practice_plugin.platform.OwnedDirectory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -44,25 +42,23 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service(Service.Level.PROJECT)
 public final class PracticeModuleWorkspace implements Disposable {
     private static final String OWNED_SDK_PREFIX = "Algorithm Practice IDE JDK ";
-    private static final String MARKER = ".algorithm-practice-generated";
     private static final String EXAMPLE_LIBRARY = "algorithm-practice-example-libraries";
-    private static final String ATTEMPT_ID_PATTERN = "[a-z][a-z0-9-]*-[a-f0-9]{32}";
     private final Project project;
+    private final GeneratedDirectories generated;
     private final Set<RunnerAndConfigurationSettings> temporaryConfigurations = new LinkedHashSet<>();
     private final Map<String, Module> modules = new LinkedHashMap<>();
-    private final Set<Path> ownedDirectories = new LinkedHashSet<>();
     private Sdk sdk;
     private Sdk ownedFallbackSdk;
 
     public PracticeModuleWorkspace(Project project) {
         this.project = project;
+        generated = new GeneratedDirectories(project);
     }
 
     public static PracticeModuleWorkspace get(Project project) {
@@ -76,8 +72,8 @@ public final class PracticeModuleWorkspace implements Disposable {
         }
         try {
             sdk = sdk == null ? selectSdk() : sdk;
-            Path output = generatedBase("module-output").resolve(attempt.id()).normalize();
-            createMarkedDirectory(output, "output", attempt.id());
+            Path output = generated.base(GeneratedDirectories.MODULE_OUTPUT).resolve(attempt.id()).normalize();
+            generated.createMarked(output, "output", attempt.id());
             ApplicationManager.getApplication().runWriteAction(() -> {
                 Module module = ModuleManager.getInstance(project).newNonPersistentModule(
                         moduleName(attempt.id()), StdModuleTypes.JAVA.getId());
@@ -103,8 +99,8 @@ public final class PracticeModuleWorkspace implements Disposable {
                 modules.put(attempt.id(), module);
             });
             VerificationWorkspace.cleanupAbandoned();
-            cleanupGenerated("harnesses", false);
-            cleanupGenerated("module-output", false);
+            generated.cleanupAbandoned(GeneratedDirectories.HARNESSES, false);
+            generated.cleanupAbandoned(GeneratedDirectories.MODULE_OUTPUT, false);
             return modules.get(attempt.id());
         } catch (IOException | IllegalArgumentException exception) {
             throw new ExecutionException("Cannot prepare the managed Java module: " + exception.getMessage(), exception);
@@ -116,12 +112,12 @@ public final class PracticeModuleWorkspace implements Disposable {
             ExerciseCatalog.Exercise exercise
     ) throws ExecutionException {
         Module module = open(attempt);
-        Path harness = generatedBase("harnesses").resolve(attempt.id()).normalize();
+        Path harness = generated.base(GeneratedDirectories.HARNESSES).resolve(attempt.id()).normalize();
         try {
             if (Files.exists(harness, LinkOption.NOFOLLOW_LINKS)) {
-                deleteMarkedTree(harness);
+                generated.deleteTree(harness);
             }
-            createMarkedDirectory(harness, "harness", attempt.id());
+            generated.createMarked(harness, "harness", attempt.id());
             Path sourceRoot = harness.resolve("src");
             List<Path> libraries = ExampleLibraries.extractTo(harness.resolve("libs"));
             Path runner = sourceRoot.resolve("com/jinloes/practice/ExampleRunner.java");
@@ -149,7 +145,7 @@ public final class PracticeModuleWorkspace implements Disposable {
     }
 
     public synchronized void clearExampleHarness(ManagedPracticeWorkspace.Attempt attempt) {
-        Path harness = generatedBase("harnesses").resolve(attempt.id()).normalize();
+        Path harness = generated.base(GeneratedDirectories.HARNESSES).resolve(attempt.id()).normalize();
         Module module = modules.get(attempt.id());
         if (module != null && !module.isDisposed()) {
             ApplicationManager.getApplication().runWriteAction(() -> {
@@ -165,7 +161,7 @@ public final class PracticeModuleWorkspace implements Disposable {
         }
         try {
             if (Files.exists(harness, LinkOption.NOFOLLOW_LINKS)) {
-                deleteMarkedTree(harness);
+                generated.deleteTree(harness);
             }
         } catch (IOException ignored) {
             // Preserve paths whose ownership can no longer be proved.
@@ -173,7 +169,7 @@ public final class PracticeModuleWorkspace implements Disposable {
     }
 
     public void compileExamples(ManagedPracticeWorkspace.Attempt attempt, Path runner) throws ExecutionException {
-        Path output = generatedBase("module-output").resolve(attempt.id()).normalize();
+        Path output = generated.base(GeneratedDirectories.MODULE_OUTPUT).resolve(attempt.id()).normalize();
         Path compiler = javaHome().resolve("bin").resolve(Os.IS_WINDOWS ? "javac.exe" : "javac");
         Path diagnostics = output.resolve("compiler.log");
         Process process = null;
@@ -245,8 +241,8 @@ public final class PracticeModuleWorkspace implements Disposable {
                     .forEach(module -> ModuleManager.getInstance(project).disposeModule(module));
             modules.clear();
             VerificationWorkspace.cleanupAbandoned();
-            cleanupGenerated("harnesses", true);
-            cleanupGenerated("module-output", true);
+            generated.cleanupAbandoned(GeneratedDirectories.HARNESSES, true);
+            generated.cleanupAbandoned(GeneratedDirectories.MODULE_OUTPUT, true);
             removeAbandonedFallbackSdks();
         });
         return true;
@@ -261,14 +257,7 @@ public final class PracticeModuleWorkspace implements Disposable {
             modules.values().stream().filter(module -> !module.isDisposed())
                     .forEach(module -> ModuleManager.getInstance(project).disposeModule(module));
             modules.clear();
-            for (Path path : Set.copyOf(ownedDirectories)) {
-                try {
-                    deleteMarkedTree(path);
-                } catch (IOException ignored) {
-                    // Preserve anything whose ownership cannot be revalidated.
-                }
-            }
-            ownedDirectories.clear();
+            generated.deleteAllOwned();
             if (ownedFallbackSdk != null && ProjectJdkTable.getInstance().findJdk(ownedFallbackSdk.getName()) != null) {
                 ProjectJdkTable.getInstance().removeJdk(ownedFallbackSdk);
             }
@@ -306,7 +295,7 @@ public final class PracticeModuleWorkspace implements Disposable {
     }
 
     private List<Path> exampleLibraries(ManagedPracticeWorkspace.Attempt attempt) throws ExecutionException {
-        Path libs = generatedBase("harnesses").resolve(attempt.id()).resolve("libs").normalize();
+        Path libs = generated.base(GeneratedDirectories.HARNESSES).resolve(attempt.id()).resolve("libs").normalize();
         List<Path> jars = ExampleLibraries.names().stream().map(libs::resolve).toList();
         for (Path jar : jars) {
             if (!Files.isRegularFile(jar, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(jar)) {
@@ -336,103 +325,6 @@ public final class PracticeModuleWorkspace implements Disposable {
                 table.removeLibrary(library);
             }
         }
-    }
-
-    private void createMarkedDirectory(Path directory, String kind, String attemptId) throws IOException {
-        OwnedDirectory owned = owned(kind);
-        owned.requireOwned(directory);
-        if (!attemptId.matches(ATTEMPT_ID_PATTERN)
-                || !attemptId.equals(directory.getFileName().toString())) {
-            throw new IOException("Generated path does not match its managed attempt.");
-        }
-        if (Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) {
-            Marker existing = readMarker(directory);
-            if (!kind.equals(existing.kind()) || !attemptId.equals(existing.attemptId())
-                    || !isInactive(existing.pid())) {
-                throw new IOException("Existing generated directory is not a recoverable inactive attempt artifact.");
-            }
-            deleteMarkedTree(directory);
-        }
-        owned.create(directory, markerText(kind, attemptId));
-        ownedDirectories.add(directory);
-    }
-
-    private static String markerText(String kind, String attemptId) {
-        return """
-                schema=1
-                kind=%s
-                attempt=%s
-                pid=%s
-                """.formatted(kind, attemptId, ProcessHandle.current().pid());
-    }
-
-    private void cleanupGenerated(String baseName, boolean includeCurrentProcess) {
-        String kind = kindOf(baseName);
-        OwnedDirectory.under(generatedBase(baseName), MARKER).cleanupAbandoned((candidate, properties) -> {
-            Marker marker = parseMarker(candidate, properties, kind);
-            return (includeCurrentProcess && marker.pid() == ProcessHandle.current().pid())
-                    || isInactive(marker.pid());
-        });
-        ownedDirectories.removeIf(path -> !Files.exists(path, LinkOption.NOFOLLOW_LINKS));
-    }
-
-    private void deleteMarkedTree(Path root) throws IOException {
-        Marker marker = readMarker(root);
-        owned(marker.kind()).deleteTree(root);
-        ownedDirectories.remove(root);
-    }
-
-    private Marker readMarker(Path root) throws IOException {
-        Path parent = root.toAbsolutePath().normalize().getParent();
-        String baseName;
-        if (generatedBase("harnesses").equals(parent)) {
-            baseName = "harnesses";
-        } else if (generatedBase("module-output").equals(parent)) {
-            baseName = "module-output";
-        } else {
-            throw new IOException("Refusing to modify an unmarked generated directory.");
-        }
-        OwnedDirectory owned = OwnedDirectory.under(generatedBase(baseName), MARKER);
-        return parseMarker(root, owned.readMarker(root), kindOf(baseName));
-    }
-
-    private static Marker parseMarker(Path root, Properties properties, String expectedKind) throws IOException {
-        String kind = properties.getProperty("kind", "");
-        String attemptId = properties.getProperty("attempt", "");
-        String pidText = properties.getProperty("pid", "");
-        if (!"1".equals(properties.getProperty("schema"))
-                || !expectedKind.equals(kind)
-                || !attemptId.matches(ATTEMPT_ID_PATTERN)
-                || !attemptId.equals(root.getFileName().toString())
-                || !pidText.matches("[1-9][0-9]*")) {
-            throw new IOException("Invalid generated-directory marker.");
-        }
-        try {
-            return new Marker(kind, attemptId, Long.parseLong(pidText));
-        } catch (NumberFormatException exception) {
-            throw new IOException("Invalid generated-directory marker.", exception);
-        }
-    }
-
-    private OwnedDirectory owned(String kind) throws IOException {
-        return OwnedDirectory.under(generatedBase(switch (kind) {
-            case "harness" -> "harnesses";
-            case "output" -> "module-output";
-            default -> throw new IOException("Unknown generated-directory kind.");
-        }), MARKER);
-    }
-
-    private static String kindOf(String baseName) {
-        return "harnesses".equals(baseName) ? "harness" : "output";
-    }
-
-    private static boolean isInactive(long pid) {
-        return ProcessHandle.of(pid).map(handle -> !handle.isAlive()).orElse(true);
-    }
-
-    private Path generatedBase(String kind) {
-        return Path.of(PathManager.getSystemPath(), "algorithm-practice", kind,
-                Integer.toUnsignedString(project.getLocationHash().hashCode())).toAbsolutePath().normalize();
     }
 
     private String moduleName(String attemptId) {

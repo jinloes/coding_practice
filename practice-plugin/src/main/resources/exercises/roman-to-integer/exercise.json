@@ -1,0 +1,30 @@
+{
+  "id": "roman-to-integer",
+  "title": "Roman to Integer",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Convert a Roman numeral to the number it represents.\n\nContract\n- `numeral` is non-null and is a valid, standard Roman numeral for a value from\n  1 through 3999.\n- The symbols are `I` = 1, `V` = 5, `X` = 10, `L` = 50, `C` = 100, `D` = 500,\n  and `M` = 1000, written in uppercase.\n- Symbols normally appear from largest to smallest and add up. The only\n  exceptions are the six subtractive pairs `IV` = 4, `IX` = 9, `XL` = 40,\n  `XC` = 90, `CD` = 400, and `CM` = 900.\n- Return the value as an `int`.\n\nExamples\n- `romanToInt(\"III\")` returns `3`.\n- `romanToInt(\"LVIII\")` returns `58`.\n- `romanToInt(\"MCMXCIV\")` returns `1994`.\n",
+  "examples": [
+    {
+      "input": "numeral = \"III\"",
+      "output": "3"
+    },
+    {
+      "input": "numeral = \"LVIII\"",
+      "output": "58"
+    },
+    {
+      "input": "numeral = \"MCMXCIV\"",
+      "output": "1994"
+    }
+  ],
+  "hints": [
+    "Map each symbol to its value; a numeral without subtractive pairs is just the sum of its symbols.",
+    "A symbol is subtracted exactly when the symbol after it is larger, as in the I of IV or the C of CM.",
+    "Scan left to right and add each symbol's value, or subtract it when the next symbol is larger. A switch on the character avoids allocating a map. Intended complexity: O(1) time and O(1) extra space, because a valid numeral has at most 15 symbols."
+  ],
+  "inputSyntax": "Input: one Roman numeral from I to MMMCMXCIX, for example: MCMXCIV",
+  "sampleInput": "MCMXCIV",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,3 @@
+# Hidden from ripgrep-based search (agents, IDE tooling) but still tracked by git.
+# Excalidraw diagrams are large JSON blobs that flood search results.
+*.excalidraw

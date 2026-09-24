@@ -6,17 +6,10 @@ import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.application.ApplicationConfiguration;
-import com.intellij.execution.application.ApplicationConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.process.KillableColoredProcessHandler;
-import com.intellij.execution.process.OSProcessHandler;
-import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
-import com.intellij.execution.process.ProcessListener;
-import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.Disposable;
@@ -26,7 +19,6 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiManager;
@@ -35,25 +27,17 @@ import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
-import com.jinloes.practice_plugin.workspace.VerificationWorkspace;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.jinloes.practice_plugin.run.CheckResult.Status.CANCELLED;
-import static com.jinloes.practice_plugin.run.CheckResult.Status.COMPILATION_FAILED;
-import static com.jinloes.practice_plugin.run.CheckResult.Status.RUNNER_ERROR;
-import static com.jinloes.practice_plugin.run.CheckResult.Status.TIMED_OUT;
 
 @Service(Service.Level.PROJECT)
 public final class PracticeRunner implements Disposable {
@@ -96,7 +80,7 @@ public final class PracticeRunner implements Disposable {
                 RunSession.RunControl control = examples.control();
                 control.active(handler);
                 if (control.stopReason() == CANCELLED) {
-                    captureOwnedChildren(handler, control);
+                    control.captureChildrenOf(handler);
                     control.terminateOwnedChildren();
                     handler.destroyProcess();
                     return;
@@ -192,117 +176,12 @@ public final class PracticeRunner implements Disposable {
         }
         // The guard is held now, so the settings this check must clean up can be taken over safely.
         session.set(new RunSession.CheckSession(attemptId, pendingCheckSettings.getAndSet(null), control));
-        VerificationWorkspace workspace = null;
         try {
-            FileDocumentManager.getInstance().saveAllDocuments();
-            ManagedPracticeWorkspace.Attempt attempt = attempts.read(attemptId);
-            var exercise = ExerciseCatalog.find(attempt.exerciseId());
-            String fingerprint = attempts.fingerprint(attempt);
-            ManagedPracticeProgress progress = ManagedPracticeProgress.get();
-            progress.validateLimits();
-            Path home = PracticeModuleWorkspace.get(project).javaHome();
-            workspace = VerificationWorkspace.create(attempt, exercise, fingerprint);
-            var command = new GeneralCommandLine(workspace.command(
-                    home, progress.getState().testSeconds, progress.getState().heapMb))
-                    .withWorkingDirectory(workspace.root())
-                    .withEnvironment("JAVA_HOME", home.toString())
-                    .withEnvironment("GRADLE_USER_HOME", workspace.gradleHome().toString());
-            VerificationWorkspace currentWorkspace = workspace;
-            var handler = new BoundedProcessHandler(command, () -> {
-                control.requestCancel();
-                control.terminateOwnedChildren();
-            });
-            handler.setShouldKillProcessSoftly(false);
-            currentWorkspace.markProcess(handler.getProcess().pid(), fingerprint);
-            control.active(handler);
-            long setupStarted = System.nanoTime();
-            handler.addProcessListener(new ProcessListener() {
-                @Override
-                public void processTerminated(@NotNull ProcessEvent event) {
-                    control.cancelWatchdog();
-                    control.terminateOwnedChildren();
-                    AppExecutorUtil.getAppExecutorService().execute(() -> finishCheckProcess(
-                            attempt, exercise, fingerprint, currentWorkspace, control, event.getExitCode()));
-                }
-            });
-            scheduleWatchdog(handler, control, currentWorkspace.resultDirectory(), setupStarted,
-                    progress.getState().suiteSeconds);
-            message("Managed attempt: " + attemptId + "\nRunning the isolated full correctness suite.\n"
-                    + "Setup limit: 5 minutes; test execution limit: "
-                    + progress.getState().suiteSeconds + " seconds.");
-            return handler;
+            return new FullCheck(project, attempts, this::message, this::stop, this::finishCheck)
+                    .start(attemptId, control);
         } catch (IOException | ExecutionException | IllegalArgumentException exception) {
-            if (workspace != null) {
-                try {
-                    workspace.markFinished("launch-failed");
-                    workspace.cleanupAfterRun();
-                } catch (IOException ignored) {
-                    // Preserve uncertain workspaces.
-                }
-            }
             session.set(RunSession.IDLE);
             throw new ExecutionException("Cannot start managed check: " + exception.getMessage(), exception);
-        }
-    }
-
-    /**
-     * Attaches the scaling measurement to a passing result. The probe only runs after the suite
-     * passes, and a missing or unreadable report never changes the verdict.
-     */
-    private static CheckResult withMeasuredComplexity(
-            CheckResult result,
-            ExerciseCatalog.Exercise exercise,
-            VerificationWorkspace workspace
-    ) {
-        if (result.status() != CheckResult.Status.PASSED) {
-            return result;
-        }
-        try {
-            return ComplexityAnalysis.read(workspace.resultDirectory())
-                    .map(report -> result.withComplexity(
-                            report.render(exercise.intendedTime(), exercise.intendedSpace())))
-                    .orElse(result);
-        } catch (IOException | RuntimeException failure) {
-            return result.withComplexity("Scaling measurement unavailable: " + failure.getMessage());
-        }
-    }
-
-    private void finishCheckProcess(
-            ManagedPracticeWorkspace.Attempt attempt,
-            ExerciseCatalog.Exercise exercise,
-            String fingerprint,
-            VerificationWorkspace workspace,
-            RunSession.RunControl control,
-            int exitCode
-    ) {
-        CheckResult result = new CheckResult(RUNNER_ERROR, 0, 0,
-                "Result processing failed. See the IDE log for diagnostics.");
-        try {
-            if (control.stopReason() != null) {
-                result = stoppedResult(control);
-            } else {
-                String phase = Files.isRegularFile(workspace.resultDirectory().resolve("phase"))
-                        ? Files.readString(workspace.resultDirectory().resolve("phase")) : "setup";
-                result = exitCode != 0 && phase.equals("compiling")
-                        ? new CheckResult(COMPILATION_FAILED, 0, 0,
-                        "Compilation failed. See the Run console for file and line diagnostics.")
-                        : TestReports.read(workspace.resultDirectory(), exercise.fullCount(), exitCode);
-                result = withMeasuredComplexity(result, exercise, workspace);
-            }
-            if (!fingerprint.equals(attempts.fingerprint(attempt))) {
-                result = staleResult(result);
-            }
-        } catch (IOException | UncheckedIOException | IllegalArgumentException exception) {
-            result = new CheckResult(RUNNER_ERROR, 0, 0, exception.getMessage());
-        } finally {
-            try {
-                workspace.markFinished(fingerprint);
-                workspace.cleanupAfterRun();
-            } catch (IOException cleanupFailure) {
-                result = new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
-                        "Verification cleanup failed: " + cleanupFailure.getMessage());
-            }
-            finishCheck(attempt, fingerprint, result);
         }
     }
 
@@ -373,18 +252,9 @@ public final class PracticeRunner implements Disposable {
                     finishExamples("Generated example runner is not owned by the attempt module.");
                     return;
                 }
-                RunManager manager = RunManager.getInstance(project);
-                RunnerAndConfigurationSettings settings = manager.createConfiguration(
-                        (debug ? "Debug " : "Run ") + (input.isEmpty() ? "" : "input ") + attemptId,
-                        ApplicationConfigurationType.getInstance().getConfigurationFactories()[0]);
-                var configuration = (ApplicationConfiguration) settings.getConfiguration();
-                configuration.setMainClass(javaFile.getClasses()[0]);
-                configuration.setModule(module);
-                configuration.setWorkingDirectory(attempt.directory().toString());
-                configuration.setProgramParameters(input.isEmpty() ? null : quoteArgument(input));
-                manager.setTemporaryConfiguration(settings);
-                manager.setSelectedConfiguration(settings);
-                session.set(current.installed(configuration, settings));
+                RunnerAndConfigurationSettings settings = ExampleRunConfigurations.install(
+                        project, attempt, attemptId, javaFile, module, input, debug);
+                session.set(current.installed((ApplicationConfiguration) settings.getConfiguration(), settings));
                 try {
                     ExecutionUtil.runConfiguration(settings, debug
                             ? DefaultDebugExecutor.getDebugExecutorInstance()
@@ -407,37 +277,9 @@ public final class PracticeRunner implements Disposable {
         control.requestCancel();
         ProcessHandler handler = control.active();
         if (handler != null && !handler.isProcessTerminated()) {
-            captureOwnedChildren(handler, control);
+            control.captureChildrenOf(handler);
             control.terminateOwnedChildren();
             handler.destroyProcess();
-        }
-    }
-
-    private void scheduleWatchdog(ProcessHandler handler, RunSession.RunControl control, Path resultRoot,
-                                  long setupStarted, int suiteSeconds) {
-        control.watchdog(AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
-            if (handler.isProcessTerminated()) {
-                return;
-            }
-            captureOwnedChildren(handler, control);
-            try {
-                Path started = resultRoot.resolve("started");
-                boolean expired = Files.isRegularFile(started)
-                        ? System.currentTimeMillis() - Files.getLastModifiedTime(started).toMillis() > suiteSeconds * 1000L
-                        : System.nanoTime() - setupStarted > TimeUnit.MINUTES.toNanos(5);
-                if (expired) {
-                    control.requestStop(TIMED_OUT, Files.isRegularFile(started)
-                            ? "Tests exceeded " + suiteSeconds + " seconds. The owned process tree was stopped."
-                            : "Setup/compilation exceeded five minutes. Check SDK, network, and Run output.");
-                    stop();
-                }
-            } catch (IOException exception) {
-                control.requestStop(RUNNER_ERROR, "Cannot inspect execution timer: " + exception.getMessage());
-                stop();
-            }
-        }, 0, 250, TimeUnit.MILLISECONDS));
-        if (handler.isProcessTerminated()) {
-            control.cancelWatchdog();
         }
     }
 
@@ -494,26 +336,6 @@ public final class PracticeRunner implements Disposable {
                     message(resultText);
                 }
         ));
-    }
-
-    private static String quoteArgument(String input) {
-        return '"' + input.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
-    }
-
-    private CheckResult stoppedResult(RunSession.RunControl control) {
-        return new CheckResult(control.stopReason(), 0, 0, control.stopDetails() != null ? control.stopDetails()
-                : "Run cancelled. No passing result was recorded.");
-    }
-
-    private static CheckResult staleResult(CheckResult result) {
-        return new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
-                "STALE: files changed during this run. Check the current solution again.\n" + result.details());
-    }
-
-    private static void captureOwnedChildren(ProcessHandler handler, RunSession.RunControl control) {
-        if (handler instanceof OSProcessHandler process) {
-            process.getProcess().descendants().forEach(control::capture);
-        }
     }
 
     private void ensureIdle() throws ExecutionException {
@@ -577,42 +399,6 @@ public final class PracticeRunner implements Disposable {
                 listeners.forEach(each -> each.accept(text));
             }
         });
-    }
-
-    private static final class BoundedProcessHandler extends KillableColoredProcessHandler {
-        private static final int LIMIT = 128 * 1024;
-        private final Runnable cancelled;
-        private int captured;
-
-        private BoundedProcessHandler(GeneralCommandLine command, Runnable cancelled) throws ExecutionException {
-            super(command);
-            this.cancelled = cancelled;
-        }
-
-        @Override
-        public void destroyProcess() {
-            cancelled.run();
-            super.destroyProcess();
-        }
-
-        @Override
-        public void killProcess() {
-            cancelled.run();
-            super.killProcess();
-        }
-
-        @Override
-        public synchronized void coloredTextAvailable(@NotNull String text, @NotNull Key outputType) {
-            if (captured >= LIMIT) {
-                return;
-            }
-            int length = Math.min(text.length(), LIMIT - captured);
-            super.coloredTextAvailable(text.substring(0, length), outputType);
-            captured += length;
-            if (captured == LIMIT) {
-                super.coloredTextAvailable("\n[Practice console truncated at 128 KiB.]\n", ProcessOutputTypes.SYSTEM);
-            }
-        }
     }
 
     @Override

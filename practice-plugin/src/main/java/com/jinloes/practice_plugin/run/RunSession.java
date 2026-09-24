@@ -2,6 +2,7 @@ package com.jinloes.practice_plugin.run;
 
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.application.ApplicationConfiguration;
+import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 
@@ -121,6 +122,13 @@ sealed interface RunSession {
 
         void capture(ProcessHandle child) {
             ownedProcesses.put(child.pid(), child);
+        }
+
+        /** Records every current descendant of an OS-backed handler as owned by this run. */
+        void captureChildrenOf(ProcessHandler handler) {
+            if (handler instanceof OSProcessHandler process) {
+                process.getProcess().descendants().forEach(this::capture);
+            }
         }
 
         /** Forcibly ends every child this run started, so no learner process outlives its run. */

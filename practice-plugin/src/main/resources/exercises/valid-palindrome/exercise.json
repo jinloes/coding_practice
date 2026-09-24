@@ -1,0 +1,30 @@
+{
+  "id": "valid-palindrome",
+  "title": "Valid Palindrome",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Decide whether a piece of text reads the same forward and backward.\n\nContract\n- `text` is non-null and may be empty. It contains only printable ASCII\n  characters (codes 32 through 126).\n- Only letters and digits count. Skip spaces, punctuation, and every other\n  character.\n- Compare letters without regard to case, so `A` matches `a`. A digit only\n  matches the same digit.\n- Return true exactly when the letters and digits read the same in both\n  directions. Text with no letters or digits reads the same both ways.\n\nExamples\n- `isPalindrome(\"Was it a car or a cat I saw?\")` returns `true`.\n- `isPalindrome(\"race a car\")` returns `false`.\n- `isPalindrome(\".,!\")` returns `true`.\n",
+  "examples": [
+    {
+      "input": "text = \"Was it a car or a cat I saw?\"",
+      "output": "true"
+    },
+    {
+      "input": "text = \"race a car\"",
+      "output": "false"
+    },
+    {
+      "input": "text = \".,!\"",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Building a cleaned, lowercased copy and comparing it with its reverse works, but it allocates two extra strings.",
+    "Walk one index in from each end, and skip any character that is neither a letter nor a digit before comparing.",
+    "Compare Character.toLowerCase of the two characters, move both indexes inward on a match, and stop when they meet. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the text between single quotes, for example: 'Was it a car or a cat I saw?'",
+  "sampleInput": "'Was it a car or a cat I saw?'",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

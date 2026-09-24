@@ -15,14 +15,10 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.ui.ColorUtil;
-import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
-import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.app.LegacyImportService;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
@@ -34,29 +30,20 @@ import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeWorkspace;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -69,15 +56,11 @@ final class PracticePanel extends JPanel implements Disposable {
     private final PracticeRunner runner;
     private final DefaultListModel<Exercise> model = new DefaultListModel<>();
     private final JBList<Exercise> exercises = new JBList<>(model);
-    private final JComboBox<String> topic = new JComboBox<>();
-    private final JComboBox<String> difficulty = new JComboBox<>();
-    private final JComboBox<String> progressFilter =
-            new JComboBox<>(new String[]{"All progress", "Passed before", "Not passed"});
-    private final JBTextField search = new JBTextField();
+    private final ExerciseFilters filters = new ExerciseFilters();
     private final JComboBox<ManagedPracticeWorkspace.Attempt> attempts = new JComboBox<>();
-    private final JEditorPane statement = htmlPane();
-    private final JBTextArea hints = textArea();
-    private final JBTextArea results = textArea();
+    private final JEditorPane statement = PracticeViews.htmlPane();
+    private final JBTextArea hints = PracticeViews.textArea();
+    private final JBTextArea results = PracticeViews.textArea();
     private final JLabel status = new JLabel("Choose an exercise.");
     private final JButton runExamples = new JButton("Run Examples");
     private final JButton runWithInput = new JButton("Run With Input...");
@@ -106,42 +89,18 @@ final class PracticePanel extends JPanel implements Disposable {
 
         JPanel header = new JPanel(new GridLayout(0, 1, 4, 4));
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        button(actions, "Limits", this::configureLimits);
+        button(actions, "Limits", () -> LimitsDialog.edit(project, progress));
         button(actions, "Clean Generated Artifacts", this::cleanGeneratedArtifacts);
         if (isLegacyWorkspace()) {
             button(actions, "Import Legacy Attempts", this::importLegacyAttempts);
         }
         header.add(actions);
-        search.getEmptyText().setText("Search exercises");
-        search.getAccessibleContext().setAccessibleName("Search exercises");
-        header.add(search);
-        JPanel filters = new JPanel(new GridLayout(1, 3, 4, 0));
-        topic.addItem("All topics");
-        ExerciseCatalog.all().stream().map(Exercise::topic).distinct().sorted().forEach(topic::addItem);
-        difficulty.addItem("All difficulties");
-        ExerciseCatalog.all().stream().map(Exercise::difficulty).distinct().sorted().forEach(difficulty::addItem);
-        topic.getAccessibleContext().setAccessibleName("Topic filter");
-        difficulty.getAccessibleContext().setAccessibleName("Difficulty filter");
-        progressFilter.getAccessibleContext().setAccessibleName("Progress filter");
-        filters.add(topic);
-        filters.add(difficulty);
-        filters.add(progressFilter);
-        header.add(filters);
+        filters.addTo(header);
         add(header, BorderLayout.NORTH);
 
         exercises.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        exercises.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index, boolean selected, boolean focus
-            ) {
-                super.getListCellRendererComponent(list, value, index, selected, focus);
-                if (value instanceof Exercise exercise) {
-                    setText(exercise.title() + "  [" + exercise.difficulty() + "]");
-                }
-                return this;
-            }
-        });
+        exercises.setCellRenderer(PracticeViews.labelled(Exercise.class,
+                exercise -> exercise.title() + "  [" + exercise.difficulty() + "]"));
         exercises.getAccessibleContext().setAccessibleName("Exercises");
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Problem", new JBScrollPane(statement));
@@ -155,18 +114,8 @@ final class PracticePanel extends JPanel implements Disposable {
         add(split, BorderLayout.CENTER);
 
         attempts.getAccessibleContext().setAccessibleName("Saved attempts");
-        attempts.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index, boolean selected, boolean focus
-            ) {
-                super.getListCellRendererComponent(list, value, index, selected, focus);
-                if (value instanceof ManagedPracticeWorkspace.Attempt attempt) {
-                    setText(attempt.id());
-                }
-                return this;
-            }
-        });
+        attempts.setRenderer(PracticeViews.labelled(
+                ManagedPracticeWorkspace.Attempt.class, ManagedPracticeWorkspace.Attempt::id));
         JPanel footer = new JPanel(new GridLayout(0, 1, 4, 4));
         footer.add(attempts);
         JPanel editing = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -199,15 +148,7 @@ final class PracticePanel extends JPanel implements Disposable {
                 showAttempt();
             }
         });
-        topic.addActionListener(event -> filter());
-        difficulty.addActionListener(event -> filter());
-        progressFilter.addActionListener(event -> filter());
-        search.getDocument().addDocumentListener(new DocumentAdapter() {
-            @Override
-            protected void textChanged(@NotNull javax.swing.event.DocumentEvent event) {
-                filter();
-            }
-        });
+        filters.onChange(this::filter);
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
@@ -225,14 +166,10 @@ final class PracticePanel extends JPanel implements Disposable {
     private void filter() {
         Exercise previous = exercises.getSelectedValue();
         model.clear();
-        String query = search.getText().toLowerCase(Locale.ROOT);
         for (Exercise exercise : ExerciseCatalog.all()) {
             boolean passed = progress.getState().attempts.values().stream()
                     .anyMatch(entry -> entry.exerciseId.equals(exercise.id()) && !entry.lastPassedAt.isEmpty());
-            if ((topic.getSelectedIndex() == 0 || exercise.topic().equals(topic.getSelectedItem()))
-                    && (difficulty.getSelectedIndex() == 0 || exercise.difficulty().equals(difficulty.getSelectedItem()))
-                    && (progressFilter.getSelectedIndex() == 0 || passed == (progressFilter.getSelectedIndex() == 1))
-                    && (exercise.title() + " " + exercise.topic()).toLowerCase(Locale.ROOT).contains(query)) {
+            if (filters.matches(exercise, passed)) {
                 model.addElement(exercise);
             }
         }
@@ -251,7 +188,7 @@ final class PracticePanel extends JPanel implements Disposable {
         updatingAttempts = false;
         showStatement(exercise == null
                 ? "<p>No exercises match these filters.</p>"
-                : problemText(exercise));
+                : PracticeViews.problemText(exercise));
         hints.setText("Start or resume an attempt to reveal hints.");
         results.setText("");
         updateButtons();
@@ -401,30 +338,6 @@ final class PracticePanel extends JPanel implements Disposable {
         status.setText("Removed inactive generated practice artifacts.");
     }
 
-    private void configureLimits() {
-        JSpinner perTest = new JSpinner(new SpinnerNumberModel(progress.getState().testSeconds, 1, 300, 1));
-        JSpinner perSuite = new JSpinner(new SpinnerNumberModel(progress.getState().suiteSeconds, 1, 1800, 5));
-        JSpinner heap = new JSpinner(new SpinnerNumberModel(progress.getState().heapMb, 64, 2048, 64));
-        JPanel fields = new JPanel(new GridLayout(0, 2, 8, 8));
-        fields.add(new JLabel("Seconds per test")); fields.add(perTest);
-        fields.add(new JLabel("Seconds per suite")); fields.add(perSuite);
-        fields.add(new JLabel("Test heap (MiB)")); fields.add(heap);
-        var dialog = new com.intellij.openapi.ui.DialogWrapper(project) {
-            { setTitle("Practice Execution Limits"); init(); }
-            @Override protected javax.swing.JComponent createCenterPanel() { return fields; }
-            @Override protected com.intellij.openapi.ui.ValidationInfo doValidate() {
-                return (int) perSuite.getValue() < (int) perTest.getValue()
-                        ? new com.intellij.openapi.ui.ValidationInfo(
-                        "Suite limit must be at least the per-test limit.", perSuite) : null;
-            }
-        };
-        if (dialog.showAndGet()) {
-            progress.getState().testSeconds = (int) perTest.getValue();
-            progress.getState().suiteSeconds = (int) perSuite.getValue();
-            progress.getState().heapMb = (int) heap.getValue();
-        }
-    }
-
     private void updateButtons() {
         boolean ready = selectedAttemptOrNull() != null && !runner.isRunning();
         runExamples.setEnabled(ready);
@@ -468,56 +381,9 @@ final class PracticePanel extends JPanel implements Disposable {
         return Path.of(Objects.requireNonNull(project.getBasePath()));
     }
 
-    private static String problemText(Exercise exercise) {
-        StringBuilder html = new StringBuilder(MarkdownHtml.toHtml(exercise.statement()));
-        html.append("<p>Visible examples</p><ul>");
-        for (int index = 0; index < exercise.examples().size(); index++) {
-            var example = exercise.examples().get(index);
-            html.append("<li>Example ").append(index + 1)
-                    .append("<br>Input: <code>").append(MarkdownHtml.inline(example.input()))
-                    .append("</code><br>Output: <code>").append(MarkdownHtml.inline(example.output()))
-                    .append("</code></li>");
-        }
-        return html.append("</ul>").toString();
-    }
-
-    /**
-     * Renders the Problem tab, whose statements are Markdown. Uses Swing's own HTML kit rather than
-     * a platform-specific pane so the rendering does not depend on an IDE version's HTML API.
-     */
-    private static JEditorPane htmlPane() {
-        HTMLEditorKit kit = new HTMLEditorKit();
-        Font font = UIUtil.getLabelFont();
-        String body = ColorUtil.toHex(UIUtil.getLabelForeground());
-        StyleSheet css = kit.getStyleSheet();
-        css.addRule("body { font-family: \"" + font.getFamily() + "\"; font-size: " + font.getSize()
-                + "pt; color: #" + body + "; margin: 8px; }");
-        css.addRule("p { margin: 0 0 10px 0; }");
-        css.addRule("ul { margin: 0 0 10px 0; }");
-        css.addRule("li { margin: 0 0 6px 0; }");
-        css.addRule("code { font-family: monospace; }");
-
-        JEditorPane pane = new JEditorPane();
-        pane.setEditorKit(kit);
-        pane.setEditable(false);
-        pane.setOpaque(true);
-        pane.setBackground(UIUtil.getPanelBackground());
-        pane.setBorder(JBUI.Borders.empty());
-        return pane;
-    }
-
     private void showStatement(String html) {
         statement.setText("<html><body>" + html + "</body></html>");
         statement.setCaretPosition(0);
-    }
-
-    private static JBTextArea textArea() {
-        JBTextArea area = new JBTextArea();
-        area.setEditable(false);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
-        area.setBorder(JBUI.Borders.empty(8));
-        return area;
     }
 
     private void button(JPanel panel, String title, Action action) {

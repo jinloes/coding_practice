@@ -1,0 +1,30 @@
+{
+  "id": "add-strings",
+  "title": "Add Strings",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Add two non-negative integers that are written as decimal strings.\n\nContract\n- `first` and `second` are non-null, non-empty, and contain only the digits `0`\n  through `9`. Neither has a leading zero unless it is exactly `\"0\"`.\n- Either number may have thousands of digits, far more than a `long` holds.\n  Do not convert a whole input to a numeric type or use `BigInteger`.\n- Return the sum as a decimal string in the same form: digits only, with no\n  leading zeros unless the sum is `\"0\"`.\n\nExamples\n- `addStrings(\"456\", \"77\")` returns `\"533\"`.\n- `addStrings(\"1\", \"999\")` returns `\"1000\"`.\n- `addStrings(\"0\", \"0\")` returns `\"0\"`.\n",
+  "examples": [
+    {
+      "input": "first = \"456\", second = \"77\"",
+      "output": "\"533\""
+    },
+    {
+      "input": "first = \"1\", second = \"999\"",
+      "output": "\"1000\""
+    },
+    {
+      "input": "first = \"0\", second = \"0\"",
+      "output": "\"0\""
+    }
+  ],
+  "hints": [
+    "The inputs can be far longer than any primitive can hold, so parsing them overflows.",
+    "Add the way you would on paper: start from the last digit of each string and carry into the next column.",
+    "Loop while either string still has digits or a carry remains, append each result digit to a StringBuilder, and reverse it once at the end. Intended complexity: O(n) time and O(n) extra space for the result."
+  ],
+  "inputSyntax": "Input: the two numbers separated by a space, for example: 456 77",
+  "sampleInput": "456 77",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

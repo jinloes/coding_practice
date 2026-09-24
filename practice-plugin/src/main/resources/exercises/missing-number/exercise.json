@@ -1,0 +1,30 @@
+{
+  "id": "missing-number",
+  "title": "Missing Number",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Find the one value missing from an otherwise complete range.\n\nContract\n- `numbers` is non-null. With `n` equal to `numbers.length` (possibly 0), it\n  holds `n` distinct values, each from `0` through `n` inclusive, in any order.\n- Exactly one value in that range is absent. Return it.\n- Do not mutate the array.\n\nExamples\n- `missingNumber(new int[]{3, 0, 1})` returns `2`.\n- `missingNumber(new int[]{0, 1})` returns `2`.\n- `missingNumber(new int[]{9, 6, 4, 2, 3, 5, 7, 0, 1})` returns `8`.\n",
+  "examples": [
+    {
+      "input": "numbers = [3, 0, 1]",
+      "output": "2"
+    },
+    {
+      "input": "numbers = [0, 1]",
+      "output": "2"
+    },
+    {
+      "input": "numbers = [9, 6, 4, 2, 3, 5, 7, 0, 1]",
+      "output": "8"
+    }
+  ],
+  "hints": [
+    "Sorting exposes the gap, but it costs O(n log n) and would reorder an array you must leave alone.",
+    "You know exactly which values belong in the range, so compare what should be there with what is there.",
+    "The sum 0 + 1 + ... + n minus the sum of the array is the missing value. Add in a long, or XOR every index and value instead, so nothing overflows. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the distinct values from 0 to n with one missing, for example: [3, 0, 1]",
+  "sampleInput": "[3, 0, 1]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

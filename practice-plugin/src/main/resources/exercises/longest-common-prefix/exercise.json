@@ -1,0 +1,30 @@
+{
+  "id": "longest-common-prefix",
+  "title": "Longest Common Prefix",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Find the longest string that every word in a list starts with.\n\nContract\n- `words` is non-null and may be empty. Every element is non-null and contains\n  only the lowercase letters `a` through `z`. A word may be empty.\n- Return the longest string that is a prefix of every word. Return `\"\"` when\n  the words share no first letter, when any word is empty, or when `words` is\n  empty.\n- A single word is its own longest common prefix.\n- Do not mutate the array.\n\nExamples\n- `longestCommonPrefix(new String[]{\"flower\", \"flow\", \"flight\"})` returns `\"fl\"`.\n- `longestCommonPrefix(new String[]{\"dog\", \"racecar\", \"car\"})` returns `\"\"`.\n- `longestCommonPrefix(new String[]{\"interview\"})` returns `\"interview\"`.\n",
+  "examples": [
+    {
+      "input": "words = [\"flower\", \"flow\", \"flight\"]",
+      "output": "\"fl\""
+    },
+    {
+      "input": "words = [\"dog\", \"racecar\", \"car\"]",
+      "output": "\"\""
+    },
+    {
+      "input": "words = [\"interview\"]",
+      "output": "\"interview\""
+    }
+  ],
+  "hints": [
+    "The answer can never be longer than the shortest word.",
+    "Compare column by column: check the character at position i in every word before moving on to position i + 1.",
+    "Stop at the first position where some word ends or disagrees with the first word, and return the first word's prefix up to that position. Intended complexity: O(n) time over the n total characters and O(1) extra space beyond the returned prefix."
+  ],
+  "inputSyntax": "Input: the words in brackets, for example: [flower, flow, flight]",
+  "sampleInput": "[flower, flow, flight]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

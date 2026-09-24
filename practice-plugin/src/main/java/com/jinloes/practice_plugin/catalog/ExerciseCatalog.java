@@ -28,7 +28,13 @@ public final class ExerciseCatalog {
             "first-unique-character",
             "max-stock-profit",
             "move-zeroes",
-            "merge-sorted-lists");
+            "merge-sorted-lists",
+            "valid-palindrome",
+            "add-strings",
+            "roman-to-integer",
+            "longest-common-prefix",
+            "missing-number",
+            "majority-element");
 
     private static final Pattern TEST_ANNOTATION = Pattern.compile("@Test\\b");
 

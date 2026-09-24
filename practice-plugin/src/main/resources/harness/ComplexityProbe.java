@@ -14,7 +14,10 @@ import java.util.List;
  * isolated verification JVM, and never decides whether an attempt passed.
  */
 public final class ComplexityProbe {
-    private static final int WARMUP_REPETITIONS = 40;
+    private static final int WARMUP_MIN_REPETITIONS = 40;
+    private static final int WARMUP_BATCH = 10;
+    private static final long WARMUP_MIN_NANOS = 300_000_000L;
+    private static final long WARMUP_MAX_NANOS = 2_000_000_000L;
     private static final int MEASURED_REPETITIONS = 7;
     private static final long BUDGET_NANOS = 6_000_000_000L;
 
@@ -57,10 +60,34 @@ public final class ComplexityProbe {
         System.out.println(report);
     }
 
+    /**
+     * Runs the smallest workload until its timing settles, so the first measured size is not
+     * inflated by code the JIT has not optimized yet or by a CPU still clocking up from idle. A
+     * fixed repetition count finishes before background compilation completes on fast workloads.
+     * Warm-up stops once a minimum time has passed and a batch is no more than 10% faster than the
+     * previous one, and never runs longer than {@link #WARMUP_MAX_NANOS}.
+     */
     private static void warmUp() {
         int size = Arrays.stream(Workload.SIZES).min().orElse(1);
-        for (int i = 0; i < WARMUP_REPETITIONS; i++) {
-            Workload.run(Workload.prepare(size));
+        long started = System.nanoTime();
+        long previousBest = Long.MAX_VALUE;
+        int repetitions = 0;
+        while (true) {
+            long best = Long.MAX_VALUE;
+            for (int i = 0; i < WARMUP_BATCH && System.nanoTime() - started < WARMUP_MAX_NANOS; i++) {
+                Object state = Workload.prepare(size);
+                long runStarted = System.nanoTime();
+                Workload.run(state);
+                best = Math.min(best, System.nanoTime() - runStarted);
+                repetitions++;
+            }
+            long elapsed = System.nanoTime() - started;
+            boolean settled = previousBest != Long.MAX_VALUE && best * 10 >= previousBest * 9;
+            if (elapsed >= WARMUP_MAX_NANOS
+                    || (repetitions >= WARMUP_MIN_REPETITIONS && elapsed >= WARMUP_MIN_NANOS && settled)) {
+                return;
+            }
+            previousBest = best;
         }
     }
 
