@@ -1,0 +1,21 @@
+{
+  "id": "subarray-sum-count",
+  "title": "Subarray Sum Count",
+  "topic": "Prefix Sums",
+  "difficulty": "Medium",
+  "statement": "Count contiguous subarrays whose values add to a target.\n\nContract\n- `numbers` is non-null and may contain positive, zero, or negative values.\n- Return the number of contiguous, non-empty subarrays whose sum equals `target`.\n- Do not mutate the input array.\n\nExamples\n- `countSubarrays(new int[]{1, 1, 1}, 2)` returns `2`.\n- `countSubarrays(new int[]{1, -1, 0}, 0)` returns `3`.\n- `countSubarrays(new int[]{3, 4, 7, 2, -3, 1, 4, 2}, 7)` returns `4`.\n",
+  "examples": [
+    {"input": "[1, 1, 1], target = 2", "output": "2"},
+    {"input": "[1, -1, 0], target = 0", "output": "3"},
+    {"input": "[3, 4, 7, 2, -3, 1, 4, 2], target = 7", "output": "4"}
+  ],
+  "hints": [
+    "A subarray sum is the difference between two prefix sums.",
+    "As you scan, remember how many times each prefix sum has appeared.",
+    "Before adding the current prefix sum to the map, add the count of prefix - target. Intended complexity: O(n) time and O(n) extra space."
+  ],
+  "inputSyntax": "Input: the values followed by the target, for example: [1, 1, 1] 2",
+  "sampleInput": "[1, 1, 1] 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

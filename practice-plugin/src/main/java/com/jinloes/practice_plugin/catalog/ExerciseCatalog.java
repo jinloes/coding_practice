@@ -34,7 +34,10 @@ public final class ExerciseCatalog {
             "roman-to-integer",
             "longest-common-prefix",
             "missing-number",
-            "majority-element");
+            "majority-element",
+            "subarray-sum-count",
+            "course-schedule",
+            "sliding-window-maximum");
 
     private static final Pattern TEST_ANNOTATION = Pattern.compile("@Test\\b");
 

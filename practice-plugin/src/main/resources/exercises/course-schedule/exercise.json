@@ -1,0 +1,21 @@
+{
+  "id": "course-schedule",
+  "title": "Course Schedule",
+  "topic": "Graphs",
+  "difficulty": "Hard",
+  "statement": "Determine whether all courses can be completed given prerequisite pairs.\n\nContract\n- Courses are numbered from 0 through `courseCount - 1`; `prerequisites[i]` is `{course, prerequisite}`.\n- Return false if the prerequisites contain a cycle, otherwise return true.\n- `courseCount` is nonnegative and every pair is valid. Duplicate pairs may occur.\n\nExamples\n- `canFinish(2, new int[][]{{1, 0}})` returns true.\n- `canFinish(2, new int[][]{{1, 0}, {0, 1}})` returns false.\n- `canFinish(4, new int[][]{{1, 0}, {2, 1}, {3, 2}})` returns true.\n",
+  "examples": [
+    {"input": "courses = 2, prerequisites = [[1, 0]]", "output": "true"},
+    {"input": "courses = 2, prerequisites = [[1, 0], [0, 1]]", "output": "false"},
+    {"input": "courses = 4, prerequisites = [[1, 0], [2, 1], [3, 2]]", "output": "true"}
+  ],
+  "hints": [
+    "A valid completion order is a topological ordering of the directed graph.",
+    "Track each course's incoming-edge count and start with courses that have none.",
+    "Remove available courses with a queue; all courses are finishable exactly when the number removed equals courseCount. Intended complexity: O(n) time and O(n) space, where n is the combined number of courses and prerequisite pairs."
+  ],
+  "inputSyntax": "Input: course count, then prerequisite pairs as course:prerequisite, for example: 4 1:0 2:1 3:2",
+  "sampleInput": "4 1:0 2:1 3:2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

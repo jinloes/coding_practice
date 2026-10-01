@@ -38,8 +38,11 @@ class ExerciseCatalogTest {
                         "roman-to-integer",
                         "longest-common-prefix",
                         "missing-number",
-                        "majority-element");
-        assertThat(ExerciseCatalog.all()).hasSize(17);
+                        "majority-element",
+                        "subarray-sum-count",
+                        "course-schedule",
+                        "sliding-window-maximum");
+        assertThat(ExerciseCatalog.all()).hasSize(20);
         assertThat(ExerciseCatalog.all().stream().map(ExerciseCatalog.Exercise::title))
                 .doesNotHaveDuplicates();
         for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {

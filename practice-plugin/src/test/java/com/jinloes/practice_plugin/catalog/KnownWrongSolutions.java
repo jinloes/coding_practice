@@ -183,6 +183,30 @@ final class KnownWrongSolutions {
                         }
                     }
                     """;
+            case "subarray-sum-count" -> """
+                    package com.jinloes.practice;
+                    public class Solution {
+                        public static int countSubarrays(int[] numbers, int target) {
+                            return 0;
+                        }
+                    }
+                    """;
+            case "course-schedule" -> """
+                    package com.jinloes.practice;
+                    public class Solution {
+                        public static boolean canFinish(int courseCount, int[][] prerequisites) {
+                            return true;
+                        }
+                    }
+                    """;
+            case "sliding-window-maximum" -> """
+                    package com.jinloes.practice;
+                    public class Solution {
+                        public static int[] maxSlidingWindow(int[] numbers, int windowSize) {
+                            return new int[numbers.length - windowSize + 1];
+                        }
+                    }
+                    """;
             default -> throw new IllegalArgumentException("No known wrong source for " + exercise.id());
         };
     }

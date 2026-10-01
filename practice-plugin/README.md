@@ -84,7 +84,8 @@ The catalog includes Pair Sum, Binary Search, Balanced Delimiters, Reverse
 Linked List, Array Stack, Binary Min Heap, Valid Anagram, First Unique
 Character, Max Stock Profit, Move Zeroes, Merge Sorted Lists, Valid Palindrome,
 Add Strings, Roman to Integer, Longest Common Prefix, Missing Number, and
-Majority Element. Each has an explicit contract and three optional hints. The
+Majority Element, Subarray Sum Count, Course Schedule, and Sliding Window
+Maximum. Each has an explicit contract and three optional hints. The
 last hint discusses the intended complexity.
 
 ## What a passing result means
