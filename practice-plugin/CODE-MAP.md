@@ -22,6 +22,7 @@ practice-plugin/
     workspace/
   src/main/resources/
     exercises/<id>/
+    guides/<id>.json
     gradle/verification-build.gradle
     harness/ComplexityProbe.java
     META-INF/plugin.xml
@@ -34,11 +35,11 @@ practice-plugin/
 | Package | Responsibility | Important classes |
 |---|---|---|
 | `app` | Cross-package application use cases | `LegacyImportService` |
-| `catalog` | Exercise registry, manifest parsing, bundled example libraries | `ExerciseCatalog`, `ExampleLibraries` |
+| `catalog` | Exercise and study guide registries, manifest parsing, bundled example libraries | `ExerciseCatalog`, `GuideCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
 | `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `LimitsDialog`, `PracticeViews`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `PracticeToolWindowFactory`, `MarkdownHtml` |
 | `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
@@ -120,8 +121,24 @@ properties to use a local IDE. Never commit a real machine path.
 5. Add a compile-compatible known-wrong implementation to
    `KnownWrongSolutions.source` (catalog test package).
    `ExerciseCatalogTest` compiles and runs it through `CatalogSandbox`.
-6. Update user-facing catalog documentation if it enumerates exercises.
-7. Run the catalog test, then the full plugin suite.
+6. Add the exercise ID to every study guide whose technique it practices.
+7. Update user-facing catalog documentation if it enumerates exercises.
+8. Run the catalog test, then the full plugin suite.
+
+## Adding A Study Guide
+
+1. Choose a stable lowercase kebab-case ID and append it to the ordered `IDS`
+   list in `GuideCatalog`.
+2. Add `src/main/resources/guides/<id>.json` with `id`, `title`, a one-line
+   `summary`, a `lesson`, and an `exercises` array of existing exercise IDs.
+   Order within a level follows the array; levels come from each exercise's
+   difficulty, so do not repeat difficulty in the guide.
+3. Write the lesson in the `MarkdownHtml` subset with the label lines
+   `How it works`, `When to reach for it`, `Common patterns`, and `Pitfalls`,
+   each followed by `- ` bullets. Teach the technique without solving a listed
+   exercise.
+4. Update `GuideCatalogTest` expectations and the README guide list, then run
+   `GuideCatalogTest` and the full plugin suite.
 
 ### Exercise Assertions
 

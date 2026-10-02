@@ -1,0 +1,10 @@
+{
+  "id": "linked-lists",
+  "title": "Linked Lists",
+  "summary": "Rewire nodes with pointers, carefully, so nothing is lost or left in a cycle.",
+  "lesson": "How it works\n- Each node holds a value and a reference to the next node; the list is reached only through its head.\n- Inserting or removing after a known node is `O(1)`; finding the `k`th node is `O(k)`.\n- There is no random access, so most algorithms walk the list once with a few pointer variables.\n\nWhen to reach for it\n- The input is already a linked list and you must rearrange it without copying values into an array.\n- The question asks to reverse, merge, split, or reorder nodes.\n- Constant extra space is required and an array copy would use `O(n)`.\n\nCommon patterns\n- Dummy head: start the result at a placeholder node so the first real node needs no special case.\n- Pointer reversal: keep `previous`, `current`, and `next` while turning each link around.\n- Splicing: attach the chosen node to a tail pointer and advance it.\n- Fast and slow pointers find the middle or detect a cycle.\n\nPitfalls\n- Overwriting `current.next` before saving where it pointed; that loses the rest of the list.\n- Returning the dummy node instead of `dummy.next`.\n- Forgetting the empty list and the single-node list.\n- Leaving an old link in place and creating a cycle.\n",
+  "exercises": [
+    "reverse-linked-list",
+    "merge-sorted-lists"
+  ]
+}

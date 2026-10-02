@@ -1,0 +1,12 @@
+{
+  "id": "two-pointers",
+  "title": "Two Pointers",
+  "summary": "Walk two indexes through one or two sequences so each element is visited a constant number of times.",
+  "lesson": "How it works\n- Keep two indexes and move one or both on every step based on what they point at.\n- Opposite ends: start at both ends of one sequence and move inward until they meet.\n- Same direction: a slow index marks where the next kept element goes while a fast index scans.\n- Two inputs: one index per sequence, advancing whichever side should be consumed next.\n\nWhen to reach for it\n- The input is sorted, or symmetric questions compare the front with the back.\n- You must rearrange or filter an array in place with `O(1)` extra space.\n- You are merging or comparing two already-ordered sequences.\n\nCommon patterns\n- Palindrome-style checks compare `left` and `right` and skip characters that do not count.\n- Read/write compaction copies kept elements to the write index, then fills the rest.\n- Merge steps pick the smaller head of two sorted inputs, then append whatever remains.\n- Digit-by-digit arithmetic walks both numbers from their last position and carries between steps.\n\nPitfalls\n- Off-by-one loop conditions: decide whether the pointers may meet (`<` versus `<=`).\n- Forgetting the leftover tail after one input runs out.\n- Skipping logic that can run past the end of the array; recheck bounds inside inner loops.\n- Every pointer must move on every iteration or the loop never ends.\n",
+  "exercises": [
+    "valid-palindrome",
+    "move-zeroes",
+    "merge-sorted-lists",
+    "add-strings"
+  ]
+}

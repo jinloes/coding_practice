@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service(Service.Level.APP)
 @State(name = "AlgorithmPracticeManaged", storages = @Storage(
@@ -75,6 +77,14 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
             throw new IllegalArgumentException("Attempt is already associated with another exercise.");
         }
         return entry;
+    }
+
+    /** Exercises with at least one attempt that has ever passed a full check. Derived, not stored. */
+    public Set<String> passedExerciseIds() {
+        return data.attempts.values().stream()
+                .filter(entry -> !entry.lastPassedAt.isEmpty())
+                .map(entry -> entry.exerciseId)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public void record(String attemptId, String exerciseId, String fingerprint, CheckResult result) {

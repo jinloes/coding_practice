@@ -88,6 +88,19 @@ Majority Element, Subarray Sum Count, Course Schedule, and Sliding Window
 Maximum. Each has an explicit contract and three optional hints. The
 last hint discusses the intended complexity.
 
+## Study guides
+
+Pick a topic in the **Guide** selector above the filters to study one interview
+data structure or technique: Hash Maps and Sets, Two Pointers, Sliding Window,
+Stacks and Queues, Linked Lists, Binary Search, Prefix Sums, Heaps and Priority
+Queues, or Graphs and Topological Sort. The **Study Guide** tab shows a short
+lesson (how it works, when to reach for it, common patterns, and pitfalls) and
+the guide's problems grouped Easy, Medium, and Hard with your pass progress.
+The exercise list narrows to those problems, easiest first, and the other
+filters still apply. One problem can belong to several guides; with
+**All guides** selected, the tab lists the guides that include the selected
+problem.
+
 ## What a passing result means
 
 - All expected tests from a **fresh full check** completed without failures or

@@ -66,6 +66,12 @@ It loads each `exercise.json`, validates metadata, derives visible and full test
 counts from bundled sources, and provides safe access to exercise and harness
 resources.
 
+`GuideCatalog` is the ordered registry of topic study guides. Each bundled,
+read-only `guides/<id>.json` holds a lesson and a list of exercise IDs; the
+catalog resolves them through `ExerciseCatalog`, rejects unknown or duplicate
+IDs, and orders each guide's exercises Easy, Medium, then Hard using the
+exercises' own difficulty. Guides add no persisted state.
+
 `ExampleLibraries` reads the generated library index and extracts bundled
 AssertJ jars for example compilation and execution.
 
@@ -79,8 +85,8 @@ starters.
 `PracticeToolWindowFactory` registers the Practice tool window.
 `PracticePanel` owns presentation and user interaction:
 
-- catalog search and topic, difficulty, and progress filters;
-- exercise statements, hints, attempts, and result rendering;
+- catalog search and guide, topic, difficulty, and progress filters;
+- exercise statements, study guides, hints, attempts, and result rendering;
 - attempt creation and opening;
 - example, custom-input, debug, check, stop, cleanup, limits, and legacy-import
   actions;
@@ -88,8 +94,11 @@ starters.
 
 The panel delegates storage, execution, and migration work. It does not own
 their persistence or process lifecycle. `ExerciseFilters` holds the search and
-filter controls, `LimitsDialog` edits execution limits, and `PracticeViews`
-provides stateless Swing building blocks; none of them hold panel state.
+filter controls, including the guide selector that narrows and orders the list
+to one guide, `StudyGuideView` renders the Study Guide tab, `LimitsDialog` edits
+execution limits, and `PracticeViews` provides stateless Swing building blocks;
+none of them hold panel state. Pass marks come from
+`ManagedPracticeProgress.passedExerciseIds()`, derived from stored history.
 
 ### `workspace`
 
@@ -234,7 +243,7 @@ The standalone Gradle build:
 - resolves `exampleLibraries`, packages their jars, and generates `index.txt`;
 - replaces dependency and Java release tokens in
   `gradle/verification-build.gradle`;
-- packages exercise, harness, and plugin descriptor resources.
+- packages exercise, study guide, harness, and plugin descriptor resources.
 
 Runtime code must not assume dependency jar filenames. It consumes the generated
 library index.

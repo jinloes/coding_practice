@@ -1,0 +1,11 @@
+{
+  "id": "stacks-queues",
+  "title": "Stacks and Queues",
+  "summary": "Use last-in-first-out and first-in-first-out order to match nested structure and process items in arrival order.",
+  "lesson": "How it works\n- A stack adds and removes at the top (LIFO); a queue adds at the back and removes at the front (FIFO).\n- A deque supports both ends; in Java, `ArrayDeque` serves as a stack, a queue, or a deque with `O(1)` amortized operations.\n- An array-backed stack doubles its capacity when full, so a push is `O(1)` amortized.\n\nWhen to reach for it\n- Input has nesting that must close in reverse order of opening, such as brackets or tags.\n- You need the most recent unmatched item, or to undo the latest action.\n- Items must be processed in the order they arrived, as in breadth-first search.\n- You need the next greater or smaller element, or a running window maximum.\n\nCommon patterns\n- Matching: push openers and pop on a closer, checking that they pair up.\n- Monotonic stack or deque: pop elements that can never be the answer before pushing a new one.\n- Queue-driven traversal: enqueue work as it is discovered and process it in order.\n\nPitfalls\n- Popping or peeking an empty stack; check emptiness first, and check it again when input ends.\n- Using `java.util.Stack`, which is synchronized and legacy; prefer `ArrayDeque`.\n- Forgetting to clear references to removed elements in a hand-written array stack.\n",
+  "exercises": [
+    "balanced-delimiters",
+    "array-stack",
+    "sliding-window-maximum"
+  ]
+}

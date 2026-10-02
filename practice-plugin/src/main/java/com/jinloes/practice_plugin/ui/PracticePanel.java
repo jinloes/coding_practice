@@ -59,6 +59,7 @@ final class PracticePanel extends JPanel implements Disposable {
     private final ExerciseFilters filters = new ExerciseFilters();
     private final JComboBox<ManagedPracticeWorkspace.Attempt> attempts = new JComboBox<>();
     private final JEditorPane statement = PracticeViews.htmlPane();
+    private final StudyGuideView studyGuide = new StudyGuideView();
     private final JBTextArea hints = PracticeViews.textArea();
     private final JBTextArea results = PracticeViews.textArea();
     private final JLabel status = new JLabel("Choose an exercise.");
@@ -104,6 +105,7 @@ final class PracticePanel extends JPanel implements Disposable {
         exercises.getAccessibleContext().setAccessibleName("Exercises");
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Problem", new JBScrollPane(statement));
+        tabs.addTab("Study Guide", new JBScrollPane(studyGuide.component()));
         JPanel hintPanel = new JPanel(new BorderLayout());
         hintPanel.add(new JBScrollPane(hints), BorderLayout.CENTER);
         button(hintPanel, "Reveal Next Hint", this::revealHint);
@@ -149,6 +151,13 @@ final class PracticePanel extends JPanel implements Disposable {
             }
         });
         filters.onChange(this::filter);
+        filters.onGuideChange(() -> {
+            filter();
+            refreshGuide();
+            if (filters.selectedGuide() != null) {
+                tabs.setSelectedIndex(1);
+            }
+        });
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
@@ -166,13 +175,7 @@ final class PracticePanel extends JPanel implements Disposable {
     private void filter() {
         Exercise previous = exercises.getSelectedValue();
         model.clear();
-        for (Exercise exercise : ExerciseCatalog.all()) {
-            boolean passed = progress.getState().attempts.values().stream()
-                    .anyMatch(entry -> entry.exerciseId.equals(exercise.id()) && !entry.lastPassedAt.isEmpty());
-            if (filters.matches(exercise, passed)) {
-                model.addElement(exercise);
-            }
-        }
+        filters.visible(progress.passedExerciseIds()).forEach(model::addElement);
         if (previous != null && model.contains(previous)) {
             exercises.setSelectedValue(previous, true);
         } else if (!model.isEmpty()) {
@@ -191,6 +194,7 @@ final class PracticePanel extends JPanel implements Disposable {
                 : PracticeViews.problemText(exercise));
         hints.setText("Start or resume an attempt to reveal hints.");
         results.setText("");
+        refreshGuide();
         updateButtons();
         if (exercise != null) {
             background("Loading practice attempts", () -> workspace.attempts(exercise.id()), loaded -> {
@@ -443,7 +447,14 @@ final class PracticePanel extends JPanel implements Disposable {
         }
         results.setCaretPosition(0);
         status.setText(runner.isRunning() ? "Running..." : "Run finished; see Results.");
+        if (!runner.isRunning()) {
+            refreshGuide();
+        }
         updateButtons();
+    }
+
+    private void refreshGuide() {
+        studyGuide.show(filters.selectedGuide(), exercises.getSelectedValue(), progress.passedExerciseIds());
     }
 
     @Override

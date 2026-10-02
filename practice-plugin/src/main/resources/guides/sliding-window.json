@@ -1,0 +1,10 @@
+{
+  "id": "sliding-window",
+  "title": "Sliding Window",
+  "summary": "Maintain a summary of a contiguous range as it grows and shrinks, instead of recomputing every subarray.",
+  "lesson": "How it works\n- A window is a contiguous range `[left, right]` that you extend on the right and shrink on the left.\n- Keep a summary of the window, such as a sum, a count map, a best-so-far value, or a deque, and update it in `O(1)` amortized time per move.\n- Each index enters and leaves the window at most once, so the total work is `O(n)`.\n\nWhen to reach for it\n- The question asks about contiguous subarrays or substrings: longest, shortest, maximum, or count.\n- A brute force would examine every start and end pair in `O(n^2)` or worse.\n- The window size is fixed, or a condition tells you exactly when to shrink.\n\nCommon patterns\n- Fixed-size window: add the new right element and remove the element that falls off the left.\n- Variable-size window: grow until the condition breaks, then shrink until it holds again.\n- Running best: track the best value seen so far as the window's left edge.\n- Monotonic deque: keep candidates in order so the window maximum or minimum is always at the front.\n\nPitfalls\n- Removing the outgoing element from the summary before or after the wrong step.\n- Windows with negative numbers: shrink-when-too-big logic assumes adding elements only increases the sum.\n- Updating the answer at the wrong moment, either before the window is valid or after it shrinks.\n",
+  "exercises": [
+    "max-stock-profit",
+    "sliding-window-maximum"
+  ]
+}

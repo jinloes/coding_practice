@@ -1,0 +1,9 @@
+{
+  "id": "graphs",
+  "title": "Graphs and Topological Sort",
+  "summary": "Model items and their relationships as nodes and edges, then traverse them to find order, reachability, or cycles.",
+  "lesson": "How it works\n- A graph is a set of nodes connected by edges, which may be directed or undirected.\n- An adjacency list maps each node to its neighbors and uses `O(V + E)` space.\n- Breadth-first search (BFS) visits nodes in layers using a queue; depth-first search (DFS) follows one path as far as it goes using recursion or a stack. Both take `O(V + E)` time.\n\nWhen to reach for it\n- The input describes dependencies, prerequisites, connections, or grids of neighboring cells.\n- The question asks whether something is reachable, what order satisfies all dependencies, or whether a cycle exists.\n- You need shortest paths in an unweighted graph, which BFS gives directly.\n\nCommon patterns\n- Topological sort with in-degrees: repeatedly take a node with no remaining incoming edges.\n- Cycle detection in a directed graph: DFS with three states (unvisited, in progress, done).\n- Connected components: run a traversal from every unvisited node.\n\nPitfalls\n- Forgetting to mark nodes as visited, which loops forever on cycles.\n- Recursion depth: deep DFS can overflow the stack; an explicit stack or BFS avoids it.\n- Edge direction: \"a depends on b\" is an edge from `b` to `a` when you want a processing order.\n- Nodes with no edges still count; include them in the traversal.\n",
+  "exercises": [
+    "course-schedule"
+  ]
+}

@@ -4,6 +4,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.testFramework.EdtTestUtil;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
+import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.run.PracticeRunner;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import org.junit.jupiter.api.AfterEach;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -63,6 +65,30 @@ class PracticePanelTest {
             assertThat(runner.listenerCount())
                     .as("every panel registration is released on dispose")
                     .isEqualTo(before);
+        });
+    }
+
+    @Test
+    void guideFilterListsItsProblemsEasiestFirstAndCombinesWithOtherFilters() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            ExerciseFilters filters = new ExerciseFilters();
+
+            filters.selectGuide("stacks-queues");
+            assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
+                    .as("the guide's exercises, Easy then Medium then Hard")
+                    .containsExactly("balanced-delimiters", "array-stack", "sliding-window-maximum");
+
+            filters.selectDifficulty("Medium");
+            assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
+                    .as("the existing filters still narrow a guide")
+                    .containsExactly("array-stack");
+
+            filters.selectGuide(null);
+            filters.selectDifficulty("All difficulties");
+            assertThat(filters.selectedGuide()).isNull();
+            assertThat(filters.visible(Set.of()))
+                    .as("all guides keeps the catalog order")
+                    .containsExactlyElementsOf(ExerciseCatalog.all());
         });
     }
 

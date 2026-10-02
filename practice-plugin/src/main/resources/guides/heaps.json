@@ -1,0 +1,9 @@
+{
+  "id": "heaps",
+  "title": "Heaps and Priority Queues",
+  "summary": "Keep the smallest or largest item instantly available while items keep arriving.",
+  "lesson": "How it works\n- A binary heap is a complete binary tree stored in an array; every parent is no larger than its children in a min-heap.\n- The children of index `i` are at `2i + 1` and `2i + 2`; its parent is at `(i - 1) / 2`.\n- Insert appends and sifts up; remove-min swaps the last element to the root and sifts down. Both are `O(log n)`; peeking is `O(1)`.\n\nWhen to reach for it\n- You repeatedly need the minimum or maximum of a changing collection.\n- The question asks for the top `k`, the `k`th largest, or the next event in time order.\n- You are merging several sorted sources.\n\nCommon patterns\n- Top `k`: keep a heap of size `k` and evict the worst whenever it grows larger.\n- Scheduling: order pending work by time or priority and always take the earliest.\n- In Java, `PriorityQueue` is a min-heap; pass `Comparator.reverseOrder()` for a max-heap.\n\nPitfalls\n- Off-by-one index arithmetic in a hand-written heap.\n- Forgetting to sift after replacing the root.\n- Iterating a `PriorityQueue` does not visit elements in sorted order.\n- Building by repeated insertion is `O(n log n)`; heapifying an array bottom-up is `O(n)`.\n",
+  "exercises": [
+    "binary-min-heap"
+  ]
+}

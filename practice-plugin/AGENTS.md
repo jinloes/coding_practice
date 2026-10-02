@@ -93,6 +93,24 @@ package.
 - Intended complexity strings must be compatible with the classifier labels in
   `ComplexityAnalysis`.
 
+## Study Guide Content Rules
+
+Every guide ID listed in `GuideCatalog` must provide
+`src/main/resources/guides/<id>.json` with a matching `id`, non-blank `title`,
+`summary`, and `lesson`, and a non-empty `exercises` array of existing,
+non-duplicated exercise IDs.
+
+- Lessons are original text in the `MarkdownHtml` subset (paragraphs, `- `
+  bullets, inline code) and contain the label lines `How it works`,
+  `When to reach for it`, `Common patterns`, and `Pitfalls`, each followed by
+  bullets.
+- Lessons teach the technique; they must not walk through a listed exercise's
+  solution, which belongs to that exercise's hints.
+- Guides never declare difficulty. Levels come from each exercise's manifest
+  and must be `Easy`, `Medium`, or `Hard`.
+- An exercise may appear in several guides. Update `GuideCatalogTest` when the
+  guide list or membership changes.
+
 ## Repository Hygiene
 
 - Keep shared run configurations in `.run/`; do not commit `.idea/` state or

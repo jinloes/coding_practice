@@ -41,6 +41,26 @@ class ManagedPracticeProgressTest {
     }
 
     @Test
+    void reportsExercisesWithAnyHistoricallyPassingAttempt() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        progress.record("pair-sum-a", "pair-sum", "f1",
+                new CheckResult(CheckResult.Status.ASSERTION_FAILED, 5, 1, "failed"));
+        progress.record("pair-sum-b", "pair-sum", "f2",
+                new CheckResult(CheckResult.Status.PASSED, 5, 0, "passed"));
+        progress.record("binary-search-a", "binary-search", "f3",
+                new CheckResult(CheckResult.Status.PASSED, 5, 0, "passed"));
+        progress.record("binary-search-a", "binary-search", "f4",
+                new CheckResult(CheckResult.Status.ASSERTION_FAILED, 5, 1, "failed"));
+        progress.record("move-zeroes-a", "move-zeroes", "f5",
+                new CheckResult(CheckResult.Status.ASSERTION_FAILED, 5, 1, "failed"));
+        progress.entry("valid-anagram-a", "valid-anagram");
+
+        assertThat(progress.passedExerciseIds())
+                .as("a later failure keeps the historical pass; never-passed exercises are excluded")
+                .containsExactlyInAnyOrder("pair-sum", "binary-search");
+    }
+
+    @Test
     void validatesAttemptOwnershipAndExecutionLimits() {
         ManagedPracticeProgress progress = new ManagedPracticeProgress();
         progress.entry("pair-sum-a", "pair-sum");

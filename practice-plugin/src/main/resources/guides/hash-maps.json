@@ -1,0 +1,13 @@
+{
+  "id": "hash-maps",
+  "title": "Hash Maps and Sets",
+  "summary": "Trade memory for constant-time lookups to answer \"have I seen this?\" and \"how many?\" questions in one pass.",
+  "lesson": "How it works\n- A hash map stores key-value pairs in buckets chosen by the key's hash code; a hash set stores keys only.\n- `get`, `put`, `containsKey`, and `remove` take `O(1)` time on average and `O(n)` in the rare worst case when many keys collide.\n- Java's `HashMap` and `HashSet` depend on `equals` and `hashCode` agreeing; boxed values and strings already do.\n\nWhen to reach for it\n- A brute-force solution compares every pair of elements and you need to drop the inner loop.\n- The question asks about counts, duplicates, frequencies, or whether two collections hold the same items.\n- You need to remember something about earlier elements while scanning once.\n\nCommon patterns\n- Frequency counting: map each value to how many times it appears, then read the counts.\n- Seen-before lookup: while scanning, check whether a value you need has already appeared before recording the current one.\n- Fixed alphabets: when keys are a small known range such as lowercase letters, an `int[26]` array is a faster map.\n- Prefix keys: store a running total as the key to find earlier positions with a related total.\n\nPitfalls\n- Iteration order of `HashMap` is unspecified; use `LinkedHashMap` when order matters.\n- Updating a value with `put(key, get(key) + 1)` fails on a missing key; use `getOrDefault` or `merge`.\n- Mutating an object after using it as a key breaks lookups.\n- Extra space is usually `O(n)`; mention it when you state your complexity.\n",
+  "exercises": [
+    "pair-sum",
+    "valid-anagram",
+    "first-unique-character",
+    "majority-element",
+    "subarray-sum-count"
+  ]
+}
