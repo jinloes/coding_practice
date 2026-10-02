@@ -1,0 +1,27 @@
+{
+  "id": "google",
+  "title": "Google",
+  "summary": "Problems whose patterns are commonly reported in Google coding interviews. Approximate and hand curated, not an official or verified question list.",
+  "lesson": "About this list\n- Each problem practices a pattern that candidates often report from Google interviews: hashing, stacks, sliding windows, binary search, prefix sums, heaps, and graphs.\n- The selection is approximate. Interviewers choose their own questions, and the real ones are usually new variations rather than well-known problems.\n- Treat the list as pattern practice, not as a prediction of the exact questions you will see.\n\nWhat to expect\n- Interviews are commonly reported to start from a short problem statement that leaves details unspecified, so asking about input size, edge cases, and output format is part of the task.\n- You are often expected to explain an approach and its time and space complexity before writing code.\n- Candidates frequently report writing code in a plain shared editor without running it, so correctness comes from careful reasoning and hand-traced examples.\n- A follow-up that changes a constraint, such as a much larger input or a stream of values, is common once the first version works.\n\nHow to prepare\n- Before opening the hints, write down the contract questions you would ask and the brute-force complexity.\n- Trace the visible examples by hand and predict the output before you run them.\n- Aim to pass the full check on the first attempt; treat every failing check as a missed edge case to add to your checklist.\n- After passing, explain how your solution would change if the input no longer fit in memory or arrived one value at a time.\n",
+  "exercises": [
+    "pair-sum",
+    "balanced-delimiters",
+    "max-stock-profit",
+    "add-strings",
+    "binary-search",
+    "subarray-sum-count",
+    "binary-min-heap",
+    "sliding-window-maximum",
+    "course-schedule",
+    "island-count",
+    "merge-intervals",
+    "longest-unique-substring",
+    "minimum-meeting-rooms",
+    "level-order-values",
+    "alien-alphabet-order",
+    "max-path-sum",
+    "running-median",
+    "word-segmentation",
+    "longest-increasing-subsequence"
+  ]
+}

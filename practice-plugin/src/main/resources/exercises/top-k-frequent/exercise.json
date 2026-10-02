@@ -1,0 +1,30 @@
+{
+  "id": "top-k-frequent",
+  "title": "Top K Frequent Values",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Find the k values that occur most often in an array.\n\nContract\n- `numbers` is a non-null, non-empty array of any `int` values, including negatives and the extremes of the `int` range.\n- `k` is between 1 and the number of distinct values in `numbers`.\n- The answer is guaranteed to be unambiguous: no value left out occurs as often as a value that is returned.\n- Return an array of exactly `k` distinct values in any order. Do not modify `numbers`.\n\nExamples\n- For `[1, 1, 1, 2, 2, 3]` and `k = 2`, the answer is `1` and `2` in any order.\n- For `[5]` and `k = 1`, the answer is `[5]`.\n- For `[4, 4, -1, -1, -1, 7]` and `k = 1`, the answer is `[-1]`.\n",
+  "examples": [
+    {
+      "input": "numbers = [1, 1, 1, 2, 2, 3], k = 2",
+      "output": "[1, 2] (any order)"
+    },
+    {
+      "input": "numbers = [5], k = 1",
+      "output": "[5]"
+    },
+    {
+      "input": "numbers = [4, 4, -1, -1, -1, 7], k = 1",
+      "output": "[-1]"
+    }
+  ],
+  "hints": [
+    "Counting occurrences first reduces the problem to ranking distinct values by count.",
+    "Sorting every distinct value costs more than needed; keep only the best k seen so far in a min-heap ordered by count and evict the smallest when it grows past k.",
+    "Alternatively bucket values by their count and read buckets from the highest count down. Intended complexity: O(n log k) time, which is O(n) for a fixed k, and O(n) extra space for the counts; n is the length of the array."
+  ],
+  "inputSyntax": "Input: the values followed by k, for example: [1, 1, 1, 2, 2, 3] 2",
+  "sampleInput": "[1, 1, 1, 2, 2, 3] 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "valid-tree-graph",
+  "title": "Valid Tree Graph",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Decide whether an undirected graph is a single tree.\n\nContract\n- Nodes are numbered `0` through `nodeCount - 1`, where `nodeCount >= 1`. Each entry of `edges` is a pair `{a, b}` of valid nodes describing an undirected edge.\n- Return true exactly when the graph is connected and contains no cycle.\n- A repeated edge or a self-loop counts as a cycle.\n- Do not modify `edges`.\n\nExamples\n- `isTree(1, new int[0][2])` returns true.\n- `isTree(3, new int[][]{{0, 1}, {1, 2}})` returns true.\n- `isTree(3, new int[][]{{0, 1}, {1, 2}, {2, 0}})` returns false.\n",
+  "examples": [
+    {"input": "nodeCount = 1, edges = []", "output": "true"},
+    {"input": "nodeCount = 3, edges = [[0, 1], [1, 2]]", "output": "true"},
+    {"input": "nodeCount = 3, edges = [[0, 1], [1, 2], [2, 0]]", "output": "false"}
+  ],
+  "hints": [
+    "A tree on n nodes has a very specific number of edges. Checking that count rules out many inputs immediately.",
+    "The right edge count is not enough: a cycle can coexist with a disconnected node. Make sure no edge joins two nodes that are already connected.",
+    "Process edges with union-find and fail when an edge joins nodes already in the same set (or search from node 0 and check every node is reached). Intended complexity: O(n) time and O(n) space, where n is the number of nodes (edges beyond n - 1 are rejected immediately)."
+  ],
+  "inputSyntax": "Input: node count, then undirected edges as a-b between nodes 0..count-1, for example: 5 0-1 0-2 0-3 1-4",
+  "sampleInput": "5 0-1 0-2 0-3 1-4",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

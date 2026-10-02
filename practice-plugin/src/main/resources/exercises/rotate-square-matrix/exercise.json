@@ -1,0 +1,30 @@
+{
+  "id": "rotate-square-matrix",
+  "title": "Rotate Square Matrix",
+  "topic": "Matrices",
+  "difficulty": "Medium",
+  "statement": "Rotate a square matrix a quarter turn clockwise, in place.\n\nContract\n- `matrix` is non-null and square: it has `n` rows and each row has `n` columns. `n` may be 0.\n- After the call, the value that started at row `r`, column `c` must be at row `c`, column `n - 1 - r`.\n- Modify `matrix` itself and return nothing; do not build a second n x n matrix.\n\nExamples\n- `{{1,2},{3,4}}` becomes `{{3,1},{4,2}}`.\n- `{{1,2,3},{4,5,6},{7,8,9}}` becomes `{{7,4,1},{8,5,2},{9,6,3}}`.\n- `{{5}}` stays `{{5}}`.\n",
+  "examples": [
+    {
+      "input": "matrix = [[1, 2], [3, 4]]",
+      "output": "[[3, 1], [4, 2]]"
+    },
+    {
+      "input": "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+      "output": "[[7, 4, 1], [8, 5, 2], [9, 6, 3]]"
+    },
+    {
+      "input": "matrix = [[5]]",
+      "output": "[[5]]"
+    }
+  ],
+  "hints": [
+    "Write down where a single cell goes: the value at (r, c) lands at (c, n - 1 - r). Copying into a new matrix works but uses O(n^2) space.",
+    "A quarter turn can be built from two simpler reflections of the whole grid. Try combining a flip across the main diagonal with another flip.",
+    "Swap across the main diagonal, then reverse every row, using only a few temporary variables. Intended complexity: O(n^2) time and O(1) extra space, where n is the side length of the matrix."
+  ],
+  "inputSyntax": "Input: a square matrix as nested lists of integers, for example: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+  "sampleInput": "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(1)"
+}

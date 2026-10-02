@@ -23,11 +23,13 @@ practice-plugin/
   src/main/resources/
     exercises/<id>/
     guides/<id>.json
+    tracks/<id>.json
     gradle/verification-build.gradle
     harness/ComplexityProbe.java
     META-INF/plugin.xml
   src/test/java/com/jinloes/practice_plugin/
   src/test/resources/reference/<id>/Solution.java
+  src/test/resources/known-wrong/<id>/Solution.java
 ```
 
 ## Package Responsibilities
@@ -35,7 +37,7 @@ practice-plugin/
 | Package | Responsibility | Important classes |
 |---|---|---|
 | `app` | Cross-package application use cases | `LegacyImportService` |
-| `catalog` | Exercise and study guide registries, manifest parsing, bundled example libraries | `ExerciseCatalog`, `GuideCatalog`, `ExampleLibraries` |
+| `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
 | `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
@@ -53,6 +55,7 @@ Run from `practice-plugin/`:
 ```bash
 ../gradlew test
 ../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
+../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
 ../gradlew buildPlugin
 ../gradlew runIde
 ```
@@ -60,6 +63,13 @@ Run from `practice-plugin/`:
 The build is standalone and is deliberately not included by the repository
 root's Gradle settings. Plugin compilation uses JDK 25. Learner and generated
 verification compilation uses Java 17.
+
+`ExerciseCatalogTest` compiles and runs every exercise (reference, starter,
+known-wrong, and complexity probe), which takes several minutes for the full
+catalog. `-PcatalogOnly` (passed to the test JVM as `practice.catalog.only`)
+restricts those per-exercise checks to the listed IDs while authoring. The
+complexity probe is timing-sensitive; run the final full suite on an otherwise
+idle machine.
 
 Set `idePath` in `practice-plugin/gradle.properties` or user-level Gradle
 properties to use a local IDE. Never commit a real machine path.
@@ -118,10 +128,12 @@ properties to use a local IDE. Never commit a real machine path.
    - the manifest already listed above.
 4. Add the author-only reference implementation at
    `src/test/resources/reference/<id>/Solution.java`.
-5. Add a compile-compatible known-wrong implementation to
-   `KnownWrongSolutions.source` (catalog test package).
+5. Add a compile-compatible known-wrong implementation at
+   `src/test/resources/known-wrong/<id>/Solution.java`; it must fail at least
+   one shipped test. `KnownWrongSolutions` loads it.
    `ExerciseCatalogTest` compiles and runs it through `CatalogSandbox`.
-6. Add the exercise ID to every study guide whose technique it practices.
+6. Add the exercise ID to every study guide whose technique it practices, and
+   to any practice track whose list or commonly reported patterns it matches.
 7. Update user-facing catalog documentation if it enumerates exercises.
 8. Run the catalog test, then the full plugin suite.
 
@@ -139,6 +151,23 @@ properties to use a local IDE. Never commit a real machine path.
    exercise.
 4. Update `GuideCatalogTest` expectations and the README guide list, then run
    `GuideCatalogTest` and the full plugin suite.
+
+## Adding A Practice Track
+
+1. Choose a stable lowercase kebab-case ID (for example `blind-75` or a company
+   name) that does not collide with a guide ID, and append it to the ordered
+   `IDS` list in `TrackCatalog`.
+2. Add `src/main/resources/tracks/<id>.json` using the guide manifest schema:
+   `id`, `title`, `summary`, `lesson`, and `exercises`. The summary must state
+   that the list is not an official or verified question list; company tracks
+   must also call themselves approximate.
+3. Write the notes in the `MarkdownHtml` subset with the label lines
+   `About this list`, `What to expect`, and `How to prepare`, in original
+   words. Never copy third-party problem statements, scrape company-tag data,
+   or claim specific questions.
+4. Add any missing exercises first (see Adding An Exercise), then update
+   `TrackCatalogTest` expectations and the README track list, and run
+   `TrackCatalogTest` and the full plugin suite.
 
 ### Exercise Assertions
 

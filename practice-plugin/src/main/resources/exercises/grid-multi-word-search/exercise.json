@@ -1,0 +1,30 @@
+{
+  "id": "grid-multi-word-search",
+  "title": "Grid Multi-Word Search",
+  "topic": "Tries",
+  "difficulty": "Hard",
+  "statement": "Find every word from a list that can be traced in a letter grid.\n\nContract\n- `grid` is a non-empty rectangular array of lowercase letters; `words` holds non-empty lowercase words and may contain duplicates.\n- A word can be traced when its letters can be read along a path of cells, each step moving to an up, down, left, or right neighbour. A single cell may not be used twice within the same word, but different words may reuse cells.\n- Return each traceable word exactly once, in any order. Return an empty list when nothing can be traced.\n- The grid may be changed during the search, but it must hold its original letters when the method returns.\n\nExamples\n- For the grid `cat / ors / den` and words `cat, cod, care, dog`, the result is `cat`, `cod`, `care` (any order); `dog` has no `g` to use.\n- For the grid `ab` and the word `aba`, the result is empty because the only `a` would be used twice.\n- For the grid `x` and the words `x, x`, the result is just `x`.\n",
+  "examples": [
+    {
+      "input": "grid = [\"cat\", \"ors\", \"den\"], words = [\"cat\", \"cod\", \"care\", \"dog\"]",
+      "output": "[cat, cod, care] in any order"
+    },
+    {
+      "input": "grid = [\"ab\"], words = [\"aba\"]",
+      "output": "[]"
+    },
+    {
+      "input": "grid = [\"x\"], words = [\"x\", \"x\"]",
+      "output": "[x]"
+    }
+  ],
+  "hints": [
+    "Searching the grid once per word repeats a lot of work. Put all the words into a trie so one search from each cell serves every word at once.",
+    "Run a depth-first search from every cell, following only letters that continue a prefix in the trie, and mark the current cell as used (then restore it) so a word never reuses a cell. Stop a branch as soon as the trie has no matching child.",
+    "Clear a word from the trie once it is found so it is reported once. Intended complexity: with a fixed word list of bounded length, each cell starts a bounded search, so time is O(n) where n is the number of grid cells; extra space is O(1) beyond the trie and the result."
+  ],
+  "inputSyntax": "Input: grid rows separated by commas, then ';' and the words separated by commas, for example: cat,ors,den; cat,cod,care",
+  "sampleInput": "cat,ors,den; cat,cod,care",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

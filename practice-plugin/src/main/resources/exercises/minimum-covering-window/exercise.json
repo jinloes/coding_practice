@@ -1,0 +1,30 @@
+{
+  "id": "minimum-covering-window",
+  "title": "Minimum Covering Window",
+  "topic": "Sliding Window",
+  "difficulty": "Hard",
+  "statement": "Find the shortest piece of a text that contains every character of a required text, counting repeats.\n\nContract\n- `source` and `required` are non-null and contain only ASCII characters (code below 128); matching is case-sensitive.\n- A window is a contiguous substring of `source`. It qualifies when, for every character, it holds at least as many copies as `required` does (so `\"LLO\"` needs two `L`).\n- Return the shortest qualifying window. If several have the same shortest length, return the leftmost.\n- Return `\"\"` if no window qualifies or if `required` is empty.\n\nExamples\n- `minimumWindow(\"HELLOWORLD\", \"LLO\")` returns `\"LLO\"`.\n- `minimumWindow(\"abc\", \"d\")` returns `\"\"`.\n- `minimumWindow(\"a\", \"a\")` returns `\"a\"`.\n",
+  "examples": [
+    {
+      "input": "source = \"HELLOWORLD\", required = \"LLO\"",
+      "output": "\"LLO\""
+    },
+    {
+      "input": "source = \"abc\", required = \"d\"",
+      "output": "\"\""
+    },
+    {
+      "input": "source = \"a\", required = \"a\"",
+      "output": "\"a\""
+    }
+  ],
+  "hints": [
+    "Count how many copies of each character are required. A window qualifies when none of those counts is still short.",
+    "Expand the right end until the window qualifies, then move the left end forward for as long as it still qualifies, recording the shortest window seen.",
+    "Track the number of characters still missing instead of rescanning counts, and keep a window only when strictly shorter so the leftmost wins. Intended complexity: O(n) time and O(1) extra space (a fixed ASCII table), where n is the source length with the required text treated as a small constant."
+  ],
+  "inputSyntax": "Input: the source and required text, each in single quotes, for example: 'HELLOWORLD' 'LLO'",
+  "sampleInput": "'HELLOWORLD' 'LLO'",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "largest-water-container",
+  "title": "Largest Water Container",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Choose two vertical walls so the rectangle between them holds as much area as possible.\n\nContract\n- `heights` is non-null and may be empty; each value is a non-negative `int`, and wall i stands at x-coordinate i.\n- Picking walls i < j encloses an area of `min(heights[i], heights[j]) * (j - i)`. Return the largest area over all pairs, or `0` when there are fewer than two walls.\n- The area can exceed the `int` range, so the result is a `long`. Do not mutate `heights`.\n\nExamples\n- `maxArea(new int[]{1, 5, 2, 6, 3})` returns `10`, from the walls of height 5 and 6.\n- `maxArea(new int[]{4, 4})` returns `4`.\n- `maxArea(new int[]{7})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "heights = [1, 5, 2, 6, 3]",
+      "output": "10"
+    },
+    {
+      "input": "heights = [4, 4]",
+      "output": "4"
+    },
+    {
+      "input": "heights = [7]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Start with the widest pair of walls, then ask which wall limits the area.",
+    "Moving the taller wall inward can never help because the shorter wall still caps the height while the width shrinks.",
+    "Keep two pointers at the ends, record the area, and move the pointer at the shorter wall. Intended complexity: O(n) time and O(1) extra space, where n is the number of walls."
+  ],
+  "inputSyntax": "Input: the wall heights, for example: [1, 5, 2, 6, 3]",
+  "sampleInput": "[1, 5, 2, 6, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

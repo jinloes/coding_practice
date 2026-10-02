@@ -8,6 +8,10 @@
     "valid-anagram",
     "first-unique-character",
     "majority-element",
-    "subarray-sum-count"
+    "subarray-sum-count",
+    "duplicate-check",
+    "longest-consecutive-run",
+    "group-anagrams",
+    "top-k-frequent"
   ]
 }

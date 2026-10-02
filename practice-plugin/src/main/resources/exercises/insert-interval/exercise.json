@@ -1,0 +1,30 @@
+{
+  "id": "insert-interval",
+  "title": "Insert Interval",
+  "topic": "Intervals",
+  "difficulty": "Medium",
+  "statement": "Insert one new interval into a sorted list of disjoint intervals, merging whatever it touches.\n\nContract\n- `intervals` is non-null and may be empty. Each interval is `{start, end}` with `start <= end`.\n  The list is sorted by start and no two intervals overlap.\n- Intervals are closed: `{1, 2}` and `{2, 3}` share the point `2`, so they overlap and merge\n  into `{1, 3}`.\n- `newInterval` is `{start, end}` with `start <= end`.\n- Return a new `int[][]` that is still sorted and disjoint and covers exactly the same points as\n  the old intervals together with `newInterval`. Do not mutate the inputs.\n\nExamples\n- `insert({{1, 3}, {6, 9}}, {2, 5})` returns `{{1, 5}, {6, 9}}`.\n- `insert({}, {4, 7})` returns `{{4, 7}}`.\n- `insert({{1, 2}, {5, 6}}, {3, 4})` returns `{{1, 2}, {3, 4}, {5, 6}}`.\n",
+  "examples": [
+    {
+      "input": "intervals = [[1, 3], [6, 9]], newInterval = [2, 5]",
+      "output": "[[1, 5], [6, 9]]"
+    },
+    {
+      "input": "intervals = [], newInterval = [4, 7]",
+      "output": "[[4, 7]]"
+    },
+    {
+      "input": "intervals = [[1, 2], [5, 6]], newInterval = [3, 4]",
+      "output": "[[1, 2], [3, 4], [5, 6]]"
+    }
+  ],
+  "hints": [
+    "Split the existing intervals into three groups relative to the new one: entirely before it, overlapping it, and entirely after it.",
+    "Copy the ones that end before the new interval starts, absorb every interval that starts no later than the new interval's end by widening the new interval, then copy the rest.",
+    "Because the input is already sorted, one left-to-right pass is enough. Intended complexity: O(n) time and O(n) space for the output, where n is the number of existing intervals."
+  ],
+  "inputSyntax": "Input: the sorted intervals followed by the new interval, for example: [[1, 3], [6, 9]] [2, 5]",
+  "sampleInput": "[[1, 3], [6, 9]] [2, 5]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

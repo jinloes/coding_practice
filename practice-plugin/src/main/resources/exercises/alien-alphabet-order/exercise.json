@@ -1,0 +1,21 @@
+{
+  "id": "alien-alphabet-order",
+  "title": "Alien Alphabet Order",
+  "topic": "Graphs",
+  "difficulty": "Hard",
+  "statement": "Recover a letter ordering from a dictionary sorted in an unknown alphabet.\n\nContract\n- `words` is sorted in the lexicographic order of an unknown alphabet that uses only lowercase English letters. Each word is non-empty.\n- Return a string containing exactly the distinct letters that appear in `words`, each once, in an order consistent with the word list. If several orders are consistent, return any of them.\n- Words compare letter by letter; the first position where two words differ decides which comes first. A word that is a proper prefix of another must come first.\n- Return an empty string if no order is consistent, including when a word is followed by one of its own proper prefixes. An empty word list returns an empty string.\n\nExamples\n- `{\"zy\", \"zx\", \"yx\"}` returns `\"zyx\"`.\n- `{\"abc\", \"ab\"}` returns an empty string, because `ab` must precede `abc`.\n- `{\"dog\"}` returns the letters d, o, g in any order.\n",
+  "examples": [
+    {"input": "words = [zy, zx, yx]", "output": "zyx"},
+    {"input": "words = [abc, ab]", "output": "(empty string)"},
+    {"input": "words = [dog]", "output": "any arrangement of d, o, g"}
+  ],
+  "hints": [
+    "Only the first differing position of two neighboring words tells you anything, and it tells you that one letter precedes another.",
+    "Turn each such fact into a directed edge between letters (remember letters that never get an edge), then find an order that respects every edge.",
+    "Use a topological sort; if it cannot place every letter there is a cycle, and a longer word directly before its own prefix is also invalid. Intended complexity: O(n) time and O(1) space, where n is the total number of characters in all words (the alphabet is fixed at 26 letters)."
+  ],
+  "inputSyntax": "Input: words in sorted order separated by commas, using lowercase letters only, for example: zy,zx,yx",
+  "sampleInput": "zy,zx,yx",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

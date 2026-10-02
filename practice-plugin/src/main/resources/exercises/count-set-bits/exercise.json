@@ -1,0 +1,30 @@
+{
+  "id": "count-set-bits",
+  "title": "Count Set Bits",
+  "topic": "Bit Manipulation",
+  "difficulty": "Easy",
+  "statement": "Count how many bits are set to 1 in a 32-bit integer.\n\nContract\n- `value` is any `int`. Treat it as an unsigned 32-bit pattern, so negative numbers have their\n  sign bit and all other bits counted like any other bit.\n- Return a number from `0` to `32`.\n- `Integer.bitCount` and similar built-ins defeat the purpose of the exercise, so avoid them.\n  The tests cannot enforce this.\n\nExamples\n- `countSetBits(11)` returns `3` because `11` is `1011` in binary.\n- `countSetBits(0)` returns `0`.\n- `countSetBits(-1)` returns `32` because every bit is set.\n",
+  "examples": [
+    {
+      "input": "value = 11",
+      "output": "3"
+    },
+    {
+      "input": "value = 0",
+      "output": "0"
+    },
+    {
+      "input": "value = -1",
+      "output": "32"
+    }
+  ],
+  "hints": [
+    "Look at one bit at a time: the lowest bit is `value & 1`, and shifting moves the next bit into place.",
+    "Be careful with negatives: an arithmetic right shift keeps the sign bit, so use the unsigned shift or a fixed 32-step loop. There is also a trick that clears the lowest set bit in one operation.",
+    "Clearing the lowest set bit with `value & (value - 1)` removes exactly one bit per step. Intended complexity: O(1) per call (at most 32 steps) and O(1) space, so a batch of n calls costs O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: a single integer, for example: 11",
+  "sampleInput": "11",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

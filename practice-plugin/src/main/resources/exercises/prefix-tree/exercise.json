@@ -1,0 +1,30 @@
+{
+  "id": "prefix-tree",
+  "title": "Prefix Tree",
+  "topic": "Tries",
+  "difficulty": "Medium",
+  "statement": "Implement a prefix tree (trie) that stores lowercase words.\n\nContract\n- `insert(word)` stores a word. Inserting the same word again changes nothing.\n- `contains(word)` is true only if exactly that word was inserted earlier. A word that is merely the start of an inserted word is not contained.\n- `hasPrefix(prefix)` is true if at least one inserted word starts with `prefix`; a full inserted word counts as a prefix of itself.\n- Words and prefixes are non-null, non-empty, and use only the letters `a` to `z`.\n\nExamples\n- After `insert(\"apple\")`: `contains(\"apple\")` is true, `contains(\"app\")` is false, and `hasPrefix(\"app\")` is true.\n- After `insert(\"car\")` and `insert(\"cart\")`: `contains(\"car\")` and `contains(\"cart\")` are true, `contains(\"carts\")` is false.\n- A new tree contains nothing: `contains(\"a\")` and `hasPrefix(\"a\")` are false.\n",
+  "examples": [
+    {
+      "input": "insert apple; contains apple, contains app, hasPrefix app",
+      "output": "true, false, true"
+    },
+    {
+      "input": "insert car, insert cart; contains car, contains cart, contains carts",
+      "output": "true, true, false"
+    },
+    {
+      "input": "new tree; contains a, hasPrefix a",
+      "output": "false, false"
+    }
+  ],
+  "hints": [
+    "Each node represents one letter; the path from the root spells a prefix. Store the children of a node by letter.",
+    "A node needs a flag saying that an inserted word ends there, so that `contains` can tell a stored word from a mere prefix.",
+    "`contains` and `hasPrefix` walk one node per letter and differ only in the final check. Intended complexity: O(L) time per operation for a word of length L, and O(n) space overall when n is the total number of letters stored."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: insert apple, contains app, hasPrefix app, contains apple",
+  "sampleInput": "insert apple, contains app, hasPrefix app, contains apple",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

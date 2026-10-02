@@ -1,0 +1,30 @@
+{
+  "id": "remove-nth-from-end",
+  "title": "Remove Nth From End",
+  "topic": "Linked Lists",
+  "difficulty": "Medium",
+  "statement": "Delete the k-th node counted from the end of a singly linked list and return the resulting head.\n\nContract\n- `head` points to the first node of a non-empty acyclic list. Each node has an integer `value` and a mutable `next` reference.\n- `k` is 1-based and always valid: 1 removes the last node and the list length removes the head.\n- Return the head of the list after removal; this is null when the only node was removed.\n- Relink the existing nodes instead of allocating replacements, and do it in a single pass without first counting the length.\n\nExamples\n- Removing the 2nd node from the end of `1 -> 2 -> 3 -> 4 -> 5` gives `1 -> 2 -> 3 -> 5`.\n- Removing the 1st node from the end of `7` returns null.\n- Removing the 2nd node from the end of `1 -> 2` returns the node holding `2`.\n",
+  "examples": [
+    {
+      "input": "head = 1 -> 2 -> 3 -> 4 -> 5, k = 2",
+      "output": "1 -> 2 -> 3 -> 5"
+    },
+    {
+      "input": "head = 7, k = 1",
+      "output": "null"
+    },
+    {
+      "input": "head = 1 -> 2, k = 2",
+      "output": "2"
+    }
+  ],
+  "hints": [
+    "Counting the length first needs two passes; try keeping two pointers a fixed distance apart instead.",
+    "Move a lead pointer k nodes ahead, then move both pointers together until the lead reaches the last node.",
+    "A sentinel node in front of the head lets you remove the head without a special case. Intended complexity: O(n) time and O(1) extra space, where n is the number of nodes."
+  ],
+  "inputSyntax": "Input: the list values followed by k, for example: [1, 2, 3, 4, 5] 2",
+  "sampleInput": "[1, 2, 3, 4, 5] 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

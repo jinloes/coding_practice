@@ -1,0 +1,30 @@
+{
+  "id": "spiral-order",
+  "title": "Spiral Order",
+  "topic": "Matrices",
+  "difficulty": "Medium",
+  "statement": "Read every element of a matrix in clockwise spiral order.\n\nContract\n- `matrix` is non-null and rectangular. It may have no rows, in which case the result is empty. Otherwise every row has at least one column.\n- Start at the top-left cell, go right along the top edge, then down, then left, then up, and keep spiraling inward until every cell has been read exactly once.\n- Return the values in the order they are read. Do not mutate `matrix`.\n\nExamples\n- `spiralOrder(new int[][]{{1,2,3},{4,5,6},{7,8,9}})` returns `[1, 2, 3, 6, 9, 8, 7, 4, 5]`.\n- `spiralOrder(new int[][]{{1,2,3,4},{5,6,7,8},{9,10,11,12}})` returns `[1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7]`.\n- `spiralOrder(new int[][]{{1},{2},{3}})` returns `[1, 2, 3]`.\n",
+  "examples": [
+    {
+      "input": "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+      "output": "[1, 2, 3, 6, 9, 8, 7, 4, 5]"
+    },
+    {
+      "input": "matrix = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]",
+      "output": "[1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7]"
+    },
+    {
+      "input": "matrix = [[1], [2], [3]]",
+      "output": "[1, 2, 3]"
+    }
+  ],
+  "hints": [
+    "Peel the matrix one ring at a time; the result has exactly rows * columns values.",
+    "Track four moving boundaries (top, bottom, left, right) and shrink one boundary after finishing each side.",
+    "After the top and right sides, check that rows and columns remain before walking the bottom and left sides, or a single row or column is read twice. Intended complexity: O(n) time and O(n) space for the returned array, where n is the number of cells."
+  ],
+  "inputSyntax": "Input: the matrix as nested lists of integers, for example: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+  "sampleInput": "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

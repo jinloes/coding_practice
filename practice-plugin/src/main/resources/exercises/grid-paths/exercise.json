@@ -1,0 +1,30 @@
+{
+  "id": "grid-paths",
+  "title": "Grid Paths",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Count the routes across a rectangular grid when you may only move right or down.\n\nContract\n- `rows` and `cols` are each between 1 and 10,000. The walker starts in the top-left cell and must finish in the bottom-right cell, and each step moves exactly one cell right or one cell down.\n- Return the number of distinct routes modulo 1,000,000,007, as an `int` (the true count quickly exceeds the `long` range).\n\nExamples\n- `count(3, 7)` returns `28`.\n- `count(3, 2)` returns `3`.\n- `count(1, 1)` returns `1`.\n",
+  "examples": [
+    {
+      "input": "rows = 3, cols = 7",
+      "output": "28"
+    },
+    {
+      "input": "rows = 3, cols = 2",
+      "output": "3"
+    },
+    {
+      "input": "rows = 1, cols = 1",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Every route to a cell arrives either from the cell above or from the cell to its left. What happens in the first row and first column?",
+    "The number of routes to a cell is the sum of the counts for its upper and left neighbours. Process the grid row by row; only the previous row is needed, and it can be updated in place.",
+    "Update a single array of `cols` counts per row, reducing modulo 1,000,000,007 on every addition. Intended complexity: O(n^2) time and O(n) extra space, where n is the side length of a square grid (rows = cols = n)."
+  ],
+  "inputSyntax": "Input: the number of rows then the number of columns, for example: 3 7",
+  "sampleInput": "3 7",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

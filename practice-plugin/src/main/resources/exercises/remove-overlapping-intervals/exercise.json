@@ -1,0 +1,30 @@
+{
+  "id": "remove-overlapping-intervals",
+  "title": "Remove Overlapping Intervals",
+  "topic": "Intervals",
+  "difficulty": "Medium",
+  "statement": "Find the fewest intervals to delete so that the remaining ones do not overlap.\n\nContract\n- `intervals` is non-null, unsorted, and may be empty. Each interval is `{start, end}` with\n  `start < end`; values may be any `int`, including extreme ones.\n- Two intervals overlap only when they share more than a single point. Intervals that merely\n  touch, such as `{1, 2}` and `{2, 3}`, do **not** overlap.\n- Return the minimum number of intervals to remove. Identical intervals overlap each other.\n- Do not mutate `intervals`.\n\nExamples\n- `minRemovals({{1, 4}, {2, 3}, {3, 5}, {4, 6}})` returns `2`.\n- `minRemovals({{1, 2}, {2, 3}})` returns `0`.\n- `minRemovals({{0, 5}, {1, 2}, {3, 4}})` returns `1`.\n",
+  "examples": [
+    {
+      "input": "intervals = [[1, 4], [2, 3], [3, 5], [4, 6]]",
+      "output": "2"
+    },
+    {
+      "input": "intervals = [[1, 2], [2, 3]]",
+      "output": "0"
+    },
+    {
+      "input": "intervals = [[0, 5], [1, 2], [3, 4]]",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Flip the question: instead of choosing what to remove, count the largest set of intervals you can keep.",
+    "Greedy choice: among intervals that fit, the one that ends earliest leaves the most room. Sort by end, keep an interval whenever it starts at or after the end of the last kept one, and remove it otherwise.",
+    "The answer is the total count minus the kept count. Compare with `Integer.compare` to avoid overflow. Intended complexity: O(n log n) time for the sort and O(n) space, where n is the number of intervals."
+  ],
+  "inputSyntax": "Input: the intervals, for example: [[1, 4], [2, 3], [3, 5], [4, 6]]",
+  "sampleInput": "[[1, 4], [2, 3], [3, 5], [4, 6]]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

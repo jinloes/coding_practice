@@ -1,0 +1,30 @@
+{
+  "id": "group-anagrams",
+  "title": "Group Anagrams",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "Partition a list of words into groups so that every group holds exactly the words that are anagrams of one another.\n\nContract\n- `words` is non-null, may be empty, and may contain duplicates. Each word is non-null and\n  made only of lowercase letters `a`-`z`; a word may be empty (empty words are anagrams of each other).\n- Return a list of groups. Every input word appears exactly once in exactly one group (duplicates\n  stay as separate entries), and two words share a group if and only if they are anagrams.\n- Group order and the order of words inside a group do not matter. Do not mutate `words`.\n\nExamples\n- `groupAnagrams(List.of(\"stop\", \"pots\", \"cat\", \"tops\", \"act\"))` returns the groups `[stop, pots, tops]` and `[cat, act]` in any order.\n- `groupAnagrams(List.of(\"\", \"\"))` returns one group `[\"\", \"\"]`.\n- `groupAnagrams(List.of(\"abc\"))` returns one group `[abc]`.\n",
+  "examples": [
+    {
+      "input": "words = [stop, pots, cat, tops, act]",
+      "output": "[stop, pots, tops] and [cat, act], in any order"
+    },
+    {
+      "input": "words = [\"\", \"\"]",
+      "output": "[[\"\", \"\"]]"
+    },
+    {
+      "input": "words = [abc]",
+      "output": "[[abc]]"
+    }
+  ],
+  "hints": [
+    "Two words are anagrams exactly when they have the same multiset of letters, so look for a representation of that multiset that is identical for all anagrams.",
+    "Sorting a word's letters, or counting each of the 26 letters, gives a canonical key. Collect words into a map from key to list.",
+    "Build the key from a letter-count signature so each word costs time proportional to its own length, then return the map's values. Intended complexity: O(n) time and O(n) space, where n is the number of words and each word has bounded length."
+  ],
+  "inputSyntax": "Input: lowercase words separated by commas with no spaces, for example: stop,pots,cat,tops,act",
+  "sampleInput": "stop,pots,cat,tops,act",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

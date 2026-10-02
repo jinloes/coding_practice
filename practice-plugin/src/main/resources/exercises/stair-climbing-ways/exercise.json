@@ -1,0 +1,21 @@
+{
+  "id": "stair-climbing-ways",
+  "title": "Stair Climbing Ways",
+  "topic": "Dynamic Programming",
+  "difficulty": "Easy",
+  "statement": "Count the distinct ways to climb a staircase using steps of one or two stairs.\n\nContract\n- `steps` is the number of stairs, from 0 to 90 inclusive.\n- Each move climbs exactly 1 or 2 stairs. Two ways differ when their sequences of moves differ,\n  so 1 then 2 is not the same as 2 then 1.\n- Return the number of sequences of moves that climb exactly `steps` stairs. There is one way to\n  climb zero stairs (make no moves). The result always fits in a `long` for the allowed range.\n\nExamples\n- `countWays(1)` returns `1`.\n- `countWays(4)` returns `5`.\n- `countWays(10)` returns `89`.\n",
+  "examples": [
+    { "input": "steps = 1", "output": "1" },
+    { "input": "steps = 4", "output": "5" },
+    { "input": "steps = 10", "output": "89" }
+  ],
+  "hints": [
+    "Think about the very last move: it climbed either one stair or two. What does that say about the stair you came from?",
+    "The count for a staircase is the count for one stair fewer plus the count for two stairs fewer. Define the base cases for 0 and 1 stairs.",
+    "Roll two variables forward instead of storing a table, and use `long` arithmetic. Intended complexity: O(n) time and O(1) space for one call, where n is the number of stairs; the probe batches many maximum-size calls, so its size axis is the number of calls."
+  ],
+  "inputSyntax": "Input: the number of stairs from 0 to 90, for example: 10",
+  "sampleInput": "10",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

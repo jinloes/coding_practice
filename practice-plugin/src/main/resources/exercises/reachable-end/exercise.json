@@ -1,0 +1,30 @@
+{
+  "id": "reachable-end",
+  "title": "Reachable End",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Decide whether a hopper standing on the first cell can reach the last cell.\n\nContract\n- `jumps` is a non-null, non-empty array of non-negative `int`s. A hopper starts at index `0`. From index `i` it may move forward to any index from `i + 1` up to `i + jumps[i]` (and not past the last index).\n- Return `true` if the last index can be reached, otherwise `false`. A one-element array is already at its end.\n- Values can be as large as `Integer.MAX_VALUE`; do not let `i + jumps[i]` overflow. Do not mutate `jumps`.\n\nExamples\n- `canReach(new int[]{2, 3, 1, 1, 4})` returns `true`.\n- `canReach(new int[]{3, 2, 1, 0, 4})` returns `false`.\n- `canReach(new int[]{0})` returns `true`.\n",
+  "examples": [
+    {
+      "input": "jumps = [2, 3, 1, 1, 4]",
+      "output": "true"
+    },
+    {
+      "input": "jumps = [3, 2, 1, 0, 4]",
+      "output": "false"
+    },
+    {
+      "input": "jumps = [0]",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "A zero in the array is not automatically a dead end: an earlier cell may jump over it.",
+    "Track the furthest index reachable so far while scanning left to right; if the scan reaches an index beyond that frontier, you are stuck.",
+    "One left-to-right pass with a single `long` (or overflow-safe) frontier is enough. Intended complexity: O(n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the jump lengths in brackets or separated by spaces, for example: [2, 3, 1, 1, 4]",
+  "sampleInput": "[2, 3, 1, 1, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "string-list-codec",
+  "title": "String List Codec",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "Design a reversible text format: turn a list of strings into one string, and recover the list from that string.\n\nContract\n- `encode(strings)` accepts a non-null list whose entries are non-null strings. Entries may be\n  empty and may contain any characters, including commas, quotes, digits, `#`, newlines,\n  and non-ASCII text. The list itself may be empty.\n- `encode` returns a non-null string. The exact format is yours to choose.\n- `decode(encoded)` receives only strings produced by your own `encode` and must return a list\n  equal to the original (same size, same order, same contents). Do not mutate the input list.\n- The two methods share no state between calls.\n\nExamples\n- Decoding the encoding of `[\"hello\", \"world\"]` returns `[\"hello\", \"world\"]`.\n- Decoding the encoding of `[\"\"]` returns a list with one empty string, which differs from an empty list.\n- Decoding the encoding of `[\"a,b\", \"c\"]` returns `[\"a,b\", \"c\"]`; separators inside entries cause no confusion.\n",
+  "examples": [
+    {
+      "input": "strings = [hello, world]",
+      "output": "decode(encode(strings)) equals [hello, world]"
+    },
+    {
+      "input": "strings = [\"\"]",
+      "output": "decode(encode(strings)) equals [\"\"], not []"
+    },
+    {
+      "input": "strings = [\"a,b\", \"c\"]",
+      "output": "decode(encode(strings)) equals [\"a,b\", \"c\"]"
+    }
+  ],
+  "hints": [
+    "A plain separator character fails because the entries themselves may contain it, and an empty list must differ from a list with one empty string.",
+    "Either escape the separator inside entries, or write each entry's length before its text so the decoder knows exactly how many characters to take.",
+    "With length prefixes, read digits up to a marker, then take that many characters and move on. Intended complexity: O(n) time and O(n) space for both methods, where n is the total number of characters across all entries."
+  ],
+  "inputSyntax": "Input: the strings joined by | inside square brackets, for example: [hello||a,b|w#rld]",
+  "sampleInput": "[hello||a,b|w#rld]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

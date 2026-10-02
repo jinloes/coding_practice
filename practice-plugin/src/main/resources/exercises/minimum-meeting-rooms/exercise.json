@@ -1,0 +1,30 @@
+{
+  "id": "minimum-meeting-rooms",
+  "title": "Minimum Meeting Rooms",
+  "topic": "Intervals",
+  "difficulty": "Medium",
+  "statement": "Find how many rooms are needed so that no two meetings in the same room overlap.\n\nContract\n- `meetings` is non-null, unsorted, and may be empty. Each meeting is `{start, end}` with\n  `start < end`; values may be any `int`, including extreme ones.\n- Meetings are half-open: `{start, end}` occupies `[start, end)`. A room freed at time `t` can\n  host a meeting that starts at `t`.\n- Return the smallest number of rooms that can host every meeting; `0` for an empty calendar.\n- Do not mutate `meetings`.\n\nExamples\n- `minRooms({{1, 4}, {2, 5}, {4, 6}})` returns `2`.\n- `minRooms({{1, 2}, {2, 3}})` returns `1`.\n- `minRooms({{1, 5}, {2, 6}, {3, 7}})` returns `3`.\n",
+  "examples": [
+    {
+      "input": "meetings = [[1, 4], [2, 5], [4, 6]]",
+      "output": "2"
+    },
+    {
+      "input": "meetings = [[1, 2], [2, 3]]",
+      "output": "1"
+    },
+    {
+      "input": "meetings = [[1, 5], [2, 6], [3, 7]]",
+      "output": "3"
+    }
+  ],
+  "hints": [
+    "The answer is the largest number of meetings happening at the same moment. How could you track that without looking at every moment?",
+    "Only start and end times change the count. Sort the starts and the ends separately and sweep through them in time order: a start adds a room, an end frees one.",
+    "Process an end before a start at the same time, since a room freed at `t` is reusable at `t`. Two sorted `int[]` arrays and two pointers are enough. Intended complexity: O(n log n) time for the sorts and O(n) space, where n is the number of meetings."
+  ],
+  "inputSyntax": "Input: the meetings, for example: [[1, 4], [2, 5], [4, 6]]",
+  "sampleInput": "[[1, 4], [2, 5], [4, 6]]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

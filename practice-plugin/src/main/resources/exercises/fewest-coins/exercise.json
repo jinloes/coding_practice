@@ -1,0 +1,21 @@
+{
+  "id": "fewest-coins",
+  "title": "Fewest Coins",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Find the smallest number of coins that add up to an amount.\n\nContract\n- `coins` holds positive coin values, may contain duplicates, and may be empty. Each value can be\n  used any number of times.\n- `amount` is zero or greater.\n- Return the minimum number of coins whose values sum to exactly `amount`, or `-1` when no\n  combination of the coins can make it. An amount of 0 needs 0 coins.\n- Do not mutate `coins`.\n\nExamples\n- `minCoins(new int[]{1, 3, 4}, 6)` returns `2` (3 + 3).\n- `minCoins(new int[]{5, 10}, 3)` returns `-1`.\n- `minCoins(new int[]{7}, 0)` returns `0`.\n",
+  "examples": [
+    { "input": "coins = [1, 3, 4], amount = 6", "output": "2" },
+    { "input": "coins = [5, 10], amount = 3", "output": "-1" },
+    { "input": "coins = [7], amount = 0", "output": "0" }
+  ],
+  "hints": [
+    "Always taking the largest coin that fits can fail. Look for a small set of coins where it does.",
+    "Let best[a] be the fewest coins that make amount a. Each best[a] extends some best[a - coin] by one coin.",
+    "Fill best from 0 up to the amount, using an unreachable marker that cannot overflow when you add one. Intended complexity: O(n) time and O(n) space with a fixed set of coin values, where n is the amount (in general O(n * number of coins))."
+  ],
+  "inputSyntax": "Input: the coin values followed by the amount, for example: [1, 3, 4] 6",
+  "sampleInput": "[1, 3, 4] 6",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

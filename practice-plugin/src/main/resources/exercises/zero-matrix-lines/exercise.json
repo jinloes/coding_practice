@@ -1,0 +1,30 @@
+{
+  "id": "zero-matrix-lines",
+  "title": "Zero Matrix Lines",
+  "topic": "Matrices",
+  "difficulty": "Medium",
+  "statement": "Zero out every row and column that contains a zero, modifying the matrix in place.\n\nContract\n- `matrix` is non-null and rectangular; it may have no rows. Values may be any `int`.\n- After the call, a cell is `0` if it was `0` originally or if any cell in its row or column was `0` originally.\n- Decide which lines to clear from the original contents only; cells you have just cleared must not trigger more clearing.\n- Modify `matrix` itself and return nothing.\n\nExamples\n- `{{1,1,1},{1,0,1},{1,1,1}}` becomes `{{1,0,1},{0,0,0},{1,0,1}}`.\n- `{{0,2,3,4},{5,6,7,8},{9,10,11,12}}` becomes `{{0,0,0,0},{0,6,7,8},{0,10,11,12}}`.\n- `{{1,2},{3,4}}` stays unchanged.\n",
+  "examples": [
+    {
+      "input": "matrix = [[1, 1, 1], [1, 0, 1], [1, 1, 1]]",
+      "output": "[[1, 0, 1], [0, 0, 0], [1, 0, 1]]"
+    },
+    {
+      "input": "matrix = [[0, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]",
+      "output": "[[0, 0, 0, 0], [0, 6, 7, 8], [0, 10, 11, 12]]"
+    },
+    {
+      "input": "matrix = [[1, 2], [3, 4]]",
+      "output": "[[1, 2], [3, 4]]"
+    }
+  ],
+  "hints": [
+    "Copying the matrix works, but think about where the information 'this line must be cleared' could be stored instead.",
+    "Zeros you create while clearing must not be mistaken for original zeros. Record the flags first and clear only afterwards.",
+    "Use the first row and first column as the flag storage, remembering separately whether they originally held a zero. Intended complexity: O(n) time and O(1) extra space, where n is the number of cells in the matrix."
+  ],
+  "inputSyntax": "Input: the matrix as nested lists of integers, for example: [[1, 1, 1], [1, 0, 1], [1, 1, 1]]",
+  "sampleInput": "[[1, 1, 1], [1, 0, 1], [1, 1, 1]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

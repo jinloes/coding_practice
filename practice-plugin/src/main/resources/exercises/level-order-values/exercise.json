@@ -1,0 +1,30 @@
+{
+  "id": "level-order-values",
+  "title": "Level Order Values",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "List a binary tree's values one depth level at a time.\n\nContract\n- `root` may be null. Nodes have an integer `value` and nullable `left` and `right` children.\n- Return a list with one inner list per level, starting with the root's level. Within a level, list values from left to right.\n- A null tree returns an empty outer list. Levels never appear empty. Do not modify the tree.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[1, 2, 3, 4, null, null, 5]` returns `[[1], [2, 3], [4, 5]]`.\n- A null tree returns `[]`.\n- `[7]` returns `[[7]]`.\n",
+  "examples": [
+    {
+      "input": "root = [1, 2, 3, 4, null, null, 5]",
+      "output": "[[1], [2, 3], [4, 5]]"
+    },
+    {
+      "input": "root = null",
+      "output": "[]"
+    },
+    {
+      "input": "root = [7]",
+      "output": "[[7]]"
+    }
+  ],
+  "hints": [
+    "Nodes at the same depth must be reported together, so a plain depth-first walk in the usual order is not enough by itself.",
+    "Keep a queue of the nodes on the current level. Before expanding it, note how many nodes it holds, then take exactly that many, record their values, and enqueue their children.",
+    "Each node is enqueued and dequeued once. Intended complexity: O(n) time and O(n) space for n nodes, since the output and queue together hold every node."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [1, 2, 3, 4, null, null, 5]",
+  "sampleInput": "[1, 2, 3, 4, null, null, 5]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "longest-common-subsequence",
+  "title": "Longest Common Subsequence",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Find the length of the longest subsequence that two strings share.\n\nContract\n- `first` and `second` are non-null and may be empty. They may contain any characters.\n- A subsequence keeps the original order of characters but may skip some; it need not be\n  contiguous.\n- Return the length of the longest string that is a subsequence of both inputs, or 0 when they\n  share none.\n\nExamples\n- `lcsLength(\"abcde\", \"ace\")` returns `3` (\"ace\").\n- `lcsLength(\"abc\", \"xyz\")` returns `0`.\n- `lcsLength(\"axbycz\", \"abc\")` returns `3`.\n",
+  "examples": [
+    { "input": "first = \"abcde\", second = \"ace\"", "output": "3" },
+    { "input": "first = \"abc\", second = \"xyz\"", "output": "0" },
+    { "input": "first = \"axbycz\", second = \"abc\"", "output": "3" }
+  ],
+  "hints": [
+    "Compare the last characters. If they match they can both be part of the answer; if not, one of them must be dropped.",
+    "Let table[i][j] be the answer for the first i and first j characters. A match extends table[i-1][j-1] by one; otherwise take the larger of table[i-1][j] and table[i][j-1].",
+    "Each row depends only on the previous row, so two rows are enough. Intended complexity: O(n^2) time and O(n) space, where n is the length of each string."
+  ],
+  "inputSyntax": "Input: the two strings separated by a space, for example: abcde ace",
+  "sampleInput": "abcde ace",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

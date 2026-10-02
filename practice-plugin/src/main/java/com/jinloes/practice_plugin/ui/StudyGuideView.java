@@ -1,5 +1,6 @@
 package com.jinloes.practice_plugin.ui;
 
+import com.jinloes.practice_plugin.catalog.TrackCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.GuideCatalog;
 import com.jinloes.practice_plugin.catalog.GuideCatalog.Guide;
@@ -10,7 +11,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** The Study Guide tab: the selected guide's lesson and its problems grouped by difficulty. */
+/**
+ * The Study Guide tab: the selected guide's lesson, or a practice track's notes, and its problems grouped
+ * by difficulty.
+ */
 final class StudyGuideView {
     private final JEditorPane pane = PracticeViews.htmlPane();
 
@@ -18,7 +22,7 @@ final class StudyGuideView {
         return pane;
     }
 
-    /** Shows {@code guide}, or, when it is null, which guides include {@code selected}. */
+    /** Shows {@code guide}, or, when it is null, which guides and practice tracks include {@code selected}. */
     void show(Guide guide, Exercise selected, Set<String> passed) {
         pane.setText("<html><body>" + html(guide, selected, passed) + "</body></html>");
         pane.setCaretPosition(0);
@@ -52,18 +56,25 @@ final class StudyGuideView {
     }
 
     private static String chooser(Exercise selected) {
-        StringBuilder html = new StringBuilder("<p>Choose a guide above to study a topic.</p>");
+        StringBuilder html = new StringBuilder(
+                "<p>Choose a guide above to study a topic, or a track to practice its list.</p>");
         if (selected != null) {
             List<Guide> guides = GuideCatalog.containing(selected.id());
             html.append("<p>").append(MarkdownHtml.inline(selected.title()));
             if (guides.isEmpty()) {
                 html.append(" is not part of any guide yet.</p>");
             } else {
-                html.append(" appears in: ").append(guides.stream()
-                        .map(guide -> MarkdownHtml.inline(guide.title()))
-                        .collect(Collectors.joining(", "))).append(".</p>");
+                html.append(" appears in: ").append(titles(guides)).append(".</p>");
+            }
+            List<Guide> tracks = TrackCatalog.containing(selected.id());
+            if (!tracks.isEmpty()) {
+                html.append("<p>Practice tracks: ").append(titles(tracks)).append(".</p>");
             }
         }
         return html.toString();
+    }
+
+    private static String titles(List<Guide> guides) {
+        return guides.stream().map(guide -> MarkdownHtml.inline(guide.title())).collect(Collectors.joining(", "));
     }
 }

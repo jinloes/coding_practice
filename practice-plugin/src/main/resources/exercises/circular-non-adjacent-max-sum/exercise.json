@@ -1,0 +1,30 @@
+{
+  "id": "circular-non-adjacent-max-sum",
+  "title": "Circular Non-Adjacent Max Sum",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Pick values from a ring so that no two picked positions are neighbours, maximising the total.\n\nContract\n- `values` is a non-null array of non-negative `int`s and may be empty. The positions form a circle: index `i` neighbours `i - 1` and `i + 1`, and the last index also neighbours index `0` (a single value has no neighbour to conflict with).\n- Return the largest total of a set of pairwise non-neighbouring indices. Choosing nothing is allowed, so an empty array gives `0`.\n- The total can exceed the `int` range, so return a `long`. Do not mutate `values`.\n\nExamples\n- `maxSum(new int[]{2, 3, 2})` returns `3`.\n- `maxSum(new int[]{1, 2, 3, 1})` returns `4`.\n- `maxSum(new int[]{6})` returns `6`.\n",
+  "examples": [
+    {
+      "input": "values = [2, 3, 2]",
+      "output": "3"
+    },
+    {
+      "input": "values = [1, 2, 3, 1]",
+      "output": "4"
+    },
+    {
+      "input": "values = [6]",
+      "output": "6"
+    }
+  ],
+  "hints": [
+    "Ask which of the first and last positions can be used: they can never both be chosen.",
+    "Solve the straight-row version on two ranges that each leave out one end, then keep the better answer; mind arrays of length 0, 1 and 2.",
+    "Reuse a constant-space row routine over `[0, n-2]` and `[1, n-1]`. Intended complexity: O(n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the values in brackets or separated by spaces, for example: [1, 2, 3, 1]",
+  "sampleInput": "[1, 2, 3, 1]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

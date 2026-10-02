@@ -1,0 +1,30 @@
+{
+  "id": "max-subarray-product",
+  "title": "Maximum Subarray Product",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Find the largest product over all non-empty contiguous slices of an array.\n\nContract\n- `numbers` is non-null and has at least one element; values may be any `int`, including zero and negatives.\n- A subarray is a non-empty run of adjacent elements. Return the largest product of any subarray.\n- The product of every subarray is guaranteed to fit in a `long`, which is also the return type. Do not mutate `numbers`.\n\nExamples\n- `maxSubarrayProduct(new int[]{1, -2, 3, -4})` returns `24`.\n- `maxSubarrayProduct(new int[]{-3, 0, -2})` returns `0`.\n- `maxSubarrayProduct(new int[]{-6})` returns `-6`.\n",
+  "examples": [
+    {
+      "input": "numbers = [1, -2, 3, -4]",
+      "output": "24"
+    },
+    {
+      "input": "numbers = [-3, 0, -2]",
+      "output": "0"
+    },
+    {
+      "input": "numbers = [-6]",
+      "output": "-6"
+    }
+  ],
+  "hints": [
+    "A very negative product can become the largest after multiplying by another negative number.",
+    "Keep both the largest and the smallest product of a subarray ending at the current index.",
+    "Update both from the new element and the previous pair, letting a zero restart the run. Intended complexity: O(n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the array values (at least one), for example: [1, -2, 3, -4]",
+  "sampleInput": "[1, -2, 3, -4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -7,6 +7,10 @@
     "valid-palindrome",
     "move-zeroes",
     "merge-sorted-lists",
-    "add-strings"
+    "add-strings",
+    "zero-sum-triplets",
+    "largest-water-container",
+    "linked-list-cycle",
+    "remove-nth-from-end"
   ]
 }

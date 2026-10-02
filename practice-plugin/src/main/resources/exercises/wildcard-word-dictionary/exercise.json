@@ -1,0 +1,30 @@
+{
+  "id": "wildcard-word-dictionary",
+  "title": "Wildcard Word Dictionary",
+  "topic": "Tries",
+  "difficulty": "Medium",
+  "statement": "Implement a word dictionary whose lookups accept `.` as a wildcard.\n\nContract\n- `add(word)` stores a non-empty lowercase word (letters `a` to `z`). Adding a word twice changes nothing.\n- `matches(pattern)` takes a non-empty pattern of lowercase letters and `.` characters. It returns true if some stored word has the same length as the pattern and agrees with it at every position, where `.` agrees with any single letter.\n- A pattern must match a whole word: `\"ca\"` does not match the stored word `\"cat\"`.\n\nExamples\n- After adding `tree`, `trap`, and `tone`: `matches(\"tr.e\")` and `matches(\"t..e\")` are true, `matches(\"t.o\")` is false.\n- After adding `cat`: `matches(\"cat\")` is true, `matches(\"ca\")` and `matches(\"cats\")` are false.\n- An empty dictionary matches nothing, not even `.`.\n",
+  "examples": [
+    {
+      "input": "add tree, trap, tone; matches tr.e, t..e, t.o",
+      "output": "true, true, false"
+    },
+    {
+      "input": "add cat; matches cat, ca, cats",
+      "output": "true, false, false"
+    },
+    {
+      "input": "empty dictionary; matches a, .",
+      "output": "false, false"
+    }
+  ],
+  "hints": [
+    "Store the words in a trie; a pattern without wildcards is then just a walk down the tree.",
+    "At a `.`, try every existing child and succeed if any branch matches the rest of the pattern. Remember that a pattern only matches when it ends exactly where a stored word ends.",
+    "Recurse on the pattern position and the current node. Intended complexity: for words of bounded length with n words stored, O(n) space and O(L) time per add, with a lookup visiting at most the stored letters; the workload keeps both pattern and word length fixed so total time is O(n)."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: add tree, add trap, matches tr.e, matches t.o",
+  "sampleInput": "add tree, add trap, matches tr.e, matches t.o",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "intervals",
+  "title": "Intervals",
+  "summary": "Sort ranges by their endpoints and sweep through them once to merge, count, or schedule overlaps.",
+  "lesson": "How it works\n- An interval is a start and an end. Two intervals overlap when each starts before the other ends; whether touching endpoints overlap depends on whether the ranges are open or closed.\n- Sorting by start (or by end) puts related intervals next to each other, so a single pass can resolve overlaps.\n- Sorting costs `O(n log n)` and usually dominates; the sweep itself is linear.\n\nWhen to reach for it\n- The input is meetings, bookings, time ranges, or segments on a line.\n- The question asks to merge ranges, find conflicts, insert a new range, or count how many overlap at once.\n- You need the fewest removals or resources so that ranges stop overlapping.\n\nCommon patterns\n- Sort by start, then compare each interval with the last one you kept.\n- Sort by end to choose greedily: keeping the interval that finishes first leaves the most room for the rest.\n- Sweep line: turn intervals into start and end events, sort the events, and keep a running count.\n- Already sorted input: copy the ranges before, absorb the overlapping ones, then copy the ranges after.\n\nPitfalls\n- Getting the boundary rule wrong for intervals that only touch.\n- Sorting with `a[0] - b[0]`, which overflows for extreme values; use `Integer.compare`.\n- Mutating the caller's array when the contract says not to.\n- Forgetting to emit the final open interval after the loop.\n",
+  "exercises": [
+    "meeting-conflicts",
+    "merge-intervals",
+    "insert-interval",
+    "remove-overlapping-intervals",
+    "minimum-meeting-rooms"
+  ]
+}

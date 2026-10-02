@@ -1,0 +1,30 @@
+{
+  "id": "max-path-sum",
+  "title": "Max Path Sum",
+  "topic": "Binary Trees",
+  "difficulty": "Hard",
+  "statement": "Find the largest total that any path through a binary tree can collect.\n\nContract\n- `root` is non-null. Nodes have an integer `value`, possibly negative, and nullable `left` and `right` children.\n- A path is a non-empty chain of nodes in which each consecutive pair is joined by a parent-child edge and no node appears twice. It may start and end at any nodes and does not have to pass through the root or end at a leaf.\n- Return the greatest sum of values over all such paths. The answer is guaranteed to fit in an `int`.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[1, 2, 3]` returns 6, by going from 2 up through 1 and down to 3.\n- `[5, -4, 6, null, 3]` returns 11, by taking 5 and 6 and skipping the negative branch.\n- `[-7]` returns -7, because a path must contain at least one node.\n",
+  "examples": [
+    {
+      "input": "root = [1, 2, 3]",
+      "output": "6"
+    },
+    {
+      "input": "root = [5, -4, 6, null, 3]",
+      "output": "11"
+    },
+    {
+      "input": "root = [-7]",
+      "output": "-7"
+    }
+  ],
+  "hints": [
+    "Every path has one highest node. Think about what a path with that node as its peak can contain.",
+    "For each node compute the best sum of a path that starts there and goes straight down one side, dropping a side whose best is negative. Combine both sides at the peak to update a running best answer.",
+    "Each node is handled once. Intended complexity: O(n) time for n nodes. Space is the recursion depth: O(h) for tree height h, which is O(log n) for a balanced tree (the workload uses balanced trees) and O(n) for a chain. Start the running best at the smallest int, not at zero."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [5, -4, 6, null, 3]",
+  "sampleInput": "[5, -4, 6, null, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

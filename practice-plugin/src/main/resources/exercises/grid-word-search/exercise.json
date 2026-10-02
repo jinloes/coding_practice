@@ -1,0 +1,30 @@
+{
+  "id": "grid-word-search",
+  "title": "Grid Word Search",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "Decide whether a word can be traced through a grid of letters.\n\nContract\n- `grid` is non-null and rectangular, and may have no rows. `word` is non-null and non-empty. Cells and the word contain only letters; matching is case-sensitive.\n- The word exists if its letters can be matched one after another on cells where each next cell is directly above, below, left of, or right of the previous one (no diagonal steps).\n- A single cell may be used at most once within one path.\n- `grid` may be modified while searching, but it must hold its original contents when the method returns.\n\nExamples\n- With rows `ABC`, `SED`, `TRO`, `wordExists(grid, \"BEST\")` returns `true`.\n- With the same grid, `wordExists(grid, \"BEE\")` returns `false` because only one `E` exists.\n- With the single-cell grid `Z`, `wordExists(grid, \"Z\")` returns `true`.\n",
+  "examples": [
+    {
+      "input": "grid = [ABC, SED, TRO], word = BEST",
+      "output": "true"
+    },
+    {
+      "input": "grid = [ABC, SED, TRO], word = BEE",
+      "output": "false"
+    },
+    {
+      "input": "grid = [Z], word = Z",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Any cell could be where the word starts, so try each cell as a starting point and extend a path from it one letter at a time.",
+    "Extend the path with a recursive step that tries the four neighbors. To forbid reusing a cell, mark it during the step and restore it afterwards so other paths can still use it.",
+    "Reject early on a mismatch or boundary so dead ends are abandoned immediately. In general the cost is roughly O(cells * 3^L) for a word of length L; this exercise measures it with L fixed, so it is O(n) time with n the number of cells, and O(1) extra space beyond a recursion depth of at most L."
+  ],
+  "inputSyntax": "Input: the grid rows followed by the word, separated by spaces, for example: ABC SED TRO BEST",
+  "sampleInput": "ABC SED TRO BEST",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

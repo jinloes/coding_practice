@@ -1,0 +1,30 @@
+{
+  "id": "subtree-match",
+  "title": "Subtree Match",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Check whether one binary tree appears inside another as a complete subtree.\n\nContract\n- `root` and `sub` may each be null. Nodes have an integer `value` and nullable `left` and `right` children.\n- Return true if some node of `root` (including `root` itself) has a subtree that is identical to `sub`: same shape, same values, and no extra descendants below the matching node.\n- The empty tree is considered to appear in every tree, so a null `sub` always returns true. A null `root` with a non-null `sub` returns false. Do not modify either tree.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `root = [10, 6, 12, 4, 8]` contains `sub = [6, 4, 8]`.\n- `root = [10, 6, 12, 4, 8, null, null, null, 5]` does not contain `[6, 4, 8]`, because node 4 has an extra child.\n- `root = [1, 1]` contains `sub = [1]`.\n",
+  "examples": [
+    {
+      "input": "root = [10, 6, 12, 4, 8], sub = [6, 4, 8]",
+      "output": "true"
+    },
+    {
+      "input": "root = [10, 6, 12, 4, 8, null, null, null, 5], sub = [6, 4, 8]",
+      "output": "false"
+    },
+    {
+      "input": "root = [1, 1], sub = [1]",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Whether two trees are identical is one question; where in the larger tree to ask it is another.",
+    "Write a helper that tests two trees for exact equality, then try it at the root and, failing that, ask the same question about the left and right subtrees of the root.",
+    "Intended complexity: O(n * m) time for a root of n nodes and a sub of m nodes, which is O(n) when m is small and fixed, as in the performance probe. Space is the recursion depth: O(h) for tree height h, which is O(log n) for a balanced tree (the workload uses balanced trees) and O(n) for a chain."
+  ],
+  "inputSyntax": "Input: two level-order trees, root then sub, separated by a semicolon, for example: [10, 6, 12, 4, 8]; [6, 4, 8]",
+  "sampleInput": "[10, 6, 12, 4, 8]; [6, 4, 8]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

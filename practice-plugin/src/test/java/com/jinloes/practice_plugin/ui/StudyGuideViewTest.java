@@ -1,5 +1,6 @@
 package com.jinloes.practice_plugin.ui;
 
+import com.jinloes.practice_plugin.catalog.TrackCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.GuideCatalog;
 import org.junit.jupiter.api.Test;
@@ -40,17 +41,33 @@ class StudyGuideViewTest {
 
         assertThat(html)
                 .contains("<h3>Easy (0/0 passed)</h3><p>No Easy problems in this guide yet.</p>")
-                .contains("<h3>Medium (0/0 passed)</h3><p>No Medium problems in this guide yet.</p>")
-                .contains("<h3>Hard (1/1 passed)</h3><ul><li>Course Schedule (passed)</li></ul>");
+                .contains("<h3>Hard (1/2 passed)</h3><ul><li>Course Schedule (passed)</li>"
+                        + "<li>Alien Alphabet Order</li></ul>");
     }
 
     @Test
     void withoutAGuideListsTheGuidesThatIncludeTheSelectedExercise() {
         assertThat(StudyGuideView.html(null, null, Set.of()))
-                .isEqualTo("<p>Choose a guide above to study a topic.</p>");
+                .isEqualTo("<p>Choose a guide above to study a topic, or a track to practice its list.</p>");
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("merge-sorted-lists"), Set.of()))
-                .contains("<p>Merge Sorted Lists appears in: Two Pointers, Linked Lists.</p>");
+                .contains("<p>Merge Sorted Lists appears in: Two Pointers, Linked Lists.</p>")
+                .contains("<p>Practice tracks: Blind 75.</p>");
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("roman-to-integer"), Set.of()))
-                .contains("<p>Roman to Integer is not part of any guide yet.</p>");
+                .contains("<p>Roman to Integer is not part of any guide yet.</p>")
+                .doesNotContain("Practice tracks");
+        assertThat(StudyGuideView.html(null, ExerciseCatalog.find("course-schedule"), Set.of()))
+                .contains("<p>Practice tracks: Blind 75, Google.</p>");
+    }
+
+    @Test
+    void rendersAPracticeTrackWithItsNotesAndLevels() {
+        var track = TrackCatalog.find("google");
+
+        String html = StudyGuideView.html(track, null, Set.of("course-schedule"));
+
+        assertThat(html)
+                .contains("<h2>Google</h2>")
+                .contains(MarkdownHtml.toHtml(track.lesson()))
+                .contains("<li>Course Schedule (passed)</li>");
     }
 }

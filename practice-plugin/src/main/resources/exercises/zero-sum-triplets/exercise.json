@@ -1,0 +1,30 @@
+{
+  "id": "zero-sum-triplets",
+  "title": "Zero-Sum Triplets",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "List every distinct group of three values from an array that adds up to zero.\n\nContract\n- `numbers` is non-null and may be empty; values may be any `int`, and the same value may appear several times.\n- A triplet uses three different positions. Return one list of three values for each distinct triplet, where two triplets are the same when they hold the same values regardless of order. No triplet may be reported twice.\n- Sums are mathematical: use `long` arithmetic so `int` overflow cannot create or hide a triplet.\n- The order of the triplets, and of the values inside each, is up to you. Do not mutate `numbers`.\n\nExamples\n- `findTriplets(new int[]{-4, 1, 3, 0, 4, -3})` returns the triplets `[-4, 1, 3]`, `[-4, 0, 4]` and `[-3, 0, 3]` in any order.\n- `findTriplets(new int[]{0, 0, 0, 0})` returns the single triplet `[0, 0, 0]`.\n- `findTriplets(new int[]{2, 5, 9})` returns no triplets.\n",
+  "examples": [
+    {
+      "input": "numbers = [-4, 1, 3, 0, 4, -3]",
+      "output": "Three triplets, in any order: [-4, 1, 3], [-4, 0, 4], [-3, 0, 3]"
+    },
+    {
+      "input": "numbers = [0, 0, 0, 0]",
+      "output": "[[0, 0, 0]]"
+    },
+    {
+      "input": "numbers = [2, 5, 9]",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Fixing one value leaves a two-sum problem for the rest of the array.",
+    "Sort a copy, fix each first value, and sweep two pointers inward, skipping repeated values so no triplet is reported twice.",
+    "Compare sums using long arithmetic and skip duplicates for all three positions. Intended complexity: O(n^2) time and O(n) extra space for the sorted copy, where n is the array length and the output is small."
+  ],
+  "inputSyntax": "Input: the array values, for example: [-4, 1, 3, 0, 4, -3]",
+  "sampleInput": "[-4, 1, 3, 0, 4, -3]",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

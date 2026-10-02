@@ -1,0 +1,30 @@
+{
+  "id": "same-tree",
+  "title": "Same Tree",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Decide whether two binary trees are identical in both shape and values.\n\nContract\n- Either argument may be null. Nodes have an integer `value` and nullable `left` and `right` children.\n- Return true only when both trees are empty, or when their roots hold equal values and their left subtrees match and their right subtrees match.\n- A node that is a left child in one tree is not equal to the same value placed as a right child in the other. Do not modify either tree.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[1, 2, 3]` and `[1, 2, 3]` are the same.\n- `[1, 2]` and `[1, null, 2]` have the same values on different sides, so they differ.\n- `[1, 2, 3]` and `[1, 2, 4]` differ in one value.\n",
+  "examples": [
+    {
+      "input": "a = [1, 2, 3], b = [1, 2, 3]",
+      "output": "true"
+    },
+    {
+      "input": "a = [1, 2], b = [1, null, 2]",
+      "output": "false"
+    },
+    {
+      "input": "a = [1, 2, 3], b = [1, 2, 4]",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Compare the two roots first, then ask the same question about each pair of matching children.",
+    "Handle the cases where both nodes are null, only one is null, and both exist before looking at values.",
+    "Each node pair is visited at most once. Intended complexity: O(n) time where n is the node count of the smaller tree. Space is the recursion depth: O(h) for tree height h, which is O(log n) for a balanced tree (the workload uses balanced trees) and O(n) for a chain."
+  ],
+  "inputSyntax": "Input: two level-order trees separated by a semicolon, for example: [1, 2, 3]; [1, 2, 3]",
+  "sampleInput": "[1, 2, 3]; [1, 2, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

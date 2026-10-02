@@ -1,0 +1,30 @@
+{
+  "id": "merge-intervals",
+  "title": "Merge Intervals",
+  "topic": "Intervals",
+  "difficulty": "Medium",
+  "statement": "Combine every group of overlapping intervals into one.\n\nContract\n- `intervals` is non-null, unsorted, and may be empty. Each interval is `{start, end}` with\n  `start <= end`; values may be any `int`, including negatives and `Integer.MIN_VALUE`/`MAX_VALUE`.\n- Intervals are closed: `{1, 4}` and `{4, 5}` share the point `4`, so they merge into `{1, 5}`.\n- Return a new `int[][]` sorted by start whose intervals are pairwise disjoint and cover exactly\n  the same points as the input.\n- Do not mutate `intervals` or the arrays inside it.\n\nExamples\n- `merge({{8, 10}, {1, 3}, {2, 6}})` returns `{{1, 6}, {8, 10}}`.\n- `merge({{1, 4}, {4, 5}})` returns `{{1, 5}}`.\n- `merge({{5, 6}})` returns `{{5, 6}}`.\n",
+  "examples": [
+    {
+      "input": "intervals = [[8, 10], [1, 3], [2, 6]]",
+      "output": "[[1, 6], [8, 10]]"
+    },
+    {
+      "input": "intervals = [[1, 4], [4, 5]]",
+      "output": "[[1, 5]]"
+    },
+    {
+      "input": "intervals = [[5, 6]]",
+      "output": "[[5, 6]]"
+    }
+  ],
+  "hints": [
+    "Overlaps are easy to see when the intervals are ordered. Decide what ordering makes two overlapping intervals neighbours.",
+    "Sort a copy by start. Then sweep once, keeping a current interval: if the next one starts at or before the current end, stretch the end; otherwise emit the current one and start a new one.",
+    "Compare starts with `Integer.compare`, not subtraction, which overflows on extreme values. Intended complexity: O(n log n) time for the sort and O(n) space, where n is the number of intervals."
+  ],
+  "inputSyntax": "Input: the intervals, for example: [[8, 10], [1, 3], [2, 6]]",
+  "sampleInput": "[[8, 10], [1, 3], [2, 6]]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "tries",
+  "title": "Tries",
+  "summary": "Store many strings in a shared prefix tree so prefix questions cost time proportional to the query, not the dictionary.",
+  "lesson": "How it works\n- A trie node holds one child per possible next character and a flag that marks where a stored word ends.\n- Inserting or looking up a word walks one node per character, so each operation is `O(L)` for a word of length `L`, regardless of how many words are stored.\n- Words that share a prefix share the path for that prefix, which is what makes prefix queries cheap.\n\nWhen to reach for it\n- You answer many queries about prefixes, autocomplete, or which stored words start with some text.\n- You search for many words at once and want to share the work for their common prefixes.\n- Characters come from a small fixed alphabet, so children fit in an array.\n\nCommon patterns\n- Array children (`new Node[26]`) for lowercase letters; a map when the alphabet is large or unknown.\n- End-of-word flag versus \"any word passes through here\": they answer different questions.\n- Wildcard matching: when a pattern character can match anything, try every child and succeed if any branch matches.\n- Pairing a trie with depth-first search over another structure, pruning as soon as the current path is not a prefix of any word.\n\nPitfalls\n- Treating \"the path exists\" as \"the word exists\"; a stored prefix is not a stored word.\n- Reporting the same found word twice; clear its end marker or deduplicate once it is reported.\n- Memory: a node per character with a full child array adds up, so share prefixes and prune empty branches when the set changes.\n",
+  "exercises": [
+    "prefix-tree",
+    "wildcard-word-dictionary",
+    "grid-multi-word-search"
+  ]
+}

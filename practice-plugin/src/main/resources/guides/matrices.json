@@ -1,0 +1,15 @@
+{
+  "id": "matrices",
+  "title": "Matrices and Grids",
+  "summary": "Index two-dimensional arrays carefully, walk them by layers or boundaries, and treat cells as graph nodes when neighbors matter.",
+  "lesson": "How it works\n- A matrix is an array of rows; `grid[r][c]` is row `r`, column `c`. A grid has `rows * cols` cells, and most single-pass solutions are linear in that count.\n- Neighbors of a cell are usually the four cells that differ by one in a single coordinate; check bounds before reading them.\n- In-place transformations reuse the input's own storage, for example by swapping elements or by keeping markers in the first row and column.\n\nWhen to reach for it\n- The input is a board, image, map, or table of values.\n- The question asks to traverse in an unusual order, transform the matrix in place, or find connected regions or paths.\n\nCommon patterns\n- Shrinking boundaries: keep top, bottom, left, and right limits and move them inward after each side is processed.\n- Layer by layer: process the outer ring, then the next ring inward.\n- Composing simple moves: a rotation can be built from a transpose and a reversal.\n- Flood fill with depth-first or breadth-first search to explore or mark a connected region.\n- Recording what to change first and applying it afterward, so early writes do not affect later reads.\n- Grid dynamic programming where a cell's answer comes from the cells above and to the left.\n\nPitfalls\n- Swapping rows and columns, especially for non-square matrices.\n- Single-row or single-column inputs that make a boundary walk visit a cell twice.\n- Writing results into the grid while still reading original values from it.\n- Deep recursive flood fills on large grids can overflow the stack.\n",
+  "exercises": [
+    "zero-matrix-lines",
+    "spiral-order",
+    "rotate-square-matrix",
+    "grid-paths",
+    "island-count",
+    "ocean-drainage",
+    "grid-word-search"
+  ]
+}

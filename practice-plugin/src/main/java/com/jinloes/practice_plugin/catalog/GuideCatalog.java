@@ -37,7 +37,14 @@ public final class GuideCatalog {
             "binary-search",
             "prefix-sums",
             "heaps",
-            "graphs");
+            "graphs",
+            "trees",
+            "tries",
+            "backtracking",
+            "dynamic-programming",
+            "intervals",
+            "bit-manipulation",
+            "matrices");
 
     /** The levels a guide groups its exercises into, easiest first. */
     public static final List<String> DIFFICULTIES = List.of("Easy", "Medium", "Hard");

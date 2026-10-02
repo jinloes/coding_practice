@@ -1,0 +1,30 @@
+{
+  "id": "tree-codec",
+  "title": "Tree Codec",
+  "topic": "Binary Trees",
+  "difficulty": "Hard",
+  "statement": "Turn a binary tree into text and rebuild an identical tree from that text.\n\nContract\n- Implement `serialize`, which converts a tree (possibly null) into a non-null string, and `deserialize`, which converts a string produced by `serialize` back into a tree.\n- For every tree, `deserialize(serialize(root))` must be a new tree with exactly the same shape and node values. Values may be any `int`, including negative ones and zero; missing children must be preserved.\n- You choose the text format. Tests only check that the round trip rebuilds the tree, not what the string looks like. Keep no state between calls.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- The round trip of `[1, 2, 3, null, null, 4, 5]` is `[1, 2, 3, null, null, 4, 5]`.\n- The round trip of a null tree is a null tree.\n- The round trip of `[-1, -2, null, -3]` is `[-1, -2, null, -3]`.\n",
+  "examples": [
+    {
+      "input": "root = [1, 2, 3, null, null, 4, 5]",
+      "output": "round trip returns [1, 2, 3, null, null, 4, 5]"
+    },
+    {
+      "input": "root = null",
+      "output": "round trip returns null"
+    },
+    {
+      "input": "root = [-1, -2, null, -3]",
+      "output": "round trip returns [-1, -2, null, -3]"
+    }
+  ],
+  "hints": [
+    "A list of values alone cannot tell where children are missing, so the text needs an explicit marker for an absent child.",
+    "Write the tree in a fixed traversal order, using a marker for each null child and a separator between tokens. To rebuild, read tokens in the same order with a shared position index, creating a node for each value and recursing for its children.",
+    "Each node is written and read once. Intended complexity: O(n) time and O(n) space for n nodes, so build the string with a StringBuilder rather than repeated concatenation."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [1, 2, 3, null, null, 4, 5]",
+  "sampleInput": "[1, 2, 3, null, null, 4, 5]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -80,26 +80,65 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    the same isolated process measures how the saved solution scales and reports
    the result alongside the exercise's intended complexity.
 
-The catalog includes Pair Sum, Binary Search, Balanced Delimiters, Reverse
-Linked List, Array Stack, Binary Min Heap, Valid Anagram, First Unique
+The catalog includes 86 exercises: Pair Sum, Binary Search, Balanced Delimiters,
+Reverse Linked List, Array Stack, Binary Min Heap, Valid Anagram, First Unique
 Character, Max Stock Profit, Move Zeroes, Merge Sorted Lists, Valid Palindrome,
-Add Strings, Roman to Integer, Longest Common Prefix, Missing Number, and
-Majority Element, Subarray Sum Count, Course Schedule, and Sliding Window
-Maximum. Each has an explicit contract and three optional hints. The
-last hint discusses the intended complexity.
+Add Strings, Roman to Integer, Longest Common Prefix, Missing Number, Majority
+Element, Subarray Sum Count, Course Schedule, Sliding Window Maximum, Duplicate
+Check, Product Except Self, Maximum Subarray Sum, Maximum Subarray Product,
+Rotated Array Minimum, Rotated Array Search, Zero-Sum Triplets, Largest Water
+Container, Longest Consecutive Run, Sum Without Plus, Count Set Bits, Bit Count
+Table, Reverse Bits, Insert Interval, Merge Intervals, Remove Overlapping
+Intervals, Meeting Conflicts, Minimum Meeting Rooms, Stair Climbing Ways, Fewest
+Coins, Longest Increasing Subsequence, Longest Common Subsequence, Word
+Segmentation, Combination Sum, Non-Adjacent Max Sum, Circular Non-Adjacent Max
+Sum, Digit Decodings, Grid Paths, Reachable End, Clone Graph, Ocean Drainage,
+Island Count, Alien Alphabet Order, Valid Tree Graph, Connected Component Count,
+Linked List Cycle, Merge K Sorted Lists, Remove Nth From End, Reorder List, Top
+K Frequent Values, Running Median, Zero Matrix Lines, Spiral Order, Rotate
+Square Matrix, Grid Word Search, Longest Unique Substring, Longest Repeat After
+Replacement, Minimum Covering Window, Group Anagrams, Longest Palindromic
+Substring, Palindromic Substring Count, String List Codec, Tree Max Depth, Same
+Tree, Mirror Tree, Max Path Sum, Level Order Values, Tree Codec, Subtree Match,
+Tree From Traversals, Valid Search Tree, Kth Smallest In Search Tree, Search
+Tree Common Ancestor, Prefix Tree, Wildcard Word Dictionary, and Grid Multi-Word
+Search. Each has an explicit contract and three optional hints. The last hint
+discusses the intended complexity.
 
 ## Study guides
 
 Pick a topic in the **Guide** selector above the filters to study one interview
 data structure or technique: Hash Maps and Sets, Two Pointers, Sliding Window,
 Stacks and Queues, Linked Lists, Binary Search, Prefix Sums, Heaps and Priority
-Queues, or Graphs and Topological Sort. The **Study Guide** tab shows a short
+Queues, Graphs and Topological Sort, Binary Trees and Search Trees, Tries,
+Backtracking, Dynamic Programming, Intervals, Bit Manipulation, or Matrices and
+Grids. The **Study Guide** tab shows a short
 lesson (how it works, when to reach for it, common patterns, and pitfalls) and
 the guide's problems grouped Easy, Medium, and Hard with your pass progress.
 The exercise list narrows to those problems, easiest first, and the other
 filters still apply. One problem can belong to several guides; with
 **All guides** selected, the tab lists the guides that include the selected
 problem.
+
+## Practice tracks
+
+Pick a list in the **Track** selector next to the guide selector to work
+through a curated set of problems. Bundled tracks:
+
+- **Blind 75**: original practice versions of the 75 problems on the widely
+  shared Blind 75 interview list, covering arrays, binary, dynamic programming,
+  graphs, intervals, linked lists, matrices, strings, trees, and heaps. The
+  statements, examples, and tests are written for this plugin, not copied.
+- **Google**: problems whose patterns are commonly reported in Google coding
+  interviews. Company tracks are approximate and are not copied from any
+  company-tag service.
+
+Tracks are hand curated from the plugin's own original exercises; they are not
+official, verified, or leaked question lists. The **Study Guide** tab shows the
+track's notes (about the list, what to expect, and how to prepare) and its
+problems grouped by difficulty with your pass progress. Choosing a guide as
+well narrows that guide to the problems in the track, and the other filters
+still apply.
 
 ## What a passing result means
 

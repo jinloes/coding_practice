@@ -4,6 +4,8 @@
   "summary": "Halve the search space at every step to answer questions about sorted or monotonic data in logarithmic time.",
   "lesson": "How it works\n- Keep a range `[low, high]` that must contain the answer if it exists.\n- Look at the middle, decide which half cannot contain the answer, and discard it.\n- Each step halves the range, so the search takes `O(log n)` comparisons.\n\nWhen to reach for it\n- The input is sorted, or a yes/no condition flips exactly once as the index or value increases.\n- The constraints allow `n` in the millions but you need a fast lookup.\n- The question asks for the first or last position satisfying a condition.\n\nCommon patterns\n- Exact match: return as soon as the middle equals the target.\n- Lower bound: find the first index where a condition becomes true.\n- Search on the answer: binary search over possible answer values instead of array indexes.\n\nPitfalls\n- Overflow in `(low + high) / 2`; use `low + (high - low) / 2`.\n- Infinite loops when the range never shrinks; make sure each branch moves `low` or `high` past `mid`.\n- Mixing inclusive and exclusive bounds; pick one convention and keep it.\n- Binary search on unsorted data gives wrong answers without any error.\n",
   "exercises": [
-    "binary-search"
+    "binary-search",
+    "rotated-array-minimum",
+    "rotated-array-search"
   ]
 }

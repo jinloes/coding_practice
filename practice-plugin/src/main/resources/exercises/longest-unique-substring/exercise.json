@@ -1,0 +1,30 @@
+{
+  "id": "longest-unique-substring",
+  "title": "Longest Unique Substring",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Find the length of the longest run of consecutive characters in which no character appears twice.\n\nContract\n- `text` is non-null and may be empty. It may contain any `char` values, including spaces, punctuation, and non-ASCII characters; uppercase and lowercase differ.\n- The run must be contiguous (a substring, not a subsequence).\n- Return `0` for empty text.\n\nExamples\n- `longestUniqueLength(\"abacdbe\")` returns `5` (the run `acdbe`).\n- `longestUniqueLength(\"\")` returns `0`.\n- `longestUniqueLength(\"zzzz\")` returns `1`.\n",
+  "examples": [
+    {
+      "input": "text = \"abacdbe\"",
+      "output": "5"
+    },
+    {
+      "input": "text = \"\"",
+      "output": "0"
+    },
+    {
+      "input": "text = \"zzzz\"",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Checking every substring for repeats is far too slow. Consider a window [start, i] that is always free of repeats and ask what happens when a new character arrives.",
+    "Remember where each character was last seen. When the new character was seen inside the window, move the start just past that earlier position.",
+    "Never move the start backward: an old sighting left of the window must be ignored. Intended complexity: O(n) time and O(1) extra space (the table size depends on the character set, not the text), where n is the text length."
+  ],
+  "inputSyntax": "Input: the text in single quotes, for example: 'abacdbe'",
+  "sampleInput": "'abacdbe'",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

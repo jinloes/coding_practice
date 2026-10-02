@@ -1,0 +1,13 @@
+{
+  "id": "bit-manipulation",
+  "title": "Bit Manipulation",
+  "summary": "Treat integers as arrays of bits and use bitwise operators to test, set, count, and combine them in constant time.",
+  "lesson": "How it works\n- Java `int` values are 32-bit two's complement numbers. `&`, `|`, `^`, and `~` act on every bit at once; `<<` shifts left, `>>` shifts right copying the sign bit, and `>>>` shifts right filling with zeros.\n- `x & (1 << i)` tests bit `i`, `x | (1 << i)` sets it, and `x & ~(1 << i)` clears it.\n- XOR is its own inverse: `a ^ a == 0` and `a ^ 0 == a`, so pairs cancel out.\n\nWhen to reach for it\n- The question talks about bits, binary representations, or powers of two.\n- Values appear in pairs except for one, or one value from a range is absent.\n- You need arithmetic or set operations without the usual operators, or a compact set of small integers.\n\nCommon patterns\n- Shift and mask to read the bits one at a time, from either end.\n- Clearing the lowest set bit with `x & (x - 1)`, or isolating it with `x & -x`.\n- Reusing earlier answers: the result for `x` often relates to the result for `x >> 1`.\n- XOR folding to cancel matching values.\n- Separating a sum into the bits that do not carry and the bits that do.\n\nPitfalls\n- Using `>>` on negative numbers when you meant an unsigned shift with `>>>`.\n- Shift distances are taken modulo 32 for `int`, so `1 << 32` is `1`, not `0`.\n- Operator precedence: `x & 1 == 0` parses as `x & (1 == 0)`; add parentheses.\n- Treating a negative `int` as unsigned requires `Integer.toUnsignedLong` or careful masking.\n",
+  "exercises": [
+    "count-set-bits",
+    "bit-count-table",
+    "reverse-bits",
+    "missing-number",
+    "sum-without-plus"
+  ]
+}

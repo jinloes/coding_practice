@@ -1,0 +1,11 @@
+{
+  "id": "backtracking",
+  "title": "Backtracking",
+  "summary": "Build candidate answers one choice at a time, undo each choice after exploring it, and prune branches that cannot succeed.",
+  "lesson": "How it works\n- Backtracking is depth-first search over a tree of partial solutions. Each level makes one choice, recurses, then undoes the choice before trying the next option.\n- A path that reaches a complete, valid state is recorded; a path that can no longer succeed is abandoned immediately.\n- The running time is usually exponential in the worst case, so pruning decides how fast it is in practice.\n\nWhen to reach for it\n- The question asks for all combinations, subsets, permutations, or arrangements that satisfy a rule.\n- You must decide whether a path exists through a grid or graph without reusing cells.\n- The input is small enough that an exponential search is acceptable.\n\nCommon patterns\n- Choose, explore, unchoose: append to a shared list, recurse, then remove the last element.\n- Start index: pass the position to continue from so the same combination is not generated in another order.\n- Visited marking: mark a cell before recursing and restore it afterward so other paths may use it.\n- Pruning: sort the options so a branch can stop as soon as the remaining options are too large.\n\nPitfalls\n- Forgetting to undo a choice, which leaks state into sibling branches.\n- Saving a reference to the shared working list instead of a copy when recording an answer.\n- Producing duplicate answers that differ only in order.\n- Recursion depth grows with the length of a path; keep it bounded by the input size.\n",
+  "exercises": [
+    "combination-sum",
+    "grid-word-search",
+    "grid-multi-word-search"
+  ]
+}

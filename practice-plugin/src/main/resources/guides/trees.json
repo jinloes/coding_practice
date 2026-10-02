@@ -1,0 +1,19 @@
+{
+  "id": "trees",
+  "title": "Binary Trees and Search Trees",
+  "summary": "Solve tree problems by deciding what each node needs from its children, and use the search-tree ordering to skip whole subtrees.",
+  "lesson": "How it works\n- A binary tree node has at most two children. Most tree functions are recursive: handle `null`, recurse into the children, then combine their answers at the node.\n- Depth-first orders differ only in when the node is visited: preorder (node first), inorder (between the children), and postorder (node last).\n- Breadth-first traversal uses a queue and visits the tree one level at a time.\n- In a binary search tree every key in the left subtree is smaller than the node and every key in the right subtree is larger, so an inorder walk yields the keys in sorted order.\n\nWhen to reach for it\n- The input is a tree, or a hierarchy that can be modeled as one.\n- The answer for a node depends only on answers for its subtrees (heights, sums, sizes, or matches).\n- The question mentions levels, depth, ancestors, or sorted order inside a search tree.\n\nCommon patterns\n- Return-a-value recursion: each call returns a summary of its subtree, such as height or best path, and the parent combines two summaries.\n- Carry-a-bound recursion: pass down the range or state that every node beneath must satisfy.\n- Two-tree recursion: walk two trees in lockstep and stop at the first difference.\n- Level processing: record the queue size before each level so you know where one level ends.\n- Search-tree navigation: compare with the node's key to choose one side, which costs `O(h)` instead of `O(n)`.\n\nPitfalls\n- Checking only a node against its direct children misses violations deeper in the tree.\n- Recursion uses `O(h)` stack: `O(log n)` for a balanced tree but `O(n)` for a chain, which can overflow the stack.\n- A value that the parent may extend differs from the best value seen anywhere; track them separately when both matter.\n- Duplicate keys and the extreme `int` values break comparisons that assume strict ordering or use sentinel numbers.\n",
+  "exercises": [
+    "tree-max-depth",
+    "same-tree",
+    "mirror-tree",
+    "subtree-match",
+    "level-order-values",
+    "tree-from-traversals",
+    "valid-search-tree",
+    "kth-smallest-in-search-tree",
+    "search-tree-common-ancestor",
+    "max-path-sum",
+    "tree-codec"
+  ]
+}

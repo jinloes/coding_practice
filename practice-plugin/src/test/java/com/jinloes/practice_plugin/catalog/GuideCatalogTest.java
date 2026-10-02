@@ -19,15 +19,48 @@ class GuideCatalogTest {
     void listsTheGuidesInOrderWithTheirExercisesEasiestFirst() {
         Map<String, List<String>> expected = new java.util.LinkedHashMap<>();
         expected.put("hash-maps", List.of(
-                "pair-sum", "valid-anagram", "first-unique-character", "majority-element", "subarray-sum-count"));
-        expected.put("two-pointers", List.of("valid-palindrome", "move-zeroes", "merge-sorted-lists", "add-strings"));
-        expected.put("sliding-window", List.of("max-stock-profit", "sliding-window-maximum"));
-        expected.put("stacks-queues", List.of("balanced-delimiters", "array-stack", "sliding-window-maximum"));
-        expected.put("linked-lists", List.of("reverse-linked-list", "merge-sorted-lists"));
-        expected.put("binary-search", List.of("binary-search"));
-        expected.put("prefix-sums", List.of("subarray-sum-count"));
-        expected.put("heaps", List.of("binary-min-heap"));
-        expected.put("graphs", List.of("course-schedule"));
+                "pair-sum", "valid-anagram", "first-unique-character", "majority-element", "duplicate-check",
+                "subarray-sum-count", "longest-consecutive-run", "group-anagrams", "top-k-frequent"));
+        expected.put("two-pointers", List.of(
+                "valid-palindrome", "move-zeroes", "merge-sorted-lists", "add-strings", "linked-list-cycle",
+                "zero-sum-triplets", "largest-water-container", "remove-nth-from-end"));
+        expected.put("sliding-window", List.of(
+                "max-stock-profit", "longest-unique-substring", "longest-repeat-after-replacement",
+                "sliding-window-maximum", "minimum-covering-window"));
+        expected.put("stacks-queues", List.of(
+                "balanced-delimiters", "array-stack", "sliding-window-maximum"));
+        expected.put("linked-lists", List.of(
+                "reverse-linked-list", "merge-sorted-lists", "linked-list-cycle", "remove-nth-from-end",
+                "reorder-list", "merge-k-sorted-lists"));
+        expected.put("binary-search", List.of(
+                "binary-search", "rotated-array-minimum", "rotated-array-search"));
+        expected.put("prefix-sums", List.of(
+                "subarray-sum-count", "product-except-self", "max-subarray-sum"));
+        expected.put("heaps", List.of(
+                "binary-min-heap", "top-k-frequent", "minimum-meeting-rooms", "merge-k-sorted-lists",
+                "running-median"));
+        expected.put("graphs", List.of(
+                "clone-graph", "ocean-drainage", "island-count", "valid-tree-graph",
+                "connected-component-count", "course-schedule", "alien-alphabet-order"));
+        expected.put("trees", List.of(
+                "tree-max-depth", "same-tree", "mirror-tree", "subtree-match", "level-order-values",
+                "tree-from-traversals", "valid-search-tree", "kth-smallest-in-search-tree",
+                "search-tree-common-ancestor", "max-path-sum", "tree-codec"));
+        expected.put("tries", List.of("prefix-tree", "wildcard-word-dictionary", "grid-multi-word-search"));
+        expected.put("backtracking", List.of("combination-sum", "grid-word-search", "grid-multi-word-search"));
+        expected.put("dynamic-programming", List.of(
+                "stair-climbing-ways", "non-adjacent-max-sum", "circular-non-adjacent-max-sum", "digit-decodings",
+                "grid-paths", "fewest-coins", "longest-increasing-subsequence", "longest-common-subsequence",
+                "word-segmentation", "max-subarray-sum", "max-subarray-product", "longest-palindromic-substring",
+                "palindromic-substring-count", "reachable-end"));
+        expected.put("intervals", List.of(
+                "meeting-conflicts", "merge-intervals", "insert-interval", "remove-overlapping-intervals",
+                "minimum-meeting-rooms"));
+        expected.put("bit-manipulation", List.of(
+                "count-set-bits", "bit-count-table", "reverse-bits", "missing-number", "sum-without-plus"));
+        expected.put("matrices", List.of(
+                "zero-matrix-lines", "spiral-order", "rotate-square-matrix", "grid-paths", "island-count",
+                "ocean-drainage", "grid-word-search"));
 
         assertThat(GuideCatalog.all()).extracting(Guide::id).containsExactlyElementsOf(expected.keySet());
         for (Guide guide : GuideCatalog.all()) {

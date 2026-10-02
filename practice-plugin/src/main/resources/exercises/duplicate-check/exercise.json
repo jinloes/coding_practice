@@ -1,0 +1,30 @@
+{
+  "id": "duplicate-check",
+  "title": "Duplicate Check",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Decide whether any value occurs at least twice in an array.\n\nContract\n- `numbers` is non-null and may be empty. Values may be any `int`.\n- Return `true` when at least two different positions hold equal values, otherwise `false`.\n- Do not mutate `numbers`.\n\nExamples\n- `hasDuplicate(new int[]{4, 9, 1, 4})` returns `true`.\n- `hasDuplicate(new int[]{3, 8, 5})` returns `false`.\n- `hasDuplicate(new int[0])` returns `false`.\n",
+  "examples": [
+    {
+      "input": "numbers = [4, 9, 1, 4]",
+      "output": "true"
+    },
+    {
+      "input": "numbers = [3, 8, 5]",
+      "output": "false"
+    },
+    {
+      "input": "numbers = []",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Compare every pair of positions first, and note how many comparisons that takes.",
+    "Remember each value you have already seen so a repeat can be recognised immediately.",
+    "Stop at the first repeat using a hash set. Intended complexity: expected O(n) time and O(n) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the array values, for example: [4, 9, 1, 4]",
+  "sampleInput": "[4, 9, 1, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

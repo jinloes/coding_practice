@@ -1,0 +1,30 @@
+{
+  "id": "kth-smallest-in-search-tree",
+  "title": "Kth Smallest In Search Tree",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Find the k-th smallest value stored in a binary search tree.\n\nContract\n- `root` is the root of a valid binary search tree with distinct values; it is non-null.\n- `k` is 1-based and satisfies `1 <= k <=` the number of nodes.\n- Return the value that would be at position `k` if all values were sorted ascending.\n- Use `Solution.TreeNode` (fields `value`, `left`, `right`) and do not modify the tree.\n\nExamples\n- In `[5, 3, 8, 2, 4, 7, 9]`, `k = 3` returns `4` (sorted order is 2, 3, 4, 5, 7, 8, 9).\n- In `[10]`, `k = 1` returns `10`.\n- In `[20, 10, 30, null, 15]`, `k = 2` returns `15`.\n",
+  "examples": [
+    {
+      "input": "root = [5, 3, 8, 2, 4, 7, 9], k = 3",
+      "output": "4"
+    },
+    {
+      "input": "root = [10], k = 1",
+      "output": "10"
+    },
+    {
+      "input": "root = [20, 10, 30, null, 15], k = 2",
+      "output": "15"
+    }
+  ],
+  "hints": [
+    "An inorder traversal of a search tree visits values in ascending order.",
+    "You do not need the whole traversal: stop as soon as you have visited k nodes. An explicit stack makes stopping early easy.",
+    "Walk left as far as possible pushing nodes, pop one, count it, then move to its right child. Intended complexity: O(h + k) time, at most O(n) where n is the number of nodes, and O(h) space for the stack depth, where h is the tree height: O(log n) for a balanced tree and O(n) for a chain."
+  ],
+  "inputSyntax": "Input: the tree in level order followed by k, for example: [5, 3, 8, 2, 4, 7, 9] 3",
+  "sampleInput": "[5, 3, 8, 2, 4, 7, 9] 3",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

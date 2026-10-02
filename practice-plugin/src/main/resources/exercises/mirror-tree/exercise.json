@@ -1,0 +1,30 @@
+{
+  "id": "mirror-tree",
+  "title": "Mirror Tree",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Flip a binary tree left to right by rewiring its existing nodes.\n\nContract\n- `root` may be null. Nodes have an integer `value` and mutable `left` and `right` references.\n- At every node, swap the left and right children, then return the root. Mutate the nodes you are given: do not allocate replacement nodes or change values.\n- The returned root is the same node that was passed in; a null tree returns null.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[5, 2, 8, 1, null, 7, 9]` becomes `[5, 8, 2, 9, 7, null, 1]`.\n- `[1, 2]` becomes `[1, null, 2]`.\n- A null tree stays null.\n",
+  "examples": [
+    {
+      "input": "root = [5, 2, 8, 1, null, 7, 9]",
+      "output": "[5, 8, 2, 9, 7, null, 1]"
+    },
+    {
+      "input": "root = [1, 2]",
+      "output": "[1, null, 2]"
+    },
+    {
+      "input": "root = null",
+      "output": "null"
+    }
+  ],
+  "hints": [
+    "Mirroring a tree means every node trades its two children, not just the root.",
+    "Swap the two child references of the current node, then mirror what is now each child. A null child needs no work.",
+    "Every node is touched once. Intended complexity: O(n) time for n nodes. Space is the recursion depth: O(h) for tree height h, which is O(log n) for a balanced tree (the workload uses balanced trees) and O(n) for a chain."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [5, 2, 8, 1, null, 7, 9]",
+  "sampleInput": "[5, 2, 8, 1, null, 7, 9]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

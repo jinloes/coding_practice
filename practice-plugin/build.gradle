@@ -70,6 +70,7 @@ test {
     useJUnitPlatform()
     systemProperty 'practice.test.classpath', sourceSets.test.runtimeClasspath.asPath
     systemProperty 'idea.load.plugins.id', 'com.jinloes.practice'
+    systemProperty 'practice.catalog.only', providers.gradleProperty('catalogOnly').getOrElse('')
 }
 
 tasks.named('wrapper') {

@@ -1,0 +1,30 @@
+{
+  "id": "reverse-bits",
+  "title": "Reverse Bits",
+  "topic": "Bit Manipulation",
+  "difficulty": "Easy",
+  "statement": "Reverse the order of the 32 bits of an integer.\n\nContract\n- `value` is any `int`. Think of it as a row of 32 bits where bit 0 is the least significant.\n- Return the `int` whose bit `31 - i` equals bit `i` of `value`, for every `i` from `0` to `31`.\n- Leading zeros matter: all 32 positions take part, so the result can be negative.\n\nExamples\n- `reverseBits(1)` returns `-2147483648` (only the top bit is set).\n- `reverseBits(6)` returns `1610612736`, which is `0x60000000`.\n- `reverseBits(-1)` returns `-1`.\n",
+  "examples": [
+    {
+      "input": "value = 1",
+      "output": "-2147483648"
+    },
+    {
+      "input": "value = 6",
+      "output": "1610612736"
+    },
+    {
+      "input": "value = -1",
+      "output": "-1"
+    }
+  ],
+  "hints": [
+    "Pick one bit position and decide where that bit has to end up in the result.",
+    "Build the answer in a loop: shift the result left to make room, copy in the lowest bit of the input, then shift the input right. Run exactly 32 times so leading zeros are included.",
+    "Use the unsigned shift `>>>` so the sign bit cannot smear into the input. Intended complexity: O(1) per call (32 steps) and O(1) space, so a batch of n calls costs O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: a single integer, for example: 6",
+  "sampleInput": "6",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

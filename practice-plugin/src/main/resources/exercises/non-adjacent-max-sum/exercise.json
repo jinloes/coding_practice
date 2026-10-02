@@ -1,0 +1,30 @@
+{
+  "id": "non-adjacent-max-sum",
+  "title": "Non-Adjacent Max Sum",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Pick values from a row so that no two picked positions are neighbours, maximising the total.\n\nContract\n- `values` is a non-null array of non-negative `int`s and may be empty. You choose a set of indices; two chosen indices may never differ by exactly 1.\n- Return the largest total of the chosen values. Choosing nothing is allowed, so an empty array gives `0`.\n- The total can exceed the `int` range, so return a `long`. Do not mutate `values`.\n\nExamples\n- `maxSum(new int[]{4, 1, 7, 3})` returns `11` (indices 0 and 2).\n- `maxSum(new int[]{5})` returns `5`.\n- `maxSum(new int[]{2, 9, 2})` returns `9`.\n",
+  "examples": [
+    {
+      "input": "values = [4, 1, 7, 3]",
+      "output": "11"
+    },
+    {
+      "input": "values = [5]",
+      "output": "5"
+    },
+    {
+      "input": "values = [2, 9, 2]",
+      "output": "9"
+    }
+  ],
+  "hints": [
+    "Think about one position at a time: either you take it and must skip the previous one, or you leave it.",
+    "The best total up to position i depends only on the best totals up to i - 1 and i - 2, so older results never need to be kept.",
+    "Carry two running totals (best including/skipping the latest pairing) in `long` variables. Intended complexity: O(n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the values in brackets or separated by spaces, for example: [4, 1, 7, 3]",
+  "sampleInput": "[4, 1, 7, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

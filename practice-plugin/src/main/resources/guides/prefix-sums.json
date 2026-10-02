@@ -4,6 +4,8 @@
   "summary": "Precompute running totals so the sum of any contiguous range is one subtraction.",
   "lesson": "How it works\n- `prefix[i]` is the sum of the first `i` elements, with `prefix[0] = 0`.\n- The sum of the range from `i` up to but not including `j` is `prefix[j] - prefix[i]`.\n- Building the prefixes takes `O(n)`; each later range query takes `O(1)`.\n\nWhen to reach for it\n- Many questions about range sums over an array that does not change.\n- Counting or finding subarrays whose sum meets a condition, including inputs with negative numbers.\n- Two-dimensional grids: a 2D prefix table answers rectangle sums the same way.\n\nCommon patterns\n- Range query: answer each query by subtracting two prefixes.\n- Prefix plus hash map: count earlier prefixes that differ from the current one by the target.\n- Difference arrays: the inverse idea, applying many range updates then taking one prefix pass.\n\nPitfalls\n- Forgetting the empty prefix of zero, which drops subarrays that start at index 0.\n- Integer overflow on large inputs; use `long` when sums can exceed `int`.\n- Off-by-one between inclusive and exclusive range ends.\n",
   "exercises": [
-    "subarray-sum-count"
+    "subarray-sum-count",
+    "product-except-self",
+    "max-subarray-sum"
   ]
 }

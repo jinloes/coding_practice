@@ -1,0 +1,30 @@
+{
+  "id": "longest-repeat-after-replacement",
+  "title": "Longest Repeat After Replacement",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Find the longest stretch that can be turned into one repeated letter using a limited number of replacements.\n\nContract\n- `text` is non-null, may be empty, and contains only uppercase letters `A`-`Z`. `k` is a non-negative `int`.\n- You may replace at most `k` characters, each with any uppercase letter.\n- Return the length of the longest substring (contiguous) that can be made of a single letter after at most `k` replacements.\n- Return `0` for empty text. Do not assume `k` is smaller than the text length.\n\nExamples\n- `longestRepeat(\"QQRQQ\", 1)` returns `5` (replace the `R`).\n- `longestRepeat(\"ABCD\", 0)` returns `1`.\n- `longestRepeat(\"XYXYXYX\", 2)` returns `5` (the window `XYXYX` has two `Y` to replace).\n",
+  "examples": [
+    {
+      "input": "text = \"QQRQQ\", k = 1",
+      "output": "5"
+    },
+    {
+      "input": "text = \"ABCD\", k = 0",
+      "output": "1"
+    },
+    {
+      "input": "text = \"XYXYXYX\", k = 2",
+      "output": "5"
+    }
+  ],
+  "hints": [
+    "For a fixed substring, the replacements needed equal its length minus the count of its most common letter.",
+    "Grow a window to the right and keep letter counts. If the window needs more than k replacements, move its left edge forward.",
+    "A running maximum of the counts is enough; it never has to decrease, because only a larger count can produce a longer answer. Intended complexity: O(n) time and O(1) extra space (26 counters), where n is the text length."
+  ],
+  "inputSyntax": "Input: the uppercase text in single quotes and k, for example: 'XYXYXYX' 2",
+  "sampleInput": "'XYXYXYX' 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

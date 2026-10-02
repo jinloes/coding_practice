@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,8 +44,74 @@ class ExerciseCatalogTest {
                         "majority-element",
                         "subarray-sum-count",
                         "course-schedule",
-                        "sliding-window-maximum");
-        assertThat(ExerciseCatalog.all()).hasSize(20);
+                        "sliding-window-maximum",
+                        "duplicate-check",
+                        "product-except-self",
+                        "max-subarray-sum",
+                        "max-subarray-product",
+                        "rotated-array-minimum",
+                        "rotated-array-search",
+                        "zero-sum-triplets",
+                        "largest-water-container",
+                        "longest-consecutive-run",
+                        "sum-without-plus",
+                        "count-set-bits",
+                        "bit-count-table",
+                        "reverse-bits",
+                        "insert-interval",
+                        "merge-intervals",
+                        "remove-overlapping-intervals",
+                        "meeting-conflicts",
+                        "minimum-meeting-rooms",
+                        "stair-climbing-ways",
+                        "fewest-coins",
+                        "longest-increasing-subsequence",
+                        "longest-common-subsequence",
+                        "word-segmentation",
+                        "combination-sum",
+                        "non-adjacent-max-sum",
+                        "circular-non-adjacent-max-sum",
+                        "digit-decodings",
+                        "grid-paths",
+                        "reachable-end",
+                        "clone-graph",
+                        "ocean-drainage",
+                        "island-count",
+                        "alien-alphabet-order",
+                        "valid-tree-graph",
+                        "connected-component-count",
+                        "linked-list-cycle",
+                        "merge-k-sorted-lists",
+                        "remove-nth-from-end",
+                        "reorder-list",
+                        "top-k-frequent",
+                        "running-median",
+                        "zero-matrix-lines",
+                        "spiral-order",
+                        "rotate-square-matrix",
+                        "grid-word-search",
+                        "longest-unique-substring",
+                        "longest-repeat-after-replacement",
+                        "minimum-covering-window",
+                        "group-anagrams",
+                        "longest-palindromic-substring",
+                        "palindromic-substring-count",
+                        "string-list-codec",
+                        "tree-max-depth",
+                        "same-tree",
+                        "mirror-tree",
+                        "max-path-sum",
+                        "level-order-values",
+                        "tree-codec",
+                        "subtree-match",
+                        "tree-from-traversals",
+                        "valid-search-tree",
+                        "kth-smallest-in-search-tree",
+                        "search-tree-common-ancestor",
+                        "prefix-tree",
+                        "wildcard-word-dictionary",
+                        "grid-multi-word-search");
+        assertThat(ExerciseCatalog.all()).hasSize(86);
         assertThat(ExerciseCatalog.all().stream().map(ExerciseCatalog.Exercise::title))
                 .doesNotHaveDuplicates();
         for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
@@ -126,7 +195,7 @@ class ExerciseCatalogTest {
 
     @Test
     void complexityProbeMeasuresEachReferenceSolutionAsItsIntendedComplexity() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
+        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
             Path root = Files.createTempDirectory(Path.of("build"), "catalog-probe-" + exercise.id() + "-");
             try {
                 Path sourceRoot = root.resolve("src/com/jinloes/practice");
@@ -172,7 +241,7 @@ class ExerciseCatalogTest {
 
     @Test
     void referenceSolutionsPassTheirCompleteSuites() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
+        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
             CatalogSandbox.RunSummary summary = CatalogSandbox.compileAndRun(exercise, referenceSource(exercise), "reference");
             assertThat(summary.failures())
                     .as("reference solution for %s: %s", exercise.id(), summary.failureDetails())
@@ -185,7 +254,7 @@ class ExerciseCatalogTest {
 
     @Test
     void starterAndKnownWrongSolutionsAreCaughtByTheSuites() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
+        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
             CatalogSandbox.RunSummary starter = CatalogSandbox.compileAndRun(
                     exercise,
                     ExerciseCatalog.resource(exercise, "Solution.java"),
@@ -203,7 +272,7 @@ class ExerciseCatalogTest {
 
     @Test
     void startersContainOnlyLearnerApiAndGeneratedRunnersPassVisibleExamples() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : ExerciseCatalog.all()) {
+        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
             Path root = Files.createTempDirectory(Path.of("build"), "catalog-runner-" + exercise.id() + "-");
             try {
                 Path sourceRoot = root.resolve("src/com/jinloes/practice");
@@ -239,6 +308,21 @@ class ExerciseCatalogTest {
                 CatalogSandbox.deleteTree(root);
             }
         }
+    }
+
+    /**
+     * The exercises the slow compile-and-run tests cover: every exercise, or only the comma-separated
+     * IDs in the {@code practice.catalog.only} system property ({@code -PcatalogOnly=a,b} in Gradle)
+     * while authoring.
+     */
+    private static List<ExerciseCatalog.Exercise> exercisesUnderTest() {
+        String only = System.getProperty("practice.catalog.only", "").strip();
+        if (only.isEmpty()) {
+            return ExerciseCatalog.all();
+        }
+        Set<String> ids = Arrays.stream(only.split(",")).map(String::strip).collect(Collectors.toSet());
+        ids.forEach(ExerciseCatalog::find);
+        return ExerciseCatalog.all().stream().filter(exercise -> ids.contains(exercise.id())).toList();
     }
 
     private static String referenceSource(ExerciseCatalog.Exercise exercise) throws IOException {

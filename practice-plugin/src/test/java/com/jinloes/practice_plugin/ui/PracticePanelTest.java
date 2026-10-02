@@ -93,6 +93,30 @@ class PracticePanelTest {
     }
 
     @Test
+    void trackFilterListsItsProblemsAndIntersectsWithAGuide() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            ExerciseFilters filters = new ExerciseFilters();
+
+            filters.selectTrack("google");
+            assertThat(filters.shownGuide()).isSameAs(filters.selectedTrack());
+            assertThat(filters.visible(Set.of()))
+                    .as("the track's exercises, Easy then Medium then Hard")
+                    .containsExactlyElementsOf(filters.selectedTrack().exercises());
+
+            filters.selectGuide("stacks-queues");
+            assertThat(filters.shownGuide()).isSameAs(filters.selectedGuide());
+            assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
+                    .as("a guide narrowed to the problems in the track")
+                    .containsExactly("balanced-delimiters", "sliding-window-maximum");
+
+            filters.selectGuide(null);
+            filters.selectTrack(null);
+            assertThat(filters.shownGuide()).isNull();
+            assertThat(filters.visible(Set.of())).containsExactlyElementsOf(ExerciseCatalog.all());
+        });
+    }
+
+    @Test
     void resolvesOneSharedWorkspaceForEveryCaller() {
         assertThat(ManagedPracticeWorkspace.get())
                 .as("the panel and the runner must resolve the same workspace, not one each")

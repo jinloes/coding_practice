@@ -1,0 +1,30 @@
+{
+  "id": "palindromic-substring-count",
+  "title": "Palindromic Substring Count",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "Count how many substrings of a string are palindromes, counting each position range separately.\n\nContract\n- `text` is non-null, may be empty, and has length at most 50,000. Characters are compared\n  exactly (case-sensitive).\n- A substring is identified by its start and end positions, so equal substrings found at\n  different positions are counted separately. Single characters are palindromes.\n- Return the total count. For an empty `text` the count is `0`.\n\nExamples\n- `countPalindromes(\"abc\")` returns `3` (`a`, `b`, `c`).\n- `countPalindromes(\"aaa\")` returns `6` (three `a`, two `aa`, one `aaa`).\n- `countPalindromes(\"abba\")` returns `6` (`a`, `b`, `b`, `a`, `bb`, `abba`).\n",
+  "examples": [
+    {
+      "input": "text = \"abc\"",
+      "output": "3"
+    },
+    {
+      "input": "text = \"aaa\"",
+      "output": "6"
+    },
+    {
+      "input": "text = \"abba\"",
+      "output": "6"
+    }
+  ],
+  "hints": [
+    "Every palindrome has a middle: one character for odd lengths, or the gap between two characters for even lengths.",
+    "From each of the 2n - 1 centers, expand outward while the two ends match; every successful expansion is one more palindromic substring.",
+    "Add one to the total per successful expansion; no extra storage is needed. Intended complexity: O(n^2) time and O(1) extra space, where n is the length of the text."
+  ],
+  "inputSyntax": "Input: one piece of text with no spaces, for example: abba",
+  "sampleInput": "abba",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(1)"
+}

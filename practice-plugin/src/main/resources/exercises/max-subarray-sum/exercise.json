@@ -1,0 +1,30 @@
+{
+  "id": "max-subarray-sum",
+  "title": "Maximum Subarray Sum",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Find the largest sum over all non-empty contiguous slices of an array.\n\nContract\n- `numbers` is non-null and has at least one element; values may be any `int`.\n- A subarray is a non-empty run of adjacent elements. Return the largest sum of any subarray.\n- Sums can exceed the `int` range, so the result is a `long`. Do not mutate `numbers`.\n\nExamples\n- `maxSubarraySum(new int[]{3, -5, 4, 2, -1, 6, -8})` returns `11`.\n- `maxSubarraySum(new int[]{-7, -3, -9})` returns `-3`.\n- `maxSubarraySum(new int[]{5})` returns `5`.\n",
+  "examples": [
+    {
+      "input": "numbers = [3, -5, 4, 2, -1, 6, -8]",
+      "output": "11"
+    },
+    {
+      "input": "numbers = [-7, -3, -9]",
+      "output": "-3"
+    },
+    {
+      "input": "numbers = [5]",
+      "output": "5"
+    }
+  ],
+  "hints": [
+    "Consider the best subarray that ends exactly at each index.",
+    "A running total that has gone negative can only hurt the next subarray, so restart from the current element instead.",
+    "Track the best sum ending here and the best seen so far, starting from the first element rather than zero. Intended complexity: O(n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the array values (at least one), for example: [3, -5, 4, 2, -1, 6, -8]",
+  "sampleInput": "[3, -5, 4, 2, -1, 6, -8]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

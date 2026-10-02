@@ -1,0 +1,30 @@
+{
+  "id": "bit-count-table",
+  "title": "Bit Count Table",
+  "topic": "Bit Manipulation",
+  "difficulty": "Easy",
+  "statement": "Build a table of how many 1 bits each number from 0 to n contains.\n\nContract\n- `n` is a non-negative `int` that is small enough for an array of `n + 1` entries.\n- Return an `int[]` of length `n + 1` whose entry `i` is the number of 1 bits in the binary\n  form of `i`.\n- Aim to compute the whole table in a single pass rather than counting every number\n  from scratch.\n\nExamples\n- `countBits(5)` returns `{0, 1, 1, 2, 1, 2}`.\n- `countBits(0)` returns `{0}`.\n- `countBits(2)` returns `{0, 1, 1}`.\n",
+  "examples": [
+    {
+      "input": "n = 5",
+      "output": "[0, 1, 1, 2, 1, 2]"
+    },
+    {
+      "input": "n = 0",
+      "output": "[0]"
+    },
+    {
+      "input": "n = 2",
+      "output": "[0, 1, 1]"
+    }
+  ],
+  "hints": [
+    "Write out the binary forms of the first few numbers and compare each number with a smaller one.",
+    "Shifting a number right by one drops its last bit, so the count for `i` is the count for `i >> 1` plus that dropped bit, `i & 1`.",
+    "Fill the table in increasing order so the smaller entry is always ready. Intended complexity: O(n) time and O(n) space for the returned table, where n is the argument."
+  ],
+  "inputSyntax": "Input: a single non-negative integer n, for example: 5",
+  "sampleInput": "5",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

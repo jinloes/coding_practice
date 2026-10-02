@@ -1,0 +1,21 @@
+{
+  "id": "combination-sum",
+  "title": "Combination Sum",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "List every distinct combination of numbers that adds up to a target, reusing numbers freely.\n\nContract\n- `candidates` holds distinct positive integers and may be empty. `target` is positive.\n- Return every combination of candidates whose sum is exactly `target`. A candidate may appear\n  any number of times in a combination.\n- Combinations are multisets: `[2, 3]` and `[3, 2]` are the same combination and must be reported\n  once. Each reported combination must be unique.\n- The order of the combinations and the order of the numbers inside each combination do not\n  matter. Return an empty list when nothing reaches the target. Do not mutate `candidates`.\n\nExamples\n- `combinations(new int[]{2, 3, 6, 7}, 7)` returns `[[2, 2, 3], [7]]` in any order.\n- `combinations(new int[]{2, 4}, 5)` returns `[]`.\n- `combinations(new int[]{1, 2}, 3)` returns `[[1, 1, 1], [1, 2]]` in any order.\n",
+  "examples": [
+    { "input": "candidates = [2, 3, 6, 7], target = 7", "output": "[[2, 2, 3], [7]] in any order" },
+    { "input": "candidates = [2, 4], target = 5", "output": "[]" },
+    { "input": "candidates = [1, 2], target = 3", "output": "[[1, 1, 1], [1, 2]] in any order" }
+  ],
+  "hints": [
+    "Build a combination one number at a time and track how much of the target is still missing.",
+    "To avoid reporting the same multiset in different orders, only allow the next number to come from the current candidate or a later one. Stop a branch when the remainder reaches zero or goes negative.",
+    "Sort the candidates so a branch can stop as soon as one is too large. The number of results is exponential in general; the probe uses candidates {1, 2}, which gives about n/2 combinations of length up to n. Intended complexity: O(n^2) time and O(n^2) space for that family, where n is the target."
+  ],
+  "inputSyntax": "Input: the candidates followed by the target, for example: [2, 3, 6, 7] 7",
+  "sampleInput": "[2, 3, 6, 7] 7",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n^2)"
+}

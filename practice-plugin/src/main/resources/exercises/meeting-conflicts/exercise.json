@@ -1,0 +1,30 @@
+{
+  "id": "meeting-conflicts",
+  "title": "Meeting Conflicts",
+  "topic": "Intervals",
+  "difficulty": "Easy",
+  "statement": "Decide whether one person can attend every meeting on a calendar.\n\nContract\n- `meetings` is non-null, unsorted, and may be empty. Each meeting is `{start, end}` with\n  `start < end`; values may be any `int`, including extreme ones.\n- Meetings are half-open: `{start, end}` occupies `[start, end)`. A meeting that starts exactly\n  when another ends does not conflict with it.\n- Return `true` when no two meetings overlap, `false` otherwise. Identical meetings conflict.\n- Do not mutate `meetings`.\n\nExamples\n- `canAttendAll({{9, 10}, {10, 11}, {13, 14}})` returns `true`.\n- `canAttendAll({{1, 5}, {4, 8}})` returns `false`.\n- `canAttendAll({})` returns `true`.\n",
+  "examples": [
+    {
+      "input": "meetings = [[9, 10], [10, 11], [13, 14]]",
+      "output": "true"
+    },
+    {
+      "input": "meetings = [[1, 5], [4, 8]]",
+      "output": "false"
+    },
+    {
+      "input": "meetings = []",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "If you looked at the meetings in calendar order, which pairs would you need to compare?",
+    "After sorting by start time, a conflict exists exactly when some meeting starts before the previous one ends. Adjacent pairs are enough.",
+    "Sort a copy by start with `Integer.compare`, then scan once, treating a start equal to the previous end as fine. Intended complexity: O(n log n) time for the sort and O(n) space, where n is the number of meetings."
+  ],
+  "inputSyntax": "Input: the meetings, for example: [[9, 10], [10, 11], [13, 14]]",
+  "sampleInput": "[[9, 10], [10, 11], [13, 14]]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

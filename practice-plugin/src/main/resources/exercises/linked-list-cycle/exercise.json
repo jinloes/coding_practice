@@ -1,0 +1,30 @@
+{
+  "id": "linked-list-cycle",
+  "title": "Linked List Cycle",
+  "topic": "Linked Lists",
+  "difficulty": "Easy",
+  "statement": "Decide whether following `next` references from the head of a singly linked list ever revisits a node.\n\nContract\n- `head` may be null or may point to the first node of a list. Each node has an integer `value` and a mutable `next` reference.\n- A list has a cycle when some node can be reached again by following `next` references. A node may link to itself.\n- Return true when the list has a cycle and false when the walk reaches null.\n- Node values may repeat, so equal values never prove a cycle; only the same node object does.\n- Do not modify the list and do not record visited nodes in a collection.\n\nExamples\n- A list `1 -> 2 -> 3` that ends in null has no cycle.\n- A list `3 -> 2 -> 0 -> -4` whose last node links back to the node holding `2` has a cycle.\n- A single node whose `next` is itself has a cycle.\n",
+  "examples": [
+    {
+      "input": "head = 1 -> 2 -> 3 -> null",
+      "output": "false"
+    },
+    {
+      "input": "head = 3 -> 2 -> 0 -> -4, tail links back to index 1",
+      "output": "true"
+    },
+    {
+      "input": "head = 5, whose next is itself",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Walking forward forever will not terminate on a cycle, so you need two walkers moving at different speeds.",
+    "Advance one walker one step and the other two steps per round; if the fast one reaches null there is no cycle.",
+    "If the walkers ever stand on the same node, the list has a cycle. Intended complexity: O(n) time and O(1) extra space, where n is the number of nodes before the walk repeats or ends."
+  ],
+  "inputSyntax": "Input: the list values followed by the index the tail links back to (-1 for none), for example: [3, 2, 0, -4] 1",
+  "sampleInput": "[3, 2, 0, -4] 1",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

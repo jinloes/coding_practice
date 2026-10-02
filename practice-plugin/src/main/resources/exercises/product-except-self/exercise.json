@@ -1,0 +1,30 @@
+{
+  "id": "product-except-self",
+  "title": "Product Except Self",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "For every position, compute the product of all the other values, without using division.\n\nContract\n- `numbers` is non-null and may be empty; values may be any `int`, including zero and negatives.\n- Return a new array `result` of the same length where `result[i]` is the product of every element except `numbers[i]`. The product of no elements is `1`.\n- Use `int` arithmetic; a product that exceeds the `int` range wraps around as usual in Java.\n- Do not divide, and do not mutate `numbers`. Aim for a single linear pass in each direction.\n\nExamples\n- `productExceptSelf(new int[]{2, 3, 4})` returns `[12, 8, 6]`.\n- `productExceptSelf(new int[]{1, 0, 3})` returns `[0, 3, 0]`.\n- `productExceptSelf(new int[]{5})` returns `[1]`.\n",
+  "examples": [
+    {
+      "input": "numbers = [2, 3, 4]",
+      "output": "[12, 8, 6]"
+    },
+    {
+      "input": "numbers = [1, 0, 3]",
+      "output": "[0, 3, 0]"
+    },
+    {
+      "input": "numbers = [5]",
+      "output": "[1]"
+    }
+  ],
+  "hints": [
+    "The answer at i is the product of everything to its left times the product of everything to its right.",
+    "Store the left products in the output array first, then sweep from the right keeping a running product.",
+    "Two sweeps over the output array suffice. Intended complexity: O(n) time and O(n) space for the required output, with O(1) work space beyond it, where n is the array length."
+  ],
+  "inputSyntax": "Input: the array values, for example: [2, 3, 4]",
+  "sampleInput": "[2, 3, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

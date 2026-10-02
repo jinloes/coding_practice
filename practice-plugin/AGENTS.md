@@ -35,10 +35,13 @@ Run from `practice-plugin/` with the repository wrapper:
 ```bash
 ../gradlew test
 ../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
+../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
 ../gradlew runIde
 ```
 
-Use the smallest relevant test first, then run the full plugin test suite before
+`-PcatalogOnly` limits the slow per-exercise catalog checks to the listed
+exercise IDs; the full catalog takes several minutes. Use the smallest relevant
+test first, then run the full plugin test suite before
 finishing a code change.
 
 ## Java And Test Conventions
@@ -67,10 +70,11 @@ src/main/resources/exercises/<id>/
   ExampleRunner.java
   Workload.java
 src/test/resources/reference/<id>/Solution.java
+src/test/resources/known-wrong/<id>/Solution.java
 ```
 
-Also add a known-wrong candidate to `KnownWrongSolutions` in the catalog test
-package.
+The known-wrong candidate compiles against the shipped tests but must fail at
+least one of them; `KnownWrongSolutions` loads it from the test resources.
 
 - Starters contain only the learner API, no `main`, assertions, or harness, and
   throw `UnsupportedOperationException("Implement <method>")`.
@@ -110,6 +114,24 @@ non-duplicated exercise IDs.
   and must be `Easy`, `Medium`, or `Hard`.
 - An exercise may appear in several guides. Update `GuideCatalogTest` when the
   guide list or membership changes.
+
+## Practice Track Content Rules
+
+Every track ID listed in `TrackCatalog` must provide
+`src/main/resources/tracks/<id>.json` in the guide manifest schema with a
+non-empty `exercises` array of existing, non-duplicated exercise IDs. Tracks
+are hand-curated problem lists such as Blind 75 or a company list.
+
+- Every summary must say the list is not an official or verified question
+  list. Company tracks must also say they are approximate, and their notes must
+  not claim specific questions.
+- Notes are original text in the `MarkdownHtml` subset with the label lines
+  `About this list`, `What to expect`, and `How to prepare`.
+- Exercises on a track are original problems. Never copy or paraphrase
+  third-party problem statements, and never scrape or copy third-party
+  company-tag data (for example paid question-frequency lists) into a track.
+- Track IDs must not collide with guide IDs. Update `TrackCatalogTest` when the
+  track list or membership changes.
 
 ## Repository Hygiene
 

@@ -1,0 +1,30 @@
+{
+  "id": "rotated-array-search",
+  "title": "Rotated Array Search",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Locate a target in a sorted array of distinct integers that has been rotated.\n\nContract\n- `rotated` is non-null, may be empty, and holds distinct values. It started in ascending order and was then rotated by some number of positions (possibly zero).\n- Return the index of `target`, or `-1` when it is absent. Do not mutate the input.\n- A linear scan is correct but not the goal; the expected solution discards half of the range at every step.\n\nExamples\n- `search(new int[]{6, 7, 8, 1, 2, 3, 4}, 2)` returns `4`.\n- `search(new int[]{6, 7, 8, 1, 2, 3, 4}, 5)` returns `-1`.\n- `search(new int[]{1}, 1)` returns `0`.\n",
+  "examples": [
+    {
+      "input": "rotated = [6, 7, 8, 1, 2, 3, 4], target = 2",
+      "output": "4"
+    },
+    {
+      "input": "rotated = [6, 7, 8, 1, 2, 3, 4], target = 5",
+      "output": "-1"
+    },
+    {
+      "input": "rotated = [1], target = 1",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "After splitting at the middle, at least one half is still sorted in plain ascending order.",
+    "Decide which half is sorted, test whether the target lies inside its bounds, and keep that half or the other one.",
+    "Use inclusive bounds and a midpoint of low + (high - low) / 2. Intended complexity: O(log n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the rotated array values followed by the target, for example: [6, 7, 8, 1, 2, 3, 4] 2",
+  "sampleInput": "[6, 7, 8, 1, 2, 3, 4] 2",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

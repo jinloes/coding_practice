@@ -1,0 +1,30 @@
+{
+  "id": "valid-search-tree",
+  "title": "Valid Search Tree",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Decide whether a binary tree is a strict binary search tree.\n\nContract\n- A tree is a strict search tree when, for every node, every value in its left subtree is smaller than the node's value and every value in its right subtree is larger. Duplicates are therefore not allowed.\n- The condition applies to whole subtrees, not just to a node's direct children.\n- `root` may be `null`; an empty tree is valid. Node values may be any `int`, including `Integer.MIN_VALUE` and `Integer.MAX_VALUE`.\n- Use `Solution.TreeNode` (fields `value`, `left`, `right`) and do not modify the tree.\n\nExamples\n- `[5, 3, 8, 1, 4]` is valid.\n- `[5, 3, 8, null, null, 4, 9]` is not valid: `4` sits in the right subtree of `5` but is smaller than `5`.\n- `[2, 2]` is not valid because the left child equals its parent.\n",
+  "examples": [
+    {
+      "input": "root = [5, 3, 8, 1, 4]",
+      "output": "true"
+    },
+    {
+      "input": "root = [5, 3, 8, null, null, 4, 9]",
+      "output": "false"
+    },
+    {
+      "input": "root = [2, 2]",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Comparing each node only with its direct children is not enough; a deep node must also respect every ancestor.",
+    "Pass down an open interval of allowed values: going left tightens the upper bound, going right tightens the lower bound.",
+    "Keep the bounds as `long` so that `Integer.MIN_VALUE` and `Integer.MAX_VALUE` nodes need no special cases. Intended complexity: O(n) time, where n is the number of nodes, and O(h) space for the recursion depth, where h is the tree height: O(log n) for a balanced tree and O(n) for a chain."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [5, 3, 8, null, null, 4, 9]",
+  "sampleInput": "[5, 3, 8, null, null, 4, 9]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

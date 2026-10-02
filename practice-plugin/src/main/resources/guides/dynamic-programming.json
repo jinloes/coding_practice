@@ -1,0 +1,22 @@
+{
+  "id": "dynamic-programming",
+  "title": "Dynamic Programming",
+  "summary": "Break a problem into overlapping subproblems, solve each one once, and build larger answers from smaller ones.",
+  "lesson": "How it works\n- Dynamic programming applies when an answer can be written in terms of answers to smaller versions of the same problem, and those smaller answers repeat.\n- Top-down: write the recursion and cache each result (memoization). Bottom-up: fill a table from the smallest subproblems to the largest.\n- The cost is the number of distinct subproblems times the work to combine their answers.\n\nWhen to reach for it\n- The question asks for a count of ways, a minimum or maximum, or whether something is possible.\n- A brute-force search makes choices step by step and keeps revisiting the same states.\n- Earlier decisions affect later ones only through a small amount of state, such as a position or a remaining amount.\n\nCommon patterns\n- Define the state in words first, for example \"the best answer using the first `i` items\", then write the recurrence and the base cases.\n- One-dimensional table over a position or an amount; two-dimensional table over positions in two sequences or a grid.\n- Space reduction: when a row depends only on the previous row or the last few values, keep just those.\n- Tracking both a best and a worst running value when a negative factor can turn one into the other.\n- Expanding around each center for palindrome questions instead of storing a full table.\n\nPitfalls\n- A state that is missing information, so two different situations share one table entry.\n- Wrong base cases, especially for an empty input or a zero amount.\n- Counting problems overflow quickly; use `long` or the modulus the contract specifies.\n- Distinguishing \"unreachable\" from a real value; pick a sentinel that cannot be confused with an answer.\n- Some problems that look like dynamic programming have a simpler greedy solution; check whether one local choice is always safe.\n",
+  "exercises": [
+    "stair-climbing-ways",
+    "non-adjacent-max-sum",
+    "circular-non-adjacent-max-sum",
+    "digit-decodings",
+    "grid-paths",
+    "fewest-coins",
+    "longest-increasing-subsequence",
+    "longest-common-subsequence",
+    "word-segmentation",
+    "max-subarray-sum",
+    "max-subarray-product",
+    "longest-palindromic-substring",
+    "palindromic-substring-count",
+    "reachable-end"
+  ]
+}

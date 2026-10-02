@@ -154,7 +154,7 @@ final class PracticePanel extends JPanel implements Disposable {
         filters.onGuideChange(() -> {
             filter();
             refreshGuide();
-            if (filters.selectedGuide() != null) {
+            if (filters.shownGuide() != null) {
                 tabs.setSelectedIndex(1);
             }
         });
@@ -454,7 +454,7 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private void refreshGuide() {
-        studyGuide.show(filters.selectedGuide(), exercises.getSelectedValue(), progress.passedExerciseIds());
+        studyGuide.show(filters.shownGuide(), exercises.getSelectedValue(), progress.passedExerciseIds());
     }
 
     @Override

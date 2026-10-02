@@ -1,0 +1,21 @@
+{
+  "id": "ocean-drainage",
+  "title": "Ocean Drainage",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Find the cells of a height map from which rain can run off into both of two oceans.\n\nContract\n- `heights` is a rectangular grid of integers (possibly empty). One ocean touches the west and north edges; the other touches the east and south edges.\n- Water moves between 4-directionally adjacent cells, from a cell to a neighbor whose height is equal or lower.\n- A cell drains into an ocean when water can flow from it, through any number of such moves, to a cell on that ocean's edges (a border cell drains into its own ocean immediately).\n- Return every cell that drains into both oceans as `{row, column}` pairs, in any order. An empty grid returns an empty list.\n\nExamples\n- `{{5}}` returns `[[0, 0]]`.\n- `{{1, 2, 3}}` returns all three cells, because a single row touches both north and south edges.\n- `{{1, 2, 2}, {3, 2, 3}, {2, 4, 5}}` returns every cell except `{0, 0}`.\n",
+  "examples": [
+    {"input": "heights = [[5]]", "output": "[[0, 0]]"},
+    {"input": "heights = [[1, 2, 3]]", "output": "[[0, 0], [0, 1], [0, 2]] (any order)"},
+    {"input": "heights = [[1, 2, 2], [3, 2, 3], [2, 4, 5]]", "output": "all cells except [0, 0] (any order)"}
+  ],
+  "hints": [
+    "Testing every cell by searching downhill from it repeats the same exploration again and again.",
+    "Reverse the question: start at each ocean's edge cells and climb to neighbors that are equal or higher, marking everything the water could have come from.",
+    "Run the climb once per ocean with its own visited array and return the cells marked by both. Intended complexity: O(n) time and O(n) space, where n is the number of cells in the grid."
+  ],
+  "inputSyntax": "Input: grid rows separated by /, each row as space-separated integer heights, for example: 1 2 2 / 3 2 3 / 2 4 5",
+  "sampleInput": "1 2 2 / 3 2 3 / 2 4 5",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

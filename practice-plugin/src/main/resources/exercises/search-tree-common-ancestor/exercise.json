@@ -1,0 +1,30 @@
+{
+  "id": "search-tree-common-ancestor",
+  "title": "Search Tree Common Ancestor",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Find the lowest common ancestor of two values in a binary search tree.\n\nContract\n- `root` is a non-null binary search tree with distinct values; both `p` and `q` are values that occur in it.\n- The lowest common ancestor is the deepest node that has both values in its subtree. A node counts as an ancestor of itself, so the answer may be the node holding `p` or `q`. `p` and `q` may be equal and may be given in either order.\n- Return the node itself (not a copy) using `Solution.TreeNode` (fields `value`, `left`, `right`). Do not modify the tree.\n\nExamples\n- In `[20, 10, 30, 5, 15, 25, 35]`, the ancestor of `5` and `15` is the node `10`.\n- In the same tree, the ancestor of `5` and `35` is the root `20`.\n- In the same tree, the ancestor of `10` and `15` is the node `10`, an ancestor of itself.\n",
+  "examples": [
+    {
+      "input": "root = [20, 10, 30, 5, 15, 25, 35], p = 5, q = 15",
+      "output": "node 10"
+    },
+    {
+      "input": "root = [20, 10, 30, 5, 15, 25, 35], p = 5, q = 35",
+      "output": "node 20"
+    },
+    {
+      "input": "root = [20, 10, 30, 5, 15, 25, 35], p = 10, q = 15",
+      "output": "node 10"
+    }
+  ],
+  "hints": [
+    "Both values are in the tree, so ordering rules tell you which side each one lives on without searching both subtrees.",
+    "From the root: if both values are smaller than the current node, move left; if both are larger, move right.",
+    "The first node where the values split (or equal one of them) is the answer; no recursion or extra storage is needed. Intended complexity: O(h) time for tree height h (O(log n) in a balanced tree with n nodes) and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the tree in level order followed by the two values, for example: [20, 10, 30, 5, 15, 25, 35] 5 15",
+  "sampleInput": "[20, 10, 30, 5, 15, 25, 35] 5 15",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

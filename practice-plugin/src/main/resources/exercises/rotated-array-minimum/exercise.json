@@ -1,0 +1,30 @@
+{
+  "id": "rotated-array-minimum",
+  "title": "Rotated Array Minimum",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Find the smallest value in a sorted array of distinct integers that has been rotated.\n\nContract\n- `rotated` is non-null, non-empty and holds distinct values. It started in ascending order and was then rotated by some number of positions (possibly zero), so a prefix of the sorted order was moved to the end.\n- Return the smallest value. Do not mutate the input.\n- A linear scan is correct but not the goal; the expected solution halves the search range at every step.\n\nExamples\n- `findMinimum(new int[]{5, 6, 7, 1, 2, 3})` returns `1`.\n- `findMinimum(new int[]{1, 2, 3})` returns `1`.\n- `findMinimum(new int[]{9})` returns `9`.\n",
+  "examples": [
+    {
+      "input": "rotated = [5, 6, 7, 1, 2, 3]",
+      "output": "1"
+    },
+    {
+      "input": "rotated = [1, 2, 3]",
+      "output": "1"
+    },
+    {
+      "input": "rotated = [9]",
+      "output": "9"
+    }
+  ],
+  "hints": [
+    "The minimum is the only element whose predecessor is larger, the point where the order wraps.",
+    "Compare the middle element with the last element to decide which half still contains the wrap point.",
+    "Keep the minimum inside an inclusive range and shrink it with lo = mid + 1 or hi = mid. Intended complexity: O(log n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the rotated array values (at least one), for example: [5, 6, 7, 1, 2, 3]",
+  "sampleInput": "[5, 6, 7, 1, 2, 3]",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

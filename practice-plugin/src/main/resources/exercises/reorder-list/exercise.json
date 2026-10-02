@@ -1,0 +1,30 @@
+{
+  "id": "reorder-list",
+  "title": "Reorder List",
+  "topic": "Linked Lists",
+  "difficulty": "Medium",
+  "statement": "Rearrange a singly linked list in place so it alternates between the front and the back.\n\nContract\n- `head` may be null or may point to the first node of an acyclic list. Each node has an integer `value` and a mutable `next` reference.\n- A list `L0 -> L1 -> ... -> Ln` must become `L0 -> Ln -> L1 -> Ln-1 -> L2 -> ...`, ending when every node has been used once.\n- The method returns nothing: the original head node stays the head and the last node of the new order must have `next` equal to null.\n- Relink the existing nodes. Do not allocate replacement nodes, change node values, or copy the nodes into an array or list.\n\nExamples\n- `1 -> 2 -> 3 -> 4` becomes `1 -> 4 -> 2 -> 3`.\n- `1 -> 2 -> 3 -> 4 -> 5` becomes `1 -> 5 -> 2 -> 4 -> 3`.\n- A one-node list stays unchanged.\n",
+  "examples": [
+    {
+      "input": "head = 1 -> 2 -> 3 -> 4",
+      "output": "1 -> 4 -> 2 -> 3"
+    },
+    {
+      "input": "head = 1 -> 2 -> 3 -> 4 -> 5",
+      "output": "1 -> 5 -> 2 -> 4 -> 3"
+    },
+    {
+      "input": "head = 7",
+      "output": "7"
+    }
+  ],
+  "hints": [
+    "The back half is needed in reverse order, but a singly linked list cannot be walked backwards.",
+    "Find the middle with a slow and a fast pointer, cut the list there, and reverse the second half in place.",
+    "Interleave the two halves node by node, taking care to save each successor before relinking. Intended complexity: O(n) time and O(1) extra space, where n is the number of nodes."
+  ],
+  "inputSyntax": "Input: the list values in order, for example: [1, 2, 3, 4]",
+  "sampleInput": "[1, 2, 3, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

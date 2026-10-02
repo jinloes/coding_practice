@@ -1,0 +1,30 @@
+{
+  "id": "tree-max-depth",
+  "title": "Tree Max Depth",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Count how many nodes lie on the longest downward path of a binary tree.\n\nContract\n- `root` may be null. Each node has an integer `value` and nullable `left` and `right` children.\n- Return the number of nodes on the longest path that starts at the root and ends at a leaf; an empty tree has depth 0.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[3, 9, 20, null, null, 15, 7]` has depth 3.\n- A null tree has depth 0.\n- `[4, 2, null, 1]` leans left and has depth 3.\n",
+  "examples": [
+    {
+      "input": "root = [3, 9, 20, null, null, 15, 7]",
+      "output": "3"
+    },
+    {
+      "input": "root = null",
+      "output": "0"
+    },
+    {
+      "input": "root = [4, 2, null, 1]",
+      "output": "3"
+    }
+  ],
+  "hints": [
+    "A tree's depth is decided by its taller subtree plus the current node.",
+    "Treat a missing child as depth 0 and combine the two child answers with the current node.",
+    "Visit every node once. Intended complexity: O(n) time for n nodes. Space is the recursion depth: O(h) for tree height h, which is O(log n) for a balanced tree (the workload uses balanced trees) and O(n) for a chain."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [3, 9, 20, null, null, 15, 7]",
+  "sampleInput": "[3, 9, 20, null, null, 15, 7]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

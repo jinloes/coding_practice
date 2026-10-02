@@ -72,20 +72,31 @@ catalog resolves them through `ExerciseCatalog`, rejects unknown or duplicate
 IDs, and orders each guide's exercises Easy, Medium, then Hard using the
 exercises' own difficulty. Guides add no persisted state.
 
+`TrackCatalog` is the ordered registry of practice tracks: hand-curated
+problem lists such as Blind 75 or a company list. Each bundled
+`tracks/<id>.json` uses the guide manifest schema and validation, holding notes
+instead of a lesson. Track exercises are original problems in the shared
+catalog, so a track never ships its own content. Tracks are not official or
+verified question lists; company tracks are approximate pattern practice and
+are not derived from third-party company-tag data. Tracks add no persisted
+state.
+
 `ExampleLibraries` reads the generated library index and extracts bundled
 AssertJ jars for example compilation and execution.
 
 Exercise content is data plus Java templates under
 `src/main/resources/exercises/<id>/`. Author-only reference implementations
-live under `src/test/resources/reference/<id>/` and are never shipped as learner
-starters.
+live under `src/test/resources/reference/<id>/`, and deliberately buggy
+candidates that the shipped tests must reject live under
+`src/test/resources/known-wrong/<id>/`. Neither is shipped.
 
 ### `ui`
 
 `PracticeToolWindowFactory` registers the Practice tool window.
 `PracticePanel` owns presentation and user interaction:
 
-- catalog search and guide, topic, difficulty, and progress filters;
+- catalog search and guide, practice track, topic, difficulty, and progress
+  filters;
 - exercise statements, study guides, hints, attempts, and result rendering;
 - attempt creation and opening;
 - example, custom-input, debug, check, stop, cleanup, limits, and legacy-import
@@ -95,7 +106,9 @@ starters.
 The panel delegates storage, execution, and migration work. It does not own
 their persistence or process lifecycle. `ExerciseFilters` holds the search and
 filter controls, including the guide selector that narrows and orders the list
-to one guide, `StudyGuideView` renders the Study Guide tab, `LimitsDialog` edits
+to one guide and the track selector that narrows the list (or the selected
+guide) to one track, `StudyGuideView` renders the Study Guide tab for the
+selected guide or, when no guide is selected, the selected track, `LimitsDialog` edits
 execution limits, and `PracticeViews` provides stateless Swing building blocks;
 none of them hold panel state. Pass marks come from
 `ManagedPracticeProgress.passedExerciseIds()`, derived from stored history.
@@ -243,7 +256,8 @@ The standalone Gradle build:
 - resolves `exampleLibraries`, packages their jars, and generates `index.txt`;
 - replaces dependency and Java release tokens in
   `gradle/verification-build.gradle`;
-- packages exercise, study guide, harness, and plugin descriptor resources.
+- packages exercise, study guide, practice track, harness, and plugin
+  descriptor resources.
 
 Runtime code must not assume dependency jar filenames. It consumes the generated
 library index.

@@ -1,0 +1,30 @@
+{
+  "id": "sum-without-plus",
+  "title": "Sum Without Plus",
+  "topic": "Bit Manipulation",
+  "difficulty": "Medium",
+  "statement": "Add two 32-bit integers using only bitwise operations, shifts, and comparisons.\n\nContract\n- `a` and `b` may be any `int`, positive, negative, or zero.\n- Return `a + b` with Java `int` semantics: when the true sum does not fit in 32 bits, the\n  result wraps around in two's complement, exactly as `a + b` would.\n- Do not use `+`, `-`, `++`, `--`, or `Math.addExact`-style helpers in your solution. The tests\n  cannot enforce this, so treat it as part of the exercise.\n\nExamples\n- `add(13, 29)` returns `42`.\n- `add(-5, 3)` returns `-2`.\n- `add(7, -7)` returns `0`.\n",
+  "examples": [
+    {
+      "input": "a = 13, b = 29",
+      "output": "42"
+    },
+    {
+      "input": "a = -5, b = 3",
+      "output": "-2"
+    },
+    {
+      "input": "a = 7, b = -7",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Add two single bits by hand: the sum bit is their XOR and the carry bit is their AND.",
+    "Do the same for whole words: XOR gives the sum ignoring carries, and AND shifted left by one gives the carries. Repeat until nothing is left to carry.",
+    "Loop while the carry word is non-zero; two's complement makes negatives and overflow work with no special cases. Intended complexity: O(1) per addition (at most 32 rounds) and O(1) space, so a batch of n additions costs O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: two integers separated by a space, for example: 13 29",
+  "sampleInput": "13 29",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

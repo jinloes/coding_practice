@@ -1,0 +1,30 @@
+{
+  "id": "longest-palindromic-substring",
+  "title": "Longest Palindromic Substring",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "Find a longest contiguous piece of a string that reads the same forwards and backwards.\n\nContract\n- `text` is non-null and may be empty; it can contain any characters. Comparison is\n  case-sensitive and exact (no skipping of spaces or punctuation).\n- Return a palindromic substring of `text` whose length is the maximum possible. When several\n  longest palindromes exist, any one of them is accepted. For an empty `text`, return `\"\"`.\n\nExamples\n- `longestPalindrome(\"xabbay\")` returns `\"abba\"`.\n- `longestPalindrome(\"qrsr\")` returns `\"rsr\"`.\n- `longestPalindrome(\"ab\")` returns `\"a\"` or `\"b\"`.\n",
+  "examples": [
+    {
+      "input": "text = \"xabbay\"",
+      "output": "\"abba\""
+    },
+    {
+      "input": "text = \"qrsr\"",
+      "output": "\"rsr\""
+    },
+    {
+      "input": "text = \"ab\"",
+      "output": "\"a\" or \"b\""
+    }
+  ],
+  "hints": [
+    "Every palindrome mirrors around its middle. Think about what the middle can look like for odd and even lengths.",
+    "Treat each character, and each gap between two characters, as a possible center and grow outward while the two ends match; remember the best span.",
+    "Track only start and length, and extract the substring once at the end. Intended complexity: O(n^2) time and O(n) space, where n is the length of the text (the O(n) space is the returned substring)."
+  ],
+  "inputSyntax": "Input: one piece of text with no spaces, for example: xabbay",
+  "sampleInput": "xabbay",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}
