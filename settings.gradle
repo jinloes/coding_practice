@@ -1,4 +1,4 @@
 include ":sorting", ":bit_manipulation", ":arrays", ":strings",
         ":linked_lists", ":stacks_and_queues", ":binary_trees", ":heaps", ":searching", ":hash_tables",
         ":binary_search_tree", ":recursion", ":greedy", ":graphs", ":regex",
-        ":concurrency", ":reflection", ":design", ":dynamic_programming"
+        ":concurrency", ":reflection", ":design", ":dynamic_programming", ":cryptography"

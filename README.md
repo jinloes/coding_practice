@@ -39,6 +39,12 @@ These modules focus on Java APIs, language features, and design-oriented practic
 
 This module experiments with regex engines beyond the JDK implementation and includes PCRE2 integration through `pcre4j`.
 
+### Cryptography And Key Management Study Guide
+
+- `cryptography`
+
+A four-week study plan for key management, cryptography, secrets management, and PKI, with JDK-only reference implementations (AES-GCM, HKDF, envelope encryption, an in-memory KMS, Ed25519/X25519, Shamir secret sharing) and tests. Start at [cryptography/README.md](cryptography/README.md).
+
 ### System Design Assets
 
 - `system_design`

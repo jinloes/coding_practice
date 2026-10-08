@@ -20,6 +20,7 @@ Each topic is implemented as an independent Gradle submodule.
 | Data structure practice | `hash_tables`, `linked_lists`, `stacks_and_queues`, `heaps`, `binary_trees`, `binary_search_tree` | ADT and tree/heap implementations |
 | Platform and language features | `concurrency`, `reflection`, `design` | Java platform, patterns, and API-focused practice |
 | Regex engine work | `regex` | Java regex and PCRE2 integration via pcre4j |
+| Security study guide | `cryptography` | Key management and cryptography study docs plus JDK-only reference implementations |
 
 ## Language Strategy
 
