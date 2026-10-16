@@ -8,6 +8,13 @@
     "merge-k-sorted-lists",
     "top-k-frequent",
     "running-median",
-    "minimum-meeting-rooms"
+    "minimum-meeting-rooms",
+    "kth-largest-stream",
+    "heaviest-stones-smash",
+    "k-closest-points",
+    "kth-largest-element",
+    "task-cooldown-schedule",
+    "social-feed",
+    "signal-delay-time"
   ]
 }

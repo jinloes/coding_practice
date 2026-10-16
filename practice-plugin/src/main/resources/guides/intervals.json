@@ -8,6 +8,7 @@
     "merge-intervals",
     "insert-interval",
     "remove-overlapping-intervals",
-    "minimum-meeting-rooms"
+    "minimum-meeting-rooms",
+    "interval-query-min"
   ]
 }

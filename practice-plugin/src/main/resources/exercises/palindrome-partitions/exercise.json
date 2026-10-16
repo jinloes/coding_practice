@@ -1,0 +1,30 @@
+{
+  "id": "palindrome-partitions",
+  "title": "Palindrome Partitions",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "Split a string into consecutive pieces so that every piece reads the same forwards and backwards, and list all such splits.\n\nContract\n- `text` is a non-null string; characters are compared exactly (case-sensitive). It may be empty.\n- A partition cuts `text` into consecutive non-empty pieces that, joined in order, give back `text`. Every piece must be a palindrome. A single character is a palindrome.\n- Return every valid partition once, each as the list of its pieces in order. The order of the partitions does not matter.\n- The empty string has exactly one partition, the one with no pieces, so the result is `[[]]`.\n\nExamples\n- `partitions(\"aab\")` returns `[[\"a\", \"a\", \"b\"], [\"aa\", \"b\"]]` in any order.\n- `partitions(\"abc\")` returns `[[\"a\", \"b\", \"c\"]]`.\n- `partitions(\"racecar\")` returns four partitions, among them `[\"racecar\"]` and `[\"r\", \"aceca\", \"r\"]`.\n",
+  "examples": [
+    {
+      "input": "text = \"aab\"",
+      "output": "[[\"a\", \"a\", \"b\"], [\"aa\", \"b\"]] in any order"
+    },
+    {
+      "input": "text = \"abc\"",
+      "output": "[[\"a\", \"b\", \"c\"]]"
+    },
+    {
+      "input": "text = \"racecar\"",
+      "output": "[[\"r\", \"a\", \"c\", \"e\", \"c\", \"a\", \"r\"], [\"r\", \"a\", \"cec\", \"a\", \"r\"], [\"r\", \"aceca\", \"r\"], [\"racecar\"]] in any order"
+    }
+  ],
+  "hints": [
+    "Choose the first piece, then partition what is left. The first piece can end at any position, but only if it is a palindrome.",
+    "Recurse on the remainder with the current pieces kept in a list; when the start index reaches the end of the text, copy the list into the results. Undo the last piece before trying the next cut.",
+    "Checking each candidate piece from scratch repeats work. Precompute a table of which substrings are palindromes (a substring is one when its end characters match and its inside is one). The probe uses a string with no palindrome longer than one character. Intended complexity: O(n^2) time and O(n^2) space for the table on that family; the number of partitions can be exponential in general."
+  ],
+  "inputSyntax": "Input: the text, for example: aab",
+  "sampleInput": "aab",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n^2)"
+}

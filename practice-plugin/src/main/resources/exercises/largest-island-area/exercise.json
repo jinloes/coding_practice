@@ -1,0 +1,30 @@
+{
+  "id": "largest-island-area",
+  "title": "Largest Island Area",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Find the area of the largest island of land in a grid of water and land cells.\n\nContract\n- `grid` is a rectangular array of `0` (water) and `1` (land); it may have no rows, and each row is the same length.\n- An island is a set of land cells joined through shared edges only: up, down, left and right. Diagonal neighbours are not connected.\n- The area of an island is its number of cells. Return the largest area, or 0 when there is no land.\n- Grids can be a few hundred cells on each side, so avoid recursion that is as deep as the island is large. Do not modify `grid`.\n\nExamples\n- `largestIsland(new int[][]{{1,1,0,0},{1,0,0,1},{0,0,1,1},{0,0,0,1}})` returns `4`: the right-hand island has four cells and the left-hand one has three.\n- `largestIsland(new int[][]{{1,0},{0,1}})` returns `1` because the two cells only touch at a corner.\n- `largestIsland(new int[][]{{0,0,0}})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "grid = [[1,1,0,0],[1,0,0,1],[0,0,1,1],[0,0,0,1]]",
+      "output": "4"
+    },
+    {
+      "input": "grid = [[1,0],[0,1]]",
+      "output": "1"
+    },
+    {
+      "input": "grid = [[0,0,0]]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Land cells that touch form one island; find one cell of an island and you can discover the rest of it by spreading outward.",
+    "Scan every cell. At an unvisited land cell, flood outward through its four neighbours while counting cells, marking each as visited, and keep the largest count seen.",
+    "Use an explicit stack or queue (or a visited array) so large islands cannot overflow the call stack. Intended complexity: O(n) time and O(n) space, where n is the number of cells in the grid."
+  ],
+  "inputSyntax": "Input: the grid rows as nested lists of 0 and 1, for example: [[1, 1, 0, 0], [1, 0, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]]",
+  "sampleInput": "[[1, 1, 0, 0], [1, 0, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

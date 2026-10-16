@@ -10,6 +10,18 @@
     "island-count",
     "alien-alphabet-order",
     "valid-tree-graph",
-    "connected-component-count"
+    "connected-component-count",
+    "largest-island-area",
+    "captured-regions",
+    "rot-spread-time",
+    "nearest-gate-distance",
+    "course-order",
+    "redundant-edge",
+    "word-ladder-length",
+    "itinerary-reconstruction",
+    "min-cost-connect-points",
+    "signal-delay-time",
+    "rising-water-path",
+    "cheapest-flights-k-stops"
   ]
 }

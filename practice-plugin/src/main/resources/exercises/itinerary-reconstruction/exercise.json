@@ -1,0 +1,30 @@
+{
+  "id": "itinerary-reconstruction",
+  "title": "Itinerary Reconstruction",
+  "topic": "Graphs",
+  "difficulty": "Hard",
+  "statement": "Order a set of one-way flight tickets into a single trip that uses every ticket exactly once and is alphabetically smallest.\n\nContract\n- Each ticket is a two-element list `[from, to]` of airport codes. The trip begins at `start`.\n- Every ticket must be used exactly once; the same ticket may appear several times and then must be used that many times.\n- A valid trip is guaranteed to exist. With no tickets the trip is just `[start]`.\n- Return the airports visited in order. When several valid trips exist, return the one that is smallest when compared airport by airport using normal string order.\n- Do not modify the ticket list.\n\nExamples\n- `[SEA-PDX, PDX-SEA, SEA-LAX]` from `SEA` returns `[SEA, PDX, SEA, LAX]`; flying to `LAX` first would strand the remaining tickets.\n- `[AAA-BBB]` from `AAA` returns `[AAA, BBB]`.\n- `[HUB-CCC, HUB-AAA, AAA-HUB, CCC-HUB]` from `HUB` returns `[HUB, AAA, HUB, CCC, HUB]`.\n",
+  "examples": [
+    {
+      "input": "tickets = [SEA-PDX, PDX-SEA, SEA-LAX], start = SEA",
+      "output": "[SEA, PDX, SEA, LAX]"
+    },
+    {
+      "input": "tickets = [AAA-BBB], start = AAA",
+      "output": "[AAA, BBB]"
+    },
+    {
+      "input": "tickets = [HUB-CCC, HUB-AAA, AAA-HUB, CCC-HUB], start = HUB",
+      "output": "[HUB, AAA, HUB, CCC, HUB]"
+    }
+  ],
+  "hints": [
+    "Using every ticket exactly once is an Eulerian path: edges are tickets, airports are nodes. Greedily taking the smallest destination can strand tickets behind a dead end.",
+    "Keep each airport's destinations in sorted order. Walk forward taking the smallest unused ticket; an airport with no tickets left can only be the last stop of what remains, so it is finalised and placed at the back.",
+    "Hierholzer's algorithm: DFS with a stack, pop an airport into the answer when it has no unused tickets, then reverse the answer. Use an explicit stack to avoid deep recursion. Intended complexity: O(E log E) time to sort or heapify destinations and O(E) space for E tickets."
+  ],
+  "inputSyntax": "Input: start airport, then tickets as FROM>TO (uppercase codes), for example: SEA SEA>PDX PDX>SEA SEA>LAX",
+  "sampleInput": "SEA SEA>PDX PDX>SEA SEA>LAX",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

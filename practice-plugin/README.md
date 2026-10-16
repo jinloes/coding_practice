@@ -80,30 +80,50 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    the same isolated process measures how the saved solution scales and reports
    the result alongside the exercise's intended complexity.
 
-The catalog includes 86 exercises: Pair Sum, Binary Search, Balanced Delimiters,
-Reverse Linked List, Array Stack, Binary Min Heap, Valid Anagram, First Unique
-Character, Max Stock Profit, Move Zeroes, Merge Sorted Lists, Valid Palindrome,
-Add Strings, Roman to Integer, Longest Common Prefix, Missing Number, Majority
-Element, Subarray Sum Count, Course Schedule, Sliding Window Maximum, Duplicate
-Check, Product Except Self, Maximum Subarray Sum, Maximum Subarray Product,
-Rotated Array Minimum, Rotated Array Search, Zero-Sum Triplets, Largest Water
-Container, Longest Consecutive Run, Sum Without Plus, Count Set Bits, Bit Count
-Table, Reverse Bits, Insert Interval, Merge Intervals, Remove Overlapping
-Intervals, Meeting Conflicts, Minimum Meeting Rooms, Stair Climbing Ways, Fewest
-Coins, Longest Increasing Subsequence, Longest Common Subsequence, Word
-Segmentation, Combination Sum, Non-Adjacent Max Sum, Circular Non-Adjacent Max
-Sum, Digit Decodings, Grid Paths, Reachable End, Clone Graph, Ocean Drainage,
-Island Count, Alien Alphabet Order, Valid Tree Graph, Connected Component Count,
-Linked List Cycle, Merge K Sorted Lists, Remove Nth From End, Reorder List, Top
-K Frequent Values, Running Median, Zero Matrix Lines, Spiral Order, Rotate
-Square Matrix, Grid Word Search, Longest Unique Substring, Longest Repeat After
-Replacement, Minimum Covering Window, Group Anagrams, Longest Palindromic
-Substring, Palindromic Substring Count, String List Codec, Tree Max Depth, Same
-Tree, Mirror Tree, Max Path Sum, Level Order Values, Tree Codec, Subtree Match,
-Tree From Traversals, Valid Search Tree, Kth Smallest In Search Tree, Search
-Tree Common Ancestor, Prefix Tree, Wildcard Word Dictionary, and Grid Multi-Word
-Search. Each has an explicit contract and three optional hints. The last hint
-discusses the intended complexity.
+The catalog includes 159 exercises: Pair Sum, Binary Search, Balanced
+Delimiters, Reverse Linked List, Array Stack, Binary Min Heap, Valid Anagram,
+First Unique Character, Max Stock Profit, Move Zeroes, Merge Sorted Lists, Valid
+Palindrome, Add Strings, Roman to Integer, Longest Common Prefix, Missing
+Number, Majority Element, Subarray Sum Count, Course Schedule, Sliding Window
+Maximum, Duplicate Check, Product Except Self, Maximum Subarray Sum, Maximum
+Subarray Product, Rotated Array Minimum, Rotated Array Search, Zero-Sum
+Triplets, Largest Water Container, Longest Consecutive Run, Sum Without Plus,
+Count Set Bits, Bit Count Table, Reverse Bits, Insert Interval, Merge Intervals,
+Remove Overlapping Intervals, Meeting Conflicts, Minimum Meeting Rooms, Stair
+Climbing Ways, Fewest Coins, Longest Increasing Subsequence, Longest Common
+Subsequence, Word Segmentation, Combination Sum, Non-Adjacent Max Sum, Circular
+Non-Adjacent Max Sum, Digit Decodings, Grid Paths, Reachable End, Clone Graph,
+Ocean Drainage, Island Count, Alien Alphabet Order, Valid Tree Graph, Connected
+Component Count, Linked List Cycle, Merge K Sorted Lists, Remove Nth From End,
+Reorder List, Top K Frequent Values, Running Median, Zero Matrix Lines, Spiral
+Order, Rotate Square Matrix, Grid Word Search, Longest Unique Substring, Longest
+Repeat After Replacement, Minimum Covering Window, Group Anagrams, Longest
+Palindromic Substring, Palindromic Substring Count, String List Codec, Tree Max
+Depth, Same Tree, Mirror Tree, Max Path Sum, Level Order Values, Tree Codec,
+Subtree Match, Tree From Traversals, Valid Search Tree, Kth Smallest In Search
+Tree, Search Tree Common Ancestor, Prefix Tree, Wildcard Word Dictionary, Grid
+Multi-Word Search, Sudoku Board Check, Sorted Pair Sum, Trapped Rainwater,
+Permutation Substring, Min-Tracking Stack, Postfix Evaluation, Parentheses
+Generation, Warmer Day Wait, Car Fleets, Largest Histogram Rectangle, Sorted
+Matrix Search, Minimum Eating Speed, Timestamped Key-Value Store, Sorted Arrays
+Median, Random-Pointer List Copy, Add Digit Lists, Duplicate in Range,
+Least-Recently-Used Cache, Reverse in Groups, Tree Diameter, Height-Balanced
+Tree, Reverse Digits, Right Side View, Good Node Count, Kth Largest in a Stream,
+Heaviest Stones Smash, K Closest Points, Kth Largest Element, Task Cooldown
+Schedule, Unpaired Value, Social Feed, All Subsets, All Permutations, Subsets
+with Duplicates, Unique Combination Sum, Palindrome Partitions, Phone Letter
+Combinations, Queens Placement, Largest Island Area, Captured Regions, Rot
+Spread Time, Nearest Gate Distance, Course Order, Redundant Edge, Word Ladder
+Length, Itinerary Reconstruction, Min Cost to Connect Points, Signal Delay Time,
+Rising Water Path, Cheapest Flights Within K Stops, Min-Cost Stairs, Equal
+Subset Partition, Stock Profit with Cooldown, Coin Change Ways, Target Sign Sum,
+String Interleaving, Longest Increasing Grid Path, Distinct Subsequence Count,
+Edit Distance, Balloon Burst Max, Dot-Star Matching, Min Jumps to End, Gas
+Station Circuit, Consecutive Hand Groups, Triplet Merge Target, Label
+Partitions, Wildcard Parentheses Check, Smallest Covering Interval, Happy
+Number, Increment Digits, Fast Power, Multiply Strings, and Axis Square Counter.
+Each has an explicit contract and three optional hints. The last hint discusses
+the intended complexity.
 
 ## Study guides
 
@@ -111,8 +131,8 @@ Pick a topic in the **Guide** selector above the filters to study one interview
 data structure or technique: Hash Maps and Sets, Two Pointers, Sliding Window,
 Stacks and Queues, Linked Lists, Binary Search, Prefix Sums, Heaps and Priority
 Queues, Graphs and Topological Sort, Binary Trees and Search Trees, Tries,
-Backtracking, Dynamic Programming, Intervals, Bit Manipulation, or Matrices and
-Grids. The **Study Guide** tab shows a short
+Backtracking, Dynamic Programming, Intervals, Bit Manipulation, Matrices and
+Grids, Greedy, or Math and Geometry. The **Study Guide** tab shows a short
 lesson (how it works, when to reach for it, common patterns, and pitfalls) and
 the guide's problems grouped Easy, Medium, and Hard with your pass progress.
 The exercise list narrows to those problems, easiest first, and the other
@@ -129,6 +149,9 @@ through a curated set of problems. Bundled tracks:
   shared Blind 75 interview list, covering arrays, binary, dynamic programming,
   graphs, intervals, linked lists, matrices, strings, trees, and heaps. The
   statements, examples, and tests are written for this plugin, not copied.
+- **NeetCode 150**: original practice versions of the NeetCode 150 study list,
+  which keeps the Blind 75 and adds 75 more problems on stacks, backtracking,
+  advanced graphs, two-dimensional dynamic programming, greedy, and math.
 - **Google**: problems whose patterns are commonly reported in Google coding
   interviews. Company tracks are approximate and are not copied from any
   company-tag service.

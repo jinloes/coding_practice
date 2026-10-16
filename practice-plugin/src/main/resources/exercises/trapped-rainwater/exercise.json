@@ -1,0 +1,30 @@
+{
+  "id": "trapped-rainwater",
+  "title": "Trapped Rainwater",
+  "topic": "Arrays",
+  "difficulty": "Hard",
+  "statement": "Compute how much rain a row of bars can hold after a storm.\n\nContract\n- `heights` is a non-null array of non-negative `int` values; each entry is the height of a bar one unit wide, and bars touch each other.\n- Water collects above a bar up to the lower of the tallest bar to its left and the tallest bar to its right (both including the bar itself); water above the edges of the row runs off.\n- Return the total water volume over all bars as a `long`, since it can exceed the `int` range.\n- The array may be empty or have fewer than three bars, which hold nothing. Do not mutate `heights`.\n\nExamples\n- `trap(new int[]{0, 2, 0, 3, 1, 0, 2})` returns `5`: 2 above the second 0, 1 above the 1 and 2 above the last 0.\n- `trap(new int[]{3, 1, 3})` returns `2`.\n- `trap(new int[]{1, 2, 3})` returns `0`, because a staircase drains away.\n",
+  "examples": [
+    {
+      "input": "heights = [0, 2, 0, 3, 1, 0, 2]",
+      "output": "5"
+    },
+    {
+      "input": "heights = [3, 1, 3]",
+      "output": "2"
+    },
+    {
+      "input": "heights = [1, 2, 3]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Look at one bar at a time: the water above it depends only on the tallest bars on each side.",
+    "Precomputing the tallest bar to the left and to the right of every position gives a simple linear solution with extra arrays.",
+    "To drop the arrays, move two pointers inward and always advance the side whose running maximum is smaller, since that side's water level is already known. Intended complexity: O(n) time and O(1) extra space, where n is the number of bars."
+  ],
+  "inputSyntax": "Input: the bar heights, for example: [0, 2, 0, 3, 1, 0, 2]",
+  "sampleInput": "[0, 2, 0, 3, 1, 0, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "permutation-substring",
+  "title": "Permutation Substring",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Check whether some contiguous piece of a text is a rearrangement of a pattern.\n\nContract\n- `text` and `pattern` are non-null strings of lowercase English letters `'a'`-`'z'`; either may be empty.\n- Return `true` when some substring of `text` has exactly the same letters as `pattern`, each with the same count, in any order; the substring must be contiguous and as long as `pattern`.\n- An empty `pattern` matches any text, including the empty text, so the result is `true`. A pattern longer than the text yields `false`.\n\nExamples\n- `containsPermutation(\"deadbeef\", \"bee\")` returns `true`: the substring `\"bee\"` is at index 4.\n- `containsPermutation(\"abcxyzcba\", \"cab\")` returns `true` because `\"abc\"` is a rearrangement of `\"cab\"`.\n- `containsPermutation(\"aabbcc\", \"abc\")` returns `false`: no three consecutive letters are all different.\n",
+  "examples": [
+    {
+      "input": "text = \"deadbeef\", pattern = \"bee\"",
+      "output": "true"
+    },
+    {
+      "input": "text = \"abcxyzcba\", pattern = \"cab\"",
+      "output": "true"
+    },
+    {
+      "input": "text = \"aabbcc\", pattern = \"abc\"",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Two strings are rearrangements of each other exactly when their letter counts match.",
+    "Only windows of length pattern.length() can match, so slide a window of that length over the text instead of recounting each one.",
+    "When the window moves one step, add the entering letter and remove the leaving letter, and track how many of the 26 counts currently match the pattern. Intended complexity: O(n) time and O(1) extra space (26 counters), where n is the text length."
+  ],
+  "inputSyntax": "Input: the text, then the pattern, separated by a space, for example: deadbeef bee",
+  "sampleInput": "deadbeef bee",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

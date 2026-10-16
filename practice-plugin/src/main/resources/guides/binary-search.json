@@ -6,6 +6,10 @@
   "exercises": [
     "binary-search",
     "rotated-array-minimum",
-    "rotated-array-search"
+    "rotated-array-search",
+    "sorted-matrix-search",
+    "minimum-eating-speed",
+    "timestamped-key-value-store",
+    "sorted-arrays-median"
   ]
 }

@@ -1,0 +1,30 @@
+{
+  "id": "sudoku-board-check",
+  "title": "Sudoku Board Check",
+  "topic": "Matrices",
+  "difficulty": "Medium",
+  "statement": "Decide whether a partly filled 9x9 digit grid breaks the sudoku rules so far.\n\nContract\n- `board` is a non-null 9x9 `char[][]`; each cell is a digit `'1'` to `'9'` or `'.'` for an empty cell.\n- The board is valid when no digit repeats within any row, any column, or any of the nine 3x3 boxes that tile the grid. Empty cells never conflict with anything.\n- Only the filled cells are judged: return `true` for a board that obeys the rules even if it could not be completed into a full solution.\n- Do not mutate `board`.\n\nExamples\n- `isValid` on a grid whose filled cells never repeat in a row, column or box returns `true`.\n- Two `4`s at the top-left corner box, one at row 0 column 0 and one at row 1 column 1, return `false`.\n- Two `7`s in column 5, at rows 0 and 8, return `false`.\n",
+  "examples": [
+    {
+      "input": "board with filled cells only from a valid solved grid",
+      "output": "true"
+    },
+    {
+      "input": "'4' at (row 0, col 0) and (row 1, col 1), all else empty",
+      "output": "false"
+    },
+    {
+      "input": "'7' at (row 0, col 5) and (row 8, col 5), all else empty",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Three kinds of group must each hold at most one copy of every digit: rows, columns and boxes.",
+    "Keep a seen-set per row, per column and per box while scanning every cell once. The box of a cell is (row / 3) * 3 + col / 3.",
+    "Skip '.' cells and test all three sets before adding the digit. Intended complexity: O(1) time and O(1) space, because the board size is fixed at 81 cells (O(n) in the cell count n)."
+  ],
+  "inputSyntax": "Input: nine rows of nine characters ('1'-'9' or '.') separated by spaces, for example: 1...5...9 .5...9... ..9...4.. ...5...9. 5...9...4 .9...4... ..5...9.. ...9...4. 9...4...8",
+  "sampleInput": "1...5...9 .5...9... ..9...4.. ...5...9. 5...9...4 .9...4... ..5...9.. ...9...4. 9...4...8",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

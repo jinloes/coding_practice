@@ -1,0 +1,30 @@
+{
+  "id": "interval-query-min",
+  "title": "Smallest Covering Interval",
+  "topic": "Intervals",
+  "difficulty": "Hard",
+  "statement": "For each query point, find the size of the smallest interval that contains it, or -1 if no interval does.\n\nContract\n- `intervals` and `queries` are non-null and either may be empty. Each interval is a two-element array `{start, end}` with `1 <= start <= end <= 1_000_000_000`; queries are in the same value range.\n- An interval contains a point when `start <= point <= end`, so both ends are inclusive. Its size is `end - start + 1`.\n- Return an array with one answer per query, in the order the queries were given. Queries may repeat and may come in any order; intervals may repeat or nest.\n- Do not modify `intervals` or `queries`.\n\nExamples\n- `smallestCovering(new int[][]{{2, 5}, {3, 4}, {8, 9}}, new int[]{4, 6, 9, 1})` returns `[2, -1, 2, -1]`.\n- `smallestCovering(new int[][]{{1, 10}}, new int[]{1, 10, 11})` returns `[10, 10, -1]`.\n- `smallestCovering(new int[][]{}, new int[]{5})` returns `[-1]`.\n",
+  "examples": [
+    {
+      "input": "intervals = [[2,5],[3,4],[8,9]], queries = [4,6,9,1]",
+      "output": "[2, -1, 2, -1]"
+    },
+    {
+      "input": "intervals = [[1,10]], queries = [1,10,11]",
+      "output": "[10, 10, -1]"
+    },
+    {
+      "input": "intervals = [], queries = [5]",
+      "output": "[-1]"
+    }
+  ],
+  "hints": [
+    "Scanning every interval for every query is correct but too slow when both lists are large. Answer the queries in increasing order of value instead.",
+    "Sort the intervals by start and the queries by value (remembering original positions). For each query, push every interval that has started into a min-heap keyed by size.",
+    "Before reading the heap, pop intervals whose end is before the query; they can never help a later, larger query either. The top of the heap is then the answer. Intended complexity: O((n + q) log (n + q)) time for n intervals and q queries, and O(n + q) extra space."
+  ],
+  "inputSyntax": "Input: intervals, a bar, then queries, for example: [[2,5],[3,4],[8,9]] | [4,6,9,1]",
+  "sampleInput": "[[2,5],[3,4],[8,9]] | [4,6,9,1]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

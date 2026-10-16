@@ -1,0 +1,30 @@
+{
+  "id": "task-cooldown-schedule",
+  "title": "Task Cooldown Schedule",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Find the fewest time slots needed to run every task when identical tasks must be spaced apart.\n\nContract\n- `tasks` is a string of uppercase letters `A`-`Z`; each letter is a kind of task and each task takes exactly one slot. It may be empty.\n- Two tasks of the same letter must have at least `cooldown` slots between them. Different letters have no restriction.\n- Tasks may run in any order, and a slot may be left idle. Return the minimum total number of slots, idle ones included; an empty string needs `0`.\n- `cooldown >= 0`. Throw `IllegalArgumentException` for a negative cooldown.\n\nExamples\n- `AAABBB` with cooldown `2` takes 8 slots: `A B _ A B _ A B`.\n- `ABCD` with cooldown `3` needs no idle slots, so it takes 4.\n- `AAAB` with cooldown `2` takes 7 slots: `A B _ A _ _ A`.\n",
+  "examples": [
+    {
+      "input": "tasks = \"AAABBB\", cooldown = 2",
+      "output": "8"
+    },
+    {
+      "input": "tasks = \"ABCD\", cooldown = 3",
+      "output": "4"
+    },
+    {
+      "input": "tasks = \"AAAB\", cooldown = 2",
+      "output": "7"
+    }
+  ],
+  "hints": [
+    "Always run the task type with the most work remaining that is not cooling down; idle only when nothing is ready.",
+    "A max-heap of remaining counts plus a queue of cooling tasks simulates this greedy schedule. Notice what the busiest letter alone forces.",
+    "The most frequent task, repeated `max` times with `tied` letters sharing that count, forces `(max - 1) * (cooldown + 1) + tied` slots; other tasks fit in the gaps or extend the schedule, so the answer is the larger of that and `tasks.length()`. Intended complexity: O(n) time to count letters and O(1) space because the alphabet has 26 letters (the heap simulation costs O(n log 26) time)."
+  ],
+  "inputSyntax": "Input: the task letters A-Z with no spaces, then the cooldown, for example: AAABBB 2",
+  "sampleInput": "AAABBB 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

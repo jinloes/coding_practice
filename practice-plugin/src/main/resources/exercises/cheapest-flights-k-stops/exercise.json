@@ -1,0 +1,30 @@
+{
+  "id": "cheapest-flights-k-stops",
+  "title": "Cheapest Flights Within K Stops",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Find the cheapest way to fly between two cities when you are only willing to make a limited number of stops.\n\nContract\n- Cities are numbered `0..cityCount-1`. `flights[i] = {from, to, price}` is a one-way flight with `price >= 0`; flights may repeat.\n- A route from `source` to `target` is allowed if it has at most `maxStops` intermediate cities, so it uses at most `maxStops + 1` flights. `maxStops = 0` means a direct flight.\n- Return the lowest total price of an allowed route, or `-1` if there is none. If `source == target` the price is 0.\n- Cities may be visited more than once if that is still within the limit. Do not modify `flights`.\n\nExamples\n- With flights `{{0,1,100},{1,2,100},{2,3,100},{0,2,500}}`, going `0 -> 3` with `maxStops = 1` returns `600` (via the pricey `0 -> 2`).\n- The same trip with `maxStops = 2` returns `300`.\n- The same flights, `0 -> 2` with `maxStops = 0` returns `500`.\n",
+  "examples": [
+    {
+      "input": "cityCount = 4, flights = {{0,1,100},{1,2,100},{2,3,100},{0,2,500}}, source = 0, target = 3, maxStops = 1",
+      "output": "600"
+    },
+    {
+      "input": "same flights, source = 0, target = 3, maxStops = 2",
+      "output": "300"
+    },
+    {
+      "input": "same flights, source = 0, target = 2, maxStops = 0",
+      "output": "500"
+    }
+  ],
+  "hints": [
+    "The cheapest path overall may use too many flights, so ordinary Dijkstra on price alone is not enough: the number of flights used is part of the state.",
+    "Think in rounds: after round i you know the cheapest price to every city using at most i flights. One more round relaxes every flight using the previous round's prices.",
+    "Bellman-Ford for maxStops + 1 rounds, reading from a snapshot of the previous round so a single round never chains two flights. Intended complexity: O(k * E) time and O(V) space; the benchmark keeps k fixed, so it scales linearly with the flights."
+  ],
+  "inputSyntax": "Input: city count, source, target, max stops, then flights as from>to:price, for example: 4 0 3 1 0>1:100 1>2:100 2>3:100 0>2:500",
+  "sampleInput": "4 0 3 1 0>1:100 1>2:100 2>3:100 0>2:500",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

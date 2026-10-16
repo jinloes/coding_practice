@@ -1,0 +1,30 @@
+{
+  "id": "all-permutations",
+  "title": "All Permutations",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "List every ordering of a collection of distinct integers.\n\nContract\n- `values` holds distinct integers and may be empty.\n- Return every ordering of all the values exactly once. k values have k! orderings; the empty input has exactly one ordering, the empty one.\n- The order in which the permutations are returned does not matter, but the order of numbers inside each permutation does.\n- Each returned permutation must be its own list, and `values` must not be changed.\n\nExamples\n- `permutations(new int[]{1, 2, 3})` returns `[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]` in any order.\n- `permutations(new int[]{})` returns `[[]]`.\n- `permutations(new int[]{4, 9})` returns `[[4, 9], [9, 4]]` in any order.\n",
+  "examples": [
+    {
+      "input": "values = [1, 2, 3]",
+      "output": "[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]] in any order"
+    },
+    {
+      "input": "values = []",
+      "output": "[[]]"
+    },
+    {
+      "input": "values = [4, 9]",
+      "output": "[[4, 9], [9, 4]] in any order"
+    }
+  ],
+  "hints": [
+    "Fill the positions of the answer from left to right. At each position, any value that is not yet placed may go there.",
+    "Keep a record of which values are already in the current permutation, place one, recurse, then undo the placement so the next choice starts from a clean state.",
+    "A permutation is complete when it holds every value; copy it into the results at that moment. The answer has k! permutations of length k, so the general bound is exponential. The probe measures a batch of n calls on four fixed values, so the work grows linearly in n. Intended complexity: O(n) time and O(n) space for that batch, and O(k * k!) per call in general."
+  ],
+  "inputSyntax": "Input: the values as a list, for example: [1, 2, 3]",
+  "sampleInput": "[1, 2, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

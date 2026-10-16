@@ -1,0 +1,30 @@
+{
+  "id": "parentheses-generation",
+  "title": "Parentheses Generation",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "List every well-formed arrangement of a given number of round-bracket pairs.\n\nContract\n- `pairs` is the number of `(` `)` pairs; it must be non-negative, otherwise throw `IllegalArgumentException`.\n- Return every string of exactly `pairs` opening and `pairs` closing brackets in which each closing bracket matches an earlier opening one (no prefix has more `)` than `(`). Each string appears exactly once.\n- The order of the returned strings is up to you. For `pairs == 0` the only arrangement is the empty string, so return a list holding just `\"\"`.\n\nExamples\n- `generate(1)` returns `[\"()\"]`.\n- `generate(2)` returns `\"(())\"` and `\"()()\"`, in any order.\n- `generate(3)` returns five strings: `\"((()))\"`, `\"(()())\"`, `\"(())()\"`, `\"()(())\"` and `\"()()()\"`, in any order.\n",
+  "examples": [
+    {
+      "input": "pairs = 1",
+      "output": "[\"()\"]"
+    },
+    {
+      "input": "pairs = 2",
+      "output": "Two strings, in any order: \"(())\", \"()()\""
+    },
+    {
+      "input": "pairs = 3",
+      "output": "Five strings, in any order: \"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\""
+    }
+  ],
+  "hints": [
+    "Build a string one character at a time and stop extending it as soon as it can no longer become well-formed.",
+    "Track how many opening and closing brackets have been placed. An opening bracket is allowed while fewer than `pairs` are used; a closing one only while it would not exceed the number of openings.",
+    "Append, recurse, then undo (a shared StringBuilder works). Intended complexity: the answer has the Catalan number C(n) of strings, about 4^n / n^1.5, each of length 2n, so time and space are exponential in n; the probe fixes n and measures the cost of one call, which is constant."
+  ],
+  "inputSyntax": "Input: the number of pairs, from 0 to 10, for example: 3",
+  "sampleInput": "3",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

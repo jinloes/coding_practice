@@ -1,0 +1,30 @@
+{
+  "id": "add-digit-lists",
+  "title": "Add Digit Lists",
+  "topic": "Linked Lists",
+  "difficulty": "Medium",
+  "statement": "Add two non-negative integers that are stored as linked lists of decimal digits, least significant digit first.\n\nContract\n- Each node holds one digit 0-9. The head is the ones place, the next node is the tens place, and so on. So `2 -> 4 -> 3` represents 342.\n- Return the head of a new list holding the sum in the same format. Do not reuse or modify nodes of the inputs.\n- The result has as many nodes as the longer input, plus one extra node holding 1 when a carry is left over after the last digit. Do not strip leading zeros of the inputs (so `0 -> 0` plus `0` is `0 -> 0`).\n- A null list counts as the number 0. If both are null the result is the single node `0`.\n- The numbers can be far larger than any primitive type, so add digit by digit.\n\nExamples\n- `2 -> 4 -> 3` plus `5 -> 6 -> 4` returns `7 -> 0 -> 8` (342 + 465 = 807).\n- `9 -> 9 -> 9 -> 9` plus `1` returns `0 -> 0 -> 0 -> 0 -> 1`.\n- `0` plus `0` returns `0`.\n",
+  "examples": [
+    {
+      "input": "a = 2 -> 4 -> 3, b = 5 -> 6 -> 4",
+      "output": "7 -> 0 -> 8"
+    },
+    {
+      "input": "a = 9 -> 9 -> 9 -> 9, b = 1",
+      "output": "0 -> 0 -> 0 -> 0 -> 1"
+    },
+    {
+      "input": "a = 0, b = 0",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Add the way you do on paper: start at the ones place and carry into the next place. Both lists already start there.",
+    "Walk both lists together; a list that has run out contributes 0. Keep going while either list has nodes or a carry remains, so the last carry gets its own node.",
+    "Each step computes sum = a + b + carry, appends sum % 10, and carries sum / 10. A dummy head node avoids special-casing the first append. Intended complexity: O(n) time and O(n) space for the result, where n is the length of the longer list."
+  ],
+  "inputSyntax": "Input: two digit lists separated by |, least significant digit first, for example: 2 4 3 | 5 6 4",
+  "sampleInput": "2 4 3 | 5 6 4",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -17,6 +17,17 @@
     "max-subarray-product",
     "longest-palindromic-substring",
     "palindromic-substring-count",
-    "reachable-end"
+    "reachable-end",
+    "min-cost-stairs",
+    "equal-subset-partition",
+    "stock-profit-cooldown",
+    "coin-change-ways",
+    "target-sign-sum",
+    "string-interleaving",
+    "longest-increasing-grid-path",
+    "distinct-subsequence-count",
+    "edit-distance",
+    "balloon-burst-max",
+    "dot-star-matching"
   ]
 }

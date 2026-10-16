@@ -1,0 +1,30 @@
+{
+  "id": "consecutive-hand-groups",
+  "title": "Consecutive Hand Groups",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Check whether a hand of numbered cards can be dealt out completely into runs of consecutive values.\n\nContract\n- `cards` is a non-null array of ints (duplicates allowed, possibly empty) and `groupSize` is the required size of every run.\n- Every card must be used exactly once, in a group of exactly `groupSize` cards whose values are consecutive (`v, v + 1, ..., v + groupSize - 1`).\n- Return `true` if such a split exists. An empty hand can be split trivially.\n- Throw `IllegalArgumentException` when `groupSize` is less than 1. Do not mutate `cards`.\n\nExamples\n- `canGroup(new int[]{4, 5, 6, 9, 10, 11}, 3)` returns `true` (runs 4-6 and 9-11).\n- `canGroup(new int[]{1, 2, 3, 5}, 2)` returns `false`.\n- `canGroup(new int[]{8}, 1)` returns `true`.\n",
+  "examples": [
+    {
+      "input": "cards = [4, 5, 6, 9, 10, 11], groupSize = 3",
+      "output": "true"
+    },
+    {
+      "input": "cards = [1, 2, 3, 5], groupSize = 2",
+      "output": "false"
+    },
+    {
+      "input": "cards = [8], groupSize = 1",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "If the number of cards is not a multiple of the group size, you can stop immediately.",
+    "The smallest remaining card can only be the start of a run, because nothing smaller is left to precede it.",
+    "Count the cards per value in an ordered map; repeatedly take the smallest key and remove one card from each of the next `groupSize` consecutive values, failing if one is missing. Intended complexity: O(n log n) time and O(n) space for n cards."
+  ],
+  "inputSyntax": "Input: the cards, a semicolon, then the group size, for example: [4, 5, 6, 9, 10, 11]; 3",
+  "sampleInput": "[4, 5, 6, 9, 10, 11]; 3",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

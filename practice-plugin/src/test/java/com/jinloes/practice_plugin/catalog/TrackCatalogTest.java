@@ -14,8 +14,9 @@ class TrackCatalogTest {
 
     @Test
     void listsTheTracksWithTheirExercisesEasiestFirst() {
-        assertThat(TrackCatalog.all()).extracting(Guide::id).containsExactly("blind-75", "google");
-        assertThat(TrackCatalog.all()).extracting(Guide::title).containsExactly("Blind 75", "Google");
+        assertThat(TrackCatalog.all()).extracting(Guide::id).containsExactly("blind-75", "neetcode-150", "google");
+        assertThat(TrackCatalog.all()).extracting(Guide::title)
+                .containsExactly("Blind 75", "NeetCode 150", "Google");
         for (Guide track : TrackCatalog.all()) {
             assertThat(track.exercises()).extracting(exercise -> GuideCatalog.DIFFICULTIES.indexOf(exercise.difficulty()))
                     .as("%s lists Easy, then Medium, then Hard", track.id())
@@ -31,6 +32,17 @@ class TrackCatalogTest {
                 .contains("pair-sum", "course-schedule", "merge-k-sorted-lists", "running-median",
                         "grid-multi-word-search");
         assertThat(blind.summary()).contains("Original practice versions");
+    }
+
+    @Test
+    void neetCodeOneFiftyExtendsTheBlindSeventyFive() {
+        Guide neetCode = TrackCatalog.find("neetcode-150");
+        assertThat(neetCode.exercises()).hasSize(150).doesNotHaveDuplicates()
+                .containsAll(TrackCatalog.find("blind-75").exercises());
+        assertThat(neetCode.exercises()).extracting(Exercise::id)
+                .contains("binary-search", "sliding-window-maximum", "trapped-rainwater", "queens-placement",
+                        "edit-distance", "axis-square-counter");
+        assertThat(neetCode.summary()).contains("Original practice versions");
     }
 
     @Test
@@ -57,7 +69,9 @@ class TrackCatalogTest {
     @Test
     void findsTheTracksThatIncludeAnExercise() {
         assertThat(TrackCatalog.containing("course-schedule")).extracting(Guide::id)
-                .containsExactly("blind-75", "google");
+                .containsExactly("blind-75", "neetcode-150", "google");
+        assertThat(TrackCatalog.containing("queens-placement")).extracting(Guide::id)
+                .containsExactly("neetcode-150");
         assertThat(TrackCatalog.containing("roman-to-integer")).isEmpty();
         assertThatThrownBy(() -> TrackCatalog.find("missing"))
                 .isInstanceOf(IllegalArgumentException.class)

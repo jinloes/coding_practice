@@ -1,0 +1,30 @@
+{
+  "id": "tree-diameter",
+  "title": "Tree Diameter",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Find the length of the longest path between any two nodes of a binary tree.\n\nContract\n- A `TreeNode` has an `int val`, a `left` child, and a `right` child (either may be null).\n- A path moves along parent-child edges and never visits a node twice. It may start and end at any nodes and does not have to pass through the root.\n- Return the number of edges on the longest such path.\n- A null tree and a single-node tree both return 0.\n- Node values are irrelevant. Do not modify the tree.\n\nExamples\n- `diameter(null)` returns `0`.\n- A single node returns `0`.\n- Level order `[1, 2, 3, 4, 5]` returns `3`, from node 4 up through 2 and 1 down to 3.\n",
+  "examples": [
+    {
+      "input": "root = null",
+      "output": "0"
+    },
+    {
+      "input": "root = [1]",
+      "output": "0"
+    },
+    {
+      "input": "root = [1, 2, 3, 4, 5]",
+      "output": "3"
+    }
+  ],
+  "hints": [
+    "The best path has a highest node; it goes down into that node's left subtree and down into its right subtree. That highest node is not necessarily the root.",
+    "For any node, the longest path whose top is that node has length (deepest descent on the left) + (deepest descent on the right). So you need the height of both children at every node.",
+    "Compute heights in one post-order pass, and update a running maximum with left height + right height at each node, instead of recomputing heights for every node. Intended complexity: O(n) time; O(h) recursion stack (no heap allocation beyond one counter), where h is the tree height."
+  ],
+  "inputSyntax": "Input: tree in level order with null for gaps, for example: 1 2 3 4 5",
+  "sampleInput": "1 2 3 4 5",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

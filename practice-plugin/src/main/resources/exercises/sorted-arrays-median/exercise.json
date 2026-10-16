@@ -1,0 +1,30 @@
+{
+  "id": "sorted-arrays-median",
+  "title": "Sorted Arrays Median",
+  "topic": "Searching",
+  "difficulty": "Hard",
+  "statement": "Find the median of all values held in two sorted arrays without merging them.\n\nContract\n- `first` and `second` are non-null and each is sorted ascending (duplicates allowed). Either may be empty, but not both: if both are empty, throw `IllegalArgumentException`.\n- The median is the middle value of all `first.length + second.length` values in sorted order; with an even count it is the average of the two middle values.\n- Return it as a `double`. Add values with `long` arithmetic so extreme `int` values cannot overflow, and keep the `.5` of an even-count average.\n- Do not mutate either array. The intended solution runs in logarithmic time in the length of the shorter array.\n\nExamples\n- `median(new int[]{1, 3}, new int[]{2})` returns `2.0`.\n- `median(new int[]{1, 2}, new int[]{3, 4})` returns `2.5`.\n- `median(new int[]{}, new int[]{5})` returns `5.0`.\n",
+  "examples": [
+    {
+      "input": "first = [1, 3], second = [2]",
+      "output": "2.0"
+    },
+    {
+      "input": "first = [1, 2], second = [3, 4]",
+      "output": "2.5"
+    },
+    {
+      "input": "first = [], second = [5]",
+      "output": "5.0"
+    }
+  ],
+  "hints": [
+    "Merging both arrays and picking the middle works but costs time linear in both lengths. Ask which values would land on the left half of the merged order.",
+    "Choose how many values `i` of the shorter array go to the left half; the longer array then supplies exactly `half - i` of them. The split is right when every value on the left is at most every value on the right.",
+    "Binary search `i` on the shorter array, comparing the four border values and treating missing borders as minus or plus infinity. Odd total: the answer is the larger left border; even total: average it with the smaller right border. Intended complexity: O(log min(m, n)) time and O(1) extra space for arrays of lengths m and n."
+  ],
+  "inputSyntax": "Input: the first sorted array, then the second, for example: [1, 3] [2]",
+  "sampleInput": "[1, 3] [2]",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

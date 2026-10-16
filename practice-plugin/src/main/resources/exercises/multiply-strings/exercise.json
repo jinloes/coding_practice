@@ -1,0 +1,30 @@
+{
+  "id": "multiply-strings",
+  "title": "Multiply Strings",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "Multiply two non-negative integers that are given as decimal strings and return the product as a decimal string, without using big-number classes.\n\nContract\n- `left` and `right` are non-null, non-empty, contain only the digits `0` to `9`, and have no leading zeros except for the single string `\"0\"`.\n- Return the exact product as a string with no leading zeros; the product of anything with `\"0\"` is `\"0\"`.\n- The inputs can be thousands of digits long, so do not convert them to `int`, `long`, `BigInteger` or `BigDecimal`.\n\nExamples\n- `multiply(\"12\", \"13\")` returns `\"156\"`.\n- `multiply(\"999\", \"999\")` returns `\"998001\"`.\n- `multiply(\"0\", \"5\")` returns `\"0\"`.\n",
+  "examples": [
+    {
+      "input": "left = \"12\", right = \"13\"",
+      "output": "\"156\""
+    },
+    {
+      "input": "left = \"999\", right = \"999\"",
+      "output": "\"998001\""
+    },
+    {
+      "input": "left = \"0\", right = \"5\"",
+      "output": "\"0\""
+    }
+  ],
+  "hints": [
+    "Do it the way you multiply on paper: every digit of one number meets every digit of the other.",
+    "A digit at position i of `left` and position j of `right` contributes to the result at positions i + j + 1 (the units) and i + j (the carry). Accumulate into an int array of length `left.length() + right.length()`.",
+    "Handle carries as you add each contribution, then skip leading zeros when building the string. Intended complexity: O(n * m) time for strings of length n and m and O(n + m) extra space; for equal lengths that is O(n^2) in the length."
+  ],
+  "inputSyntax": "Input: two non-negative decimal numbers separated by a space, for example: 123 456",
+  "sampleInput": "123 456",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

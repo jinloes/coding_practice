@@ -9,6 +9,11 @@
     "linked-list-cycle",
     "remove-nth-from-end",
     "reorder-list",
-    "merge-k-sorted-lists"
+    "merge-k-sorted-lists",
+    "random-pointer-list-copy",
+    "add-digit-lists",
+    "duplicate-in-range",
+    "least-recently-used-cache",
+    "reverse-in-groups"
   ]
 }

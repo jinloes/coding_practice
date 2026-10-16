@@ -1,0 +1,30 @@
+{
+  "id": "right-side-view",
+  "title": "Right Side View",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "List the values you would see looking at a binary tree from its right-hand side.\n\nContract\n- `root` may be null. Each node has an integer `value` and nullable `left` and `right` children.\n- Return one value per level, from the root level downward: the value of the rightmost node on that level.\n- A node on the left still counts when no node to its right exists on the same level.\n- An empty tree gives an empty list. Do not modify the tree.\n\nExamples\n- `[5, 2, 8, null, 4, null, 6]` gives `[5, 8, 6]`.\n- A null tree gives `[]`.\n- `[7, 8, null, 9]` leans left but every level has one node, so the answer is `[7, 8, 9]`.\n",
+  "examples": [
+    {
+      "input": "root = [5, 2, 8, null, 4, null, 6]",
+      "output": "[5, 8, 6]"
+    },
+    {
+      "input": "root = null",
+      "output": "[]"
+    },
+    {
+      "input": "root = [7, 8, null, 9]",
+      "output": "[7, 8, 9]"
+    }
+  ],
+  "hints": [
+    "Group nodes by their distance from the root; each group contributes exactly one value.",
+    "Process the tree level by level and remember the last node you meet on each level, or walk right-first and record the first node reached at each new depth.",
+    "Visit every node once. Intended complexity: O(n) time for n nodes. A level-order queue holds up to one full level, so extra space is O(n) in the worst case (a right-first depth-first walk needs only O(h) stack plus the result)."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [5, 2, 8, null, 4, null, 6]",
+  "sampleInput": "[5, 2, 8, null, 4, null, 6]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

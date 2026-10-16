@@ -1,0 +1,30 @@
+{
+  "id": "random-pointer-list-copy",
+  "title": "Random-Pointer List Copy",
+  "topic": "Linked Lists",
+  "difficulty": "Medium",
+  "statement": "Make an independent copy of a singly linked list in which every node also carries a second pointer to an arbitrary node of the same list.\n\nContract\n- A `Node` has an `int value`, a `next` pointer, and a `random` pointer. `random` is either null or refers to any node of the same list, including the node itself.\n- Return the head of a new list with the same length and values. Each copy's `next` must be the copy of the original's `next`, and each copy's `random` must be the copy of the original's `random` (or null when the original's is null).\n- No node of the original list may appear in the new list, not even through a `random` pointer.\n- Return null for a null list. Leave the original list exactly as it was.\n- Values may repeat, so copies must be matched by node, not by value.\n\nExamples\n- `copyList(null)` returns null.\n- A single node of value 5 whose `random` is itself becomes a new node of value 5 whose `random` is that new node.\n- Values `3, 7, 1` with random targets (index 1, none, index 0) yield new nodes `3, 7, 1` with the same relative random targets.\n",
+  "examples": [
+    {
+      "input": "head = null",
+      "output": "null"
+    },
+    {
+      "input": "one node, value 5, random points to itself",
+      "output": "a new node, value 5, random points to the new node"
+    },
+    {
+      "input": "values 3, 7, 1 with random targets index 1, none, index 0",
+      "output": "new list 3, 7, 1 with random targets index 1, none, index 0"
+    }
+  ],
+  "hints": [
+    "A plain walk can copy values and `next`, but a `random` pointer refers to a node that may not have a copy yet, and you must never leave it pointing into the old list.",
+    "You need a way to answer 'which new node belongs to this old node?'. A map from old node to new node works, and so does temporarily weaving each copy right after its original.",
+    "Make all copies first, then wire `next` and `random` through the old-to-new association. If you weave copies into the original list, restore it before returning. Intended complexity: O(n) time; the copies themselves take O(n) space, and the weaving approach needs no extra structure beyond them."
+  ],
+  "inputSyntax": "Input: nodes as value@randomIndex (index from 0, or -1 for none) separated by spaces, for example: 3@1 7@-1 1@0",
+  "sampleInput": "3@1 7@-1 1@0",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

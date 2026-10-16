@@ -1,0 +1,30 @@
+{
+  "id": "k-closest-points",
+  "title": "K Closest Points",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Pick the k points of a plane that lie nearest the origin.\n\nContract\n- `points` holds `{x, y}` integer pairs, possibly with repeats; coordinates have magnitude up to 40000. Do not modify `points` or its rows.\n- Distance is straight-line (Euclidean) distance from `(0, 0)`. Compare squared distances so no square root is needed; use `long` arithmetic.\n- Return a new array of exactly `k` of the input points whose distances are the `k` smallest. The order of the result does not matter.\n- When several points tie for the last place, any valid choice is accepted. Throw `IllegalArgumentException` when `k < 0` or `k > points.length`; `k = 0` returns an empty array.\n\nExamples\n- `k = 2` over `(3,3) (1,-2) (-1,0) (5,1)` returns `(-1,0)` and `(1,-2)` in any order.\n- A single point with `k = 1` is returned as is.\n- `k` equal to the number of points returns every point.\n",
+  "examples": [
+    {
+      "input": "points = [[3, 3], [1, -2], [-1, 0], [5, 1]], k = 2",
+      "output": "[[-1, 0], [1, -2]] (any order)"
+    },
+    {
+      "input": "points = [[4, -7]], k = 1",
+      "output": "[[4, -7]]"
+    },
+    {
+      "input": "points = [[2, 2], [-2, 1], [0, 5]], k = 3",
+      "output": "all three points (any order)"
+    }
+  ],
+  "hints": [
+    "Rank points by squared distance; the square root is monotonic so it adds nothing.",
+    "Sorting everything finds the answer but does more work than needed. Keep only the best k candidates seen so far, ready to evict the worst of them.",
+    "Hold a max-heap of size k keyed by squared distance: a new point replaces the heap's farthest point when it is nearer. Intended complexity: O(n log k) time, which is O(n log n) when k grows with n as in the workload, and O(k) extra space."
+  ],
+  "inputSyntax": "Input: k, then the points as (x,y) pairs, for example: 2; (3,3) (1,-2) (-1,0) (5,1)",
+  "sampleInput": "2; (3,3) (1,-2) (-1,0) (5,1)",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

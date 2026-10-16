@@ -6,6 +6,11 @@
   "exercises": [
     "balanced-delimiters",
     "array-stack",
-    "sliding-window-maximum"
+    "sliding-window-maximum",
+    "min-tracking-stack",
+    "postfix-evaluation",
+    "warmer-day-wait",
+    "car-fleets",
+    "largest-histogram-rectangle"
   ]
 }

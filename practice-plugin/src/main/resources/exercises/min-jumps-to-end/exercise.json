@@ -1,0 +1,30 @@
+{
+  "id": "min-jumps-to-end",
+  "title": "Min Jumps to End",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Hop along a row of stepping stones and count the fewest hops needed to reach the last one.\n\nContract\n- `reach` is a non-null, non-empty array of non-negative ints; `reach[i]` is the longest hop you may make forward from stone `i`, and you may hop any shorter distance (at least 1) too.\n- You start on index 0 and want to stand on the last index. The last index is guaranteed to be reachable.\n- Return the minimum number of hops; an array with one stone needs 0 hops.\n- Do not mutate `reach`.\n\nExamples\n- `minJumps(new int[]{3, 1, 1, 2, 1, 4})` returns `2` (index 0 to 3, then to 5).\n- `minJumps(new int[]{1, 1, 1, 1})` returns `3`.\n- `minJumps(new int[]{5})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "reach = [3, 1, 1, 2, 1, 4]",
+      "output": "2"
+    },
+    {
+      "input": "reach = [1, 1, 1, 1]",
+      "output": "3"
+    },
+    {
+      "input": "reach = [5]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Hopping to the stone with the largest own value is not always best; what matters is how far you can get from the stone you land on.",
+    "Think in waves: all stones reachable with k hops form a window. The next window ends at the farthest point any stone in the current window can reach.",
+    "Scan once, tracking the end of the current window and the farthest reach seen; each time the scan hits the window end, count a hop. Intended complexity: O(n) time and O(1) extra space for n stones."
+  ],
+  "inputSyntax": "Input: the hop lengths, where the last index is reachable, for example: [3, 1, 1, 2, 1, 4]",
+  "sampleInput": "[3, 1, 1, 2, 1, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

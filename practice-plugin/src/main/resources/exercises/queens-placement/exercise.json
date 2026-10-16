@@ -1,0 +1,30 @@
+{
+  "id": "queens-placement",
+  "title": "Queens Placement",
+  "topic": "Backtracking",
+  "difficulty": "Hard",
+  "statement": "Place n queens on an n-by-n chessboard so that no two attack each other, and list every such arrangement.\n\nContract\n- `n` is at least 1; throw `IllegalArgumentException` for anything smaller. Queens attack along rows, columns and both diagonals.\n- A board is a list of `n` strings of length `n`, one per row, using `'Q'` for a queen and `'.'` for an empty square.\n- Return every distinct board exactly once. The order of the boards is up to you.\n- If no arrangement exists, return an empty list.\n\nExamples\n- `solveQueens(4)` returns two boards: `[\".Q..\", \"...Q\", \"Q...\", \"..Q.\"]` and `[\"..Q.\", \"Q...\", \"...Q\", \".Q..\"]` in any order.\n- `solveQueens(1)` returns `[[\"Q\"]]`.\n- `solveQueens(3)` returns an empty list.\n",
+  "examples": [
+    {
+      "input": "n = 4",
+      "output": "Two boards in any order: [\".Q..\", \"...Q\", \"Q...\", \"..Q.\"] and [\"..Q.\", \"Q...\", \"...Q\", \".Q..\"]"
+    },
+    {
+      "input": "n = 1",
+      "output": "[[\"Q\"]]"
+    },
+    {
+      "input": "n = 3",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Each row must hold exactly one queen, so decide the queens one row at a time.",
+    "Try each column in the current row, skipping squares attacked by earlier rows. Track used columns and both diagonal directions in constant-time lookups, and undo the choice after exploring it.",
+    "Row minus column identifies one diagonal and row plus column identifies the other. Intended complexity: the general search is exponential, roughly O(n!) time with O(n) working space per branch plus the output. The scaling probe repeatedly solves a fixed 6-by-6 board and keeps the results, so it grows linearly in the number of repeats (n) in both time and space."
+  ],
+  "inputSyntax": "Input: the board size n, for example: 6",
+  "sampleInput": "6",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

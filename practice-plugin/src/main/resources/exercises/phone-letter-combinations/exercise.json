@@ -1,0 +1,30 @@
+{
+  "id": "phone-letter-combinations",
+  "title": "Phone Letter Combinations",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "Given digits typed on a phone keypad, list every letter string they could spell.\n\nContract\n- The keypad letters are `2` abc, `3` def, `4` ghi, `5` jkl, `6` mno, `7` pqrs, `8` tuv, `9` wxyz.\n- `digits` is a non-null string. It may be empty, in which case the result is an empty list (not a list holding an empty string).\n- Return every string that picks one letter for each digit in order. A string of k digits yields the product of the letter counts of its digits.\n- Throw `IllegalArgumentException` if `digits` contains any character other than `2` to `9`. The order of the results does not matter.\n\nExamples\n- `combinations(\"23\")` returns `[\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"]` in any order.\n- `combinations(\"7\")` returns `[\"p\", \"q\", \"r\", \"s\"]`.\n- `combinations(\"\")` returns `[]`.\n",
+  "examples": [
+    {
+      "input": "digits = \"23\"",
+      "output": "[\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"] in any order"
+    },
+    {
+      "input": "digits = \"7\"",
+      "output": "[\"p\", \"q\", \"r\", \"s\"]"
+    },
+    {
+      "input": "digits = \"\"",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Store the letters for each digit in a lookup table, then build the answer one digit at a time.",
+    "Recurse over the digit positions with a shared character buffer: at position i, try each letter of digit i, recurse to i + 1, and when the buffer has one letter per digit emit it as a string. Validate the digits before generating anything.",
+    "Reuse one buffer rather than concatenating strings at every level. The number of results is exponential in the number of digits; the probe measures a batch of n calls on the fixed input \"234\" (27 results each), so the work grows linearly in n. Intended complexity: O(n) time and O(n) space for that batch, and O(k * 4^k) per call in general."
+  ],
+  "inputSyntax": "Input: the digits 2-9, for example: 23",
+  "sampleInput": "23",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

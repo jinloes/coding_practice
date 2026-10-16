@@ -1,0 +1,30 @@
+{
+  "id": "word-ladder-length",
+  "title": "Word Ladder Length",
+  "topic": "Graphs",
+  "difficulty": "Hard",
+  "statement": "Find the length of the shortest chain that turns one word into another by changing a single letter at a time.\n\nContract\n- `begin` and `end` are lowercase words of the same length as every word in `words`, and `begin` differs from `end`.\n- A step replaces exactly one letter of the current word with a different letter; the resulting word must appear in `words`. `begin` itself does not have to be in `words`.\n- Return the number of words in the shortest chain, counting both `begin` and `end`.\n- Return 0 when `end` is not in `words` or no chain exists.\n- `words` may contain duplicates and may contain `begin`; do not modify it.\n\nExamples\n- `ladderLength(\"bake\", \"cave\", [cake, cave, base])` returns `3` via `bake -> cake -> cave`.\n- `ladderLength(\"bake\", \"cane\", [cake, base, cave])` returns `0` because `cane` is not listed.\n- `ladderLength(\"lead\", \"gold\", [load, goad, gold, mold])` returns `4`.\n",
+  "examples": [
+    {
+      "input": "begin = bake, end = cave, words = [cake, cave, base]",
+      "output": "3"
+    },
+    {
+      "input": "begin = bake, end = cane, words = [cake, base, cave]",
+      "output": "0"
+    },
+    {
+      "input": "begin = lead, end = gold, words = [load, goad, gold, mold]",
+      "output": "4"
+    }
+  ],
+  "hints": [
+    "Every word is a node and two words are neighbours when they differ in exactly one position, so shortest chain means shortest path in an unweighted graph.",
+    "Breadth-first search finds the shortest path. Comparing every pair of words is slow; group words by patterns such as `ba*e` (one position wildcarded) so neighbours share a pattern.",
+    "Build pattern buckets once, then run a level-by-level BFS from `begin`, marking words as seen when queued and returning the level count on reaching `end`. Intended complexity: O(n * L) time and O(n * L) space for n words of length L; the benchmark treats L as a constant, so it is O(n)."
+  ],
+  "inputSyntax": "Input: begin word, end word, then the word list (lowercase, equal lengths), for example: bake cave cake cave base",
+  "sampleInput": "bake cave cake cave base",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

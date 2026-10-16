@@ -1,0 +1,30 @@
+{
+  "id": "duplicate-in-range",
+  "title": "Duplicate in Range",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Find the one value that appears more than once in an array whose entries are all drawn from a small fixed range, without changing the array.\n\nContract\n- `nums` has length `n + 1` and every entry is an integer from 1 to `n` inclusive (so `n >= 1`).\n- Exactly one value occurs more than once; it may occur two times or many more times. Return that value.\n- Do not modify `nums`, and do not sort it or copy it. Use only O(1) extra space.\n- Inputs outside the contract (null, wrong length, entries out of range) are not tested.\n\nExamples\n- `findDuplicate([1, 3, 4, 2, 2])` returns `2`.\n- `findDuplicate([3, 1, 3, 4, 2])` returns `3`.\n- `findDuplicate([2, 2, 2, 2, 2])` returns `2`.\n",
+  "examples": [
+    {
+      "input": "nums = [1, 3, 4, 2, 2]",
+      "output": "2"
+    },
+    {
+      "input": "nums = [3, 1, 3, 4, 2]",
+      "output": "3"
+    },
+    {
+      "input": "nums = [2, 2, 2, 2, 2]",
+      "output": "2"
+    }
+  ],
+  "hints": [
+    "A set or a counting array finds the repeat easily, and sorting does too, but the contract forbids extra memory and modifying the input.",
+    "Treat each index as a node whose single outgoing edge goes to the index `nums[i]`. Because there are n + 1 slots but only n possible targets, two slots lead to the same node.",
+    "Starting from index 0, the walk eventually enters a cycle, and the entry point of that cycle is the repeated value. Find the meeting point with a slow and a fast pointer, then restart one pointer at 0 and move both one step at a time until they meet. Intended complexity: O(n) time and O(1) space."
+  ],
+  "inputSyntax": "Input: n+1 integers from 1..n with exactly one repeated value, for example: 3 1 3 4 2",
+  "sampleInput": "3 1 3 4 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

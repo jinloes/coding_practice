@@ -1,0 +1,17 @@
+{
+  "id": "greedy",
+  "title": "Greedy",
+  "summary": "Make the locally best choice at each step when you can argue it never rules out an optimal answer.",
+  "lesson": "How it works\n- A greedy algorithm commits to one choice at each step and never revisits it, so it usually runs in a single pass or after one sort.\n- It is correct only when an exchange argument holds: any optimal answer can be rewritten to agree with the greedy choice without getting worse.\n- Many greedy solutions track a running summary, such as the farthest reachable index or the current balance, instead of exploring every option.\n\nWhen to reach for it\n- The question asks for a minimum or maximum count of steps, groups, or resources, and choices made early never need to be undone.\n- Sorting the input by one key makes the right choice at each step obvious.\n- A dynamic programming solution exists but its state collapses to one or two running values.\n\nCommon patterns\n- Reach tracking: keep the farthest point you can get to and extend it as you scan.\n- Running balance: accumulate a surplus and restart from the next position whenever it goes negative.\n- Range of possibilities: track the lowest and highest value a state could have when a symbol can mean several things.\n- Smallest first: sort and always consume the smallest remaining value so it starts its own group.\n\nPitfalls\n- Trusting a greedy rule without a counterexample search; small hand-made cases often break plausible rules.\n- Forgetting the global feasibility check, such as a total that must be non-negative before any start position works.\n- Choosing the wrong sort key, for example sorting by start when the argument needs the end.\n- Letting a running lower bound drop below zero when negative values are impossible.\n",
+  "exercises": [
+    "min-jumps-to-end",
+    "gas-station-circuit",
+    "consecutive-hand-groups",
+    "triplet-merge-target",
+    "label-partitions",
+    "wildcard-parentheses-check",
+    "task-cooldown-schedule",
+    "reachable-end",
+    "max-subarray-sum"
+  ]
+}

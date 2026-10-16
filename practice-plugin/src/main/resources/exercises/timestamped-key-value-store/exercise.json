@@ -1,0 +1,30 @@
+{
+  "id": "timestamped-key-value-store",
+  "title": "Timestamped Key-Value Store",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Build a store that remembers every value a key has ever held and can answer what the value was at a given moment.\n\nContract\n- `set(key, value, time)` records that `key` holds `value` from `time` onward. Keys and values are non-null strings; `time` is a positive `int`.\n- For any one key, successive `set` calls use strictly increasing times. Different keys are independent and their times are unrelated.\n- `get(key, time)` returns the value from the most recent `set` of `key` whose time is at most `time`.\n- If the key was never set, or every `set` of it happened after `time`, `get` returns the empty string `\"\"`.\n- Earlier values stay available: a later `set` never changes the answer to a `get` for an earlier time.\n\nExamples\n- After `set(\"cat\", \"meow\", 5)`: `get(\"cat\", 5)` is `\"meow\"`, `get(\"cat\", 4)` is `\"\"` and `get(\"cat\", 9)` is `\"meow\"`.\n- After `set(\"a\", \"x\", 1)` and `set(\"a\", \"y\", 4)`: `get(\"a\", 3)` is `\"x\"`, `get(\"a\", 4)` is `\"y\"` and `get(\"a\", 1)` is `\"x\"`.\n- A new store answers `get(\"ghost\", 1)` with `\"\"`.\n",
+  "examples": [
+    {
+      "input": "set cat meow 5; get cat 5, get cat 4, get cat 9",
+      "output": "meow, \"\", meow"
+    },
+    {
+      "input": "set a x 1, set a y 4; get a 3, get a 4, get a 1",
+      "output": "x, y, x"
+    },
+    {
+      "input": "new store; get ghost 1",
+      "output": "\"\""
+    }
+  ],
+  "hints": [
+    "Keep, for every key, its history in the order the values were set; the times are already sorted because they only increase.",
+    "A query asks for the last history entry whose time is not after the query time. That is a binary search over the key's times, not a scan.",
+    "Search for the first time greater than the query and step back one entry; if that is before the first entry, answer with the empty string. Intended complexity: O(1) amortized per `set` and O(log k) per `get` where k is the number of values stored for that key, so n operations cost O(n log n) in total, with O(n) space for the history."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: set cat meow 5, get cat 5, get cat 4, get cat 9",
+  "sampleInput": "set cat meow 5, get cat 5, get cat 4, get cat 9",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

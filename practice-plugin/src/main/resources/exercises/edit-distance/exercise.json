@@ -1,0 +1,30 @@
+{
+  "id": "edit-distance",
+  "title": "Edit Distance",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Count the fewest single-letter edits that turn one word into another.\n\nContract\n- `from` and `to` are non-null lowercase strings of any length, including empty.\n- One edit inserts a letter anywhere, deletes a letter, or replaces a letter with a different one. Each edit costs 1.\n- Return the minimum number of edits that makes `from` equal to `to`; identical words need 0.\n- Do not assume the words have the same length. Inputs are not mutated.\n\nExamples\n- `minEdits(\"planet\", \"plant\")` returns `1` (delete the `e`).\n- `minEdits(\"flaw\", \"lawn\")` returns `2` (delete `f`, then append `n`).\n- `minEdits(\"\", \"abc\")` returns `3`.\n",
+  "examples": [
+    {
+      "input": "from = \"planet\", to = \"plant\"",
+      "output": "1"
+    },
+    {
+      "input": "from = \"flaw\", to = \"lawn\"",
+      "output": "2"
+    },
+    {
+      "input": "from = \"\", to = \"abc\"",
+      "output": "3"
+    }
+  ],
+  "hints": [
+    "Ask what the answer is for a prefix of `from` and a prefix of `to`; the last letters either already agree or need one edit.",
+    "Let `cost[i][j]` be the edits for the first `i` letters of `from` and the first `j` of `to`. A match copies the diagonal; otherwise take 1 plus the best of insert, delete, or replace neighbours.",
+    "Each row depends only on the row above, so two rows are enough. Intended complexity: O(n*m) time and O(m) space for words of length n and m; the workload uses n = m, so it is reported as O(n^2) time and O(n) space."
+  ],
+  "inputSyntax": "Input: two lowercase words separated by a comma, for example: planet, plant",
+  "sampleInput": "planet, plant",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

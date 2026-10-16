@@ -1,0 +1,30 @@
+{
+  "id": "postfix-evaluation",
+  "title": "Postfix Evaluation",
+  "topic": "Stacks",
+  "difficulty": "Medium",
+  "statement": "Evaluate an arithmetic expression written in postfix (reverse Polish) notation.\n\nContract\n- `tokens` is a non-null, non-empty array of strings. Each token is either a decimal integer (possibly negative, such as `\"-7\"`) or one of the operators `\"+\"`, `\"-\"`, `\"*\"`, `\"/\"`.\n- The expression is always well formed: every operator finds two operands, and exactly one value remains at the end. No division by zero occurs, and every intermediate result and the final result fit in an `int`.\n- An operator applies to the two most recent values, with the older value as the left operand: `\"7\", \"3\", \"-\"` means `7 - 3`.\n- Division truncates toward zero, as Java's `/` on `int` does, so `-7 / 2` is `-3`. Do not mutate `tokens`.\n\nExamples\n- `evaluate(new String[]{\"7\", \"3\", \"-\", \"2\", \"*\"})` returns `8`, since `(7 - 3) * 2 = 8`.\n- `evaluate(new String[]{\"-7\", \"2\", \"/\"})` returns `-3`.\n- `evaluate(new String[]{\"6\", \"4\", \"5\", \"+\", \"*\", \"3\", \"-\"})` returns `51`, since `6 * (4 + 5) - 3 = 51`.\n",
+  "examples": [
+    {
+      "input": "tokens = [\"7\", \"3\", \"-\", \"2\", \"*\"]",
+      "output": "8"
+    },
+    {
+      "input": "tokens = [\"-7\", \"2\", \"/\"]",
+      "output": "-3"
+    },
+    {
+      "input": "tokens = [\"6\", \"4\", \"5\", \"+\", \"*\", \"3\", \"-\"]",
+      "output": "51"
+    }
+  ],
+  "hints": [
+    "Postfix notation never needs parentheses: an operator always applies to the values produced just before it.",
+    "Scan left to right, pushing numbers on a stack; for an operator, pop the right operand first, then the left operand, and push the result.",
+    "Tell \"-\" the operator from \"-7\" the number by comparing the whole token, and rely on Java's int division for truncation. Intended complexity: O(n) time and O(n) space for the value stack, where n is the number of tokens."
+  ],
+  "inputSyntax": "Input: tokens separated by spaces, each an integer or one of + - * /, for example: 6 4 5 + * 3 -",
+  "sampleInput": "6 4 5 + * 3 -",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "balloon-burst-max",
+  "title": "Balloon Burst Max",
+  "topic": "Dynamic Programming",
+  "difficulty": "Hard",
+  "statement": "Pop a row of numbered balloons in the best order to collect the most coins.\n\nContract\n- `values` is non-null and may be empty; each entry is between 0 and 100 and the best total fits in an `int`.\n- Popping the balloon at some position pays `left * value * right` coins, where `left` and `right` are the values of the nearest balloons that have not been popped yet.\n- A missing neighbour (past either end of the row) counts as 1. Every balloon must be popped, one at a time.\n- Return the largest total number of coins over all pop orders; an empty row earns 0. Do not mutate `values`.\n\nExamples\n- `maxCoins(new int[]{3, 1, 5})` returns `35`.\n- `maxCoins(new int[]{7})` returns `7` because both neighbours count as 1.\n- `maxCoins(new int[]{})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "values = [3, 1, 5]",
+      "output": "35"
+    },
+    {
+      "input": "values = [7]",
+      "output": "7"
+    },
+    {
+      "input": "values = []",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Greedy choices such as popping the smallest balloon first fail; the best first pop is hard to know up front.",
+    "Think backwards: within a stretch of balloons, choose which one is popped LAST. Its neighbours are then the fixed borders of the stretch, and the two sides are independent.",
+    "Pad the row with a 1 at each end and fill `best[left][right]` for increasing stretch lengths. Intended complexity: O(n^3) time and O(n^2) space for n balloons; the plugin workload grows n more slowly than its size parameter, so it measures as O(n^2) time and O(n) space."
+  ],
+  "inputSyntax": "Input: the balloon values (0 to 100), for example: [3, 1, 5]",
+  "sampleInput": "[3, 1, 5]",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

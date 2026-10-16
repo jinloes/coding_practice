@@ -1,0 +1,30 @@
+{
+  "id": "signal-delay-time",
+  "title": "Signal Delay Time",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "A signal is sent from one node of a directed network and forwarded along every outgoing link; find how long until every node has received it.\n\nContract\n- Nodes are numbered `1..nodeCount`. `links[i] = {from, to, delay}` is a one-way link that takes `delay >= 0` time units.\n- A node forwards the signal the instant it first receives it, along all its outgoing links at once.\n- Return the time at which the last node receives the signal, or `-1` if some node is never reached.\n- The source itself receives the signal at time 0, so a network of one node returns 0. Links may repeat and may form cycles. Do not modify `links`.\n\nExamples\n- `links = {{1,2,4},{1,3,1},{3,2,2},{2,4,5}}`, `nodeCount = 4`, `source = 1` returns `8` (node 2 at time 3, node 4 at 8).\n- `links = {{1,2,3}}`, `nodeCount = 3`, `source = 1` returns `-1`.\n- No links, `nodeCount = 1`, `source = 1` returns `0`.\n",
+  "examples": [
+    {
+      "input": "links = {{1,2,4},{1,3,1},{3,2,2},{2,4,5}}, nodeCount = 4, source = 1",
+      "output": "8"
+    },
+    {
+      "input": "links = {{1,2,3}}, nodeCount = 3, source = 1",
+      "output": "-1"
+    },
+    {
+      "input": "links = {}, nodeCount = 1, source = 1",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "The time a node hears the signal is the length of the shortest path from the source, and the answer is the largest of those shortest paths.",
+    "Links have different delays, so plain breadth-first search is wrong: a path with more links can be faster. Settle nodes in order of increasing arrival time (Dijkstra).",
+    "Use a min-heap keyed by arrival time and skip stale heap entries. After the search, any node still unreached means -1. Intended complexity: O((V + E) log V) time and O(V + E) space."
+  ],
+  "inputSyntax": "Input: node count, source node, then links as from>to:delay, for example: 4 1 1>2:4 1>3:1 3>2:2 2>4:5",
+  "sampleInput": "4 1 1>2:4 1>3:1 3>2:2 2>4:5",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

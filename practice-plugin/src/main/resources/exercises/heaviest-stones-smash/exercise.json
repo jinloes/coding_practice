@@ -1,0 +1,30 @@
+{
+  "id": "heaviest-stones-smash",
+  "title": "Heaviest Stones Smash",
+  "topic": "Heaps",
+  "difficulty": "Easy",
+  "statement": "Repeatedly smash the two heaviest stones together and report what is left at the end.\n\nContract\n- `stones` holds positive integer weights, in any order; it may be empty. Do not modify it.\n- Each round, take the two heaviest stones. If their weights are equal, both disappear; otherwise only one stone remains, weighing the difference of the two.\n- Continue until at most one stone remains. Return its weight, or `0` when none remain (including for an empty input).\n- A single stone is never smashed.\n\nExamples\n- `[8, 3, 5, 1]`: `8` and `5` leave `3`; the two `3`s vanish; `1` remains, so the answer is `1`.\n- `[6, 6]` cancel out completely, so the answer is `0`.\n- `[20]` is never smashed, so the answer is `20`.\n",
+  "examples": [
+    {
+      "input": "stones = [8, 3, 5, 1]",
+      "output": "1"
+    },
+    {
+      "input": "stones = [6, 6]",
+      "output": "0"
+    },
+    {
+      "input": "stones = [20]",
+      "output": "20"
+    }
+  ],
+  "hints": [
+    "Every round needs the two largest stones, and the leftover goes back into the pile.",
+    "Re-sorting after each smash works but repeats effort; use a structure that always hands you the current maximum.",
+    "Keep a max-heap: poll twice, push the difference when it is non-zero, and stop when one or zero stones remain (guard the empty case). Intended complexity: O(n log n) time because each of at most n rounds does O(log n) heap work, and O(n) space for the heap."
+  ],
+  "inputSyntax": "Input: the stone weights separated by spaces or commas, for example: 8 3 5 1",
+  "sampleInput": "8 3 5 1",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

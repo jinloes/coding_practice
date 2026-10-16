@@ -1,0 +1,30 @@
+{
+  "id": "happy-number",
+  "title": "Happy Number",
+  "topic": "Math",
+  "difficulty": "Easy",
+  "statement": "Replace a number by the sum of the squares of its decimal digits, over and over, and decide whether that process ever reaches 1.\n\nContract\n- `n` is a positive `int` (`1 <= n <= Integer.MAX_VALUE`).\n- One step turns `n` into the sum of the squares of its decimal digits. Return true if repeating steps eventually produces exactly 1.\n- Otherwise the sequence runs into a cycle that never contains 1, and the answer is false. The method must always terminate.\n- The number 1 itself is happy.\n\nExamples\n- `isHappy(19)` is true: 19 becomes 82, then 68, then 100, then 1.\n- `isHappy(4)` is false: 4 leads to 16, 37, 58, 89, 145, 42, 20 and back to 4.\n- `isHappy(1)` is true.\n",
+  "examples": [
+    {
+      "input": "n = 19",
+      "output": "true"
+    },
+    {
+      "input": "n = 4",
+      "output": "false"
+    },
+    {
+      "input": "n = 1",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Write the digit-square step as a small helper, then watch what sequence a few numbers produce.",
+    "A number that never reaches 1 must eventually repeat a value. Remember the values already seen, or detect the cycle without memory.",
+    "Floyd-style slow and fast pointers over the step function find the cycle in constant space. Intended complexity: O(log n) time per call, because the sequence quickly falls into a small range and each step costs the number of digits, and O(1) extra space."
+  ],
+  "inputSyntax": "Input: a positive integer, for example: 19",
+  "sampleInput": "19",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

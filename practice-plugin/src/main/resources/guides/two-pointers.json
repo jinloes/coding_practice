@@ -11,6 +11,9 @@
     "zero-sum-triplets",
     "largest-water-container",
     "linked-list-cycle",
-    "remove-nth-from-end"
+    "remove-nth-from-end",
+    "sorted-pair-sum",
+    "trapped-rainwater",
+    "duplicate-in-range"
   ]
 }

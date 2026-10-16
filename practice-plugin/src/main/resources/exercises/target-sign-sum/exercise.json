@@ -1,0 +1,30 @@
+{
+  "id": "target-sign-sum",
+  "title": "Target Sign Sum",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Count the ways to put a plus or minus sign in front of every number so that the signed total equals a target.\n\nContract\n- `values` is non-null and may be empty; every value is at least 0 (zeros are allowed) and the sum fits in an `int`. `target` may be negative.\n- Every value must receive exactly one sign. Two assignments differ when some position receives a different sign, so a `0` can be signed either way and doubles the count.\n- An empty `values` has one assignment (the empty total 0): return 1 when `target` is 0, otherwise 0.\n- The answer fits in an `int`. Do not mutate `values`.\n\nExamples\n- `countAssignments(new int[]{1, 1, 1, 1, 1}, 3)` returns `5`: exactly one of the five 1s takes a minus sign.\n- `countAssignments(new int[]{2, 3}, 7)` returns `0`: the largest reachable total is 5.\n- `countAssignments(new int[]{0, 0, 1}, 1)` returns `4`: the two zeros can each take either sign.\n",
+  "examples": [
+    {
+      "input": "values = [1, 1, 1, 1, 1], target = 3",
+      "output": "5"
+    },
+    {
+      "input": "values = [2, 3], target = 7",
+      "output": "0"
+    },
+    {
+      "input": "values = [0, 0, 1], target = 1",
+      "output": "4"
+    }
+  ],
+  "hints": [
+    "Let P be the sum of values given a plus and N the sum given a minus. Then P + N is the total and P - N is the target.",
+    "That makes P = (total + target) / 2, so the question becomes: how many subsets sum to P? If total + target is odd or negative, or |target| > total, the answer is 0.",
+    "Count subsets with a one-dimensional table, iterating sums downward for each value (zeros included, so they multiply the count). Intended complexity: O(n * total) time and O(total) extra space; for the doubling workload (total grows with n) that is O(n^2) time and O(n) space."
+  ],
+  "inputSyntax": "Input: the array values, then the target, for example: [1, 1, 1, 1, 1] 3",
+  "sampleInput": "[1, 1, 1, 1, 1] 3",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

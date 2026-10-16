@@ -10,6 +10,14 @@
     "grid-paths",
     "island-count",
     "ocean-drainage",
-    "grid-word-search"
+    "grid-word-search",
+    "sudoku-board-check",
+    "sorted-matrix-search",
+    "largest-island-area",
+    "captured-regions",
+    "rot-spread-time",
+    "nearest-gate-distance",
+    "rising-water-path",
+    "longest-increasing-grid-path"
   ]
 }

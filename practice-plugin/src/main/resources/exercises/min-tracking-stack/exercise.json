@@ -1,0 +1,30 @@
+{
+  "id": "min-tracking-stack",
+  "title": "Min-Tracking Stack",
+  "topic": "Stacks",
+  "difficulty": "Medium",
+  "statement": "Build a stack of integers that can report its smallest value instantly.\n\nContract\n- `push(value)` adds a value to the top; the stack is unbounded and accepts every `int`, including duplicates.\n- `pop()` removes and returns the top value and `top()` returns it without removing it.\n- `min()` returns the smallest value currently stored, without removing anything. After pops, it must reflect only the values that remain, and duplicates of the minimum count separately.\n- `pop`, `top` and `min` throw `NoSuchElementException` on an empty stack. `size()` returns the number of stored values.\n- Every operation must run in constant time (amortized for `push`); scanning the stack to find the minimum is not allowed.\n\nExamples\n- After `push(5)`, `push(2)`, `push(7)`: `min()` returns `2` and `top()` returns `7`.\n- Continuing, `pop()` returns `7`, `pop()` returns `2`, and then `min()` returns `5` again.\n- On a new stack, `min()`, `top()` and `pop()` each throw `NoSuchElementException`.\n",
+  "examples": [
+    {
+      "input": "push(5), push(2), push(7), min(), top()",
+      "output": "2, then 7"
+    },
+    {
+      "input": "push(5), push(2), push(7), pop(), pop(), min()",
+      "output": "7, 2, then 5"
+    },
+    {
+      "input": "new stack; min(), top(), pop()",
+      "output": "All three throw NoSuchElementException"
+    }
+  ],
+  "hints": [
+    "The minimum of the whole stack changes only when a value is pushed or popped, and popping restores what it was before the push.",
+    "Store, next to every value, the smallest value in the stack up to and including that position.",
+    "Push records min(value, previous minimum) and pop simply discards the top pair. Intended complexity: O(1) time per operation and O(n) space overall for the n stored values (O(1) auxiliary space per operation)."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: push 5, push 2, push 7, min, top, pop, pop, min",
+  "sampleInput": "push 5, push 2, push 7, min, top, pop, pop, min",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

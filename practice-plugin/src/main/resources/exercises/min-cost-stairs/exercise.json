@@ -1,0 +1,30 @@
+{
+  "id": "min-cost-stairs",
+  "title": "Min-Cost Stairs",
+  "topic": "Dynamic Programming",
+  "difficulty": "Easy",
+  "statement": "Climb a staircase where every step charges a toll for landing on it, and find the cheapest way to get past the last step.\n\nContract\n- `cost[i]` is the non-negative toll for landing on step `i`. You begin on the ground, just below step 0.\n- Each move goes up one or two steps; you pay the toll of the step you land on. You may land on step 0 or step 1 first.\n- Reaching or passing the position just above the last step finishes the climb and costs nothing extra, so from the last step either move finishes.\n- Return the smallest total toll. An empty staircase returns 0, and a single step returns 0 (jump over it from the ground). Do not modify `cost`.\n\nExamples\n- `{10, 15, 20}` returns `15`: land on step 1, then jump past the top.\n- `{4, 9, 2, 7, 1, 8}` returns `7`.\n- `{}` returns `0`.\n",
+  "examples": [
+    {
+      "input": "cost = {10, 15, 20}",
+      "output": "15"
+    },
+    {
+      "input": "cost = {4, 9, 2, 7, 1, 8}",
+      "output": "7"
+    },
+    {
+      "input": "cost = {}",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "To land on step i you must have come from step i-1 or i-2, so the cheapest way to reach step i only depends on the cheapest ways to reach those two steps.",
+    "Let reach[i] be the cheapest total toll for a climb that ends by landing on step i: it is cost[i] plus the smaller of reach[i-1] and reach[i-2], where the ground counts as reach 0. Finishing is possible from either of the last two steps.",
+    "Only the previous two values are needed, so keep two variables instead of an array, and answer with the smaller of the last two. Intended complexity: O(n) time and O(1) space."
+  ],
+  "inputSyntax": "Input: step tolls separated by spaces (non-negative integers), for example: 4 9 2 7 1 8",
+  "sampleInput": "4 9 2 7 1 8",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "math",
+  "title": "Math and Geometry",
+  "summary": "Use number properties, digit arithmetic, and coordinate reasoning to replace brute force with a direct calculation.",
+  "lesson": "How it works\n- Many problems reduce to arithmetic on digits, exponents, or coordinates once you spot the underlying property.\n- Digit problems process a number or string one place value at a time and carry the overflow to the next place.\n- Geometry problems on a grid or plane usually index points in a hash map so that each candidate shape can be checked in constant time.\n\nWhen to reach for it\n- The input is a single integer, a digit array, or a numeric string too large for built-in types.\n- The question involves repeated multiplication, a sequence that must either end or cycle, or reversing a number.\n- The input is a set of points or a square matrix and the answer depends on their positions.\n\nCommon patterns\n- Carry propagation: add or multiply place by place from the least significant digit and push the carry forward.\n- Repeated squaring: halve the exponent each step so a power takes a logarithmic number of multiplications.\n- Cycle detection on a number sequence with a set of seen values or with slow and fast pointers.\n- Fix one point as a corner, then look up the other corners by coordinates.\n\nPitfalls\n- Overflow: check before multiplying or adding, or work in `long`, when the result can leave the `int` range.\n- Negating `Integer.MIN_VALUE`, which has no positive `int` counterpart.\n- Leaving leading zeros in a digit-string result, or returning an empty string for zero.\n- Integer division that rounds toward zero when the contract needs floor or ceiling.\n",
+  "exercises": [
+    "happy-number",
+    "increment-digits",
+    "fast-power",
+    "multiply-strings",
+    "axis-square-counter",
+    "reverse-digits",
+    "rotate-square-matrix",
+    "add-strings"
+  ]
+}

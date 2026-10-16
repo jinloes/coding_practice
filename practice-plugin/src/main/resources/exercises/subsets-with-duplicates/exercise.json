@@ -1,0 +1,30 @@
+{
+  "id": "subsets-with-duplicates",
+  "title": "Subsets with Duplicates",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "Produce every distinct subset of a collection of integers that may contain repeated values.\n\nContract\n- `values` may be empty and may contain equal numbers.\n- Return every distinct subset once. Two subsets are the same when they hold the same numbers the same number of times, regardless of which positions the numbers came from.\n- The empty subset is always included. The order of the subsets and of the numbers inside a subset do not matter.\n- Each returned subset must be its own list, and `values` must not be changed.\n\nExamples\n- `subsets(new int[]{1, 2, 2})` returns `[[], [1], [2], [1, 2], [2, 2], [1, 2, 2]]` in any order.\n- `subsets(new int[]{4, 4, 4})` returns `[[], [4], [4, 4], [4, 4, 4]]`.\n- `subsets(new int[]{0})` returns `[[], [0]]` in any order.\n",
+  "examples": [
+    {
+      "input": "values = [1, 2, 2]",
+      "output": "[[], [1], [2], [1, 2], [2, 2], [1, 2, 2]] in any order"
+    },
+    {
+      "input": "values = [4, 4, 4]",
+      "output": "[[], [4], [4, 4], [4, 4, 4]]"
+    },
+    {
+      "input": "values = [0]",
+      "output": "[[], [0]] in any order"
+    }
+  ],
+  "hints": [
+    "If equal numbers sit next to each other, choosing the first or the second copy of a number gives the same subset. Sorting a copy of the values makes equal numbers adjacent.",
+    "Build subsets by choosing which value to add next from the remaining positions. When you loop over the candidates for the next slot, skip a value that equals the one tried just before it in the same loop.",
+    "The skip applies only to alternatives for the same slot; a repeated value may still follow its own earlier copy deeper in the path. The probe uses n copies of one value, which gives n + 1 subsets of total length about n^2 / 2. Intended complexity: O(n^2) time and O(n^2) space for that family; in general the output can hold 2^n subsets."
+  ],
+  "inputSyntax": "Input: the values as a list, for example: [1, 2, 2]",
+  "sampleInput": "[1, 2, 2]",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n^2)"
+}

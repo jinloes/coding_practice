@@ -1,0 +1,30 @@
+{
+  "id": "all-subsets",
+  "title": "All Subsets",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "Produce every subset of a collection of distinct integers.\n\nContract\n- `values` holds distinct integers (possibly negative) and may be empty.\n- Return every subset exactly once, including the empty subset and the full set. A collection of k values has 2^k subsets.\n- The order of the subsets and the order of the numbers inside a subset do not matter.\n- Each returned subset must be its own list, and `values` must not be changed.\n\nExamples\n- `subsets(new int[]{1, 2, 3})` returns `[[], [1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]]` in any order.\n- `subsets(new int[]{})` returns `[[]]`.\n- `subsets(new int[]{5, -1})` returns `[[], [5], [-1], [5, -1]]` in any order.\n",
+  "examples": [
+    {
+      "input": "values = [1, 2, 3]",
+      "output": "[[], [1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]] in any order"
+    },
+    {
+      "input": "values = []",
+      "output": "[[]]"
+    },
+    {
+      "input": "values = [5, -1]",
+      "output": "[[], [5], [-1], [5, -1]] in any order"
+    }
+  ],
+  "hints": [
+    "Every value is either in a subset or not. Start from one subset, the empty one, and decide the values one at a time.",
+    "When you reach a new value, every subset built so far has a twin that also contains it. You can grow the answer by copying each existing subset and adding the value to the copy, or recurse with an include/skip choice.",
+    "Copy each subset before changing it so the results never share a list. The answer itself holds 2^k subsets, so the work is proportional to its size; the probe doubles the number of subsets n = 2^k. Intended complexity: O(n log n) time and O(n log n) space in the number of subsets n, which is O(k * 2^k) for k values."
+  ],
+  "inputSyntax": "Input: the values as a list, for example: [1, 2, 3]",
+  "sampleInput": "[1, 2, 3]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n log n)"
+}

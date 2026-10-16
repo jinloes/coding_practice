@@ -1,0 +1,30 @@
+{
+  "id": "dot-star-matching",
+  "title": "Dot-Star Matching",
+  "topic": "Dynamic Programming",
+  "difficulty": "Hard",
+  "statement": "Decide whether a tiny pattern language describes an entire word.\n\nContract\n- `text` is a non-null string of lowercase letters (possibly empty).\n- `pattern` is a non-null string made of lowercase letters, `.` and `*`. A `*` always follows a letter or a `.` and never starts the pattern or follows another `*`.\n- `.` matches any single letter. A letter matches itself. `x*` matches zero or more copies of the element `x` that comes right before the star (so `.*` matches any run of letters).\n- The pattern must match the WHOLE text, not just a prefix or a substring. Return `true` or `false`.\n\nExamples\n- `matches(\"moon\", \"mo*n\")` returns `true` (`o*` covers both `o`).\n- `matches(\"moon\", \"mo.\")` returns `false` because the pattern ends one letter early.\n- `matches(\"\", \"a*b*\")` returns `true` because both starred elements can match nothing.\n",
+  "examples": [
+    {
+      "input": "text = \"moon\", pattern = \"mo*n\"",
+      "output": "true"
+    },
+    {
+      "input": "text = \"moon\", pattern = \"mo.\"",
+      "output": "false"
+    },
+    {
+      "input": "text = \"\", pattern = \"a*b*\"",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Look at the pattern one element at a time; a starred element gives you a choice between using it zero times and using it once more.",
+    "Let `ok[i][j]` mean the first `i` letters of the text match the first `j` characters of the pattern. For `x*`, either skip it (`ok[i][j-2]`) or consume a letter that `x` matches and stay on the star (`ok[i-1][j]`).",
+    "Row `i` only needs row `i-1`, so two boolean rows suffice. Remember the empty-text row, where every `x*` pair can vanish. Intended complexity: O(n*m) time and O(m) space for a text of length n and a pattern of length m; the workload uses n = m."
+  ],
+  "inputSyntax": "Input: a lowercase text, a comma, then a pattern of letters, . and *, for example: moon, mo*n",
+  "sampleInput": "moon, mo*n",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

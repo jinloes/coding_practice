@@ -1,0 +1,30 @@
+{
+  "id": "rot-spread-time",
+  "title": "Rot Spread Time",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Compute how many minutes it takes for every fresh item in a grid to rot, or report that some never will.\n\nContract\n- `grid` is a rectangular array holding `0` (empty), `1` (fresh) or `2` (rotten); it may have no rows.\n- Each minute, every fresh cell that shares an edge (up, down, left or right) with a rotten cell becomes rotten. All cells change at the same moment, so spreading starts from every rotten cell at once.\n- Return the number of minutes until no fresh cell remains. Return 0 if there was no fresh cell to begin with.\n- Return -1 if some fresh cell can never rot. Do not modify `grid`.\n\nExamples\n- `minutesToRot(new int[][]{{0,1,1,1},{1,2,1,0}})` returns `3`.\n- `minutesToRot(new int[][]{{2,0,1}})` returns `-1`: the empty cell blocks the spread.\n- `minutesToRot(new int[][]{{0,2},{0,0}})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "grid = [[0,1,1,1],[1,2,1,0]]",
+      "output": "3"
+    },
+    {
+      "input": "grid = [[2,0,1]]",
+      "output": "-1"
+    },
+    {
+      "input": "grid = [[0,2],[0,0]]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Rot spreads outward in rounds, like ripples, and every rotten cell starts spreading in the very first round.",
+    "Put all initially rotten cells in a queue and process it one round at a time, turning fresh neighbours rotten and queuing them. Count the fresh cells so you know when you are done.",
+    "Count a minute only for rounds that rot something, and compare the remaining fresh count with zero at the end to decide between the answer and -1. Intended complexity: O(n) time and O(n) space for the queue, where n is the number of cells."
+  ],
+  "inputSyntax": "Input: the grid rows as nested lists using 0 (empty), 1 (fresh) and 2 (rotten), for example: [[0, 1, 1, 1], [1, 2, 1, 0]]",
+  "sampleInput": "[[0, 1, 1, 1], [1, 2, 1, 0]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

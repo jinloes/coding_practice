@@ -1,0 +1,30 @@
+{
+  "id": "kth-largest-stream",
+  "title": "Kth Largest in a Stream",
+  "topic": "Heaps",
+  "difficulty": "Easy",
+  "statement": "Build a tracker that reports the kth largest value seen so far each time a number is added.\n\nContract\n- `new Solution(k, initial)` starts with the values in `initial` (any order, possibly empty) and a fixed rank `k >= 1`. Do not modify `initial`.\n- `add(value)` records one more value and returns the kth largest of every value recorded so far, counting repeated values separately.\n- At least `k` values exist after every `add`, which requires `initial.length >= k - 1`. Throw `IllegalArgumentException` when `k < 1` or when `initial` has fewer than `k - 1` values.\n- Values may be negative. `k` may be much smaller than the number of recorded values.\n\nExamples\n- With `k = 2` and `[10, 3, 7]`, adding `4, 12, 8, 15` returns `7, 10, 10, 12`.\n- With `k = 1` and no starting values, adding `-5, -9, 2` returns `-5, -5, 2`.\n- With `k = 2` and `[6, 6]`, adding `6, 1, 9` returns `6, 6, 6` because repeated values count separately.\n",
+  "examples": [
+    {
+      "input": "k = 2, initial = [10, 3, 7]; add 4, 12, 8, 15",
+      "output": "7, 10, 10, 12"
+    },
+    {
+      "input": "k = 1, initial = []; add -5, -9, 2",
+      "output": "-5, -5, 2"
+    },
+    {
+      "input": "k = 2, initial = [6, 6]; add 6, 1, 9",
+      "output": "6, 6, 6"
+    }
+  ],
+  "hints": [
+    "Only the k largest values can ever be the answer; everything smaller can be forgotten.",
+    "Keep exactly those k values in a structure that exposes its smallest member cheaply, because that member is the kth largest.",
+    "Use a min-heap capped at size k: a new value enters only if the heap is not full or it beats the heap's minimum, which then leaves. Intended complexity: O(log k) per add and O(k) space. The workload keeps k fixed, so a run of n adds measures as O(n) time and O(1) space."
+  ],
+  "inputSyntax": "Input: k, the starting values and the values to add, separated by semicolons, for example: 2; 10 3 7; 4 12 8 15",
+  "sampleInput": "2; 10 3 7; 4 12 8 15",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

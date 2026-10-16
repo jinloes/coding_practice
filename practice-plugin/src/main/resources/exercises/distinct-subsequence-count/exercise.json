@@ -1,0 +1,30 @@
+{
+  "id": "distinct-subsequence-count",
+  "title": "Distinct Subsequence Count",
+  "topic": "Dynamic Programming",
+  "difficulty": "Hard",
+  "statement": "Count how many different ways the characters of a pattern can be picked, in order, from a source string.\n\nContract\n- Both strings are non-null and may be empty; characters compare exactly (case-sensitive).\n- A selection is a set of positions in `source`, increasing from left to right, whose characters spell `pattern`. Two selections that use different positions count separately even when they spell the same text.\n- An empty `pattern` has exactly one selection (choose nothing); a pattern longer than `source` has none.\n- The answer fits in a `long`.\n\nExamples\n- `countSubsequences(\"bagbag\", \"bag\")` returns `4`: the `b`, `a`, `g` can be chosen from positions {0,1,2}, {0,1,5}, {0,4,5} or {3,4,5}.\n- `countSubsequences(\"xyz\", \"xzy\")` returns `0`: `y` comes before `z` in the source.\n- `countSubsequences(\"aaaa\", \"aa\")` returns `6`: any two of the four positions.\n",
+  "examples": [
+    {
+      "input": "source = \"bagbag\", pattern = \"bag\"",
+      "output": "4"
+    },
+    {
+      "input": "source = \"xyz\", pattern = \"xzy\"",
+      "output": "0"
+    },
+    {
+      "input": "source = \"aaaa\", pattern = \"aa\"",
+      "output": "6"
+    }
+  ],
+  "hints": [
+    "Whether the pattern's last character is matched by the source's last character splits the count into two disjoint cases.",
+    "Let ways[i][j] be the number of ways the first j pattern characters appear in the first i source characters. Always add ways[i - 1][j] (skip source[i]); if the characters match, also add ways[i - 1][j - 1].",
+    "Row i only reads row i - 1, so one array works if you update j from high to low. Intended complexity: O(|source| * |pattern|) time and O(|pattern|) extra space; with both strings of length n that is O(n^2) time and O(n) space."
+  ],
+  "inputSyntax": "Input: the source word and the pattern word, for example: bagbag bag",
+  "sampleInput": "bagbag bag",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

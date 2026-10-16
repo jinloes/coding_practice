@@ -1,0 +1,30 @@
+{
+  "id": "kth-largest-element",
+  "title": "Kth Largest Element",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Find the value that would sit at rank k from the top if an unsorted array were sorted in descending order.\n\nContract\n- `nums` is unsorted and may hold negative numbers and repeated values; each occurrence counts separately toward the rank.\n- `k` is 1-based: `k = 1` is the maximum and `k = nums.length` is the minimum.\n- Return the value, not its index. Do not modify `nums`.\n- Throw `IllegalArgumentException` when `k < 1` or `k > nums.length` (this includes an empty array).\n\nExamples\n- `[9, 4, 7, 1, 8]` with `k = 2` returns `8`.\n- `[5, 5, 5, 2]` with `k = 3` returns `5`, because the three `5`s occupy ranks 1 to 3.\n- `[-3]` with `k = 1` returns `-3`.\n",
+  "examples": [
+    {
+      "input": "nums = [9, 4, 7, 1, 8], k = 2",
+      "output": "8"
+    },
+    {
+      "input": "nums = [5, 5, 5, 2], k = 3",
+      "output": "5"
+    },
+    {
+      "input": "nums = [-3], k = 1",
+      "output": "-3"
+    }
+  ],
+  "hints": [
+    "Sorting the whole array answers the question, but you only need to know about the top k values.",
+    "Keep the k largest values seen so far in a structure that can quickly drop its smallest member; after one pass, that smallest member is the answer.",
+    "Scan with a min-heap capped at size k. Intended complexity: O(n log k) time, which is O(n log n) when k grows with n as in the workload, and O(k) space. Quickselect reaches O(n) average time at the cost of a working copy."
+  ],
+  "inputSyntax": "Input: k, then the values separated by spaces or commas, for example: 2; 9 4 7 1 8",
+  "sampleInput": "2; 9 4 7 1 8",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

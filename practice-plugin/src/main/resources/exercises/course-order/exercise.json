@@ -1,0 +1,30 @@
+{
+  "id": "course-order",
+  "title": "Course Order",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Find an order in which all courses can be taken so that every prerequisite comes before the course that needs it.\n\nContract\n- Courses are numbered `0` to `courses - 1`. Each pair `{course, prerequisite}` in `prerequisites` means `prerequisite` must be taken somewhere before `course`.\n- Return an array containing every course exactly once in a valid order. When several orders work, any one of them is accepted.\n- If the prerequisites cannot all be satisfied (for example they form a cycle, including a course that requires itself), return an empty array.\n- `courses` may be 0, `prerequisites` may be empty, and the same pair may appear more than once. Do not modify the input.\n\nExamples\n- `courseOrder(4, new int[][]{{1,0},{2,1},{3,2}})` returns `[0, 1, 2, 3]`.\n- `courseOrder(3, new int[][]{{0,1},{1,2},{2,0}})` returns an empty array because the courses wait on each other in a loop.\n- `courseOrder(3, new int[0][])` returns the three courses in any order, such as `[0, 1, 2]`.\n",
+  "examples": [
+    {
+      "input": "courses = 4, prerequisites = [[1,0],[2,1],[3,2]]",
+      "output": "[0, 1, 2, 3]"
+    },
+    {
+      "input": "courses = 3, prerequisites = [[0,1],[1,2],[2,0]]",
+      "output": "[]"
+    },
+    {
+      "input": "courses = 3, prerequisites = []",
+      "output": "Any permutation of 0, 1, 2"
+    }
+  ],
+  "hints": [
+    "A course can be taken as soon as everything it depends on has been taken, so start with the courses that need nothing.",
+    "Count how many unmet prerequisites each course has. Repeatedly take a course with count zero, and lower the count of every course that was waiting on it.",
+    "If you manage to take fewer courses than exist, the rest are stuck in a cycle, so return an empty array. Intended complexity: O(n) time and O(n) space, where n is the number of courses plus the number of prerequisite pairs."
+  ],
+  "inputSyntax": "Input: the course count, then the [course, prerequisite] pairs, for example: 4 [[1, 0], [2, 1], [3, 2]]",
+  "sampleInput": "4 [[1, 0], [2, 1], [3, 2]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

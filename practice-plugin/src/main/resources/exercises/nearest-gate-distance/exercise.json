@@ -1,0 +1,30 @@
+{
+  "id": "nearest-gate-distance",
+  "title": "Nearest Gate Distance",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Label every open room in a grid with its walking distance to the nearest gate, in place.\n\nContract\n- `rooms` is a rectangular array (possibly with no rows) holding `-1` for a wall, `0` for a gate, and `Integer.MAX_VALUE` for an open room.\n- You may step up, down, left or right onto any cell that is not a wall; each step costs 1.\n- Replace every open room that can reach a gate with the number of steps to the closest gate. A room that cannot reach any gate stays `Integer.MAX_VALUE`. Walls and gates never change.\n- The method returns nothing: write the answers into `rooms`.\n\nExamples\n- `{{0,INF,INF},{INF,-1,INF},{INF,INF,0}}` becomes `{{0,1,2},{1,-1,1},{2,1,0}}`, where `INF` is `Integer.MAX_VALUE`.\n- `{{0,-1,INF}}` is unchanged because the wall blocks the open room.\n- `{{INF,INF,INF,0}}` becomes `{{3,2,1,0}}`.\n",
+  "examples": [
+    {
+      "input": "rooms = [[0,INF,INF],[INF,-1,INF],[INF,INF,0]]",
+      "output": "[[0,1,2],[1,-1,1],[2,1,0]]"
+    },
+    {
+      "input": "rooms = [[0,-1,INF]]",
+      "output": "[[0,-1,INF]]"
+    },
+    {
+      "input": "rooms = [[INF,INF,INF,0]]",
+      "output": "[[3,2,1,0]]"
+    }
+  ],
+  "hints": [
+    "Searching from each room to the closest gate repeats a lot of work; think about searching from the gates instead.",
+    "Start a breadth-first search with every gate already in the queue. The first time the search reaches an open room, that is its shortest distance.",
+    "Use the open-room marker itself as the \"not visited yet\" test, and set a neighbour to current distance plus one when you enqueue it. Intended complexity: O(n) time and O(n) space for the queue, where n is the number of cells."
+  ],
+  "inputSyntax": "Input: the room grid as nested lists using -1 (wall), 0 (gate) and inf (open room), for example: [[0, inf, inf], [inf, -1, inf], [inf, inf, 0]]",
+  "sampleInput": "[[0, inf, inf], [inf, -1, inf], [inf, inf, 0]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

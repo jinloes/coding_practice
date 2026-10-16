@@ -1,0 +1,30 @@
+{
+  "id": "sorted-pair-sum",
+  "title": "Sorted Pair Sum",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Find two positions in a sorted array whose values add up to a target, using only constant extra space.\n\nContract\n- `sorted` is a non-null array in non-decreasing order; it may be empty and values may repeat.\n- Return an `int[]` of two different indices `{i, j}` with `i < j` and `sorted[i] + sorted[j] == target`. When several pairs qualify, any one is accepted.\n- Return an empty array (length 0) when no such pair exists.\n- Add values as `long`, so `int` overflow cannot create or hide a pair. Do not mutate `sorted`; do not allocate a map or copy of the input.\n\nExamples\n- `findPair(new int[]{2, 5, 9, 11, 15}, 13)` returns `{0, 3}` (values 2 and 11).\n- `findPair(new int[]{4, 4, 9}, 8)` returns `{0, 1}`: the same value may be used twice from different positions.\n- `findPair(new int[]{1, 3, 6}, 100)` returns an empty array.\n",
+  "examples": [
+    {
+      "input": "sorted = [2, 5, 9, 11, 15], target = 13",
+      "output": "[0, 3]"
+    },
+    {
+      "input": "sorted = [4, 4, 9], target = 8",
+      "output": "[0, 1]"
+    },
+    {
+      "input": "sorted = [1, 3, 6], target = 100",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Because the array is sorted, a sum that is too big can only shrink by moving the right end left.",
+    "Keep one index at each end. If the sum is below the target advance the left index; if above, retreat the right index; stop when they meet.",
+    "Never revisit an index once it is discarded, and add as long values. Intended complexity: O(n) time and O(1) extra space, where n is the array length."
+  ],
+  "inputSyntax": "Input: the sorted array values, then the target, for example: [2, 5, 9, 11, 15] 13",
+  "sampleInput": "[2, 5, 9, 11, 15] 13",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

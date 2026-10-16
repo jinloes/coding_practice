@@ -1,0 +1,30 @@
+{
+  "id": "reverse-digits",
+  "title": "Reverse Digits",
+  "topic": "Math",
+  "difficulty": "Medium",
+  "statement": "Reverse the decimal digits of a 32-bit signed integer, returning 0 if the result does not fit in 32 bits.\n\nContract\n- Reverse the digits of the absolute value and keep the original sign. Trailing zeros of the input become leading zeros and vanish, so `120` becomes `21`.\n- If the reversed value is outside the range of `int` (below `-2147483648` or above `2147483647`), return `0`.\n- `0` returns `0`. `Integer.MIN_VALUE` reverses to something too large, so it returns `0`.\n- Do not use `long`, `double`, `BigInteger`, or strings to hold the reversed number; detect the overflow before it happens using `int` arithmetic only.\n\nExamples\n- `reverseDigits(1203)` returns `3021`.\n- `reverseDigits(-450)` returns `-54`.\n- `reverseDigits(1563847412)` returns `0`, because the reversal `2147483651` exceeds `2147483647`.\n",
+  "examples": [
+    {
+      "input": "x = 1203",
+      "output": "3021"
+    },
+    {
+      "input": "x = -450",
+      "output": "-54"
+    },
+    {
+      "input": "x = 1563847412",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Peel the last digit with `x % 10`, drop it with `x / 10`, and push it onto the result with `result * 10 + digit`. In Java the remainder of a negative number is negative, so the sign takes care of itself.",
+    "The danger is the multiply-and-add overflowing silently. Instead of checking afterwards (too late with plain `int`), check before pushing the digit whether `result` is already past `limit / 10`, or exactly at it with a digit beyond the limit's last digit.",
+    "Test both ends: `result > MAX / 10`, or `result == MAX / 10` with `digit > 7`; and `result < MIN / 10`, or `result == MIN / 10` with `digit < -8`. Intended complexity: O(1) time (at most 10 loop iterations per call, so the probe measures a batch of calls) and O(1) space."
+  ],
+  "inputSyntax": "Input: one 32-bit integer, for example: 1203",
+  "sampleInput": "1203",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "equal-subset-partition",
+  "title": "Equal Subset Partition",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Decide whether a list of positive whole numbers can be divided into two groups with exactly the same sum.\n\nContract\n- `values` is non-null and may be empty; every value is at least 1 and the total fits in an `int`.\n- Every value must go into exactly one of the two groups. A group may be empty only when the other is empty too, so an empty array counts as splittable.\n- Return `true` when some assignment gives both groups the same sum, otherwise `false`.\n- Do not mutate `values`.\n\nExamples\n- `canSplitEvenly(new int[]{3, 1, 1, 2, 1})` returns `true`: `{3, 1}` and `{1, 1, 2}` both sum to 4.\n- `canSplitEvenly(new int[]{2, 5, 4})` returns `false`: the total 11 is odd.\n- `canSplitEvenly(new int[]{6, 6})` returns `true`: one value goes to each group.\n",
+  "examples": [
+    {
+      "input": "values = [3, 1, 1, 2, 1]",
+      "output": "true"
+    },
+    {
+      "input": "values = [2, 5, 4]",
+      "output": "false"
+    },
+    {
+      "input": "values = [6, 6]",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Both groups sum to half of the total, so an odd total can never work; the real question is whether some subset sums to total / 2.",
+    "Track which sums from 0 up to the target are reachable using the values seen so far. Each value either extends an earlier reachable sum or is skipped.",
+    "Use a boolean array indexed by sum and update it from high sums to low so each value is used at most once. Intended complexity: O(n * total) time and O(total) extra space, where n is the number of values and total is their sum; for the doubling workload (total grows with n) that is O(n^2) time and O(n) space."
+  ],
+  "inputSyntax": "Input: the array values, for example: [3, 1, 1, 2, 1]",
+  "sampleInput": "[3, 1, 1, 2, 1]",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

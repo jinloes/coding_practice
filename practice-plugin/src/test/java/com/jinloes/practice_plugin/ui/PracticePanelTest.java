@@ -76,12 +76,15 @@ class PracticePanelTest {
             filters.selectGuide("stacks-queues");
             assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
                     .as("the guide's exercises, Easy then Medium then Hard")
-                    .containsExactly("balanced-delimiters", "array-stack", "sliding-window-maximum");
+                    .containsExactly("balanced-delimiters", "array-stack", "min-tracking-stack", "postfix-evaluation",
+                            "warmer-day-wait", "car-fleets", "sliding-window-maximum",
+                            "largest-histogram-rectangle");
 
             filters.selectDifficulty("Medium");
             assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
                     .as("the existing filters still narrow a guide")
-                    .containsExactly("array-stack");
+                    .containsExactly("array-stack", "min-tracking-stack", "postfix-evaluation", "warmer-day-wait",
+                            "car-fleets");
 
             filters.selectGuide(null);
             filters.selectDifficulty("All difficulties");

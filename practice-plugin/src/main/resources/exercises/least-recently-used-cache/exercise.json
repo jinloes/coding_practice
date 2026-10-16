@@ -1,0 +1,30 @@
+{
+  "id": "least-recently-used-cache",
+  "title": "Least-Recently-Used Cache",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Design a fixed-capacity key-value cache that evicts the entry that has gone unused the longest.\n\nContract\n- `new Solution(capacity)` creates an empty cache holding at most `capacity` entries. Throw `IllegalArgumentException` when `capacity < 1`.\n- `get(key)` returns the stored value, or `-1` when the key is absent. Values are non-negative, so `-1` is unambiguous. A successful `get` makes the key the most recently used.\n- `put(key, value)` inserts or overwrites. Either way the key becomes the most recently used. When inserting a new key into a full cache, first evict the least recently used key.\n- Overwriting an existing key never evicts anything. A `get` that misses changes nothing.\n- Both `get` and `put` must run in O(1) average time.\n\nExamples\n- With capacity 2: `put(1, 10)`, `put(2, 20)`, `get(1)` returns `10`, `put(3, 30)` evicts key 2, so `get(2)` returns `-1`.\n- With capacity 1: `put(1, 5)`, `put(2, 6)` leaves only key 2, so `get(1)` returns `-1` and `get(2)` returns `6`.\n- With capacity 2: `put(1, 1)`, `put(2, 2)`, `put(1, 100)`, `put(3, 3)` evicts key 2, and `get(1)` returns `100`.\n",
+  "examples": [
+    {
+      "input": "capacity 2: put 1 10, put 2 20, get 1, put 3 30, get 2",
+      "output": "get 1 -> 10, get 2 -> -1"
+    },
+    {
+      "input": "capacity 1: put 1 5, put 2 6, get 1, get 2",
+      "output": "get 1 -> -1, get 2 -> 6"
+    },
+    {
+      "input": "capacity 2: put 1 1, put 2 2, put 1 100, put 3 3, get 1, get 2",
+      "output": "get 1 -> 100, get 2 -> -1"
+    }
+  ],
+  "hints": [
+    "You need two things at once: find an entry by key quickly, and know which entry was used longest ago. A hash map handles the first, an ordering of entries handles the second.",
+    "Keep entries in a doubly linked list ordered by recency, and a map from key to its list node. Moving a node to the front, and removing the node at the back, are both constant time when you can reach the node directly.",
+    "Every get hit and every put moves its node to the front; a put into a full cache first removes the tail node and its map entry. Sentinel head and tail nodes remove edge cases. Intended complexity: O(1) time per operation, so n operations take O(n) total (the probe measures a whole run of n operations), and O(capacity) space."
+  ],
+  "inputSyntax": "Input: capacity first, then operations separated by commas, for example: capacity 2, put 1 10, put 2 20, get 1, put 3 30, get 2",
+  "sampleInput": "capacity 2, put 1 10, put 2 20, get 1, put 3 30, get 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

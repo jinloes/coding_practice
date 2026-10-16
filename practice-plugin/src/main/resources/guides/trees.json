@@ -14,6 +14,10 @@
     "kth-smallest-in-search-tree",
     "search-tree-common-ancestor",
     "max-path-sum",
-    "tree-codec"
+    "tree-codec",
+    "tree-diameter",
+    "height-balanced-tree",
+    "right-side-view",
+    "good-node-count"
   ]
 }

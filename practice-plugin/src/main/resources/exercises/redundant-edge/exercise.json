@@ -1,0 +1,30 @@
+{
+  "id": "redundant-edge",
+  "title": "Redundant Edge",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "A connected network of n nodes was built as a tree and then given one extra edge; find the edge that should be removed.\n\nContract\n- Nodes are labelled `1` to `n`, and `edges` holds exactly `n` pairs `{a, b}` in the order they were added. Without the extra edge the graph would be a tree, so it is connected.\n- The extra edge may repeat an existing pair or be a self-loop (`a == b`).\n- Return the edge that, once removed, leaves a tree. When several edges qualify (every edge on the single cycle does), return the one that appears last in `edges`.\n- Return the pair exactly as it appears in the input, as a new array. Do not modify `edges`.\n\nExamples\n- `redundantEdge(new int[][]{{4,1},{2,3},{1,2},{3,4}})` returns `[3, 4]`: all four edges lie on the cycle and `[3, 4]` comes last.\n- `redundantEdge(new int[][]{{1,2},{2,3},{3,4},{4,1},{5,1}})` returns `[4, 1]`, not the final edge, which is a harmless branch.\n- `redundantEdge(new int[][]{{2,1},{1,2}})` returns `[1, 2]`.\n",
+  "examples": [
+    {
+      "input": "edges = [[4,1],[2,3],[1,2],[3,4]]",
+      "output": "[3,4]"
+    },
+    {
+      "input": "edges = [[1,2],[2,3],[3,4],[4,1],[5,1]]",
+      "output": "[4,1]"
+    },
+    {
+      "input": "edges = [[2,1],[1,2]]",
+      "output": "[1,2]"
+    }
+  ],
+  "hints": [
+    "Adding edges one at a time keeps the graph a forest until an edge joins two nodes that were already connected.",
+    "Keep a disjoint-set (union-find) structure over the nodes. For each edge in order, find both endpoints' roots; if they match, this edge closes the cycle.",
+    "The first edge whose endpoints are already connected is the last cycle edge in input order. Use path compression so the find steps stay cheap. Intended complexity: O(n) time (near-linear with path compression) and O(n) space for the parent array, where n is the number of nodes."
+  ],
+  "inputSyntax": "Input: the edge list as nested [a, b] pairs, for example: [[4, 1], [2, 3], [1, 2], [3, 4]]",
+  "sampleInput": "[[4, 1], [2, 3], [1, 2], [3, 4]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

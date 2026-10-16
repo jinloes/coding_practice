@@ -1,0 +1,30 @@
+{
+  "id": "unpaired-value",
+  "title": "Unpaired Value",
+  "topic": "Bit Manipulation",
+  "difficulty": "Easy",
+  "statement": "Find the one value that has no twin in an array where every other value appears exactly twice.\n\nContract\n- `nums` has odd length of at least 1. Exactly one value appears once; every other value appears exactly twice, in any positions.\n- Values may be negative, zero, or span the whole `int` range.\n- Return the value that appears once. Do not modify `nums`.\n- Use constant extra space; sorting a copy or counting in a map is allowed for correctness but not the intended solution.\n\nExamples\n- `[4, 9, 4, 7, 9]` returns `7`.\n- `[42]` returns `42`.\n- `[-5, 3, -5]` returns `3`.\n",
+  "examples": [
+    {
+      "input": "nums = [4, 9, 4, 7, 9]",
+      "output": "7"
+    },
+    {
+      "input": "nums = [42]",
+      "output": "42"
+    },
+    {
+      "input": "nums = [-5, 3, -5]",
+      "output": "3"
+    }
+  ],
+  "hints": [
+    "Think about an operation that makes a value cancel itself when it meets its twin.",
+    "Bitwise XOR of a number with itself is 0, XOR with 0 leaves a number unchanged, and XOR does not care about order.",
+    "XOR every element into one accumulator; paired values cancel and the unpaired one remains. Intended complexity: O(n) time with a single pass and O(1) extra space."
+  ],
+  "inputSyntax": "Input: the values separated by spaces or commas, every value twice except one, for example: 4 9 4 7 9",
+  "sampleInput": "4 9 4 7 9",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

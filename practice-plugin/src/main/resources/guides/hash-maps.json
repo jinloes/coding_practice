@@ -12,6 +12,8 @@
     "duplicate-check",
     "longest-consecutive-run",
     "group-anagrams",
-    "top-k-frequent"
+    "top-k-frequent",
+    "sudoku-board-check",
+    "least-recently-used-cache"
   ]
 }

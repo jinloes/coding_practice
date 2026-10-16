@@ -8,6 +8,7 @@
     "sliding-window-maximum",
     "longest-unique-substring",
     "longest-repeat-after-replacement",
-    "minimum-covering-window"
+    "minimum-covering-window",
+    "permutation-substring"
   ]
 }

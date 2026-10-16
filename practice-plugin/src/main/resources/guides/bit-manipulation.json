@@ -8,6 +8,8 @@
     "bit-count-table",
     "reverse-bits",
     "missing-number",
-    "sum-without-plus"
+    "sum-without-plus",
+    "unpaired-value",
+    "reverse-digits"
   ]
 }

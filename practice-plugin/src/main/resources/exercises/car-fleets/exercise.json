@@ -1,0 +1,30 @@
+{
+  "id": "car-fleets",
+  "title": "Car Fleets",
+  "topic": "Stacks",
+  "difficulty": "Medium",
+  "statement": "Cars drive toward a finish line on a single lane where nobody can pass; count the groups that arrive together.\n\nContract\n- `target` is the position of the finish line. `positions[i]` is where car `i` starts (all distinct, `0 <= positions[i] < target`) and `speeds[i]` is its constant speed (`> 0`). The arrays have equal length and may be empty.\n- All cars drive toward `target`. A car cannot overtake: if it catches a slower car ahead it joins it and from then on moves at that slower car's speed.\n- A fleet is a set of cars that reach `target` at the same moment, including cars that merge exactly at the line. A lone car is a fleet of one.\n- Return the number of fleets. `positions` is not sorted. Do not mutate either array. Compare arrival times exactly (no floating-point rounding errors).\n\nExamples\n- `countFleets(100, new int[]{10, 40, 70}, new int[]{5, 3, 1})` returns `1`: the car at 70 is slowest and the cars behind it pile up behind it.\n- `countFleets(50, new int[]{0, 10, 20}, new int[]{1, 2, 4})` returns `3`: every car ahead is faster, so nobody catches up.\n- `countFleets(12, new int[]{3}, new int[]{2})` returns `1`.\n",
+  "examples": [
+    {
+      "input": "target = 100, positions = [10, 40, 70], speeds = [5, 3, 1]",
+      "output": "1"
+    },
+    {
+      "input": "target = 50, positions = [0, 10, 20], speeds = [1, 2, 4]",
+      "output": "3"
+    },
+    {
+      "input": "target = 12, positions = [3], speeds = [2]",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Each car on its own would arrive after (target - position) / speed time units. Think about which cars could ever interfere with each other.",
+    "Process cars from the one closest to the line backwards. A car whose solo arrival is no later than the fleet directly ahead catches it and joins that fleet; a later arrival starts a new fleet.",
+    "Sort by position (keep each speed with its position), sweep from the front and track the arrival time of the fleet ahead, comparing times with cross-multiplication in long arithmetic. Intended complexity: O(n log n) time for the sort and O(n) space for the sorted pairs, where n is the number of cars."
+  ],
+  "inputSyntax": "Input: the target, then the positions, then the speeds, for example: 100 [10, 40, 70] [5, 3, 1]",
+  "sampleInput": "100 [10, 40, 70] [5, 3, 1]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

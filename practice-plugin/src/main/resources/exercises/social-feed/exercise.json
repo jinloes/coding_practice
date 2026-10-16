@@ -1,0 +1,30 @@
+{
+  "id": "social-feed",
+  "title": "Social Feed",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Design a tiny social feed where users post, follow each other, and read their ten most recent posts.\n\nContract\n- Users and posts are identified by integers. Post ids are unique but carry no ordering: recency is the order in which `post` was called.\n- `post(user, postId)` publishes a post. `follow(follower, followee)` makes `follower` see `followee`'s posts; following yourself, or following someone twice, changes nothing. `unfollow` removes the link and does nothing if there is none.\n- `feed(user)` returns the ids of up to 10 most recent posts written by `user` or by anyone `user` currently follows, newest first. Posts made before a follow still count; unfollowing hides that person's posts at once.\n- A user who never posted or followed (or is unknown) has an empty feed. A user's own posts are always in their feed. Never list a post twice.\n\nExamples\n- `post(1, 5)`, `post(2, 6)`, `follow(1, 2)`: `feed(1)` is `[6, 5]` and `feed(2)` is `[6]`.\n- `follow(1, 2)`, `post(2, 8)`, `post(1, 9)`, `unfollow(1, 2)`: `feed(1)` is `[9]`.\n- User 3 posts ids 1 to 12 in order: `feed(3)` is `[12, 11, 10, 9, 8, 7, 6, 5, 4, 3]`.\n",
+  "examples": [
+    {
+      "input": "post 1 5; post 2 6; follow 1 2; feed 1; feed 2",
+      "output": "[6, 5] then [6]"
+    },
+    {
+      "input": "follow 1 2; post 2 8; post 1 9; unfollow 1 2; feed 1",
+      "output": "[9]"
+    },
+    {
+      "input": "user 3 posts ids 1 to 12; feed 3",
+      "output": "[12, 11, 10, 9, 8, 7, 6, 5, 4, 3]"
+    }
+  ],
+  "hints": [
+    "Give every post a timestamp from a counter that goes up on each `post`. Store each user's posts in the order they were written, and each user's followees in a set.",
+    "To build a feed you need the 10 newest posts across several already-sorted lists. Walk each relevant user's list from the newest end and keep only the best 10 seen so far, or merge the lists with a heap.",
+    "A user's list can be abandoned as soon as its next post is older than the 10th best you hold. Keeping a fixed 10-slot buffer needs no extra space beyond it, whereas a heap with one entry per followee needs space proportional to the followee count F. The probe gives one user n followees. Intended complexity: O(F) time per `feed` with O(1) extra space (10 slots); `post`, `follow` and `unfollow` are O(1)."
+  ],
+  "inputSyntax": "Input: operations separated by semicolons, each post <user> <postId>, follow <a> <b>, unfollow <a> <b> or feed <user>, for example: post 1 5; post 2 6; follow 1 2; feed 1",
+  "sampleInput": "post 1 5; post 2 6; follow 1 2; feed 1",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "fast-power",
+  "title": "Fast Power",
+  "topic": "Math",
+  "difficulty": "Medium",
+  "statement": "Raise a `double` to an `int` power without calling `Math.pow`, quickly enough that even enormous exponents are cheap.\n\nContract\n- `exponent` may be any `int`, including negative values and `Integer.MIN_VALUE`; `base` is any finite `double`.\n- Return `base` raised to `exponent`. A zero exponent gives `1.0`, including for a zero base.\n- A negative exponent means the reciprocal of the positive power. A zero base with a negative exponent returns `Double.POSITIVE_INFINITY`, and a result too large or too small for a `double` becomes infinity or `0.0` the way ordinary floating-point arithmetic does.\n- Do not loop `exponent` times and do not call `Math.pow`; results are compared with a tiny relative tolerance.\n\nExamples\n- `power(2.0, 10)` returns `1024.0`.\n- `power(2.0, -2)` returns `0.25`.\n- `power(5.0, 0)` returns `1.0`.\n",
+  "examples": [
+    {
+      "input": "base = 2.0, exponent = 10",
+      "output": "1024.0"
+    },
+    {
+      "input": "base = 2.0, exponent = -2",
+      "output": "0.25"
+    },
+    {
+      "input": "base = 5.0, exponent = 0",
+      "output": "1.0"
+    }
+  ],
+  "hints": [
+    "Multiplying `base` by itself `exponent` times is correct but far too slow for exponents in the billions.",
+    "Square the base each step and halve the exponent; multiply the result by the current base whenever the exponent has a 1 in its lowest bit.",
+    "Negating `Integer.MIN_VALUE` overflows an `int`, so widen the exponent to `long` before taking its absolute value. Intended complexity: O(log n) time for exponent n, since the loop runs once per bit, and O(1) extra space."
+  ],
+  "inputSyntax": "Input: a base and an integer exponent, for example: 2 10",
+  "sampleInput": "2 10",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

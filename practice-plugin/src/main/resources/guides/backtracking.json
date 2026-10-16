@@ -6,6 +6,14 @@
   "exercises": [
     "combination-sum",
     "grid-word-search",
-    "grid-multi-word-search"
+    "grid-multi-word-search",
+    "parentheses-generation",
+    "all-subsets",
+    "all-permutations",
+    "subsets-with-duplicates",
+    "unique-combination-sum",
+    "palindrome-partitions",
+    "phone-letter-combinations",
+    "queens-placement"
   ]
 }

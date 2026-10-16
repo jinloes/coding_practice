@@ -1,0 +1,30 @@
+{
+  "id": "largest-histogram-rectangle",
+  "title": "Largest Histogram Rectangle",
+  "topic": "Stacks",
+  "difficulty": "Hard",
+  "statement": "Given the heights of adjacent bars, find the area of the largest rectangle that fits entirely inside the bars.\n\nContract\n- `heights` is non-null and may be empty. Every bar is exactly `1` wide and its height is a non-negative `int`.\n- The rectangle must cover consecutive bars and may be no taller than the shortest bar it covers; its area is that height times the number of bars covered.\n- Return the largest possible area as a `long` (areas can exceed the `int` range). An empty array, or one containing only zero-height bars, has area `0`.\n- Do not mutate `heights`.\n\nExamples\n- `largestRectangle(new int[]{3, 1, 4, 4, 2})` returns `8`, from the two bars of height `4`.\n- `largestRectangle(new int[]{7, 7, 7, 7})` returns `28`.\n- `largestRectangle(new int[]{})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "heights = [3, 1, 4, 4, 2]",
+      "output": "8"
+    },
+    {
+      "input": "heights = [7, 7, 7, 7]",
+      "output": "28"
+    },
+    {
+      "input": "heights = []",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "For a fixed bar, the best rectangle that uses its full height stretches left and right until it meets a shorter bar.",
+    "Find for every bar the nearest strictly shorter bar on each side. Do it in one pass by keeping bars whose heights are non-decreasing; a shorter bar closes the taller bars waiting on the stack.",
+    "Process one extra sentinel bar of height 0 at the end so every bar is popped. When popping, the width runs from the new stack top plus one up to the current index, and the area uses `long`. Intended complexity: O(n) time because each bar is pushed and popped once, and O(n) space for the stack, where n is the number of bars."
+  ],
+  "inputSyntax": "Input: the bar heights, for example: [3, 1, 4, 4, 2]",
+  "sampleInput": "[3, 1, 4, 4, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

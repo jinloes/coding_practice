@@ -44,7 +44,9 @@ public final class GuideCatalog {
             "dynamic-programming",
             "intervals",
             "bit-manipulation",
-            "matrices");
+            "matrices",
+            "greedy",
+            "math");
 
     /** The levels a guide groups its exercises into, easiest first. */
     public static final List<String> DIFFICULTIES = List.of("Easy", "Medium", "Hard");

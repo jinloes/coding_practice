@@ -1,0 +1,30 @@
+{
+  "id": "triplet-merge-target",
+  "title": "Triplet Merge Target",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Decide whether some of the given triplets can be merged, by taking position-wise maxima, into exactly a target triplet.\n\nContract\n- `triplets` is a non-null array of arrays, each with exactly 3 ints (it may be empty); `target` has exactly 3 ints.\n- You may choose any subset of the triplets (including just one). Merging them produces a triplet whose value at each position is the largest value found at that position among the chosen triplets.\n- Return `true` if some non-empty subset merges into exactly `target`, otherwise `false`. An empty `triplets` array always gives `false`.\n- Do not mutate the inputs.\n\nExamples\n- `canMerge(new int[][]{{2, 5, 3}, {1, 8, 4}, {1, 7, 5}}, new int[]{2, 7, 5})` returns `true` (merge the first and third; the middle one overshoots).\n- `canMerge(new int[][]{{3, 4, 5}, {4, 5, 6}}, new int[]{3, 4, 5})` returns `true` using only the first triplet.\n- `canMerge(new int[][]{{2, 3, 1}, {1, 2, 2}}, new int[]{2, 3, 3})` returns `false`.\n",
+  "examples": [
+    {
+      "input": "triplets = [[2, 5, 3], [1, 8, 4], [1, 7, 5]], target = [2, 7, 5]",
+      "output": "true"
+    },
+    {
+      "input": "triplets = [[3, 4, 5], [4, 5, 6]], target = [3, 4, 5]",
+      "output": "true"
+    },
+    {
+      "input": "triplets = [[2, 3, 1], [1, 2, 2]], target = [2, 3, 3]",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Merging can only raise values, so a triplet with any value above the target can never be part of a valid subset.",
+    "Among the remaining safe triplets, merging all of them is as good as any subset, since extra safe triplets cannot push a position past the target.",
+    "Scan once, ignore unsafe triplets, and record which of the three target positions is matched exactly by some safe triplet. Intended complexity: O(n) time and O(1) extra space for n triplets."
+  ],
+  "inputSyntax": "Input: the triplets, a semicolon, then the target triplet, for example: [[2, 5, 3], [1, 8, 4], [1, 7, 5]]; [2, 7, 5]",
+  "sampleInput": "[[2, 5, 3], [1, 8, 4], [1, 7, 5]]; [2, 7, 5]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

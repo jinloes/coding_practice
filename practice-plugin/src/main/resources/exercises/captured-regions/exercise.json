@@ -1,0 +1,30 @@
+{
+  "id": "captured-regions",
+  "title": "Captured Regions",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Flip every group of `'O'` cells that is completely surrounded by `'X'` cells, modifying the board in place.\n\nContract\n- `board` is a rectangular array of `'X'` and `'O'`; it may have no rows.\n- Cells are connected through shared edges only (up, down, left, right). A group of `'O'` cells is safe when any of its cells lies on the outer border of the board; otherwise it is enclosed.\n- Change every `'O'` in an enclosed group to `'X'`. Safe groups and all `'X'` cells stay as they are.\n- The method returns nothing: the result must be written into `board` itself.\n\nExamples\n- Rows `XXXX`, `XOOX`, `XXOX`, `XOXX` become `XXXX`, `XXXX`, `XXXX`, `XOXX`: the bottom `O` is on the border, so only the three inner cells flip.\n- Rows `OOO`, `OXO`, `OOO` are unchanged because the ring of `O` cells touches the border.\n- Rows `XXXXX`, `XOXOX`, `XXOXX` become `XXXXX`, `XXXXX`, `XXOXX`.\n",
+  "examples": [
+    {
+      "input": "board = [\"XXXX\",\"XOOX\",\"XXOX\",\"XOXX\"]",
+      "output": "[\"XXXX\",\"XXXX\",\"XXXX\",\"XOXX\"]"
+    },
+    {
+      "input": "board = [\"OOO\",\"OXO\",\"OOO\"]",
+      "output": "[\"OOO\",\"OXO\",\"OOO\"]"
+    },
+    {
+      "input": "board = [\"XXXXX\",\"XOXOX\",\"XXOXX\"]",
+      "output": "[\"XXXXX\",\"XXXXX\",\"XXOXX\"]"
+    }
+  ],
+  "hints": [
+    "An O group survives exactly when it can reach the border, so ask which cells are safe rather than which are enclosed.",
+    "Start from every O on the border and spread through connected O cells, marking them with a temporary symbol. Anything still O afterwards is enclosed.",
+    "Finish with one pass that turns the marked cells back into O and the remaining O cells into X. Intended complexity: O(n) time and O(n) space for the traversal stack, where n is the number of cells."
+  ],
+  "inputSyntax": "Input: the board rows separated by spaces, using X and O, for example: XXXX XOOX XXOX XOXX",
+  "sampleInput": "XXXX XOOX XXOX XOXX",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

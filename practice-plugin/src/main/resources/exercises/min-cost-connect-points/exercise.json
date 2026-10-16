@@ -1,0 +1,30 @@
+{
+  "id": "min-cost-connect-points",
+  "title": "Min Cost to Connect Points",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Lay cable between points on a plane so that every point is connected to every other, as cheaply as possible.\n\nContract\n- `points[i] = {x, y}` with integer coordinates. A cable between two points costs their Manhattan distance, `|x1 - x2| + |y1 - y2|`.\n- Cables may only join two given points, but the network may pass through any point, so connectivity is transitive.\n- Return the smallest total cost that links all points. Zero or one point costs 0; duplicate points are allowed and cost 0 to join.\n- The total always fits in an `int`. Do not modify `points`.\n\nExamples\n- `{{0,0},{2,2},{3,10},{5,2},{7,0}}` returns `20`.\n- `{{4,4}}` returns `0`.\n- `{{1,1},{4,5}}` returns `7`.\n",
+  "examples": [
+    {
+      "input": "points = {{0,0},{2,2},{3,10},{5,2},{7,0}}",
+      "output": "20"
+    },
+    {
+      "input": "points = {{4,4}}",
+      "output": "0"
+    },
+    {
+      "input": "points = {{1,1},{4,5}}",
+      "output": "7"
+    }
+  ],
+  "hints": [
+    "Treat the points as a complete graph with Manhattan-distance edge weights. Cheapest connection of everything is a minimum spanning tree.",
+    "Always growing from the already-connected set by its cheapest outgoing cable is correct (Prim). Always hopping to the nearest unvisited point from where you stand is not, because it can leave a cheap link behind.",
+    "Keep, for every unconnected point, its cheapest distance to the connected set; repeatedly attach the minimum and refresh the others. Intended complexity: O(n^2) time with no explicit edge list and O(n) space (Kruskal would need O(n^2 log n) over all edges)."
+  ],
+  "inputSyntax": "Input: points as x,y pairs separated by spaces, for example: 0,0 2,2 3,10 5,2 7,0",
+  "sampleInput": "0,0 2,2 3,10 5,2 7,0",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

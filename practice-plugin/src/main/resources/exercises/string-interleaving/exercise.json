@@ -1,0 +1,30 @@
+{
+  "id": "string-interleaving",
+  "title": "String Interleaving",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Check whether a third string can be formed by weaving two strings together without reordering either one.\n\nContract\n- All three arguments are non-null and may be empty; characters compare exactly (case-sensitive).\n- `merged` is an interleaving when its characters can be split into two subsequences that spell `first` and `second`, using every character of `merged` exactly once.\n- Characters taken from `first` keep their order, and so do those from `second`; the two strings may alternate in any pattern.\n- Return `false` immediately when the lengths do not add up. Three empty strings are an interleaving.\n\nExamples\n- `isInterleaving(\"ab\", \"ac\", \"acab\")` returns `true`: take `a`, `c` from the second string, then `a`, `b` from the first.\n- `isInterleaving(\"ab\", \"cd\", \"acbe\")` returns `false`: `e` appears in neither string.\n- `isInterleaving(\"\", \"xyz\", \"xyz\")` returns `true`: everything comes from the second string.\n",
+  "examples": [
+    {
+      "input": "first = \"ab\", second = \"ac\", merged = \"acab\"",
+      "output": "true"
+    },
+    {
+      "input": "first = \"ab\", second = \"cd\", merged = \"acbe\"",
+      "output": "false"
+    },
+    {
+      "input": "first = \"\", second = \"xyz\", merged = \"xyz\"",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Whether merged[k] can come from either string depends only on how many characters of each string have been used so far.",
+    "Let reachable[i][j] mean the first i characters of `first` and first j of `second` can weave into the first i + j characters of `merged`. Fill it from smaller prefixes: step i or step j when the character matches.",
+    "Row i of the table only needs row i - 1, so a single row of length |second| + 1 is enough. Intended complexity: O(|first| * |second|) time and O(|second|) extra space; with both strings of length n that is O(n^2) time and O(n) space."
+  ],
+  "inputSyntax": "Input: three words (first second merged), for example: ab ac acab",
+  "sampleInput": "ab ac acab",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

@@ -22,8 +22,11 @@ class StudyGuideViewTest {
                 .contains("<p><i>" + MarkdownHtml.inline(guide.summary()) + "</i></p>")
                 .contains(MarkdownHtml.toHtml(guide.lesson()))
                 .contains("<h3>Easy (0/1 passed)</h3><ul><li>Balanced Delimiters</li></ul>")
-                .contains("<h3>Medium (1/1 passed)</h3><ul><li>Array Stack (passed)</li></ul>")
-                .contains("<h3>Hard (0/1 passed)</h3><ul><li>Sliding Window Maximum</li></ul>");
+                .contains("<h3>Medium (1/5 passed)</h3><ul><li>Array Stack (passed)</li>"
+                        + "<li>Min-Tracking Stack</li><li>Postfix Evaluation</li><li>Warmer Day Wait</li>"
+                        + "<li>Car Fleets</li></ul>")
+                .contains("<h3>Hard (0/2 passed)</h3><ul><li>Sliding Window Maximum</li>"
+                        + "<li>Largest Histogram Rectangle</li></ul>");
         assertThat(html.indexOf("<h3>Easy")).isLessThan(html.indexOf("<h3>Medium"));
         assertThat(html.indexOf("<h3>Medium")).isLessThan(html.indexOf("<h3>Hard"));
     }
@@ -41,8 +44,9 @@ class StudyGuideViewTest {
 
         assertThat(html)
                 .contains("<h3>Easy (0/0 passed)</h3><p>No Easy problems in this guide yet.</p>")
-                .contains("<h3>Hard (1/2 passed)</h3><ul><li>Course Schedule (passed)</li>"
-                        + "<li>Alien Alphabet Order</li></ul>");
+                .contains("<h3>Hard (1/5 passed)</h3><ul><li>Course Schedule (passed)</li>"
+                        + "<li>Alien Alphabet Order</li><li>Word Ladder Length</li>"
+                        + "<li>Itinerary Reconstruction</li><li>Rising Water Path</li></ul>");
     }
 
     @Test
@@ -51,12 +55,12 @@ class StudyGuideViewTest {
                 .isEqualTo("<p>Choose a guide above to study a topic, or a track to practice its list.</p>");
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("merge-sorted-lists"), Set.of()))
                 .contains("<p>Merge Sorted Lists appears in: Two Pointers, Linked Lists.</p>")
-                .contains("<p>Practice tracks: Blind 75.</p>");
+                .contains("<p>Practice tracks: Blind 75, NeetCode 150.</p>");
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("roman-to-integer"), Set.of()))
                 .contains("<p>Roman to Integer is not part of any guide yet.</p>")
                 .doesNotContain("Practice tracks");
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("course-schedule"), Set.of()))
-                .contains("<p>Practice tracks: Blind 75, Google.</p>");
+                .contains("<p>Practice tracks: Blind 75, NeetCode 150, Google.</p>");
     }
 
     @Test

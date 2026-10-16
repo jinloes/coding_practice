@@ -22,6 +22,13 @@
     "max-path-sum",
     "running-median",
     "word-segmentation",
-    "longest-increasing-subsequence"
+    "longest-increasing-subsequence",
+    "trapped-rainwater",
+    "least-recently-used-cache",
+    "kth-largest-element",
+    "task-cooldown-schedule",
+    "word-ladder-length",
+    "rising-water-path",
+    "edit-distance"
   ]
 }

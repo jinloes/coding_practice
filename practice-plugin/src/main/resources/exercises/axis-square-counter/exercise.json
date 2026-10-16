@@ -1,0 +1,30 @@
+{
+  "id": "axis-square-counter",
+  "title": "Axis Square Counter",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Build a structure that collects points on a grid and counts the axis-aligned squares that have a given query point as one corner.\n\nContract\n- `add(x, y)` stores a point with `0 <= x, y <= 1000`. The same point may be added many times, and each copy counts separately.\n- `count(x, y)` returns the number of ways to choose three stored points that, together with `(x, y)`, are the four corners of a square whose sides are parallel to the axes and whose area is greater than zero. The query point itself does not need to have been added, and it is not used as one of the three stored points.\n- Copies multiply: if the three needed corners are stored 2, 3 and 4 times, they give 24 squares.\n- The count always fits in an `int`. `count` must not change the stored points.\n\nExamples\n- After `add(3, 3)`, `add(7, 3)` and `add(7, 7)`, `count(3, 7)` returns `1`: the square has side 4.\n- After adding `(0, 0)`, `(0, 2)`, `(2, 0)` and `(2, 2)` twice, `count(0, 0)` returns `2`.\n- On an empty structure `count(5, 5)` returns `0`, and it stays `0` after `add(5, 5)` because a square needs a positive side.\n",
+  "examples": [
+    {
+      "input": "add 3 3, add 7 3, add 7 7, count 3 7",
+      "output": "1"
+    },
+    {
+      "input": "add 0 0, add 0 2, add 2 0, add 2 2, add 2 2, count 0 0",
+      "output": "2"
+    },
+    {
+      "input": "count 5 5, add 5 5, count 5 5",
+      "output": "0, 0"
+    }
+  ],
+  "hints": [
+    "A square with a known corner is fixed by choosing the diagonal corner: the other two corners follow from it.",
+    "Keep a map from point to how many times it was added. For each distinct stored point on a diagonal of the query (equal horizontal and vertical distance, not zero), multiply its count by the counts of the two remaining corners.",
+    "Adding is a single map update. A query visits each distinct stored point once and does constant work per point. Intended complexity: O(1) per add and O(n) per count for n distinct points, with O(n) space; the workload measures n adds followed by a few counts."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: add 3 3, add 7 3, add 7 7, count 3 7",
+  "sampleInput": "add 3 3, add 7 3, add 7 7, count 3 7",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

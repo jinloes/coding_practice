@@ -1,0 +1,30 @@
+{
+  "id": "wildcard-parentheses-check",
+  "title": "Wildcard Parentheses Check",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Decide whether a string of `(`, `)` and `*` can be read as a correctly nested set of parentheses when every `*` is free to act as `(`, as `)`, or as nothing.\n\nContract\n- `pattern` is non-null and contains only the characters `(`, `)` and `*`; it may be empty.\n- A reading is correct when every `)` closes an earlier unclosed `(` and no `(` is left open at the end.\n- Each `*` may be chosen independently as `(`, `)` or an empty string. Return true if at least one choice gives a correct reading.\n- An empty `pattern` is correct.\n\nExamples\n- `isBalanced(\"(*))\")` is true: read the star as `(` to get `(())`.\n- `isBalanced(\"*(\")` is false: the final `(` can never be closed.\n- `isBalanced(\"\")` is true.\n",
+  "examples": [
+    {
+      "input": "pattern = \"(*))\"",
+      "output": "true"
+    },
+    {
+      "input": "pattern = \"*(\"",
+      "output": "false"
+    },
+    {
+      "input": "pattern = \"\"",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "If there were no stars, a single counter of open parentheses would be enough. With stars the count of open parentheses becomes a range.",
+    "Track the lowest and highest possible number of open parentheses: `(` raises both, `)` lowers both, and `*` lowers the low end and raises the high end. Never let the low end drop below zero.",
+    "If the high end ever goes negative there are too many `)`; at the end the low end must be zero. Intended complexity: O(n) time for a string of length n and O(1) extra space."
+  ],
+  "inputSyntax": "Input: a string of ( ) and * characters, for example: (*))",
+  "sampleInput": "(*))",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

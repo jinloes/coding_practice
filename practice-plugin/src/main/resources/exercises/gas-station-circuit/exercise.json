@@ -1,0 +1,30 @@
+{
+  "id": "gas-station-circuit",
+  "title": "Gas Station Circuit",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Pick the fuel stop where a lap around a circular road can begin without ever running dry.\n\nContract\n- `gain` and `cost` are non-null arrays of the same non-zero length `n`. Station `i` hands out `gain[i]` units of fuel, and driving from station `i` to the next one (station 0 follows station `n - 1`) burns `cost[i]`.\n- You begin at the chosen station with an empty tank, collect its fuel, pay the cost to reach the next station, and so on until you are back at the start. The tank may reach exactly 0 but never go below it.\n- Return any starting index from which one full lap succeeds, or `-1` if no start works. Several starts may be valid, so any valid one is accepted.\n- Values are non-negative and sums fit in a `long`. Do not mutate the arrays.\n\nExamples\n- `startingStation(new int[]{4, 2, 3}, new int[]{3, 4, 2})` returns `2`.\n- `startingStation(new int[]{1, 2}, new int[]{3, 3})` returns `-1` because total fuel is short.\n- `startingStation(new int[]{5}, new int[]{5})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "gain = [4, 2, 3], cost = [3, 4, 2]",
+      "output": "2"
+    },
+    {
+      "input": "gain = [1, 2], cost = [3, 3]",
+      "output": "-1"
+    },
+    {
+      "input": "gain = [5], cost = [5]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "If total fuel is less than total cost, no start can work, so the answer is -1.",
+    "Sweep once with a running tank. If the tank would go negative at station i, no start in the stretch up to i can work, so restart the candidate at i + 1.",
+    "When the totals allow a lap, the final candidate is valid because the deficit before it is covered by the surplus after it. Intended complexity: O(n) time and O(1) extra space for n stations."
+  ],
+  "inputSyntax": "Input: the fuel gains, a semicolon, then the travel costs, for example: [4, 2, 3]; [3, 4, 2]",
+  "sampleInput": "[4, 2, 3]; [3, 4, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

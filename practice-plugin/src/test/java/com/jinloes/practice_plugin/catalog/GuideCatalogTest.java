@@ -20,47 +20,74 @@ class GuideCatalogTest {
         Map<String, List<String>> expected = new java.util.LinkedHashMap<>();
         expected.put("hash-maps", List.of(
                 "pair-sum", "valid-anagram", "first-unique-character", "majority-element", "duplicate-check",
-                "subarray-sum-count", "longest-consecutive-run", "group-anagrams", "top-k-frequent"));
+                "subarray-sum-count", "longest-consecutive-run", "group-anagrams", "top-k-frequent",
+                "sudoku-board-check", "least-recently-used-cache"));
         expected.put("two-pointers", List.of(
                 "valid-palindrome", "move-zeroes", "merge-sorted-lists", "add-strings", "linked-list-cycle",
-                "zero-sum-triplets", "largest-water-container", "remove-nth-from-end"));
+                "zero-sum-triplets", "largest-water-container", "remove-nth-from-end", "sorted-pair-sum",
+                "duplicate-in-range", "trapped-rainwater"));
         expected.put("sliding-window", List.of(
                 "max-stock-profit", "longest-unique-substring", "longest-repeat-after-replacement",
-                "sliding-window-maximum", "minimum-covering-window"));
+                "permutation-substring", "sliding-window-maximum", "minimum-covering-window"));
         expected.put("stacks-queues", List.of(
-                "balanced-delimiters", "array-stack", "sliding-window-maximum"));
+                "balanced-delimiters", "array-stack", "min-tracking-stack", "postfix-evaluation", "warmer-day-wait",
+                "car-fleets", "sliding-window-maximum", "largest-histogram-rectangle"));
         expected.put("linked-lists", List.of(
                 "reverse-linked-list", "merge-sorted-lists", "linked-list-cycle", "remove-nth-from-end",
-                "reorder-list", "merge-k-sorted-lists"));
+                "reorder-list", "random-pointer-list-copy", "add-digit-lists", "duplicate-in-range",
+                "least-recently-used-cache", "merge-k-sorted-lists", "reverse-in-groups"));
         expected.put("binary-search", List.of(
-                "binary-search", "rotated-array-minimum", "rotated-array-search"));
+                "binary-search", "rotated-array-minimum", "rotated-array-search", "sorted-matrix-search",
+                "minimum-eating-speed", "timestamped-key-value-store", "sorted-arrays-median"));
         expected.put("prefix-sums", List.of(
                 "subarray-sum-count", "product-except-self", "max-subarray-sum"));
         expected.put("heaps", List.of(
-                "binary-min-heap", "top-k-frequent", "minimum-meeting-rooms", "merge-k-sorted-lists",
-                "running-median"));
+                "kth-largest-stream", "heaviest-stones-smash", "binary-min-heap", "top-k-frequent",
+                "minimum-meeting-rooms", "k-closest-points", "kth-largest-element", "task-cooldown-schedule",
+                "social-feed", "signal-delay-time", "merge-k-sorted-lists", "running-median"));
         expected.put("graphs", List.of(
-                "clone-graph", "ocean-drainage", "island-count", "valid-tree-graph",
-                "connected-component-count", "course-schedule", "alien-alphabet-order"));
+                "clone-graph", "ocean-drainage", "island-count", "valid-tree-graph", "connected-component-count",
+                "largest-island-area", "captured-regions", "rot-spread-time", "nearest-gate-distance",
+                "course-order", "redundant-edge", "min-cost-connect-points", "signal-delay-time",
+                "cheapest-flights-k-stops", "course-schedule", "alien-alphabet-order", "word-ladder-length",
+                "itinerary-reconstruction", "rising-water-path"));
         expected.put("trees", List.of(
-                "tree-max-depth", "same-tree", "mirror-tree", "subtree-match", "level-order-values",
-                "tree-from-traversals", "valid-search-tree", "kth-smallest-in-search-tree",
-                "search-tree-common-ancestor", "max-path-sum", "tree-codec"));
-        expected.put("tries", List.of("prefix-tree", "wildcard-word-dictionary", "grid-multi-word-search"));
-        expected.put("backtracking", List.of("combination-sum", "grid-word-search", "grid-multi-word-search"));
+                "tree-max-depth", "same-tree", "mirror-tree", "subtree-match", "tree-diameter",
+                "height-balanced-tree", "level-order-values", "tree-from-traversals", "valid-search-tree",
+                "kth-smallest-in-search-tree", "search-tree-common-ancestor", "right-side-view", "good-node-count",
+                "max-path-sum", "tree-codec"));
+        expected.put("tries", List.of(
+                "prefix-tree", "wildcard-word-dictionary", "grid-multi-word-search"));
+        expected.put("backtracking", List.of(
+                "combination-sum", "grid-word-search", "parentheses-generation", "all-subsets", "all-permutations",
+                "subsets-with-duplicates", "unique-combination-sum", "palindrome-partitions",
+                "phone-letter-combinations", "grid-multi-word-search", "queens-placement"));
         expected.put("dynamic-programming", List.of(
-                "stair-climbing-ways", "non-adjacent-max-sum", "circular-non-adjacent-max-sum", "digit-decodings",
-                "grid-paths", "fewest-coins", "longest-increasing-subsequence", "longest-common-subsequence",
-                "word-segmentation", "max-subarray-sum", "max-subarray-product", "longest-palindromic-substring",
-                "palindromic-substring-count", "reachable-end"));
+                "stair-climbing-ways", "min-cost-stairs", "non-adjacent-max-sum", "circular-non-adjacent-max-sum",
+                "digit-decodings", "grid-paths", "fewest-coins", "longest-increasing-subsequence",
+                "longest-common-subsequence", "word-segmentation", "max-subarray-sum", "max-subarray-product",
+                "longest-palindromic-substring", "palindromic-substring-count", "reachable-end",
+                "equal-subset-partition", "stock-profit-cooldown", "coin-change-ways", "target-sign-sum",
+                "string-interleaving", "edit-distance", "longest-increasing-grid-path", "distinct-subsequence-count",
+                "balloon-burst-max", "dot-star-matching"));
         expected.put("intervals", List.of(
                 "meeting-conflicts", "merge-intervals", "insert-interval", "remove-overlapping-intervals",
-                "minimum-meeting-rooms"));
+                "minimum-meeting-rooms", "interval-query-min"));
         expected.put("bit-manipulation", List.of(
-                "count-set-bits", "bit-count-table", "reverse-bits", "missing-number", "sum-without-plus"));
+                "count-set-bits", "bit-count-table", "reverse-bits", "missing-number", "unpaired-value",
+                "sum-without-plus", "reverse-digits"));
         expected.put("matrices", List.of(
                 "zero-matrix-lines", "spiral-order", "rotate-square-matrix", "grid-paths", "island-count",
-                "ocean-drainage", "grid-word-search"));
+                "ocean-drainage", "grid-word-search", "sudoku-board-check", "sorted-matrix-search",
+                "largest-island-area", "captured-regions", "rot-spread-time", "nearest-gate-distance",
+                "rising-water-path", "longest-increasing-grid-path"));
+        expected.put("greedy", List.of(
+                "min-jumps-to-end", "gas-station-circuit", "consecutive-hand-groups", "triplet-merge-target",
+                "label-partitions", "wildcard-parentheses-check", "task-cooldown-schedule", "reachable-end",
+                "max-subarray-sum"));
+        expected.put("math", List.of(
+                "happy-number", "increment-digits", "add-strings", "fast-power", "multiply-strings",
+                "axis-square-counter", "reverse-digits", "rotate-square-matrix"));
 
         assertThat(GuideCatalog.all()).extracting(Guide::id).containsExactlyElementsOf(expected.keySet());
         for (Guide guide : GuideCatalog.all()) {

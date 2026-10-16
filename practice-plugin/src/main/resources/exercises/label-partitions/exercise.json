@@ -1,0 +1,30 @@
+{
+  "id": "label-partitions",
+  "title": "Label Partitions",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Cut a lowercase string into as many consecutive pieces as possible so that no letter shows up in more than one piece, and report the piece lengths.\n\nContract\n- `text` is non-null and contains only the letters `a` to `z`; it may be empty.\n- Every letter that occurs in `text` must lie entirely inside one piece, and the pieces, read in order, must rebuild `text`.\n- Return the lengths of the pieces from left to right, using as many pieces as possible. The result is therefore unique.\n- An empty `text` has no pieces, so the result is an empty list.\n\nExamples\n- `partitionSizes(\"abcabdxyx\")` returns `[5, 1, 3]`: the pieces are `abcab`, `d` and `xyx`.\n- `partitionSizes(\"zzzz\")` returns `[4]` because a single letter cannot be split apart.\n- `partitionSizes(\"qrst\")` returns `[1, 1, 1, 1]`.\n",
+  "examples": [
+    {
+      "input": "text = \"abcabdxyx\"",
+      "output": "[5, 1, 3]"
+    },
+    {
+      "input": "text = \"zzzz\"",
+      "output": "[4]"
+    },
+    {
+      "input": "text = \"qrst\"",
+      "output": "[1, 1, 1, 1]"
+    }
+  ],
+  "hints": [
+    "A piece must reach at least as far as the last occurrence of every letter it contains.",
+    "Record the last index of each letter first. Then sweep left to right, keeping the furthest last-index seen in the current piece; when the sweep index reaches it, the piece can close.",
+    "Closing a piece exactly when the index equals the running furthest end makes every piece as short as possible. Intended complexity: O(n) time for a string of length n and O(1) extra space, since the table has 26 entries and the list holds at most 26 pieces."
+  ],
+  "inputSyntax": "Input: a lowercase string, for example: abcabdxyx",
+  "sampleInput": "abcabdxyx",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

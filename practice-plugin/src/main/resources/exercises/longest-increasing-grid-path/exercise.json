@@ -1,0 +1,30 @@
+{
+  "id": "longest-increasing-grid-path",
+  "title": "Longest Increasing Grid Path",
+  "topic": "Dynamic Programming",
+  "difficulty": "Hard",
+  "statement": "Find the longest chain of cells in a grid where you walk to a neighbouring cell with a strictly larger value at every step.\n\nContract\n- `grid` is non-null, has at least one row, and every row has the same positive length; values are arbitrary `int`s.\n- From a cell you may step up, down, left or right (no diagonals, no wrapping), and only onto a cell whose value is strictly greater than the current one.\n- You may start in any cell and cells can never repeat, because values strictly increase along a path.\n- Return the number of cells on the longest such path (at least 1). Do not mutate `grid`.\n\nExamples\n- `longestRise(new int[][]{{3, 4, 5}, {2, 9, 6}, {1, 8, 7}})` returns `9`: the path `1, 2, 3, 4, 5, 6, 7, 8, 9` winds through every cell.\n- `longestRise(new int[][]{{5, 5}, {5, 5}})` returns `1`: equal neighbours cannot be stepped onto.\n- `longestRise(new int[][]{{1, 4, 2, 8}})` returns `2`: for instance `1, 4` or `2, 8`.\n",
+  "examples": [
+    {
+      "input": "grid = [[3, 4, 5], [2, 9, 6], [1, 8, 7]]",
+      "output": "9"
+    },
+    {
+      "input": "grid = [[5, 5], [5, 5]]",
+      "output": "1"
+    },
+    {
+      "input": "grid = [[1, 4, 2, 8]]",
+      "output": "2"
+    }
+  ],
+  "hints": [
+    "The longest path starting from a cell depends only on the longest paths from its larger neighbours, and strictly increasing values mean there are no cycles.",
+    "Compute best[cell] = 1 + max(best[larger neighbour]). Either memoize a depth-first search, or process cells in increasing value order, or peel cells layer by layer starting from those with no smaller neighbour.",
+    "Each cell is computed once and looks at four neighbours. Beware very deep recursion on long paths. Intended complexity: O(R * C) time and O(R * C) extra space for the table or queue, where R and C are the grid dimensions."
+  ],
+  "inputSyntax": "Input: the grid as rows, for example: [[3, 4, 5], [2, 9, 6], [1, 8, 7]]",
+  "sampleInput": "[[3, 4, 5], [2, 9, 6], [1, 8, 7]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}
