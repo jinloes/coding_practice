@@ -4,14 +4,11 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -54,6 +51,7 @@ final class PracticePanel extends JPanel implements Disposable {
     private final ManagedPracticeWorkspace workspace;
     private final LegacyImportService legacyImport;
     private final PracticeRunner runner;
+    private final BackgroundTasks tasks;
     private final DefaultListModel<Exercise> model = new DefaultListModel<>();
     private final JBList<Exercise> exercises = new JBList<>(model);
     private final ExerciseFilters filters = new ExerciseFilters();
@@ -86,6 +84,7 @@ final class PracticePanel extends JPanel implements Disposable {
         workspace = ManagedPracticeWorkspace.get();
         legacyImport = new LegacyImportService(workspace);
         runner = project.getService(PracticeRunner.class);
+        tasks = new BackgroundTasks(project, () -> !disposed, this::error);
         setBorder(JBUI.Borders.empty(8));
 
         JPanel header = new JPanel(new GridLayout(0, 1, 4, 4));
@@ -161,10 +160,8 @@ final class PracticePanel extends JPanel implements Disposable {
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
-                var attempt = selectedAttemptOrNull();
                 var file = FileDocumentManager.getInstance().getFile(event.getDocument());
-                if (attempt != null && file != null
-                        && Path.of(file.getPath()).toAbsolutePath().normalize().equals(attempt.solution())) {
+                if (AttemptFiles.isSolution(file, selectedAttemptOrNull())) {
                     status.setText("Edited since displayed result; check again.");
                 }
             }
@@ -352,17 +349,7 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private boolean hasUnsavedAttemptFile() {
-        var attempt = selectedAttemptOrNull();
-        if (attempt == null) {
-            return false;
-        }
-        for (var document : FileDocumentManager.getInstance().getUnsavedDocuments()) {
-            var file = FileDocumentManager.getInstance().getFile(document);
-            if (file != null && Path.of(file.getPath()).toAbsolutePath().normalize().equals(attempt.solution())) {
-                return true;
-            }
-        }
-        return false;
+        return AttemptFiles.hasUnsavedChanges(selectedAttemptOrNull());
     }
 
     private ManagedPracticeWorkspace.Attempt selectedAttempt() throws IOException {
@@ -408,26 +395,8 @@ final class PracticePanel extends JPanel implements Disposable {
         }
     }
 
-    private <T> void background(String title, IoTask<T> operation, Consumer<T> completed) {
-        new Task.Backgroundable(project, title, false) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                try {
-                    T result = operation.run();
-                    ApplicationManager.getApplication().invokeLater(() -> {
-                        if (!disposed && !project.isDisposed()) {
-                            completed.accept(result);
-                        }
-                    });
-                } catch (IOException | IllegalArgumentException exception) {
-                    ApplicationManager.getApplication().invokeLater(() -> {
-                        if (!disposed && !project.isDisposed()) {
-                            error(exception.getMessage());
-                        }
-                    });
-                }
-            }
-        }.queue();
+    private <T> void background(String title, BackgroundTasks.IoTask<T> operation, Consumer<T> completed) {
+        tasks.run(title, operation, completed);
     }
 
     private void error(String text) {
@@ -466,10 +435,5 @@ final class PracticePanel extends JPanel implements Disposable {
     @FunctionalInterface
     private interface Action {
         void run() throws IOException, ExecutionException;
-    }
-
-    @FunctionalInterface
-    private interface IoTask<T> {
-        T run() throws IOException;
     }
 }

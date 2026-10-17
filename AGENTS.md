@@ -36,11 +36,14 @@ Use Gradle from the repository root.
 
 ## Agent Context Budget
 
-The tracked repository (~1.6 MB) is larger than one agent context window; the plugin alone fits comfortably.
+The tracked repository (~3.7 MB, roughly 950k tokens) cannot fit in one agent context window. About 2.5 MB of it is per-exercise plugin content, about 0.4 MB is plugin Java code, and about 0.4 MB is `system_design` diagrams.
 
-- Scope work to one module. Repo-wide reviews or audits should run one module or area at a time (for example `practice-plugin/`, then the platform and regex modules, then `system_design/`) and merge findings afterward, rather than loading everything at once.
+- Scope work to one module. Repo-wide reviews or audits should run one module or area at a time (for example `practice-plugin/` code, then the platform and regex modules, then `system_design/`) and merge findings afterward, rather than loading everything at once.
+- Treat `practice-plugin/src/main/resources/exercises/<id>/` and `practice-plugin/src/test/resources/{reference,known-wrong}/<id>/` as per-exercise data. Read only the IDs a task names; never read or search the whole tree. `practice-plugin/src/main/resources/exercises/index.txt` lists every ID.
+- For plugin code work, exclude exercise content from searches, for example with the glob `!practice-plugin/src/*/resources/**`. Start from `practice-plugin/CODE-MAP.md` to find the right package instead of reading broadly.
 - `system_design/*.excalidraw` diagrams are hidden from ripgrep-based search by the root `.ignore`. Open one directly only when the task is about that diagram.
 - Keep source and test files under about 20 KB so they can be read in one pass; split oversized files by responsibility.
+- Avoid tests that restate catalog content (exercise or guide membership lists). Derive expectations from the manifests or assert invariants, so content changes do not require reading and editing large test files.
 
 ## Versioning Metadata
 

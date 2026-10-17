@@ -41,7 +41,7 @@ practice-plugin/
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
 | `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
 | `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
@@ -110,8 +110,10 @@ properties to use a local IDE. Never commit a real machine path.
 
 ## Adding An Exercise
 
-1. Choose a stable lowercase kebab-case ID and append it to the ordered `IDS`
-   list in `ExerciseCatalog`.
+1. Choose a stable lowercase kebab-case ID and append it to
+   `src/main/resources/exercises/index.txt`, which lists exercises in display
+   order. `ExerciseCatalogTest` checks that the index, the exercise directories,
+   and the reference and known-wrong directories all agree.
 2. Add `src/main/resources/exercises/<id>/exercise.json` with:
    - stable `id`, title, topic, and difficulty;
    - an original statement with `Contract` and `Examples`;
@@ -134,7 +136,7 @@ properties to use a local IDE. Never commit a real machine path.
    `ExerciseCatalogTest` compiles and runs it through `CatalogSandbox`.
 6. Add the exercise ID to every study guide whose technique it practices, and
    to any practice track whose list or commonly reported patterns it matches.
-7. Update user-facing catalog documentation if it enumerates exercises.
+7. Update the exercise and difficulty counts in the README.
 8. Run the catalog test, then the full plugin suite.
 
 ## Adding A Study Guide
@@ -149,8 +151,10 @@ properties to use a local IDE. Never commit a real machine path.
    `How it works`, `When to reach for it`, `Common patterns`, and `Pitfalls`,
    each followed by `- ` bullets. Teach the technique without solving a listed
    exercise.
-4. Update `GuideCatalogTest` expectations and the README guide list, then run
-   `GuideCatalogTest` and the full plugin suite.
+4. Add the guide ID to the guide order in `GuideCatalogTest` and the README
+   guide list, then run `GuideCatalogTest` and the full plugin suite. Guide
+   membership is checked against the manifests, so editing a guide's
+   `exercises` array needs no test change.
 
 ## Adding A Practice Track
 

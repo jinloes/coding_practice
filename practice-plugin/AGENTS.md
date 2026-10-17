@@ -59,7 +59,8 @@ finishing a code change.
 
 ## Exercise Content Rules
 
-Every exercise ID listed in `ExerciseCatalog` must provide:
+Every exercise ID listed in `src/main/resources/exercises/index.txt` must
+provide:
 
 ```text
 src/main/resources/exercises/<id>/
@@ -112,8 +113,9 @@ non-duplicated exercise IDs.
   solution, which belongs to that exercise's hints.
 - Guides never declare difficulty. Levels come from each exercise's manifest
   and must be `Easy`, `Medium`, or `Hard`.
-- An exercise may appear in several guides. Update `GuideCatalogTest` when the
-  guide list or membership changes.
+- An exercise may appear in several guides. Update the guide order in
+  `GuideCatalogTest` when the guide list changes; membership is checked against
+  the manifests.
 
 ## Practice Track Content Rules
 

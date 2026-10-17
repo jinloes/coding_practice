@@ -62,7 +62,9 @@ LegacyImportService <--------- legacy reader + managed storage + progress
 ### `catalog`
 
 `ExerciseCatalog` is the authoritative ordered registry of shipped exercises.
-It loads each `exercise.json`, validates metadata, derives visible and full test
+The bundled `exercises/index.txt` names every exercise in display order, because
+a classpath directory cannot be listed reliably from a packaged plugin. The
+catalog loads each listed `exercise.json`, validates metadata, derives visible and full test
 counts from bundled sources, and provides safe access to exercise and harness
 resources.
 

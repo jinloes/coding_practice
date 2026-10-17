@@ -21,13 +21,18 @@ class StudyGuideViewTest {
                 .contains("<h2>Stacks and Queues</h2>")
                 .contains("<p><i>" + MarkdownHtml.inline(guide.summary()) + "</i></p>")
                 .contains(MarkdownHtml.toHtml(guide.lesson()))
-                .contains("<h3>Easy (0/1 passed)</h3><ul><li>Balanced Delimiters</li></ul>")
-                .contains("<h3>Medium (1/9 passed)</h3><ul><li>Array Stack (passed)</li>"
-                        + "<li>Min-Tracking Stack</li><li>Postfix Evaluation</li><li>Warmer Day Wait</li>"
-                        + "<li>Car Fleets</li><li>Max-Tracking Queue</li><li>Rolling Hit Counter</li>"
-                        + "<li>Sort Stack With Stack</li><li>Sunset View Buildings</li></ul>")
-                .contains("<h3>Hard (0/3 passed)</h3><ul><li>Sliding Window Maximum</li>"
-                        + "<li>Largest Histogram Rectangle</li><li>Max Stack With Pop Max</li></ul>");
+                .contains("<li>Array Stack (passed)</li>");
+        for (String level : GuideCatalog.DIFFICULTIES) {
+            var exercises = guide.exercisesAt(level);
+            long passed = exercises.stream().filter(exercise -> exercise.id().equals("array-stack")).count();
+            String header = "<h3>" + level + " (" + passed + "/" + exercises.size() + " passed)</h3>";
+            assertThat(html).contains(header);
+            assertThat(html.substring(html.indexOf(header)))
+                    .as("%s problems in guide order", level)
+                    .containsSubsequence(exercises.stream()
+                            .map(exercise -> "<li>" + MarkdownHtml.inline(exercise.title()))
+                            .toList());
+        }
         assertThat(html.indexOf("<h3>Easy")).isLessThan(html.indexOf("<h3>Medium"));
         assertThat(html.indexOf("<h3>Medium")).isLessThan(html.indexOf("<h3>Hard"));
     }
@@ -41,14 +46,15 @@ class StudyGuideViewTest {
 
     @Test
     void saysWhenALevelHasNoProblemsYet() {
-        String html = StudyGuideView.html(GuideCatalog.find("graphs"), null, Set.of("course-schedule"));
+        var guide = GuideCatalog.find("graphs");
+        assertThat(guide.exercisesAt("Easy")).as("precondition: graphs has no Easy problems").isEmpty();
+
+        String html = StudyGuideView.html(guide, null, Set.of("course-schedule"));
 
         assertThat(html)
                 .contains("<h3>Easy (0/0 passed)</h3><p>No Easy problems in this guide yet.</p>")
-                .contains("<h3>Hard (1/7 passed)</h3><ul><li>Course Schedule (passed)</li>"
-                        + "<li>Alien Alphabet Order</li><li>Word Ladder Length</li>"
-                        + "<li>Itinerary Reconstruction</li><li>Rising Water Path</li>"
-                        + "<li>Grid Obstacle Shortest Path</li><li>Grouped Dependency Order</li></ul>");
+                .contains("<h3>Hard (1/" + guide.exercisesAt("Hard").size() + " passed)</h3>")
+                .contains("<li>Course Schedule (passed)</li>");
     }
 
     @Test

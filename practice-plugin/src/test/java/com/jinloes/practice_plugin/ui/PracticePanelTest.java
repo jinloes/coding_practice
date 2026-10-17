@@ -74,19 +74,17 @@ class PracticePanelTest {
             ExerciseFilters filters = new ExerciseFilters();
 
             filters.selectGuide("stacks-queues");
-            assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
+            var guide = filters.selectedGuide();
+            assertThat(filters.visible(Set.of()))
                     .as("the guide's exercises, Easy then Medium then Hard")
-                    .containsExactly("balanced-delimiters", "array-stack", "min-tracking-stack", "postfix-evaluation",
-                            "warmer-day-wait", "car-fleets", "max-tracking-queue", "rolling-hit-counter",
-                            "sort-stack-with-stack", "sunset-view-buildings", "sliding-window-maximum",
-                            "largest-histogram-rectangle", "max-stack-with-pop-max");
+                    .isNotEmpty()
+                    .containsExactlyElementsOf(guide.exercises());
 
             filters.selectDifficulty("Medium");
-            assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
+            assertThat(filters.visible(Set.of()))
                     .as("the existing filters still narrow a guide")
-                    .containsExactly("array-stack", "min-tracking-stack", "postfix-evaluation", "warmer-day-wait",
-                            "car-fleets", "max-tracking-queue", "rolling-hit-counter", "sort-stack-with-stack",
-                            "sunset-view-buildings");
+                    .isNotEmpty()
+                    .containsExactlyElementsOf(guide.exercisesAt("Medium"));
 
             filters.selectGuide(null);
             filters.selectDifficulty("All difficulties");
@@ -108,11 +106,15 @@ class PracticePanelTest {
                     .as("the track's exercises, Easy then Medium then Hard")
                     .containsExactlyElementsOf(filters.selectedTrack().exercises());
 
+            var track = filters.selectedTrack();
             filters.selectGuide("stacks-queues");
             assertThat(filters.shownGuide()).isSameAs(filters.selectedGuide());
-            assertThat(filters.visible(Set.of())).extracting(ExerciseCatalog.Exercise::id)
+            assertThat(filters.visible(Set.of()))
                     .as("a guide narrowed to the problems in the track")
-                    .containsExactly("balanced-delimiters", "sliding-window-maximum");
+                    .isNotEmpty()
+                    .containsExactlyElementsOf(filters.selectedGuide().exercises().stream()
+                            .filter(track.exercises()::contains)
+                            .toList());
 
             filters.selectGuide(null);
             filters.selectTrack(null);
