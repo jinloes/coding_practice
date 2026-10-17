@@ -1,0 +1,30 @@
+{
+  "id": "ip-address-splits",
+  "title": "IP Address Splits",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "List every valid dotted IPv4 address that can be made by cutting a digit string into four pieces.\n\nContract\n- `digits` is non-null and contains only decimal digits. Lengths outside 4 through 12 have no valid split.\n- Return every address formed by four parts in their original order. Each part must be between `0` and `255`, inclusive.\n- A multi-digit part may not start with `0`; the single part `0` is allowed.\n- Return addresses in lexicographic cut order: try shorter earlier parts before longer earlier parts. Do not mutate the input.\n\nExamples\n- `splitIpAddresses(\"25525511135\")` returns `[\"255.255.11.135\", \"255.255.111.35\"]`.\n- `splitIpAddresses(\"0000\")` returns `[\"0.0.0.0\"]`.\n- `splitIpAddresses(\"123\")` returns `[]`.\n",
+  "examples": [
+    {
+      "input": "digits = \"25525511135\"",
+      "output": "[\"255.255.11.135\", \"255.255.111.35\"]"
+    },
+    {
+      "input": "digits = \"0000\"",
+      "output": "[\"0.0.0.0\"]"
+    },
+    {
+      "input": "digits = \"123\"",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "There are only four parts, and each part has length one, two, or three, so enumerate the cut lengths first.",
+    "Reject a part as soon as it has a leading zero or a value above 255.",
+    "Depth-first search over four parts keeps the ordering simple. Intended complexity is O(1) time and O(1) extra space because a legal IPv4 input has bounded length."
+  ],
+  "inputSyntax": "Input: one digit string, for example: 25525511135",
+  "sampleInput": "25525511135",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

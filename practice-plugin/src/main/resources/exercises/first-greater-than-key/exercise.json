@@ -1,0 +1,30 @@
+{
+  "id": "first-greater-than-key",
+  "title": "First Greater Than Key",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Find the first sorted-array position whose value is greater than a key.\n\nContract\n- `numbers` is non-null, sorted in nondecreasing order, and may contain duplicates.\n- Return the smallest index `i` with `numbers[i] > key`, or `-1` if no value is greater.\n- Do not mutate `numbers`.\n\nExamples\n- `firstGreaterThan(new int[]{1, 2, 2, 4}, 2)` returns `3`.\n- `firstGreaterThan(new int[]{1, 3, 5}, 0)` returns `0`.\n- `firstGreaterThan(new int[]{1, 3, 5}, 9)` returns `-1`.\n",
+  "examples": [
+    {
+      "input": "numbers = [1, 2, 2, 4], key = 2",
+      "output": "3"
+    },
+    {
+      "input": "numbers = [1, 3, 5], key = 0",
+      "output": "0"
+    },
+    {
+      "input": "numbers = [1, 3, 5], key = 9",
+      "output": "-1"
+    }
+  ],
+  "hints": [
+    "This is an upper-bound search rather than an equality search.",
+    "Keep an answer candidate whenever the middle value is greater than the key.",
+    "Move left after finding a candidate to prove it is the first one."
+  ],
+  "inputSyntax": "Input: a sorted integer array followed by the key, for example: [1, 2, 2, 4] 2",
+  "sampleInput": "[1, 2, 2, 4] 2",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

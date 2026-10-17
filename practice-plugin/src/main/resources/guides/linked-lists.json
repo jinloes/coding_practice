@@ -14,6 +14,14 @@
     "add-digit-lists",
     "duplicate-in-range",
     "least-recently-used-cache",
-    "reverse-in-groups"
+    "reverse-in-groups",
+    "odd-even-position-buckets",
+    "linked-list-cycle-entry",
+    "delete-linked-list-node",
+    "linked-list-intersection-node",
+    "linked-list-intersection-with-cycles",
+    "reverse-linked-list-subrange",
+    "kth-node-from-end",
+    "deduplicate-linked-list"
   ]
 }

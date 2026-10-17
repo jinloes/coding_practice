@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+import java.util.ArrayList; import java.util.List;
+public class Solution { public static String rankTeams(String[] votes){ if(votes.length==0) return ""; int m=votes[0].length(); int[][] counts=new int[26][m]; boolean[] present=new boolean[26]; for(char c:votes[0].toCharArray()) present[c-'A']=true; for(String vote:votes) for(int i=0;i<vote.length();i++) counts[vote.charAt(i)-'A'][i]++; List<Character> teams=new ArrayList<>(); for(int i=0;i<26;i++) if(present[i]) teams.add((char)('A'+i)); teams.sort((a,b)->{ for(int i=0;i<m;i++){ int d=counts[b-'A'][i]-counts[a-'A'][i]; if(d!=0) return d; } return Character.compare(a,b); }); StringBuilder out=new StringBuilder(); for(char c:teams) out.append(c); return out.toString(); } }

@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+public class Solution { public static class TreeNode { public int value; public TreeNode left; public TreeNode right; public TreeNode(int value){this.value=value;} public TreeNode(int value, TreeNode left, TreeNode right){this.value=value;this.left=left;this.right=right;} } public static int sumRootToLeaf(TreeNode root){return sum(root,0);} private static int sum(TreeNode n,int p){if(n==null)return 0; int x=(p<<1)|n.value; if(n.left==null&&n.right==null)return x; return sum(n.left,x)+sum(n.right,x);} }

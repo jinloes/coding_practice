@@ -1,0 +1,30 @@
+{
+  "id": "symmetric-binary-tree",
+  "title": "Symmetric Binary Tree",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Decide whether a binary tree is a mirror image of itself around its root.\n\nContract\n- `root` may be null. An empty tree is symmetric.\n- A tree is symmetric when the left and right subtrees have matching values in mirrored positions and matching shapes.\n- Return only the boolean answer and do not mutate the tree.\n\nExamples\n`isSymmetric(tree(1, 2, 2, 3, 4, 4, 3))` => `true`\n`isSymmetric(tree(1, 2, 2, null, 3, null, 3))` => `false`\n`isSymmetric(null)` => `true`\n",
+  "examples": [
+    {
+      "input": "`isSymmetric(tree(1, 2, 2, 3, 4, 4, 3))`",
+      "output": "`true`"
+    },
+    {
+      "input": "`isSymmetric(tree(1, 2, 2, null, 3, null, 3))`",
+      "output": "`false`"
+    },
+    {
+      "input": "`isSymmetric(null)`",
+      "output": "`true`"
+    }
+  ],
+  "hints": [
+    "Compare two subtrees rather than comparing one traversal.",
+    "The outside children must match each other, and the inside children must match each other.",
+    "A recursive mirror helper can stop as soon as one side is null or a value differs. Intended complexity: O(n) time and O(h) stack space."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [1, 2, 2, 3, 4, 4, 3]",
+  "sampleInput": "[1, 2, 2, 3, 4, 4, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

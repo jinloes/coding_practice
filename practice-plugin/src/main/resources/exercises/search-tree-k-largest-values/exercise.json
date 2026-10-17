@@ -1,0 +1,30 @@
+{
+  "id": "search-tree-k-largest-values",
+  "title": "Search Tree K Largest Values",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Return the largest values stored in a binary search tree, from largest to smaller values.\n\nContract\n- `root` may be null and represents a binary search tree with distinct integer values.\n- `k` is non-negative. Return at most `k` values.\n- Values must appear in strictly decreasing order. If `k` is larger than the tree size, return every value.\n- Do not mutate the tree.\n\nExamples\n`kLargest(tree(5, 3, 8, 2, 4, 7, 9), 3)` => `[9, 8, 7]`\n`kLargest(tree(4), 5)` => `[4]`\n`kLargest(null, 2)` => `[]`\n",
+  "examples": [
+    {
+      "input": "`kLargest(tree(5, 3, 8, 2, 4, 7, 9), 3)`",
+      "output": "`[9, 8, 7]`"
+    },
+    {
+      "input": "`kLargest(tree(4), 5)`",
+      "output": "`[4]`"
+    },
+    {
+      "input": "`kLargest(null, 2)`",
+      "output": "`[]`"
+    }
+  ],
+  "hints": [
+    "An inorder traversal of a search tree sees values in sorted order.",
+    "Visit right child, then the node, then left child to see values from largest to smallest.",
+    "Stop as soon as you have collected k values. Intended complexity: O(n) time in the worst case and O(h) stack space."
+  ],
+  "inputSyntax": "Input: k followed by the tree in level order with null for missing children, for example: 3 [5, 3, 8, 2, 4, 7, 9]",
+  "sampleInput": "3 [5, 3, 8, 2, 4, 7, 9]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

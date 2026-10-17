@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+class Workload { static final String UNIT="records"; static final int[] SIZES={1000,2000,4000,8000}; static Object prepare(int size){ Solution s=new Solution(); for(int i=0;i<size;i++) s.recordTweet("x",i); return new Object[]{s,size}; } static void run(Object st){ Object[] d=(Object[])st; if(((Solution)d[0]).getTweetCountsPerFrequency("minute","x",0,(Integer)d[1]-1).isEmpty()) throw new IllegalStateException(); } static int units(int size){ return size; } }

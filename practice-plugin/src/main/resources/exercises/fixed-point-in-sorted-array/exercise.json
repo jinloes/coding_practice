@@ -1,0 +1,30 @@
+{
+  "id": "fixed-point-in-sorted-array",
+  "title": "Fixed Point In Sorted Array",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Find an index whose value is the same as the index in a sorted array.\n\nContract\n- `numbers` is non-null, sorted in strictly increasing order, and may be empty.\n- Return the index `i` where `numbers[i] == i`, or `-1` when no such index exists.\n- Do not mutate `numbers`.\n\nExamples\n- `findFixedPoint(new int[]{-3, -1, 2, 5})` returns `2`.\n- `findFixedPoint(new int[]{1, 2, 3})` returns `-1`.\n- `findFixedPoint(new int[]{0, 4, 8})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "numbers = [-3, -1, 2, 5]",
+      "output": "2"
+    },
+    {
+      "input": "numbers = [1, 2, 3]",
+      "output": "-1"
+    },
+    {
+      "input": "numbers = [0, 4, 8]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Compare the middle value with its index, not with a separate target.",
+    "If the middle value is too large, every later value is also too large relative to its index.",
+    "Use binary search for O(log n) time and constant space."
+  ],
+  "inputSyntax": "Input: a strictly increasing integer array, for example: [-3, -1, 2, 5]",
+  "sampleInput": "[-3, -1, 2, 5]",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

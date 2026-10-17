@@ -1,0 +1,30 @@
+{
+  "id": "substring-word-concatenations",
+  "title": "Word Concatenation Substrings",
+  "topic": "Sliding Window",
+  "difficulty": "Hard",
+  "statement": "Find every place where a string contains all required words back-to-back in any order.\n\nContract\n- `text` and `words` are non-null. Every word is non-null, non-empty, and all words have the same length.\n- Return the starting indices, in increasing order, where the substring of length `words.length * wordLength` can be split into words that match `words` with exactly the same multiplicities.\n- The words may appear in any order inside the window. Overlapping answers are allowed.\n- If `words` is empty, or the combined length is longer than `text`, return an empty list.\n\nExamples\n- In `barfoothefoobarman` with `[foo, bar]`, return `[0, 9]`.\n- In `wordgoodgoodgoodbestword` with `[word, good, best, good]`, return `[8]`.\n- In `aaaaaa` with `[aa, aa]`, return `[0, 1, 2]`.\n",
+  "examples": [
+    {
+      "input": "text = barfoothefoobarman, words = [foo, bar]",
+      "output": "[0, 9]"
+    },
+    {
+      "input": "text = wordgoodgoodgoodbestword, words = [word, good, best, good]",
+      "output": "[8]"
+    },
+    {
+      "input": "text = aaaaaa, words = [aa, aa]",
+      "output": "[0, 1, 2]"
+    }
+  ],
+  "hints": [
+    "All words have the same length, so valid starts fall into word-length offsets.",
+    "For each offset, slide a window by whole words and keep counts of words currently inside it.",
+    "When a word appears too many times, advance the left edge until the count is legal again. Intended complexity: O(n) time and O(m) space for the word counts."
+  ],
+  "inputSyntax": "Input: text followed by a bracketed word list, for example: barfoothefoobarman [foo, bar]",
+  "sampleInput": "barfoothefoobarman [foo, bar]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

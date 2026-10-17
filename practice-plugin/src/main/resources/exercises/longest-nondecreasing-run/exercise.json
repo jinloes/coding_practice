@@ -1,0 +1,26 @@
+{
+  "id": "longest-nondecreasing-run",
+  "title": "Longest Nondecreasing Run",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Find the longest contiguous stretch whose values never decrease from left to right.\n\nContract\n- `numbers` is non-null and may be empty. Values may be any `int`.\n- Return the number of elements in the longest contiguous run where every value is greater than or equal to the previous value.\n- Equal neighbouring values may stay in the run. Do not mutate `numbers`.\n\nExamples\n- `longestRun(new int[]{5, 6, 6, 2, 3})` returns `3`.\n- `longestRun(new int[]{4, 3, 2})` returns `1`.\n",
+  "examples": [
+    {
+      "input": "numbers = [5, 6, 6, 2, 3]",
+      "output": "3"
+    },
+    {
+      "input": "numbers = [4, 3, 2]",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Track the length of the current run ending at each position.",
+    "When the next value is smaller, start a new run at that value.",
+    "A single pass with a best-so-far counter is enough; no extra collection is needed."
+  ],
+  "inputSyntax": "Input: integer values, for example: [5, 6, 6, 2, 3]",
+  "sampleInput": "[5, 6, 6, 2, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

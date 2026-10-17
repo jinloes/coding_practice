@@ -1,0 +1,30 @@
+{
+  "id": "matchstick-square",
+  "title": "Matchstick Square",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "Decide whether every matchstick can be used as one side segment of a square.\n\nContract\n- `matchsticks` is non-null and contains non-negative lengths.\n- Every matchstick must be assigned to exactly one of four sides with equal positive total length.\n- Return `false` for fewer than four sticks, total length zero, a total not divisible by four, or no valid assignment. Do not mutate the input.\n\nExamples\n- `canFormSquare(new int[]{1, 1, 2, 2, 2})` returns `true`.\n- `canFormSquare(new int[]{3, 3, 3, 3, 4})` returns `false`.\n- `canFormSquare(new int[]{0, 0, 0, 0})` returns `false`.\n",
+  "examples": [
+    {
+      "input": "matchsticks = [1, 1, 2, 2, 2]",
+      "output": "true"
+    },
+    {
+      "input": "matchsticks = [3, 3, 3, 3, 4]",
+      "output": "false"
+    },
+    {
+      "input": "matchsticks = [0, 0, 0, 0]",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "The target side length is forced by the total sum.",
+    "Place longer sticks first so impossible branches fail earlier.",
+    "Track four side sums and skip symmetric empty sides. The workload repeats a fixed puzzle, so intended measured complexity is O(n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: matchstick lengths as an array, for example: [1, 1, 2, 2, 2]",
+  "sampleInput": "[1, 1, 2, 2, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

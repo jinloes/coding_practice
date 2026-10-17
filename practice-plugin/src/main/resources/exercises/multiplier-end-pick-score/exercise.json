@@ -1,0 +1,30 @@
+{
+  "id": "multiplier-end-pick-score",
+  "title": "Multiplier End Pick Score",
+  "topic": "Dynamic Programming",
+  "difficulty": "Hard",
+  "statement": "Choose numbers from the ends of an array to maximize a multiplier-weighted score.\n\nContract\n- `nums` and `multipliers` are non-null, and `multipliers.length <= nums.length`.\n- Perform exactly one operation for each multiplier, in order. On operation `i`, choose either the current leftmost or current rightmost value from `nums`, remove it, and add `multipliers[i] * chosenValue` to the score.\n- Return the maximum possible total score as an `int`. Inputs in this exercise are small enough that the optimal score fits in `int`.\n- Do not mutate either input array.\n\nExamples\n- `maximumScore(new int[]{1, 2, 3}, new int[]{3, 2, 1})` returns `14`.\n- `maximumScore(new int[]{-5, -3, -3, -2, 7, 1}, new int[]{-10, -5, 3, 4, 6})` returns `102`.\n- `maximumScore(new int[]{4}, new int[]{-2})` returns `-8`.\n",
+  "examples": [
+    {
+      "input": "nums = [1, 2, 3], multipliers = [3, 2, 1]",
+      "output": "14"
+    },
+    {
+      "input": "nums = [-5, -3, -3, -2, 7, 1], multipliers = [-10, -5, 3, 4, 6]",
+      "output": "102"
+    },
+    {
+      "input": "nums = [4], multipliers = [-2]",
+      "output": "-8"
+    }
+  ],
+  "hints": [
+    "A brute-force tree branches left or right at every multiplier.",
+    "The state can be described by how many picks have been made and how many came from the left.",
+    "Use dynamic programming over those states; the right index is determined from total picks and left picks. Intended complexity: O(m^2) time and O(m^2) extra space."
+  ],
+  "inputSyntax": "Input: nums array followed by multipliers array, for example: [1, 2, 3] [3, 2, 1]",
+  "sampleInput": "[1, 2, 3] [3, 2, 1]",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n^2)"
+}

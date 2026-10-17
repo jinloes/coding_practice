@@ -1,0 +1,30 @@
+{
+  "id": "alien-word-sort",
+  "title": "Alien Word Sort",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Decide whether a list of words is already sorted according to a supplied alphabet order.\n\nContract\n- `words` and `order` are non-null. `words` may be empty, and every word is non-null.\n- `order` contains each character that appears in `words` exactly once. Characters not present in the words may also appear in `order`.\n- Compare adjacent words lexicographically using the rank from `order`. If one word is a prefix of the other, the shorter word comes first.\n- Return `true` when every adjacent pair is in nondecreasing order; otherwise return `false`. Do not mutate `words`.\n\nExamples\n- `isSorted(new String[]{\"app\", \"apple\"}, \"abcdefghijklmnopqrstuvwxyz\")` returns `true`.\n- `isSorted(new String[]{\"apple\", \"app\"}, \"abcdefghijklmnopqrstuvwxyz\")` returns `false` because the longer prefix word came first.\n- `isSorted(new String[]{\"zen\", \"zip\"}, \"abcdefghijklmnopqrstuvwxyz\")` returns `true`.\n",
+  "examples": [
+    {
+      "input": "words = [app, apple], order = abcdefghijklmnopqrstuvwxyz",
+      "output": "true"
+    },
+    {
+      "input": "words = [apple, app], order = abcdefghijklmnopqrstuvwxyz",
+      "output": "false"
+    },
+    {
+      "input": "words = [zen, zip], order = abcdefghijklmnopqrstuvwxyz",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Write a helper that compares two words under the custom ranks.",
+    "The first different character decides the pair; only if none differ does length matter.",
+    "Build a rank table once, then check each adjacent pair. Intended complexity: O(total characters) time and O(1) space for a fixed-size rank table."
+  ],
+  "inputSyntax": "Input: words as a bracketed list followed by order, for example: [app, apple] abcdefghijklmnopqrstuvwxyz",
+  "sampleInput": "[app, apple] abcdefghijklmnopqrstuvwxyz",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

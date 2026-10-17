@@ -1,0 +1,30 @@
+{
+  "id": "salary-cap-threshold",
+  "title": "Salary Cap Threshold",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Find the payroll cap that makes a salary budget fit exactly.\n\nContract\n- `salaries` is non-null and contains non-negative whole-dollar salaries. `targetPayroll` is non-negative.\n- Return a cap `c` such that `sum(min(salary, c))` equals `targetPayroll`, within normal floating-point tolerance.\n- Return `-1.0` if even paying every salary in full is less than the target. Do not mutate `salaries`.\n\nExamples\n- `findSalaryCap(new int[]{90, 30, 100, 40}, 210)` returns `70.0`.\n- `findSalaryCap(new int[]{20, 30}, 100)` returns `-1.0`.\n- `findSalaryCap(new int[]{10, 20, 30}, 30)` returns `10.0`.\n",
+  "examples": [
+    {
+      "input": "[90, 30, 100, 40] 210",
+      "output": "70.0"
+    },
+    {
+      "input": "[20, 30] 100",
+      "output": "-1.0"
+    },
+    {
+      "input": "[10, 20, 30] 30",
+      "output": "10.0"
+    }
+  ],
+  "hints": [
+    "Sort the salaries and imagine lowering only the largest salaries first.",
+    "Between two adjacent salary values, the remaining employees would all receive the same cap.",
+    "After sorting, scan from low to high while subtracting fixed salaries. The intended complexity is O(n log n) time and O(n) extra space if you sort a copy."
+  ],
+  "inputSyntax": "Input: a salary array followed by the target payroll, for example: [90, 30, 100, 40] 210",
+  "sampleInput": "[90, 30, 100, 40] 210",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

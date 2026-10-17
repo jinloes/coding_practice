@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+import java.util.*;
+public class Solution { public record Access(String name,String time) {} public static List<String> highAccessEmployees(List<Access> accesses){ Map<String,List<Integer>> m=new HashMap<>(); for(Access a:accesses)m.computeIfAbsent(a.name(),x->new ArrayList<>()).add(Integer.parseInt(a.time().substring(0,2))*60+Integer.parseInt(a.time().substring(2))); List<String> r=new ArrayList<>(); for(var e:m.entrySet()){ Collections.sort(e.getValue()); for(int i=2;i<e.getValue().size();i++) if(e.getValue().get(i)-e.getValue().get(i-2)<=60){ r.add(e.getKey()); break; }} Collections.sort(r); return r; } }

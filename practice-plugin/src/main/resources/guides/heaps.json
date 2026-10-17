@@ -15,6 +15,14 @@
     "kth-largest-element",
     "task-cooldown-schedule",
     "social-feed",
-    "signal-delay-time"
+    "signal-delay-time",
+    "smallest-range-from-sorted-lists",
+    "single-threaded-cpu-order",
+    "best-three-score-average",
+    "sort-increasing-decreasing-array",
+    "sort-nearly-sorted-list",
+    "weighted-server-task-assignment",
+    "k-closest-sorted-values",
+    "reorganize-adjacent-characters"
   ]
 }

@@ -1,0 +1,52 @@
+{
+
+  "id": "max-grid-path-sum",
+
+  "title": "Max Grid Path Sum",
+
+  "topic": "Dynamic Programming",
+
+  "difficulty": "Medium",
+
+  "statement": "Collect the largest possible sum along a path through a grid.\n\nContract\n- `grid` is non-null. It may have zero rows, and non-empty grids are rectangular. Values may be negative.\n- Start at the top-left cell and finish at the bottom-right cell, moving only right or down. Return the maximum sum over all such paths, or `0` for an empty grid.\n- Do not mutate `grid`.\n\nExamples\n- `maxPathSum(new int[][]{{5, 1, 2}, {4, 0, 3}})` returns `12`.\n- `maxPathSum(new int[][]{{-1, -2}, {-3, -4}})` returns `-7`.\n",
+
+  "examples": [
+
+    {
+
+      "input": "grid = [[5, 1, 2], [4, 0, 3]]",
+
+      "output": "12"
+
+    },
+
+    {
+
+      "input": "grid = [[-1, -2], [-3, -4]]",
+
+      "output": "-7"
+
+    }
+
+  ],
+
+  "hints": [
+
+    "A path reaches each cell either from above or from the left.",
+
+    "Store the best sum that can reach the current row and column.",
+
+    "A one-dimensional DP array is enough because each row only needs the previous row and left neighbour."
+
+  ],
+
+  "inputSyntax": "Input: grid rows separated by semicolons, for example: 5,1,2;4,0,3",
+
+  "sampleInput": "5,1,2;4,0,3",
+
+  "intendedTime": "O(n^2)",
+
+  "intendedSpace": "O(1)"
+
+}
+

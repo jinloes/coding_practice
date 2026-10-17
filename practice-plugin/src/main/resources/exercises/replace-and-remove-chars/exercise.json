@@ -1,0 +1,30 @@
+{
+  "id": "replace-and-remove-chars",
+  "title": "Replace And Remove Characters",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "Rewrite the active prefix of a character buffer by deleting one character and expanding another.\n\nContract\n- `chars` is non-null and has enough capacity for the expanded result.\n- Only the first `size` entries are input; entries after that are scratch space.\n- Remove every `b` from the active prefix, replace every `a` with two `d` characters, and preserve the order of all other characters.\n- Write the transformed text back into the beginning of `chars` and return its logical length.\n\nExamples\n- `replaceAndRemove(['a','c','d','b','b','c','a',...], 7)` writes `ddcdcdd` and returns `7`.\n- `replaceAndRemove(['b','b','c'], 3)` writes `c` and returns `1`.\n- `replaceAndRemove(['x','y'], 2)` writes `xy` and returns `2`.\n",
+  "examples": [
+    {
+      "input": "chars = acdbbca, size = 7",
+      "output": "ddcdcdd"
+    },
+    {
+      "input": "chars = bbc, size = 3",
+      "output": "c"
+    },
+    {
+      "input": "chars = xy, size = 2",
+      "output": "xy"
+    }
+  ],
+  "hints": [
+    "First compact the live prefix by copying every character except `b` toward the front.",
+    "Count the kept `a` characters so you know how far the expanded result will reach.",
+    "Fill the final answer from right to left so each `a` can become two `d` characters without overwriting unread data. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: active characters as text, for example: acdbbca",
+  "sampleInput": "acdbbca",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

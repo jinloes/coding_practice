@@ -1,0 +1,30 @@
+{
+  "id": "first-greater-search-tree-value",
+  "title": "First Greater Search Tree Value",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Find the smallest search-tree value above a key.\n\nContract\n- `root` is either `null` or the root of a binary search tree with distinct integer values.\n- Return the smallest tree value that is strictly greater than `key`, or `null` when no such value exists.\n- The tree structure must not be modified.\n\nExamples\n- In the tree containing `2, 3, 4, 5, 7, 8, 9`, `firstGreater(root, 6)` returns `7`.\n- With key `9` in that tree, the result is `null`.\n- With key `4`, the result is `5`, not `4`.\n",
+  "examples": [
+    {
+      "input": "[5,3,8,2,4,7,9] 6",
+      "output": "7"
+    },
+    {
+      "input": "[5,3,8,2,4,7,9] 9",
+      "output": "null"
+    },
+    {
+      "input": "[5,3,8,2,4,7,9] 4",
+      "output": "5"
+    }
+  ],
+  "hints": [
+    "A candidate answer appears whenever you move left from a node greater than the key.",
+    "If a node is less than or equal to the key, its whole left subtree is too small to help.",
+    "Walk the search path once, remembering the best greater value seen so far."
+  ],
+  "inputSyntax": "Input: BST insertion values followed by the key, for example: [5,3,8,2,4,7,9] 6",
+  "sampleInput": "[5,3,8,2,4,7,9] 6",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

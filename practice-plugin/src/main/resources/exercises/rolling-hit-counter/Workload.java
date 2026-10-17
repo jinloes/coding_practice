@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+class Workload { static final String UNIT="operations"; static final int[] SIZES={1000,2000,4000,8000}; static Object prepare(int size){ return size; } static void run(Object state){ int size=(Integer)state; Solution c=new Solution(); long sum=0; for(int i=1;i<=size;i++){ c.hit(i); if((i&7)==0) sum+=c.hitsInLastWindow(i); } if(sum==-1) throw new IllegalStateException(); } static int units(int size){ return size; } }

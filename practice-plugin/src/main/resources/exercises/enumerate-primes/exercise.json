@@ -1,0 +1,30 @@
+{
+  "id": "enumerate-primes",
+  "title": "Enumerate Primes",
+  "topic": "Math",
+  "difficulty": "Medium",
+  "statement": "Return every prime number not greater than an upper bound.\n\nContract\n- `upperBound` may be any `int`. Values below `2` produce an empty array.\n- Return the primes in strictly increasing order.\n- A prime is an integer greater than one whose only positive divisors are one and itself.\n- Do not use probabilistic primality tests.\n\nExamples\n- `enumeratePrimes(1)` returns `[]`.\n- `enumeratePrimes(10)` returns `[2, 3, 5, 7]`.\n- `enumeratePrimes(20)` returns `[2, 3, 5, 7, 11, 13, 17, 19]`.\n",
+  "examples": [
+    {
+      "input": "upperBound = 1",
+      "output": "[]"
+    },
+    {
+      "input": "upperBound = 10",
+      "output": "[2, 3, 5, 7]"
+    },
+    {
+      "input": "upperBound = 20",
+      "output": "[2, 3, 5, 7, 11, 13, 17, 19]"
+    }
+  ],
+  "hints": [
+    "Try marking every composite number rather than testing divisibility from scratch for each value.",
+    "Once `p * p` is beyond the bound, every remaining unmarked value is prime.",
+    "Use a sieve: when a prime is found, mark multiples starting at its square. Intended complexity: O(n) to O(n log n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: an inclusive upper bound, for example: 20",
+  "sampleInput": "20",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

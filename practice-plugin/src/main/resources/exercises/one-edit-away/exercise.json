@@ -1,0 +1,30 @@
+{
+  "id": "one-edit-away",
+  "title": "One Edit Away",
+  "topic": "Strings",
+  "difficulty": "Medium",
+  "statement": "Decide whether two strings can be made equal with at most one single-character edit.\n\nContract\n- `first` and `second` are non-null strings.\n- One edit means inserting one character, deleting one character, or replacing one character.\n- Equal strings are considered zero edits away and should return `true`.\n- Return `false` when two or more edits would be required.\n\nExamples\n- `isOneEditAway(\"pale\", \"ple\")` returns `true`.\n- `isOneEditAway(\"pales\", \"pale\")` returns `true`.\n- `isOneEditAway(\"pale\", \"bake\")` returns `false`.\n",
+  "examples": [
+    {
+      "input": "first = pale, second = ple",
+      "output": "true"
+    },
+    {
+      "input": "first = pales, second = pale",
+      "output": "true"
+    },
+    {
+      "input": "first = pale, second = bake",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "If the lengths differ by more than one, no single edit can repair them.",
+    "Walk the strings with two indices and spend at most one edit when characters differ.",
+    "After one mismatch, advance both indices for replacement or only the longer string for insertion/deletion. Intended complexity: O(n) time and O(1) space."
+  ],
+  "inputSyntax": "Input: two strings separated by a pipe, for example: pale | ple",
+  "sampleInput": "pale | ple",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "remove-selected-characters",
+  "title": "Remove Selected Characters",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Remove all characters from a text when they appear in a separate removal set.\n\nContract\n- `text` and `remove` are non-null strings. Either may be empty.\n- Treat `remove` as a set of Java `char` values: duplicates in `remove` do not change the result.\n- Return a new string containing the characters from `text` whose value is not present in `remove`, preserving their original order.\n- Matching is case-sensitive. Do not mutate either input.\n\nExamples\n- `removeSelected(\"Battle of the Vowels: Hawaii vs. Grozny\", \"aeiou\")` returns `\"Bttl f th Vwls: Hw vs. Grzny\"`.\n- `removeSelected(\"abracadabra\", \"ab\")` returns `\"rcdr\"`.\n- `removeSelected(\"keep\", \"xyz\")` returns `\"keep\"`.\n",
+  "examples": [
+    {
+      "input": "text = \"Battle of the Vowels: Hawaii vs. Grozny\", remove = \"aeiou\"",
+      "output": "\"Bttl f th Vwls: Hw vs. Grzny\""
+    },
+    {
+      "input": "text = \"abracadabra\", remove = \"ab\"",
+      "output": "\"rcdr\""
+    },
+    {
+      "input": "text = \"keep\", remove = \"xyz\"",
+      "output": "\"keep\""
+    }
+  ],
+  "hints": [
+    "Checking every removal character for every text character works but repeats the same membership question.",
+    "Precompute which characters should be removed, then scan the text once and append only the survivors.",
+    "A boolean lookup table or set gives constant-time membership checks; the returned string stores the survivors. Intended complexity: O(n) time and O(n) space including the output."
+  ],
+  "inputSyntax": "Input: text, then removal characters separated by |, for example: abracadabra|ab",
+  "sampleInput": "abracadabra|ab",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

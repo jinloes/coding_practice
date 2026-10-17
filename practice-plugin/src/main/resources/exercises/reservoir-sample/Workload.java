@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+import java.util.ArrayList; import java.util.List; import java.util.Random;
+final class Workload { static final String UNIT="call"; static final int[] SIZES={4096,8192,16384,32768,65536}; private Workload(){} static Object prepare(int size){ List<Integer> values=new ArrayList<>(size); for(int i=0;i<size;i++) values.add(i); return values; } static void run(Object state){ @SuppressWarnings("unchecked") List<Integer> values=(List<Integer>)state; if(Solution.sample(values.iterator(),values.size()/2,new Random(1)).length==0) throw new IllegalStateException(); } static int units(int size){ return 1; } }

@@ -80,7 +80,7 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    the same isolated process measures how the saved solution scales and reports
    the result alongside the exercise's intended complexity.
 
-The catalog includes 159 exercises: Pair Sum, Binary Search, Balanced
+The catalog includes 267 exercises: Pair Sum, Binary Search, Balanced
 Delimiters, Reverse Linked List, Array Stack, Binary Min Heap, Valid Anagram,
 First Unique Character, Max Stock Profit, Move Zeroes, Merge Sorted Lists, Valid
 Palindrome, Add Strings, Roman to Integer, Longest Common Prefix, Missing
@@ -106,9 +106,9 @@ Multi-Word Search, Sudoku Board Check, Sorted Pair Sum, Trapped Rainwater,
 Permutation Substring, Min-Tracking Stack, Postfix Evaluation, Parentheses
 Generation, Warmer Day Wait, Car Fleets, Largest Histogram Rectangle, Sorted
 Matrix Search, Minimum Eating Speed, Timestamped Key-Value Store, Sorted Arrays
-Median, Random-Pointer List Copy, Add Digit Lists, Duplicate in Range,
-Least-Recently-Used Cache, Reverse in Groups, Tree Diameter, Height-Balanced
-Tree, Reverse Digits, Right Side View, Good Node Count, Kth Largest in a Stream,
+Median, Random-Pointer List Copy, Add Digit Lists, Duplicate in Range, Least-
+Recently-Used Cache, Reverse in Groups, Tree Diameter, Height-Balanced Tree,
+Reverse Digits, Right Side View, Good Node Count, Kth Largest in a Stream,
 Heaviest Stones Smash, K Closest Points, Kth Largest Element, Task Cooldown
 Schedule, Unpaired Value, Social Feed, All Subsets, All Permutations, Subsets
 with Duplicates, Unique Combination Sum, Palindrome Partitions, Phone Letter
@@ -121,7 +121,43 @@ String Interleaving, Longest Increasing Grid Path, Distinct Subsequence Count,
 Edit Distance, Balloon Burst Max, Dot-Star Matching, Min Jumps to End, Gas
 Station Circuit, Consecutive Hand Groups, Triplet Merge Target, Label
 Partitions, Wildcard Parentheses Check, Smallest Covering Interval, Happy
-Number, Increment Digits, Fast Power, Multiply Strings, and Axis Square Counter.
+Number, Increment Digits, Fast Power, Multiply Strings, Axis Square Counter,
+Offline Random Sample, Reservoir Sample, Weighted Random Choice, Sorted Array
+Deduplication, Enumerate Primes, Dutch Flag Partition, Next Lexicographic
+Permutation, Odd And Even Position Buckets, Apply Index Permutation, Unique By
+First Name, Salary Cap Threshold, Sorted Arrays Intersection, Team Photo
+Feasibility, High Access Employees, Rank Teams By Votes, Sorted Array Balanced
+Search Tree, Smallest Range From Sorted Lists, First Greater Search Tree Value,
+Substring Index, IP Address Splits, Remove Selected Characters, One Character
+Difference, Summarize Integer Ranges, Longest Nondecreasing Run, Longest Bounded
+Difference Subarray, Grid Pattern Search, Max Grid Path Sum, Two Target
+Subarrays Minimum Length, Longest Zigzag Subsequence, Max Stock Profit With Two
+Transactions, Minimum Rescue Boats, Single-Threaded CPU Order, Linked List Cycle
+Entry, Delete Linked List Node, Linked List Intersection Node, Linked List
+Intersection With Cycles, Reverse Linked List Subrange, Kth Node From End,
+Deduplicate Linked List, Max-Tracking Queue, Best Three Score Average,
+Matchstick Square, Unique Permutations, Fixed-Size Combinations, Subset Sum
+Decision, Binary Wildcard Expansion, Base Conversion, Longest K-Repeating
+Substring, Longest K-Distinct Substring, Base Digit Validator, Integer
+Palindrome, Rectangle Intersection, Pascal Triangle Rows, Multiplier End Pick
+Score, Microwave Timer Minimum Cost, Optimal Task Pair Assignment, Minimum
+Interval Point Cover, Minimize Total Waiting Time, Rolling Hit Counter, Search
+Tree K Largest Values, Tweet Counts By Frequency, Binary Tree Boundary Values,
+Symmetric Binary Tree, Root To Leaf Path Sum, Leaf Values Left To Right, Binary
+Tree Common Ancestor, Employee News Spread Time, Max Painting Profit, Sorted
+Target Range, Fixed Point In Sorted Array, First Greater Than Key, Row And
+Column Sorted Matrix Search, Sorted Insert Position, Guess Number By Feedback,
+Merge Sorted Arrays In Place, Group Equal Keys In Place, Root Prefix Sum Count,
+Binary Tree Inorder Successor, Binary Root Path Sum, Binary Tree Traversal
+Orders, Sort Increasing-Decreasing Array, Sort Nearly Sorted List, Weighted
+Server Task Assignment, K Closest Sorted Values, Reorganize Adjacent Characters,
+Alien Word Sort, All-One Key Counter, Chained Hash Table, Score Leaderboard,
+Word Concatenation Substrings, Ransom Letter Check, Nearest Repeated Word
+Distance, Smallest Keyword Cover, Palindrome Permutation Check, One Edit Away,
+Replace And Remove Characters, Reverse Word Order, String Integer Conversion,
+Word Count Report, Max Stack With Pop Max, Sort Stack With Stack, Sunset View
+Buildings, In-Memory File System, Popularity Tracker, Cinema Schedule Gaps, Link
+Tree Level Neighbors, Grid Obstacle Shortest Path, and Grouped Dependency Order.
 Each has an explicit contract and three optional hints. The last hint discusses
 the intended complexity.
 

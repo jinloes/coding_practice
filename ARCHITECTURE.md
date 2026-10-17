@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository is a multi-module Gradle project for practicing algorithms, data structures, and regex engines in Java.
+This repository is a multi-module Gradle project for Java platform, regex engine, and cryptography practice, plus the standalone `practice-plugin` build that holds every algorithm and data structure exercise.
 
 ## Build System
 
@@ -16,9 +16,7 @@ Each topic is implemented as an independent Gradle submodule.
 
 | Module Group | Modules | Responsibility |
 |---|---|---|
-| Core algorithm practice | `arrays`, `strings`, `sorting`, `searching`, `recursion`, `dynamic_programming`, `greedy`, `graphs` | Algorithm exercises and implementations |
-| Data structure practice | `hash_tables`, `linked_lists`, `stacks_and_queues`, `heaps`, `binary_trees`, `binary_search_tree` | ADT and tree/heap implementations |
-| Platform and language features | `concurrency`, `reflection`, `design` | Java platform, patterns, and API-focused practice |
+| Platform and language features | `concurrency`, `reflection` | Java platform and API-focused practice |
 | Regex engine work | `regex` | Java regex and PCRE2 integration via pcre4j |
 | Security study guide | `cryptography` | Key management and cryptography study docs plus JDK-only reference implementations |
 

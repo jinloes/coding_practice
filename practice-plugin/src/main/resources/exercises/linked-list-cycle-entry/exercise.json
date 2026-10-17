@@ -1,0 +1,30 @@
+{
+  "id": "linked-list-cycle-entry",
+  "title": "Linked List Cycle Entry",
+  "topic": "Linked Lists",
+  "difficulty": "Medium",
+  "statement": "Find the first node of a cycle in a singly linked list.\n\nContract\n- `head` may be null. Nodes are compared by object identity, not by value.\n- If following `next` pointers eventually repeats a node, return the node where that cycle begins.\n- If the list is acyclic, return null.\n- Do not allocate a set of visited nodes and do not change any `next` pointer.\n\nExamples\n- In `1 -> 2 -> 3 -> 4` with `4.next` pointing back to node `2`, return the node containing `2`.\n- In `5 -> 6 -> null`, return null.\n- In a one-node list whose node points to itself, return that node.\n",
+  "examples": [
+    {
+      "input": "1 -> 2 -> 3 -> 4, with 4.next = node 2",
+      "output": "node 2"
+    },
+    {
+      "input": "5 -> 6 -> null",
+      "output": "null"
+    },
+    {
+      "input": "9, with 9.next = itself",
+      "output": "node 9"
+    }
+  ],
+  "hints": [
+    "Use two walkers moving at different speeds to detect whether a cycle exists.",
+    "After the walkers meet, reset one to the head and move both one step at a time.",
+    "The reset walker and the meeting walker meet at the cycle entry. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: list values followed by an optional cycle entry index, for example: [1, 2, 3, 4] cycle 1",
+  "sampleInput": "[1, 2, 3, 4] cycle 1",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

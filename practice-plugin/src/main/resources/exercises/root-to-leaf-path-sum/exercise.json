@@ -1,0 +1,30 @@
+{
+  "id": "root-to-leaf-path-sum",
+  "title": "Root To Leaf Path Sum",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Check whether any root-to-leaf path in a binary tree adds up to a target total.\n\nContract\n- `root` may be null. An empty tree has no root-to-leaf paths and returns false.\n- A path must start at the root and end at a leaf, where a leaf has no children.\n- Node values and `target` may be negative. Return true if at least one complete root-to-leaf path has the requested sum.\n\nExamples\n`hasPathSum(tree(5, 4, 8, 11, null, 13, 4, 7, 2), 22)` => `true`\n`hasPathSum(tree(1, 2, 3), 5)` => `false`\n`hasPathSum(null, 0)` => `false`\n",
+  "examples": [
+    {
+      "input": "`hasPathSum(tree(5, 4, 8, 11, null, 13, 4, 7, 2), 22)`",
+      "output": "`true`"
+    },
+    {
+      "input": "`hasPathSum(tree(1, 2, 3), 5)`",
+      "output": "`false`"
+    },
+    {
+      "input": "`hasPathSum(null, 0)`",
+      "output": "`false`"
+    }
+  ],
+  "hints": [
+    "Subtract the current node value from the remaining target as you descend.",
+    "Only accept the sum when the current node is a leaf.",
+    "A depth-first search can short-circuit once either child finds a valid path. Intended complexity: O(n) time and O(h) stack space."
+  ],
+  "inputSyntax": "Input: target followed by the tree in level order with null for missing children, for example: 22 [5, 4, 8, 11, null, 13, 4, 7, 2]",
+  "sampleInput": "22 [5, 4, 8, 11, null, 13, 4, 7, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

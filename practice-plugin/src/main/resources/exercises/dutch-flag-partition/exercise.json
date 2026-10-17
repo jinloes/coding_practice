@@ -1,0 +1,30 @@
+{
+  "id": "dutch-flag-partition",
+  "title": "Dutch Flag Partition",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Rearrange an array around the value stored at a pivot index.\n\nContract\n- `numbers` is non-null. If it has length zero, leave it unchanged; otherwise `pivotIndex` is a valid index.\n- Mutate `numbers` so all values less than the pivot value come first, then values equal to the pivot value, then values greater than it.\n- The relative order inside each region does not matter.\n- Use constant extra space.\n\nExamples\n- Partitioning `[3, 5, 2, 3, 8]` around index `0` may produce `[2, 3, 3, 8, 5]`.\n- Partitioning `[4, 4, 4]` around index `1` keeps all values in the equal region.\n- Partitioning `[]` leaves it empty.\n",
+  "examples": [
+    {
+      "input": "numbers = [3, 5, 2, 3, 8], pivotIndex = 0",
+      "output": "less values, then equal values, then greater values"
+    },
+    {
+      "input": "numbers = [4, 4, 4], pivotIndex = 1",
+      "output": "[4, 4, 4]"
+    },
+    {
+      "input": "numbers = [], pivotIndex = 0",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "It is enough to satisfy the three-region property; stable order is not required.",
+    "Track the next slot for values less than the pivot and the next slot for values greater than the pivot.",
+    "Scan with three pointers and swap unknown values into the proper region. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: an array followed by a pivot index, for example: [3, 5, 2, 3, 8] 0",
+  "sampleInput": "[3, 5, 2, 3, 8] 0",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

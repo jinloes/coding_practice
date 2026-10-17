@@ -1,0 +1,30 @@
+{
+  "id": "microwave-timer-min-cost",
+  "title": "Microwave Timer Minimum Cost",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Find the cheapest button sequence that sets a microwave timer to a target number of seconds.\n\nContract\n- `startDigit` is 0 through 9; `moveCost`, `pushCost`, and `targetSeconds` are non-negative integers. `targetSeconds` is between 1 and 6039 inclusive.\n- A sequence of one to four pressed digits is interpreted as `MMSS` after left-padding with zeroes. The seconds part may be 0 through 99, so `90` seconds can be entered either as `130` or `90`.\n- Moving from the current digit to a different digit costs `moveCost`; pressing the current digit costs `pushCost`. Pressing the same digit repeatedly does not pay another move cost.\n- Return the minimum total cost over every sequence that represents exactly `targetSeconds` seconds.\n\nExamples\n- `minCost(1, 2, 1, 600)` returns `6`.\n- `minCost(0, 1, 2, 76)` returns `6`.\n- `minCost(9, 100, 1, 9)` returns `1`.\n",
+  "examples": [
+    {
+      "input": "startDigit = 1, moveCost = 2, pushCost = 1, targetSeconds = 600",
+      "output": "6"
+    },
+    {
+      "input": "startDigit = 0, moveCost = 1, pushCost = 2, targetSeconds = 76",
+      "output": "6"
+    },
+    {
+      "input": "startDigit = 9, moveCost = 100, pushCost = 1, targetSeconds = 9",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "A target can usually be represented by at most two minute/second pairs.",
+    "For each valid `(minutes, seconds)` pair, convert `minutes * 100 + seconds` to the shortest button string.",
+    "Score every valid representation and take the minimum. The number of candidates is bounded, so intended complexity is O(1)."
+  ],
+  "inputSyntax": "Input: startDigit moveCost pushCost targetSeconds, for example: 1 2 1 600",
+  "sampleInput": "1 2 1 600",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

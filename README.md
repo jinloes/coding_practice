@@ -1,37 +1,21 @@
 # Coding Practice
 
-A multi-module Java repository for practicing algorithms, data structures, concurrency, design exercises, and regex engine work.
+A Java repository for practicing algorithms, data structures, concurrency, and regex engine work. Algorithm and data structure problems live in the IntelliJ practice plugin (`practice-plugin`).
 
 ## What Is In This Repository
 
 The project is organized as independent Gradle submodules so each topic can evolve separately while still sharing common dependency management and test conventions.
 
-### Algorithm And Data Structure Modules
+### Algorithm And Data Structure Practice
 
-- `arrays`
-- `bit_manipulation`
-- `strings`
-- `linked_lists`
-- `stacks_and_queues`
-- `binary_trees`
-- `binary_search_tree`
-- `heaps`
-- `searching`
-- `hash_tables`
-- `recursion`
-- `greedy`
-- `graphs`
-- `dynamic_programming`
+All algorithm, data structure, and object-design problems live in the IntelliJ practice plugin under `practice-plugin`. Each exercise is tagged with a topic and difficulty, grouped by technique in study guides, and collected into curated practice tracks. See [practice-plugin/README.md](practice-plugin/README.md).
 
-These modules contain standalone implementations and tests for common interview-style problems and foundational computer science exercises.
-
-### Java Platform And Design Modules
+### Java Platform Modules
 
 - `concurrency`
 - `reflection`
-- `design`
 
-These modules focus on Java APIs, language features, and design-oriented practice problems.
+These modules focus on Java APIs and language features.
 
 ### Regex Module
 

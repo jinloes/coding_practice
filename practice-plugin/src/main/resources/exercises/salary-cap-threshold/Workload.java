@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT="call"; static final int[] SIZES={2048,4096,8192,16384,32768}; private Workload(){} static Object prepare(int size){ int[] s=new int[size]; for(int i=0;i<size;i++) s[i]=(size-i)*3+(i%17); return s; } static void run(Object state){ double cap=Solution.findSalaryCap((int[])state, ((int[])state).length*120.0); if(Double.isNaN(cap)) throw new IllegalStateException(); } static int units(int size){ return 1; } }

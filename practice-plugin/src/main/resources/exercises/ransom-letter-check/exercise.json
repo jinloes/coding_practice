@@ -1,0 +1,30 @@
+{
+  "id": "ransom-letter-check",
+  "title": "Ransom Letter Check",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Decide whether the characters available in a magazine can assemble a requested letter.\n\nContract\n- `letterText` and `magazineText` are non-null and may be empty.\n- Every UTF-16 character in `letterText` must be used no more times than it appears in `magazineText`.\n- Characters are case-sensitive, and spaces or punctuation count like any other character.\n- Return `true` if the letter can be constructed, otherwise `false`.\n\nExamples\n- `canConstruct(\"note\", \"tone and more\")` returns `true`.\n- `canConstruct(\"aa\", \"ab\")` returns `false`.\n- `canConstruct(\"A\", \"aA\")` returns `true`.\n",
+  "examples": [
+    {
+      "input": "letter = note, magazine = tone and more",
+      "output": "true"
+    },
+    {
+      "input": "letter = aa, magazine = ab",
+      "output": "false"
+    },
+    {
+      "input": "letter = A, magazine = aA",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Count how many times every magazine character is available.",
+    "Scan the requested letter and spend one available count for each character.",
+    "If any count would go negative, the magazine is missing that character. Intended complexity: O(n) time and O(1) space for a fixed-size character table."
+  ],
+  "inputSyntax": "Input: letter text, then a pipe, then magazine text, for example: note | tone and more",
+  "sampleInput": "note | tone and more",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

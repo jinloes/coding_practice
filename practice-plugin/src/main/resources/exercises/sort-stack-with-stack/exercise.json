@@ -1,0 +1,26 @@
+{
+  "id": "sort-stack-with-stack",
+  "title": "Sort Stack With Stack",
+  "topic": "Stacks",
+  "difficulty": "Medium",
+  "statement": "Sort a mutable stack using only one additional stack as working storage.\n\nContract\n- `sort(stack)` receives a non-null `java.util.Stack<Integer>` and mutates that same object.\n- After the call, iterating the stack from bottom to top must produce values in descending order, so the smallest value is on top.\n- Duplicate and negative values are allowed. The method returns nothing.\n\nExamples\n- Sorting `[3, 1, 2]` leaves the stack as `[3, 2, 1]` from bottom to top.\n- Sorting `[4, 4, -1]` leaves it as `[4, 4, -1]`.\n",
+  "examples": [
+    {
+      "input": "stack = [3, 1, 2]",
+      "output": "[3, 2, 1]"
+    },
+    {
+      "input": "stack = [4, 4, -1]",
+      "output": "[4, 4, -1]"
+    }
+  ],
+  "hints": [
+    "The top of a Java `Stack` is the end of its list representation.",
+    "Move values between the input stack and the helper stack until the helper remains ordered.",
+    "Each inserted value may move many earlier values, leading to quadratic time and linear helper space."
+  ],
+  "inputSyntax": "Input: stack values from bottom to top, for example: [3, 1, 2]",
+  "sampleInput": "[3, 1, 2]",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(n)"
+}

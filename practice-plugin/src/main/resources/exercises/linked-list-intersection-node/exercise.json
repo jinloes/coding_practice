@@ -1,0 +1,30 @@
+{
+  "id": "linked-list-intersection-node",
+  "title": "Linked List Intersection Node",
+  "topic": "Linked Lists",
+  "difficulty": "Medium",
+  "statement": "Find where two acyclic singly linked lists first share storage.\n\nContract\n- `first` and `second` may be null. Both reachable lists are acyclic.\n- Nodes are the same only when they are the exact same object; equal values do not count as an intersection.\n- Return the first shared node encountered while walking from each head, or null when the two lists are disjoint.\n- Do not mutate either list.\n\nExamples\n- Lists `1 -> 2 -> 8 -> 9` and `3 -> 8 -> 9` that share the `8` node return that `8` node.\n- Lists `1 -> 2` and `1 -> 2` built from separate nodes return null.\n- If both heads are the same object, return that head.\n",
+  "examples": [
+    {
+      "input": "shared tail [8, 9], prefixes [1, 2] and [3]",
+      "output": "node 8"
+    },
+    {
+      "input": "separate lists [1, 2] and [1, 2]",
+      "output": "null"
+    },
+    {
+      "input": "both heads are the same node",
+      "output": "that head"
+    }
+  ],
+  "hints": [
+    "First compare list lengths so both walkers can be the same distance from the tail.",
+    "Advance the longer list walker by the length difference.",
+    "Move both walkers together until they are identical or both reach null. Intended complexity: O(a + b) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: shared tail, first prefix, second prefix separated by semicolons, for example: [8, 9]; [1, 2]; [3]",
+  "sampleInput": "[8, 9]; [1, 2]; [3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

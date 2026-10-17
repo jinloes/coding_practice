@@ -1,0 +1,30 @@
+{
+  "id": "minimize-total-wait-time",
+  "title": "Minimize Total Waiting Time",
+  "topic": "Greedy",
+  "difficulty": "Easy",
+  "statement": "Order independent jobs so the sum of all waiting times is as small as possible.\n\nContract\n- `serviceTimes` is non-null and contains non-negative durations.\n- If jobs are processed one at a time, a job's waiting time is the total duration of every job scheduled before it.\n- Return the minimum possible sum of waiting times as a `long`.\n- Do not mutate `serviceTimes`.\n\nExamples\n- `minimumTotalWaitTime(new int[]{2, 5, 1, 3})` returns `10`.\n- `minimumTotalWaitTime(new int[]{7})` returns `0`.\n- `minimumTotalWaitTime(new int[]{4, 4, 4})` returns `12`.\n",
+  "examples": [
+    {
+      "input": "serviceTimes = [2, 5, 1, 3]",
+      "output": "10"
+    },
+    {
+      "input": "serviceTimes = [7]",
+      "output": "0"
+    },
+    {
+      "input": "serviceTimes = [4, 4, 4]",
+      "output": "12"
+    }
+  ],
+  "hints": [
+    "Try writing the wait contribution of a job at position `i`.",
+    "Shorter jobs should appear earlier because they are counted in more later waits.",
+    "Sort ascending and add each duration multiplied by how many jobs remain after it. Intended complexity: O(n log n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: service times array, for example: [2, 5, 1, 3]",
+  "sampleInput": "[2, 5, 1, 3]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

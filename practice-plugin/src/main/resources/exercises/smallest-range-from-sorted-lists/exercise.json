@@ -1,0 +1,30 @@
+{
+  "id": "smallest-range-from-sorted-lists",
+  "title": "Smallest Range From Sorted Lists",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Choose a shortest value range that touches every sorted list.\n\nContract\n- `lists` is non-null, contains at least one list, and every inner list is non-empty and sorted in nondecreasing order.\n- Return a two-element array `[low, high]` describing the shortest inclusive range that contains at least one value from every list.\n- If several ranges have the same length, return the one with the smaller `low` value. Do not mutate the lists.\n\nExamples\n- `smallestRange([[4,10,15], [1,12,20], [6,14,24]])` returns `[12, 15]`.\n- `smallestRange([[1,2,3], [1,2,3]])` returns `[1, 1]`.\n- `smallestRange([[5], [0,10]])` returns `[0, 5]`.\n",
+  "examples": [
+    {
+      "input": "[4,10,15];[1,12,20];[6,14,24]",
+      "output": "[12, 15]"
+    },
+    {
+      "input": "[1,2,3];[1,2,3]",
+      "output": "[1, 1]"
+    },
+    {
+      "input": "[5];[0,10]",
+      "output": "[0, 5]"
+    }
+  ],
+  "hints": [
+    "Keep one current value from each list; those values define a candidate range.",
+    "Advancing the list that currently supplies the minimum is the only move that can shrink the range.",
+    "A min-heap can track the current minimum while a variable tracks the current maximum."
+  ],
+  "inputSyntax": "Input: sorted lists separated by semicolons, for example: [4,10,15];[1,12,20];[6,14,24]",
+  "sampleInput": "[4,10,15];[1,12,20];[6,14,24]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

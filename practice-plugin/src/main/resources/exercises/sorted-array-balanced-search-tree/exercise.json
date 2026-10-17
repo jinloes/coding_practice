@@ -1,0 +1,30 @@
+{
+  "id": "sorted-array-balanced-search-tree",
+  "title": "Sorted Array Balanced Search Tree",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Build a height-balanced search tree from sorted values.\n\nContract\n- `values` is non-null, sorted in strictly increasing order, and may be empty.\n- Return the root of a binary search tree whose inorder traversal is exactly `values`.\n- The tree must be height-balanced: at every node, the left and right subtree heights differ by at most one.\n\nExamples\n- `buildBalanced([1, 2, 3])` may return a tree rooted at `2`.\n- `buildBalanced([])` returns `null`.\n- `buildBalanced([-2, 0, 5, 9, 12])` returns a balanced tree with those inorder values.\n",
+  "examples": [
+    {
+      "input": "[1, 2, 3]",
+      "output": "balanced BST with inorder [1, 2, 3]"
+    },
+    {
+      "input": "[]",
+      "output": "null"
+    },
+    {
+      "input": "[-2, 0, 5, 9, 12]",
+      "output": "balanced BST with the same inorder values"
+    }
+  ],
+  "hints": [
+    "The middle value of a sorted range is a good root because it leaves similarly sized halves.",
+    "Build the left subtree from the values before the middle and the right subtree from values after it.",
+    "Each array position should become exactly one node, giving O(n) time and O(n) output space."
+  ],
+  "inputSyntax": "Input: a sorted integer array, for example: [1, 2, 3]",
+  "sampleInput": "[1, 2, 3]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

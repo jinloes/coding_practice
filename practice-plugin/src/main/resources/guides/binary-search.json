@@ -10,6 +10,15 @@
     "sorted-matrix-search",
     "minimum-eating-speed",
     "timestamped-key-value-store",
-    "sorted-arrays-median"
+    "sorted-arrays-median",
+    "salary-cap-threshold",
+    "first-greater-search-tree-value",
+    "sorted-target-range",
+    "fixed-point-in-sorted-array",
+    "first-greater-than-key",
+    "row-column-sorted-matrix-search",
+    "sorted-insert-position",
+    "guess-number-by-feedback",
+    "k-closest-sorted-values"
   ]
 }

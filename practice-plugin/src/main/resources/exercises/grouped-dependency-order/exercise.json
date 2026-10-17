@@ -1,0 +1,20 @@
+{
+  "id": "grouped-dependency-order",
+  "title": "Grouped Dependency Order",
+  "topic": "Graphs",
+  "difficulty": "Hard",
+  "statement": "Order items with prerequisites while keeping each group contiguous.\n\nContract\n- `sortItems(itemCount, groupCount, groups, beforeItems)` returns an array containing every item exactly once, or an empty array when no valid order exists.\n- `groups[i]` is the group for item `i`; `-1` means the item starts ungrouped and should be treated as its own private group. Do not mutate the caller's `groups` array.\n- Each `beforeItems.get(i)` list contains prerequisites that must appear before item `i`.\n- All items from the same group must appear as one contiguous block in the result. Any order satisfying those rules is accepted.\n\nExamples\n- The sample with eight items and dependencies from items `6`, `5`, and `3` has a valid grouped order.\n- Two items in the same group that require each other form a cycle, so the answer is empty.\n",
+  "examples": [
+    {"input": "n=8; m=2; group=[-1,-1,1,0,0,1,0,-1]; before=[[],[6],[5],[6],[3,6],[],[],[]]", "output": "a valid order such as [6, 3, 4, 5, 0, 7, 1, 2]"},
+    {"input": "n=2; m=1; group=[0,0]; before=[[1],[0]]", "output": "[]"}
+  ],
+  "hints": [
+    "First give every ungrouped item a fresh synthetic group id.",
+    "Build one dependency graph between groups and another between items within each group.",
+    "Topologically sort groups, then topologically sort the items of each group; any cycle makes the whole answer empty."
+  ],
+  "inputSyntax": "Input: item count, group count, groups, and prerequisite lists, for example: n=8; m=2; group=[-1,-1,1,0,0,1,0,-1]; before=[[],[6],[5],[6],[3,6],[],[],[]]",
+  "sampleInput": "n=8; m=2; group=[-1,-1,1,0,0,1,0,-1]; before=[[],[6],[5],[6],[3,6],[],[],[]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

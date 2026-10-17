@@ -1,0 +1,27 @@
+{
+  "id": "sunset-view-buildings",
+  "title": "Sunset View Buildings",
+  "topic": "Stacks",
+  "difficulty": "Medium",
+  "statement": "Report which buildings can see the sunset over the west horizon.\n\nContract\n- `sunsetViews(heights)` receives non-null building heights listed from east to west.\n- A building can see the sunset if every building west of it is strictly shorter.\n- Equal heights block the view. Return visible building indices in increasing index order.\n- Do not mutate the input list.\n\nExamples\n- Heights `[3, 7, 8, 3, 6, 1]` return `[2, 4, 5]`.\n- Heights `[5, 5, 4]` return `[1, 2]` because the western `5` blocks the eastern `5`.\n",
+  "examples": [
+    {
+      "input": "heights = [3, 7, 8, 3, 6, 1]",
+      "output": "[2, 4, 5]"
+    },
+    {
+      "input": "heights = [5, 5, 4]",
+      "output": "[1, 2]"
+    }
+  ],
+  "hints": [
+    "Scan from west to east and remember the tallest building seen so far.",
+    "A building is visible exactly when its height is greater than that running maximum.",
+    "Collect indices while scanning backward, then reverse them to restore east-to-west order."
+  ],
+  "inputSyntax": "Input: building heights from east to west, for example: [3, 7, 8, 3, 6, 1]",
+  "sampleInput": "[3, 7, 8, 3, 6, 1]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}
+

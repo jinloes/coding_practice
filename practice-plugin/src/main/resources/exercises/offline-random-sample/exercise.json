@@ -1,0 +1,30 @@
+{
+  "id": "offline-random-sample",
+  "title": "Offline Random Sample",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Move a random sample into the front of an array.\n\nContract\n- `values` is non-null and contains distinct integers; `0 <= k <= values.length`.\n- Use the supplied `Random`; do not create another source of randomness.\n- Mutate `values` so the first `k` positions contain a uniformly random k-element subset. The order of those sampled values may be random.\n- Preserve the multiset of all array values.\n\nExamples\n- Sampling `2` values from `[0, 1, 2, 3]` leaves two distinct original values in the first two positions.\n- Sampling `0` values leaves the sampled prefix empty.\n- Sampling all values leaves the whole array as a permutation of the input.\n",
+  "examples": [
+    {
+      "input": "values = [0, 1, 2, 3], k = 2",
+      "output": "any two distinct original values in the first two positions"
+    },
+    {
+      "input": "values = [5, 6, 7], k = 0",
+      "output": "empty sampled prefix"
+    },
+    {
+      "input": "values = [8, 9], k = 2",
+      "output": "both values in some order"
+    }
+  ],
+  "hints": [
+    "A full shuffle is more work than necessary when only the first k positions matter.",
+    "At step i, randomly choose one value from the unchosen suffix and swap it into position i.",
+    "Repeat the Fisher-Yates swap only for the first k positions. Intended complexity: O(n) time when k grows with n and O(1) extra space."
+  ],
+  "inputSyntax": "Input: array values followed by sample size, for example: [0, 1, 2, 3] 2",
+  "sampleInput": "[0, 1, 2, 3] 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

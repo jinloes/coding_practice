@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+class Workload { static final String UNIT="employees"; static final int[] SIZES={1000,2000,4000,8000}; static Object prepare(int size){ int[] m=new int[size], t=new int[size]; m[0]=-1; t[0]=1; for(int i=1;i<size;i++){ m[i]=(i-1)/2; t[i]=1; } return new Object[]{size,m,t}; } static void run(Object st){ Object[] d=(Object[])st; if(Solution.minutesToInformAll((Integer)d[0],0,(int[])d[1],(int[])d[2])<=0) throw new IllegalStateException(); } static int units(int size){ return size; } }

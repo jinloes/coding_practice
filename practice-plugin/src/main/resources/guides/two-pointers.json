@@ -14,6 +14,21 @@
     "remove-nth-from-end",
     "sorted-pair-sum",
     "trapped-rainwater",
-    "duplicate-in-range"
+    "duplicate-in-range",
+    "sorted-array-dedup",
+    "dutch-flag-partition",
+    "next-lexicographic-permutation",
+    "apply-index-permutation",
+    "sorted-arrays-intersection",
+    "substring-index",
+    "longest-nondecreasing-run",
+    "minimum-rescue-boats",
+    "linked-list-cycle-entry",
+    "linked-list-intersection-node",
+    "kth-node-from-end",
+    "merge-sorted-arrays-in-place",
+    "one-edit-away",
+    "replace-and-remove-chars",
+    "reverse-word-order"
   ]
 }

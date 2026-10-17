@@ -1,0 +1,30 @@
+{
+  "id": "reservoir-sample",
+  "title": "Reservoir Sample",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Sample items from a stream whose length is not known in advance.\n\nContract\n- `values` is a finite iterator of integers; `k` may be zero or positive.\n- Use the supplied `Random`; do not create another random source.\n- Return up to `k` sampled values. If the stream has fewer than `k` values, return every value seen.\n- When the stream has at least `k` values, every k-element subset is equally likely. The output order may be the reservoir order.\n\nExamples\n- Sampling `2` from `[0, 1, 2, 3]` returns two distinct stream values.\n- Sampling `5` from `[4, 5]` returns `[4, 5]`.\n- Sampling `0` from any stream returns `[]`.\n",
+  "examples": [
+    {
+      "input": "values = [0, 1, 2, 3], k = 2",
+      "output": "any two distinct stream values"
+    },
+    {
+      "input": "values = [4, 5], k = 5",
+      "output": "[4, 5]"
+    },
+    {
+      "input": "values = [9, 10], k = 0",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Fill the reservoir with the first k items.",
+    "For the item at count c, choose a random index from 0 through c - 1.",
+    "Replace only when that index lands inside the reservoir. Intended complexity: O(n) time and O(k) space."
+  ],
+  "inputSyntax": "Input: stream values followed by sample size, for example: [0, 1, 2, 3] 2",
+  "sampleInput": "[0, 1, 2, 3] 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -11,6 +11,11 @@
     "postfix-evaluation",
     "warmer-day-wait",
     "car-fleets",
-    "largest-histogram-rectangle"
+    "largest-histogram-rectangle",
+    "max-tracking-queue",
+    "rolling-hit-counter",
+    "max-stack-with-pop-max",
+    "sort-stack-with-stack",
+    "sunset-view-buildings"
   ]
 }

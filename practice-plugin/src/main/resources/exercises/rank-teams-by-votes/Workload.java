@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT="call"; static final int[] SIZES={2048,4096,8192,16384,32768}; private Workload(){} static Object prepare(int size){ String[] votes=new String[size]; String[] choices={"ABCDEFGH","BACDEFGH","CBADEFGH","DABCEFGH"}; for(int i=0;i<size;i++) votes[i]=choices[i%choices.length]; return votes; } static void run(Object state){ if(Solution.rankTeams((String[])state).isEmpty()) throw new IllegalStateException(); } static int units(int size){ return 1; } }

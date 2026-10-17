@@ -1,0 +1,26 @@
+{
+  "id": "reorganize-adjacent-characters",
+  "title": "Reorganize Adjacent Characters",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Rearrange a lowercase string so equal characters are never adjacent.\n\nContract\n- `text` is non-null and contains lowercase English letters.\n- Return any string with the same multiset of characters and no equal neighbouring characters.\n- Return the empty string when no valid arrangement exists.\n\nExamples\n- `aab` may return `aba`.\n- `aaab` returns the empty string.\n",
+  "examples": [
+    {
+      "input": "text = aab",
+      "output": "Any valid arrangement, such as aba"
+    },
+    {
+      "input": "text = aaab",
+      "output": "empty string"
+    }
+  ],
+  "hints": [
+    "A character that appears too often makes the task impossible.",
+    "Use a max-heap by remaining count and hold back the character you just placed.",
+    "Reinsert the held-back character only after placing a different one. Intended complexity: O(n log m) time for m distinct letters."
+  ],
+  "inputSyntax": "Input: a lowercase string, for example: aab",
+  "sampleInput": "aab",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

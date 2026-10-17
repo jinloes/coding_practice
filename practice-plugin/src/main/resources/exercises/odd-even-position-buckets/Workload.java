@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT="call"; static final int[] SIZES={4096,8192,16384,32768,65536}; private Workload(){} static Object prepare(int size){ Solution.Node head=null; for(int i=size-1;i>=0;i--) head=new Solution.Node(i,head); return head; } static void run(Object state){ if(Solution.bucketByPosition((Solution.Node)state).size()!=2) throw new IllegalStateException(); } static int units(int size){ return 1; } }

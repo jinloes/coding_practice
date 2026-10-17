@@ -1,0 +1,30 @@
+{
+  "id": "max-tracking-queue",
+  "title": "Max-Tracking Queue",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Design a FIFO queue of integers that can report its current maximum quickly.\n\nContract\n- `new Solution()` creates an empty queue.\n- `enqueue(value)` appends `value` at the back.\n- `dequeue()` removes and returns the oldest value. Throw `NoSuchElementException` when the queue is empty.\n- `max()` returns the largest value currently in the queue. Throw `NoSuchElementException` when the queue is empty.\n- Each operation should run in O(1) amortized time.\n\nExamples\n- After `enqueue 3`, `enqueue 1`, `enqueue 5`, `max` returns `5`; `dequeue` returns `3`; `max` still returns `5`.\n- After `enqueue 4`, `enqueue 4`, `dequeue`, `max` returns `4` because the second copy remains.\n- Calling `max` on a new queue throws `NoSuchElementException`.\n",
+  "examples": [
+    {
+      "input": "enqueue 3, enqueue 1, enqueue 5, max, dequeue, max",
+      "output": "max -> 5, dequeue -> 3, max -> 5"
+    },
+    {
+      "input": "enqueue 4, enqueue 4, dequeue, max",
+      "output": "dequeue -> 4, max -> 4"
+    },
+    {
+      "input": "max on empty queue",
+      "output": "NoSuchElementException"
+    }
+  ],
+  "hints": [
+    "Keep the real FIFO order in one deque.",
+    "Keep a second deque of candidates in decreasing order; values smaller than a new value can never become maximum later.",
+    "When dequeuing, remove the front candidate only if it equals the dequeued value. Intended complexity: O(1) amortized per operation, O(n) for n operations."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: enqueue 3, enqueue 1, enqueue 5, max, dequeue, max",
+  "sampleInput": "enqueue 3, enqueue 1, enqueue 5, max, dequeue, max",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

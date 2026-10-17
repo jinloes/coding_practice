@@ -1,0 +1,30 @@
+{
+  "id": "sorted-insert-position",
+  "title": "Sorted Insert Position",
+  "topic": "Searching",
+  "difficulty": "Easy",
+  "statement": "Find where a value belongs in a sorted array.\n\nContract\n- `numbers` is non-null, sorted in nondecreasing order, and may be empty.\n- Return the first index at which `target` could be inserted while preserving sorted order. If `target` already appears, return the index of its first occurrence.\n- The return value may be `numbers.length` when the target belongs after every element. Do not mutate `numbers`.\n\nExamples\n- `insertPosition(new int[]{1, 3, 5, 6}, 5)` returns `2`.\n- `insertPosition(new int[]{1, 3, 5, 6}, 2)` returns `1`.\n- `insertPosition(new int[]{1, 3, 5, 6}, 7)` returns `4`.\n",
+  "examples": [
+    {
+      "input": "numbers = [1, 3, 5, 6], target = 5",
+      "output": "2"
+    },
+    {
+      "input": "numbers = [1, 3, 5, 6], target = 2",
+      "output": "1"
+    },
+    {
+      "input": "numbers = [1, 3, 5, 6], target = 7",
+      "output": "4"
+    }
+  ],
+  "hints": [
+    "Think of the answer as the first value that is not less than the target.",
+    "Keep the search interval half-open: possible answers are from 0 through length.",
+    "A lower-bound binary search gives O(log n) time and O(1) space."
+  ],
+  "inputSyntax": "Input: a sorted integer array followed by the target, for example: [1, 3, 5, 6] 2",
+  "sampleInput": "[1, 3, 5, 6] 2",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

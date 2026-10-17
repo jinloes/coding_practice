@@ -1,0 +1,28 @@
+{
+  "id": "cinema-schedule-gaps",
+  "title": "Cinema Schedule Gaps",
+  "topic": "Intervals",
+  "difficulty": "Medium",
+  "statement": "Choose whether one more movie can fit into a theater day that already has screenings.\n\nContract\n- Construct a schedule with `new Solution(movies, screenings)`. The theater opens at 10:00 and closes at 23:00.\n- Each `Movie` has a title, duration in minutes, and revenue. Each `Screening` names a movie and start minute measured after midnight.\n- Existing screenings may arrive unsorted; use their movie durations to find occupied intervals. Tests use non-overlapping existing screenings with known titles.\n- `canSchedule(title)` returns true when the named movie can fit wholly inside any free gap between opening, existing screenings, and closing. Unknown titles return false.\n- `calculateRevenue()` returns the sum of revenue from the existing screenings only.\n\nExamples\n- With `Short` lasting 60 minutes already at 10:00 and 12:00, a 90-minute `Feature` fits after 13:00 before closing.\n- If a 700-minute `Epic` is requested between the fixed opening and closing time, it does not fit once a noon screening occupies part of the day.\n",
+  "examples": [
+    {
+      "input": "movies Short:60:100|Feature:90:250; screenings Short@10:00,Short@12:00; query Feature",
+      "output": "canSchedule -> true, revenue -> 200"
+    },
+    {
+      "input": "movies Short:60:100|Epic:700:900; screenings Short@12:00; query Epic",
+      "output": "canSchedule -> false, revenue -> 100"
+    }
+  ],
+  "hints": [
+    "Convert times to minutes and sort existing screenings by start time before checking gaps.",
+    "Treat the opening-to-first and last-to-closing spans the same way as gaps between screenings.",
+    "Revenue is independent of the query movie; add the revenue of each existing screening once."
+  ],
+  "inputSyntax": "Input: movie definitions, screenings, and query, for example: movies Short:60:100|Feature:90:250; screenings Short@10:00,Short@12:00; query Feature",
+  "sampleInput": "movies Short:60:100|Feature:90:250; screenings Short@10:00,Short@12:00; query Feature",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}
+
+

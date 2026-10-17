@@ -1,0 +1,30 @@
+{
+  "id": "binary-wildcard-expansion",
+  "title": "Binary Wildcard Expansion",
+  "topic": "Backtracking",
+  "difficulty": "Easy",
+  "statement": "Expand a binary pattern by replacing each question mark with both possible bits.\n\nContract\n- `pattern` is non-null and contains only `0`, `1`, and `?`.\n- Return every string formed by replacing each `?` with either `0` or `1`.\n- Results must be in lexicographic order, which means choosing `0` before `1` at each wildcard.\n- If there is no wildcard, return a single-element list containing the original pattern.\n\nExamples\n- `expand(\"1?0\")` returns `[\"100\", \"110\"]`.\n- `expand(\"??\")` returns `[\"00\", \"01\", \"10\", \"11\"]`.\n- `expand(\"101\")` returns `[\"101\"]`.\n",
+  "examples": [
+    {
+      "input": "pattern = \"1?0\"",
+      "output": "[\"100\", \"110\"]"
+    },
+    {
+      "input": "pattern = \"??\"",
+      "output": "[\"00\", \"01\", \"10\", \"11\"]"
+    },
+    {
+      "input": "pattern = \"101\"",
+      "output": "[\"101\"]"
+    }
+  ],
+  "hints": [
+    "Copy fixed characters directly into the working buffer.",
+    "When a wildcard is found, try `0`, recurse, then try `1`.",
+    "Append the completed buffer when every position is filled. The answer doubles for each wildcard; the probe repeats fixed patterns, so measured complexity is O(n)."
+  ],
+  "inputSyntax": "Input: a binary pattern using ? wildcards, for example: 1?0",
+  "sampleInput": "1?0",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

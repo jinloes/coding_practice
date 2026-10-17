@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+public class Solution { public static class TreeNode { public int value; public TreeNode left; public TreeNode right; public TreeNode(int value){this.value=value;} public TreeNode(int value,TreeNode left,TreeNode right){this.value=value;this.left=left;this.right=right;} } public static TreeNode buildBalanced(int[] values){ return build(values,0,values.length); } static TreeNode build(int[] v,int lo,int hi){ if(lo>=hi)return null; int mid=lo+(hi-lo)/2; return new TreeNode(v[mid], build(v,lo,mid), build(v,mid+1,hi)); } }

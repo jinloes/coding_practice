@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+class Workload { static final String UNIT="nodes"; static final int[] SIZES={1000,2000,4000,8000}; static Object prepare(int size){ Solution.TreeNode[] n=new Solution.TreeNode[size]; for(int i=0;i<size;i++)n[i]=new Solution.TreeNode(i); for(int i=0;i<size;i++){ int l=2*i+1,r=2*i+2; if(l<size)n[i].left=n[l]; if(r<size)n[i].right=n[r]; } return n[0]; } static void run(Object st){ if(Solution.leafValues((Solution.TreeNode)st).isEmpty()) throw new IllegalStateException(); } static int units(int size){ return size; } }

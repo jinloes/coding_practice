@@ -1,0 +1,30 @@
+{
+  "id": "kth-node-from-end",
+  "title": "Kth Node From End",
+  "topic": "Linked Lists",
+  "difficulty": "Easy",
+  "statement": "Return the node that is k positions from the end of a singly linked list.\n\nContract\n- `head` may be null. `k` is 1-based: `k == 1` asks for the last node.\n- Return the requested node object, or null when the list has fewer than `k` nodes.\n- Throw `IllegalArgumentException` when `k < 1`.\n- Do not mutate the list and do not copy its values into another collection.\n\nExamples\n- `kthFromEnd([1, 2, 3, 4], 1)` returns the node containing `4`.\n- `kthFromEnd([1, 2, 3, 4], 3)` returns the node containing `2`.\n- `kthFromEnd([1, 2], 5)` returns null.\n",
+  "examples": [
+    {
+      "input": "list = [1, 2, 3, 4], k = 1",
+      "output": "node 4"
+    },
+    {
+      "input": "list = [1, 2, 3, 4], k = 3",
+      "output": "node 2"
+    },
+    {
+      "input": "list = [1, 2], k = 5",
+      "output": "null"
+    }
+  ],
+  "hints": [
+    "Let a lead pointer move k steps ahead first.",
+    "If the lead pointer falls off before taking k steps, the list is too short.",
+    "Then move the lead and answer pointers together until lead reaches null. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: list values followed by k, for example: [1, 2, 3, 4] 3",
+  "sampleInput": "[1, 2, 3, 4] 3",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

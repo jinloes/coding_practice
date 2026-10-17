@@ -1,0 +1,26 @@
+{
+  "id": "longest-bounded-difference-subarray",
+  "title": "Longest Bounded Difference Subarray",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Find the longest contiguous slice whose largest and smallest values stay close enough.\n\nContract\n- `numbers` is non-null and may be empty. `limit` is non-negative.\n- Return the maximum length of a contiguous subarray where `max(subarray) - min(subarray) <= limit`.\n- Values may be any `int`; compute differences with `long`. Do not mutate `numbers`.\n\nExamples\n- `longestSubarray(new int[]{8, 2, 4, 7}, 4)` returns `2`.\n- `longestSubarray(new int[]{10, 1, 2, 4, 7, 2}, 5)` returns `4`.\n",
+  "examples": [
+    {
+      "input": "numbers = [8, 2, 4, 7], limit = 4",
+      "output": "2"
+    },
+    {
+      "input": "numbers = [10, 1, 2, 4, 7, 2], limit = 5",
+      "output": "4"
+    }
+  ],
+  "hints": [
+    "A sliding window works if you can learn the current window minimum and maximum quickly.",
+    "Maintain decreasing and increasing deques of candidate indices.",
+    "When the window breaks the limit, move the left edge and discard expired deque entries."
+  ],
+  "inputSyntax": "Input: integer values followed by the limit, for example: [8, 2, 4, 7] 4",
+  "sampleInput": "[8, 2, 4, 7] 4",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

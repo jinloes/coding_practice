@@ -1,0 +1,30 @@
+{
+  "id": "merge-sorted-arrays-in-place",
+  "title": "Merge Sorted Arrays In Place",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Merge one sorted array into the spare space at the end of another.\n\nContract\n- `first` and `second` are non-null. `first[0..m)` and `second[0..n)` are sorted in nondecreasing order, and `first.length >= m + n`.\n- Mutate `first` so that `first[0..m+n)` contains all `m + n` values in sorted order. Values beyond `m + n` are outside the contract.\n- `m` or `n` may be zero.\n\nExamples\n- Merging `[1, 2, 3, 0, 0, 0]`, `m = 3`, and `[2, 5, 6]`, `n = 3` makes `first` start with `[1, 2, 2, 3, 5, 6]`.\n- Merging `[4, 0, 0]`, `m = 1`, and `[1, 3]`, `n = 2` makes `first` start with `[1, 3, 4]`.\n- Merging `[1, 2, 3]`, `m = 3`, and `[]`, `n = 0` leaves the prefix `[1, 2, 3]`.\n",
+  "examples": [
+    {
+      "input": "first = [1, 2, 3, 0, 0, 0], m = 3, second = [2, 5, 6], n = 3",
+      "output": "first starts with [1, 2, 2, 3, 5, 6]"
+    },
+    {
+      "input": "first = [4, 0, 0], m = 1, second = [1, 3], n = 2",
+      "output": "first starts with [1, 3, 4]"
+    },
+    {
+      "input": "first = [1, 2, 3], m = 3, second = [], n = 0",
+      "output": "first starts with [1, 2, 3]"
+    }
+  ],
+  "hints": [
+    "Writing from the front can overwrite values in `first` that you still need.",
+    "Compare the largest remaining values and write the next result from the back.",
+    "A reverse two-pointer merge uses O(m+n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: first array, m, second array, and n separated by pipes, for example: [1, 2, 3, 0, 0, 0] | 3 | [2, 5, 6] | 3",
+  "sampleInput": "[1, 2, 3, 0, 0, 0] | 3 | [2, 5, 6] | 3",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

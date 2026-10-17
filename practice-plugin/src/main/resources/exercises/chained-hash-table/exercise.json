@@ -1,0 +1,30 @@
+{
+  "id": "chained-hash-table",
+  "title": "Chained Hash Table",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Implement a small string-keyed hash table that resolves collisions with separate chains.\n\nContract\n- `new Solution(capacity)` creates an empty table with exactly `capacity` buckets. Throw `IllegalArgumentException` when `capacity < 1`.\n- `put(key, value)` inserts or overwrites `key`. Keys are non-null strings; `value` may be null.\n- `get(key)` returns the stored value, or null when the key is absent. `containsKey(key)` distinguishes an absent key from a key mapped to null.\n- `remove(key)` deletes the key if present and returns whether a deletion happened.\n- `size()` returns the number of stored keys. Null keys passed to any key operation throw `IllegalArgumentException`.\n- Do not use `java.util.Map` or other map implementations in the table implementation.\n\nExamples\n- With capacity 4, `put(\"a\", \"1\")`, then `get(\"a\")` returns `\"1\"` and `size()` is 1.\n- Overwriting key `\"a\"` from `\"1\"` to `\"2\"` keeps `size()` at 1 and `get(\"a\")` returns `\"2\"`.\n- Removing a present key returns `true`; removing it again returns `false`.\n",
+  "examples": [
+    {
+      "input": "capacity 4: put a 1, get a, size",
+      "output": "get a -> 1, size -> 1"
+    },
+    {
+      "input": "capacity 4: put a 1, put a 2, get a, size",
+      "output": "get a -> 2, size -> 1"
+    },
+    {
+      "input": "capacity 2: put a 1, remove a, remove a",
+      "output": "true, then false"
+    }
+  ],
+  "hints": [
+    "Start with an array of bucket heads; each bucket can be a singly linked list of entries.",
+    "Compute a non-negative bucket index from `key.hashCode()`; be careful with `Integer.MIN_VALUE`.",
+    "Search only the selected chain for put, get, contains, and remove. With a reasonable distribution the intended average cost per operation is O(1), so the probe measures O(n) for n operations and O(n) stored entries."
+  ],
+  "inputSyntax": "Input: capacity first, then operations separated by commas, for example: capacity 4, put a 1, get a, size",
+  "sampleInput": "capacity 4, put a 1, get a, size",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

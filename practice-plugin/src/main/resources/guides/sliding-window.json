@@ -9,6 +9,12 @@
     "longest-unique-substring",
     "longest-repeat-after-replacement",
     "minimum-covering-window",
-    "permutation-substring"
+    "permutation-substring",
+    "high-access-employees",
+    "longest-bounded-difference-subarray",
+    "longest-k-repeating-substring",
+    "longest-k-distinct-substring",
+    "substring-word-concatenations",
+    "smallest-keyword-cover"
   ]
 }

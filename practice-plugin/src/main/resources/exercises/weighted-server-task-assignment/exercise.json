@@ -1,0 +1,26 @@
+{
+  "id": "weighted-server-task-assignment",
+  "title": "Weighted Server Task Assignment",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Assign arriving tasks to weighted servers.\n\nContract\n- `serverWeights` is non-null and non-empty; `taskDurations` is non-null and contains positive durations. Task `i` arrives at time `i`.\n- Choose the free server with smallest weight, then smallest index.\n- If none is free, advance time to the earliest completion and choose among the servers free then. Return one server index per task.\n\nExamples\n- Weights `[3, 3, 2]` and tasks `[1, 2, 3, 2, 1, 2]` return `[2, 2, 0, 2, 1, 2]`.\n- With one server, every answer is `0`.\n",
+  "examples": [
+    {
+      "input": "serverWeights = [3, 3, 2], taskDurations = [1, 2, 3, 2, 1, 2]",
+      "output": "[2, 2, 0, 2, 1, 2]"
+    },
+    {
+      "input": "serverWeights = [5], taskDurations = [2, 1, 3]",
+      "output": "[0, 0, 0]"
+    }
+  ],
+  "hints": [
+    "Store idle servers by weight then index.",
+    "Store busy servers by free time, then weight and index.",
+    "Move newly free servers before assigning the next task. Intended complexity: O((s + t) log s) time."
+  ],
+  "inputSyntax": "Input: server weights, then task durations separated by semicolon, for example: [3, 3, 2]; [1, 2, 3, 2, 1, 2]",
+  "sampleInput": "[3, 3, 2]; [1, 2, 3, 2, 1, 2]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

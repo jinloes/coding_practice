@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+class Workload { static final String UNIT="nodes"; static final int[] SIZES={1023,2047,4095,8191}; static Object prepare(int size){ return build(size,1); } static void run(Object st){ if(!Solution.isSymmetric((Solution.TreeNode)st)) throw new IllegalStateException(); } static int units(int size){ return size; } private static Solution.TreeNode build(int size,int v){ if(size<=0)return null; int c=(size-1)/2; return new Solution.TreeNode(v,build(c,v+1),build(c,v+1)); } }

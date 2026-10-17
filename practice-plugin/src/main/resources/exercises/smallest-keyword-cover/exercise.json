@@ -1,0 +1,30 @@
+{
+  "id": "smallest-keyword-cover",
+  "title": "Smallest Keyword Cover",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Find the shortest contiguous part of a word stream that contains every required keyword.\n\nContract\n- `words` and `keywords` are non-null arrays containing non-null strings. `keywords` contains distinct values.\n- Return a two-element array `{left, right}` for the shortest inclusive range in `words` that contains every keyword at least once.\n- If several ranges have the same minimum length, return the one with the smallest left index.\n- Return `{-1, -1}` when no range covers all keywords. If `keywords` is empty, return `{0, -1}`.\n- Words not in `keywords` may appear inside the returned range.\n\nExamples\n- In `[a, b, c, a, b]` with keywords `[a, c]`, return `[2, 3]`.\n- In `[alpha, beta]` with keywords `[gamma]`, return `[-1, -1]`.\n- In `[one, two, three]` with no keywords, return `[0, -1]`.\n",
+  "examples": [
+    {
+      "input": "words = [a, b, c, a, b], keywords = [a, c]",
+      "output": "[2, 3]"
+    },
+    {
+      "input": "words = [alpha, beta], keywords = [gamma]",
+      "output": "[-1, -1]"
+    },
+    {
+      "input": "words = [one, two, three], keywords = []",
+      "output": "[0, -1]"
+    }
+  ],
+  "hints": [
+    "Use a sliding window with left and right boundaries over the word array.",
+    "Keep counts only for keywords currently inside the window, plus how many distinct keywords are covered.",
+    "Whenever all keywords are covered, try shrinking from the left before expanding again. Intended complexity: O(n) time and O(k) space."
+  ],
+  "inputSyntax": "Input: words list, then keywords list, for example: [a, b, c, a, b] [a, c]",
+  "sampleInput": "[a, b, c, a, b] [a, c]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

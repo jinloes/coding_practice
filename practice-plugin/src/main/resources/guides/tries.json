@@ -6,6 +6,7 @@
   "exercises": [
     "prefix-tree",
     "wildcard-word-dictionary",
-    "grid-multi-word-search"
+    "grid-multi-word-search",
+    "one-character-difference"
   ]
 }

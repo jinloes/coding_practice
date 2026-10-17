@@ -1,0 +1,30 @@
+{
+  "id": "sorted-array-dedup",
+  "title": "Sorted Array Deduplication",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Compact a sorted array so each value appears once at the front.\n\nContract\n- `numbers` is non-null and sorted in nondecreasing order. It may be empty.\n- Rewrite the beginning of `numbers` so positions `0` through `returnedCount - 1` contain the distinct values in ascending order.\n- Return the number of distinct values. Values after that prefix may be left unchanged.\n- Use constant extra space.\n\nExamples\n- `deduplicate(new int[]{1, 1, 2})` returns `2` and leaves prefix `[1, 2]`.\n- `deduplicate(new int[]{-3, -3, -1, 0, 0, 5})` returns `4` with prefix `[-3, -1, 0, 5]`.\n- `deduplicate(new int[]{})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "numbers = [1, 1, 2]",
+      "output": "count 2, prefix [1, 2]"
+    },
+    {
+      "input": "numbers = [-3, -3, -1, 0, 0, 5]",
+      "output": "count 4, prefix [-3, -1, 0, 5]"
+    },
+    {
+      "input": "numbers = []",
+      "output": "count 0"
+    }
+  ],
+  "hints": [
+    "Keep one write pointer for the next unique slot.",
+    "A value is new when it differs from the last value written to the prefix.",
+    "Scan once from left to right and overwrite only the prefix. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: a sorted integer array, for example: [1, 1, 2]",
+  "sampleInput": "[1, 1, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "delete-linked-list-node",
+  "title": "Delete Linked List Node",
+  "topic": "Linked Lists",
+  "difficulty": "Easy",
+  "statement": "Delete a node from a singly linked list when you are given only that node.\n\nContract\n- `node` is a reference to a non-tail node that is already inside a singly linked list.\n- Remove that logical node by copying data from its successor and bypassing the successor. The list head is not provided and must not be needed.\n- If `node` is null or `node.next` is null, throw `IllegalArgumentException` because the deletion cannot be performed under this API.\n- The relative order of all other logical values must stay the same.\n\nExamples\n- In `1 -> 2 -> 3 -> 4`, deleting the node currently holding `2` leaves `1 -> 3 -> 4`.\n- In `7 -> 8`, deleting the node holding `7` leaves `8` at that same reference.\n- Deleting null or the tail node is invalid.\n",
+  "examples": [
+    {
+      "input": "list = [1, 2, 3, 4], node index = 1",
+      "output": "[1, 3, 4]"
+    },
+    {
+      "input": "list = [7, 8], node index = 0",
+      "output": "[8]"
+    },
+    {
+      "input": "tail node",
+      "output": "IllegalArgumentException"
+    }
+  ],
+  "hints": [
+    "Without the previous node, you cannot redirect a pointer that points to `node`.",
+    "Instead, copy the next node value into `node`, then skip over the next node.",
+    "This works only when a successor exists. Intended complexity: O(1) for one deletion; the probe measures many independent deletions."
+  ],
+  "inputSyntax": "Input: list values followed by the zero-based node index to delete, for example: [1, 2, 3, 4] 1",
+  "sampleInput": "[1, 2, 3, 4] 1",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

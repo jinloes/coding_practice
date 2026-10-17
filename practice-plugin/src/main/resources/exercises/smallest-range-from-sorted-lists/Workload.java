@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+import java.util.*;
+final class Workload { static final String UNIT="call"; static final int[] SIZES={4096,8192,16384,32768,65536}; private Workload(){} static Object prepare(int size){ int k=64, len=Math.max(1,size/k); List<List<Integer>> lists=new ArrayList<>(); for(int i=0;i<k;i++){ List<Integer> list=new ArrayList<>(); for(int j=0;j<len;j++) list.add(i+j*k); lists.add(list); } return lists; } static void run(Object state){ if(Solution.smallestRange((List<List<Integer>>)state).length!=2) throw new IllegalStateException(); } static int units(int size){ return 1; } }

@@ -1,0 +1,21 @@
+{
+  "id": "grid-obstacle-shortest-path",
+  "title": "Grid Obstacle Shortest Path",
+  "topic": "Graphs",
+  "difficulty": "Hard",
+  "statement": "Find the shortest walk through a grid when a limited number of walls may be removed.\n\nContract\n- `shortestPath(grid, eliminations)` receives a non-empty rectangular grid containing `0` for open cells and `1` for obstacles.\n- Start at the top-left cell and reach the bottom-right cell using four-direction moves. The returned distance is the number of moves, so a one-cell grid returns 0.\n- You may enter at most `eliminations` obstacle cells; entering such a cell spends one elimination. The starting cell is treated as already occupied and does not spend one.\n- Return `-1` when no valid path exists. Do not mutate the input grid.\n\nExamples\n- In `[[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]]` with one elimination, the shortest path length is `6`.\n- In `[[0,1,1],[1,1,1],[1,0,0]]` with one elimination, the target cannot be reached.\n",
+  "examples": [
+    {"input": "grid = [[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]], k = 1", "output": "6"},
+    {"input": "grid = [[0,1,1],[1,1,1],[1,0,0]], k = 1", "output": "-1"}
+  ],
+  "hints": [
+    "A BFS state needs row, column, and how many eliminations remain.",
+    "Revisiting the same cell can be useful only if you arrive with more eliminations left than before.",
+    "Store, for each cell, the best remaining budget seen so far and ignore weaker states."
+  ],
+  "inputSyntax": "Input: grid and elimination count, for example: grid=[[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]]; k=1",
+  "sampleInput": "grid=[[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]]; k=1",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}
+

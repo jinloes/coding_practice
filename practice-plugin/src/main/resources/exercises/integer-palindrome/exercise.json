@@ -1,0 +1,30 @@
+{
+  "id": "integer-palindrome",
+  "title": "Integer Palindrome",
+  "topic": "Math",
+  "difficulty": "Easy",
+  "statement": "Check whether an `int` reads the same from left to right and right to left in decimal form.\n\nContract\n- `value` may be any Java `int`.\n- Negative numbers are not palindromes because of the minus sign.\n- Return `true` for non-negative values whose decimal digits are symmetric, including every single-digit number and zero.\n- Use arithmetic on digits rather than converting the value to text.\n\nExamples\n- `isPalindrome(12321)` returns `true`.\n- `isPalindrome(-121)` returns `false`.\n- `isPalindrome(12310)` returns `false`.\n",
+  "examples": [
+    {
+      "input": "value = 12321",
+      "output": "true"
+    },
+    {
+      "input": "value = -121",
+      "output": "false"
+    },
+    {
+      "input": "value = 12310",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "First decide how negatives and numbers ending in zero should behave.",
+    "You only need to reverse half of the digits before comparing both halves.",
+    "Stop when the reversed suffix catches up to the remaining prefix. Intended complexity is constant for Java `int` inputs and O(1) extra space."
+  ],
+  "inputSyntax": "Input: one integer, for example: 12321",
+  "sampleInput": "12321",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

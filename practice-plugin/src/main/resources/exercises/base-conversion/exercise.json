@@ -1,0 +1,30 @@
+{
+  "id": "base-conversion",
+  "title": "Base Conversion",
+  "topic": "Math",
+  "difficulty": "Medium",
+  "statement": "Convert an integer string from one base to another.\n\nContract\n- `number` is a valid integer representation in `fromBase`, optionally starting with `-`.\n- Bases are between 2 and 16 inclusive. Digits may use `0`-`9` and `A`-`F`, in either case.\n- Return an uppercase representation in `toBase`, preserving a leading minus sign for negative non-zero values.\n- Zero is represented as exactly `\"0\"`.\n\nExamples\n- `convert(\"615\", 7, 13)` returns `\"1A7\"`.\n- `convert(\"-1010\", 2, 16)` returns `\"-A\"`.\n- `convert(\"0\", 10, 2)` returns `\"0\"`.\n",
+  "examples": [
+    {
+      "input": "number = \"615\", fromBase = 7, toBase = 13",
+      "output": "\"1A7\""
+    },
+    {
+      "input": "number = \"-1010\", fromBase = 2, toBase = 16",
+      "output": "\"-A\""
+    },
+    {
+      "input": "number = \"0\", fromBase = 10, toBase = 2",
+      "output": "\"0\""
+    }
+  ],
+  "hints": [
+    "Convert the source digits into one numeric value.",
+    "Repeatedly divide by the target base to collect output digits from right to left.",
+    "Handle the sign separately so zero never becomes negative zero. The probe uses fixed-width inputs, so measured complexity is O(n)."
+  ],
+  "inputSyntax": "Input: number fromBase toBase, for example: 615 7 13",
+  "sampleInput": "615 7 13",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

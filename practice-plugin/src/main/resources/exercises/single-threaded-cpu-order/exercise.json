@@ -1,0 +1,30 @@
+{
+  "id": "single-threaded-cpu-order",
+  "title": "Single-Threaded CPU Order",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Return the order in which a single worker processes indexed tasks.\n\nContract\n- `tasks` is non-null. Each row is exactly `[enqueueTime, processingTime]` with non-negative times, and the row index is the task id.\n- Whenever the worker is free, it may run any task whose enqueue time is at or before the current time.\n- Choose the available task with the smallest processing time; break ties by the smallest original index. If none is available, jump time to the next enqueue time.\n- Return every task index in the order processing starts. Do not mutate `tasks`.\n\nExamples\n- `processingOrder(new int[][]{{1,2},{2,4},{3,2},{4,1}})` returns `[0, 2, 3, 1]`.\n- Tasks `[[7,10],[7,12],[7,5],[7,4],[7,2]]` return `[4, 3, 2, 0, 1]`.\n- One task returns `[0]`.\n",
+  "examples": [
+    {
+      "input": "tasks = [[1,2],[2,4],[3,2],[4,1]]",
+      "output": "[0, 2, 3, 1]"
+    },
+    {
+      "input": "tasks = [[7,10],[7,12],[7,5],[7,4],[7,2]]",
+      "output": "[4, 3, 2, 0, 1]"
+    },
+    {
+      "input": "tasks = [[5,3]]",
+      "output": "[0]"
+    }
+  ],
+  "hints": [
+    "Sort task ids by enqueue time so tasks become visible in chronological order.",
+    "Keep available tasks in a priority queue ordered by processing time, then by original index.",
+    "When the queue is empty, advance the clock to the next enqueue time. Intended complexity: O(n log n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: task pairs [enqueue, processing] in order, for example: [[1, 2], [2, 4], [3, 2], [4, 1]]",
+  "sampleInput": "[[1, 2], [2, 4], [3, 2], [4, 1]]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

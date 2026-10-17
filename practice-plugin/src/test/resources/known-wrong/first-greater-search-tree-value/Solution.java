@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+public class Solution { public static class TreeNode { public int value; public TreeNode left; public TreeNode right; public TreeNode(int value){this.value=value;} public TreeNode(int value,TreeNode left,TreeNode right){this.value=value;this.left=left;this.right=right;} } public static Integer firstGreater(TreeNode root,int key){ Integer best=null; for(TreeNode n=root;n!=null;){ if(n.value>=key){ best=n.value; n=n.left; } else n=n.right; } return best; } }

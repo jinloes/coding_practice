@@ -14,6 +14,12 @@
     "unique-combination-sum",
     "palindrome-partitions",
     "phone-letter-combinations",
-    "queens-placement"
+    "queens-placement",
+    "ip-address-splits",
+    "matchstick-square",
+    "unique-permutations",
+    "fixed-size-combinations",
+    "subset-sum-decision",
+    "binary-wildcard-expansion"
   ]
 }

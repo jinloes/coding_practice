@@ -1,0 +1,26 @@
+{
+  "id": "two-target-subarrays-min-length",
+  "title": "Two Target Subarrays Minimum Length",
+  "topic": "Prefix Sums",
+  "difficulty": "Hard",
+  "statement": "Find two disjoint target-sum slices with the smallest combined length.\n\nContract\n- `numbers` is non-null and may be empty. Values and `target` may be any `int`.\n- Return the minimum total length of two non-overlapping contiguous subarrays whose sums are both exactly `target`.\n- Return `-1` when fewer than two such non-overlapping subarrays exist. Do not mutate `numbers`.\n\nExamples\n- `minSumOfLengths(new int[]{3, 2, 2, 4, 3}, 3)` returns `2`.\n- `minSumOfLengths(new int[]{7, 3, 4, 7}, 7)` returns `2`.\n",
+  "examples": [
+    {
+      "input": "numbers = [3, 2, 2, 4, 3], target = 3",
+      "output": "2"
+    },
+    {
+      "input": "numbers = [7, 3, 4, 7], target = 7",
+      "output": "2"
+    }
+  ],
+  "hints": [
+    "Use prefix sums to identify every target-sum subarray ending at the current index.",
+    "Keep the best target-sum length that ends before each position.",
+    "When a new target-sum subarray ends now, combine it with the best earlier non-overlapping subarray."
+  ],
+  "inputSyntax": "Input: integer values followed by the target, for example: [3, 2, 2, 4, 3] 3",
+  "sampleInput": "[3, 2, 2, 4, 3] 3",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

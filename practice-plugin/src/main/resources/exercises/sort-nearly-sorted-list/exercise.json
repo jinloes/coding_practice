@@ -1,0 +1,26 @@
+{
+  "id": "sort-nearly-sorted-list",
+  "title": "Sort Nearly Sorted List",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Sort a list whose values are close to their final locations.\n\nContract\n- `values` is non-null and `k` is non-negative. Every item is at most `k` positions from its fully sorted position.\n- Return a new ascending list and do not mutate `values`.\n- Empty lists and `k` larger than the list length are allowed.\n\nExamples\n- `[3, 1, 2, 6, 4, 5]`, `k = 2` returns `[1, 2, 3, 4, 5, 6]`.\n- `[2, 1]`, `k = 5` returns `[1, 2]`.\n",
+  "examples": [
+    {
+      "input": "values = [3, 1, 2, 6, 4, 5], k = 2",
+      "output": "[1, 2, 3, 4, 5, 6]"
+    },
+    {
+      "input": "values = [2, 1], k = 5",
+      "output": "[1, 2]"
+    }
+  ],
+  "hints": [
+    "The next output must be among the next `k + 1` unseen values.",
+    "Keep those candidates in a min-heap.",
+    "Remove one candidate and add one new value until input is exhausted. Intended complexity: O(n log k) time."
+  ],
+  "inputSyntax": "Input: an integer array, then k=<distance>, for example: [3, 1, 2, 6, 4, 5] k=2",
+  "sampleInput": "[3, 1, 2, 6, 4, 5] k=2",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

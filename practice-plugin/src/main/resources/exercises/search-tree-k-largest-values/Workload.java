@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+class Workload { static final String UNIT="nodes"; static final int[] SIZES={1000,2000,4000,8000}; static Object prepare(int size){ return build(0,size-1); } static void run(Object st){ if(Solution.kLargest((Solution.TreeNode)st,500).isEmpty()) throw new IllegalStateException(); } static int units(int size){ return size; } private static Solution.TreeNode build(int l,int h){ if(l>h)return null; int m=(l+h)>>>1; return new Solution.TreeNode(m,build(l,m-1),build(m+1,h)); } }

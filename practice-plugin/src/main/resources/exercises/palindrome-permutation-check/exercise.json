@@ -1,0 +1,30 @@
+{
+  "id": "palindrome-permutation-check",
+  "title": "Palindrome Permutation Check",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Decide whether the characters of a string can be rearranged to form a palindrome.\n\nContract\n- `text` is non-null and may be empty.\n- Count every UTF-16 character exactly as it appears; matching is case-sensitive and spaces or punctuation are ordinary characters.\n- Return `true` when at most one character has an odd count, because such a multiset can be placed in the center of a palindrome.\n- Return `false` when two or more different characters have odd counts.\n\nExamples\n- `canPermutePalindrome(\"carrace\")` returns `true` because it can become `racecar`.\n- `canPermutePalindrome(\"daily\")` returns `false`.\n- `canPermutePalindrome(\"aabb c\")` returns `false` because both the space and `c` have odd counts.\n",
+  "examples": [
+    {
+      "input": "carrace",
+      "output": "true"
+    },
+    {
+      "input": "daily",
+      "output": "false"
+    },
+    {
+      "input": "aabb c",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "A palindrome mirrors pairs of equal characters around its center.",
+    "Track whether each character currently has an odd or even count; you only need the number of odd-count characters.",
+    "Toggle a character's parity as you scan. Intended complexity: O(n) time and O(1) space for a fixed-size character table."
+  ],
+  "inputSyntax": "Input: one string, for example: carrace",
+  "sampleInput": "carrace",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

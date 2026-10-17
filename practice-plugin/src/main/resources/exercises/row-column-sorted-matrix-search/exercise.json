@@ -1,0 +1,30 @@
+{
+  "id": "row-column-sorted-matrix-search",
+  "title": "Row And Column Sorted Matrix Search",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Search a matrix whose rows and columns are each sorted in ascending order.\n\nContract\n- `matrix` is non-null. It may have zero rows, and rows may be empty; non-empty rows form a rectangular grid.\n- Within the grid, every row is sorted left to right and every column is sorted top to bottom. The matrix is not necessarily sorted in row-major order.\n- Return whether `target` appears. Do not mutate `matrix`.\n\nExamples\n- `contains(new int[][]{{1, 4, 7}, {2, 5, 8}, {3, 6, 9}}, 5)` returns `true`.\n- Searching the same matrix for `10` returns `false`.\n- `contains(new int[][]{{-5, -1}, {-3, 4}}, -3)` returns `true`.\n",
+  "examples": [
+    {
+      "input": "matrix = [[1, 4, 7], [2, 5, 8], [3, 6, 9]], target = 5",
+      "output": "true"
+    },
+    {
+      "input": "matrix = [[1, 4, 7], [2, 5, 8], [3, 6, 9]], target = 10",
+      "output": "false"
+    },
+    {
+      "input": "matrix = [[-5, -1], [-3, 4]], target = -3",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "Start from a corner where one move removes a row and the other removes a column.",
+    "From the top-right corner, too-small values eliminate a row and too-large values eliminate a column.",
+    "The intended walk visits at most rows plus columns cells: O(n) time for n = rows + columns, O(1) space."
+  ],
+  "inputSyntax": "Input: matrix rows separated by semicolons, then the target, for example: [1, 4, 7]; [2, 5, 8]; [3, 6, 9] | 5",
+  "sampleInput": "[1, 4, 7]; [2, 5, 8]; [3, 6, 9] | 5",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

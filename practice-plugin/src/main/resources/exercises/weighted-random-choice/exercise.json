@@ -1,0 +1,30 @@
+{
+  "id": "weighted-random-choice",
+  "title": "Weighted Random Choice",
+  "topic": "Math",
+  "difficulty": "Medium",
+  "statement": "Choose a value randomly according to positive weights.\n\nContract\n- `values` and `weights` are non-null, have the same positive length, and every weight is positive and finite.\n- Use the supplied `Random`; do not create another source of randomness.\n- The probability of returning `values[i]` is `weights[i] / sum(weights)`.\n- Return one of the provided values.\n\nExamples\n- With values `[10, 20, 30]` and weights `[1, 3, 6]`, `30` is most likely.\n- With one value `[7]`, the result is always `7`.\n- Equal weights choose uniformly among the values.\n",
+  "examples": [
+    {
+      "input": "values = [10, 20, 30], weights = [1.0, 3.0, 6.0]",
+      "output": "10, 20, or 30 with probabilities 10%, 30%, and 60%"
+    },
+    {
+      "input": "values = [7], weights = [5.0]",
+      "output": "7"
+    },
+    {
+      "input": "values = [4, 9], weights = [1.0, 1.0]",
+      "output": "4 or 9 with equal probability"
+    }
+  ],
+  "hints": [
+    "Think of the weights as adjacent ranges on a number line.",
+    "Draw a random threshold between zero and the total weight.",
+    "Walk the ranges until the cumulative weight passes the threshold. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: values then a semicolon then weights, for example: [10, 20, 30]; [1.0, 3.0, 6.0]",
+  "sampleInput": "[10, 20, 30]; [1.0, 3.0, 6.0]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT="task"; static final int[] SIZES={2048,4096,8192,16384,32768}; private Workload(){} record State(int[] servers,int[] tasks){} static Object prepare(int size){ int[] s=new int[Math.max(16,size/64)]; for(int i=0;i<s.length;i++)s[i]=(i*37)%101+1; int[] t=new int[size]; for(int i=0;i<size;i++)t[i]=(i%17)+1; return new State(s,t);} static void run(Object state){ State s=(State)state; if(Solution.assignTasks(s.servers,s.tasks).length!=s.tasks.length)throw new IllegalStateException(); } static int units(int size){ return 1; } }
+

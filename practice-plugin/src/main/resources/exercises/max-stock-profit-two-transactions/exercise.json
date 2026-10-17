@@ -1,0 +1,26 @@
+{
+  "id": "max-stock-profit-two-transactions",
+  "title": "Max Stock Profit With Two Transactions",
+  "topic": "Dynamic Programming",
+  "difficulty": "Hard",
+  "statement": "Find the best profit from at most two buy-sell trades.\n\nContract\n- `prices` is non-null and may contain fewer than two days. Prices are non-negative `int` values.\n- You may complete at most two transactions. A transaction is one buy followed later by one sell, and you may not hold more than one share at a time.\n- Return `0` when no profitable trade exists. Do not mutate `prices`.\n\nExamples\n- `maxProfit(new int[]{3, 3, 5, 0, 0, 3, 1, 4})` returns `6`.\n- `maxProfit(new int[]{7, 6, 4, 3, 1})` returns `0`.\n",
+  "examples": [
+    {
+      "input": "prices = [3, 3, 5, 0, 0, 3, 1, 4]",
+      "output": "6"
+    },
+    {
+      "input": "prices = [7, 6, 4, 3, 1]",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "For one transaction, track the lowest earlier price and the best profit so far.",
+    "Compute best profit ending on or before each day and best profit starting on or after each day.",
+    "Try every split day between the first and second trade, combining the two precomputed profits."
+  ],
+  "inputSyntax": "Input: daily prices, for example: [3, 3, 5, 0, 0, 3, 1, 4]",
+  "sampleInput": "[3, 3, 5, 0, 0, 3, 1, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

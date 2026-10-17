@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT = "word"; static final int[] SIZES = {4096,8192,16384,32768,65536}; private Workload() {} static Object prepare(int size) { String[] words = new String[size]; for (int i = 0; i < size; i++) words[i] = "w" + i; words[size - 1] = "w" + (size / 2); return words; } static void run(Object state) { if (Solution.nearestDistance((String[]) state) <= 0) throw new IllegalStateException(); } static int units(int size) { return 1; } }

@@ -1,0 +1,30 @@
+{
+  "id": "sorted-arrays-intersection",
+  "title": "Sorted Arrays Intersection",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "List the values shared by two sorted arrays.\n\nContract\n- `left` and `right` are non-null and sorted in nondecreasing order. Either may be empty and either may contain duplicates.\n- Return a sorted array containing each shared value exactly once.\n- Do not mutate either input array.\n\nExamples\n- `intersection([1, 2, 2, 3], [2, 2, 4])` returns `[2]`.\n- `intersection([1, 3, 5], [2, 4, 6])` returns `[]`.\n- `intersection([-3, -1, 0, 4], [-5, -3, 0, 2])` returns `[-3, 0]`.\n",
+  "examples": [
+    {
+      "input": "[1, 2, 2, 3] [2, 2, 4]",
+      "output": "[2]"
+    },
+    {
+      "input": "[1, 3, 5] [2, 4, 6]",
+      "output": "[]"
+    },
+    {
+      "input": "[-3, -1, 0, 4] [-5, -3, 0, 2]",
+      "output": "[-3, 0]"
+    }
+  ],
+  "hints": [
+    "Because the arrays are sorted, compare the current values instead of searching from the beginning each time.",
+    "When the values match, append the value only if it is different from the last value you appended.",
+    "Advance past duplicates as you move two pointers through the arrays. Intended complexity: O(n + m) time."
+  ],
+  "inputSyntax": "Input: two sorted integer arrays, for example: [1, 2, 2, 3] [2, 2, 4]",
+  "sampleInput": "[1, 2, 2, 3] [2, 2, 4]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

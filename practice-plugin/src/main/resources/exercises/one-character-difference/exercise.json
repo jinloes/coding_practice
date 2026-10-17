@@ -1,0 +1,30 @@
+{
+  "id": "one-character-difference",
+  "title": "One Character Difference",
+  "topic": "Tries",
+  "difficulty": "Medium",
+  "statement": "Decide whether a list contains two words that differ in exactly one position.\n\nContract\n- `words` is non-null. Every entry is non-null, has the same length, and contains lowercase letters. The list may be empty.\n- Return true if there are two distinct entries with equal length that differ at exactly one character index and match at every other index.\n- Equal duplicate words do not count because they differ in zero positions.\n- Do not mutate the array or its strings.\n\nExamples\n- `hasOneCharacterDifference(new String[]{\"abcd\", \"acbd\", \"aacd\"})` returns `true` because `abcd` and `aacd` differ only at index 1.\n- `hasOneCharacterDifference(new String[]{\"ab\", \"cd\", \"yz\"})` returns `false`.\n- `hasOneCharacterDifference(new String[]{\"same\", \"same\"})` returns `false`.\n",
+  "examples": [
+    {
+      "input": "words = [\"abcd\", \"acbd\", \"aacd\"]",
+      "output": "true"
+    },
+    {
+      "input": "words = [\"ab\", \"cd\", \"yz\"]",
+      "output": "false"
+    },
+    {
+      "input": "words = [\"same\", \"same\"]",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "A brute force comparison of every pair is simple but repeats most character checks.",
+    "For each word, hide one position with a marker. Two words with the same masked form differ in at most that one position.",
+    "Store masked forms in a set and make sure the matching words are not identical. Intended complexity: O(n) time and O(n) extra space when word length is treated as part of each processed item."
+  ],
+  "inputSyntax": "Input: equal-length lowercase words separated by commas, for example: abcd,acbd,aacd",
+  "sampleInput": "abcd,acbd,aacd",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

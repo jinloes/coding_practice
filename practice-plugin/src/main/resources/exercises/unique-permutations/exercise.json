@@ -1,0 +1,30 @@
+{
+  "id": "unique-permutations",
+  "title": "Unique Permutations",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "List every distinct ordering of numbers that may contain duplicates.\n\nContract\n- `values` is non-null and may contain repeated integers.\n- Return each unique permutation of all values exactly once. The empty input has one permutation: the empty list.\n- The result order does not matter, but each individual permutation must preserve its chosen order.\n- Do not mutate `values`, and make each returned permutation an independent list.\n\nExamples\n- `uniquePermutations(new int[]{1, 1, 2})` returns `[[1, 1, 2], [1, 2, 1], [2, 1, 1]]` in any order.\n- `uniquePermutations(new int[]{})` returns `[[]]`.\n- `uniquePermutations(new int[]{3, 3, 3})` returns `[[3, 3, 3]]`.\n",
+  "examples": [
+    {
+      "input": "values = [1, 1, 2]",
+      "output": "[[1, 1, 2], [1, 2, 1], [2, 1, 1]] in any order"
+    },
+    {
+      "input": "values = []",
+      "output": "[[]]"
+    },
+    {
+      "input": "values = [3, 3, 3]",
+      "output": "[[3, 3, 3]]"
+    }
+  ],
+  "hints": [
+    "Sort a copy so equal values are adjacent.",
+    "Skip a duplicate value at one depth when the identical previous value has not been used.",
+    "Use a `used` array, copy complete permutations, then undo choices. The probe repeats fixed-size calls, so measured complexity is O(n)."
+  ],
+  "inputSyntax": "Input: the values as an array, for example: [1, 1, 2]",
+  "sampleInput": "[1, 1, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

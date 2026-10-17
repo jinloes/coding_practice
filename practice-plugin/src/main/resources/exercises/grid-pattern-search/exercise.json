@@ -1,0 +1,52 @@
+{
+
+  "id": "grid-pattern-search",
+
+  "title": "Grid Pattern Search",
+
+  "topic": "Matrices",
+
+  "difficulty": "Medium",
+
+  "statement": "Decide whether a smaller rectangle of digit strings appears inside a larger grid.\n\nContract\n- `grid` and `pattern` are non-null arrays of non-null strings. All strings within each array have the same length.\n- Return `true` when the pattern rows occur contiguously in the grid at the same starting column. Return `false` when the pattern is empty, wider, or taller than the grid.\n- Treat characters literally; the inputs contain digits but no numeric conversion is needed. Do not mutate the arrays.\n\nExamples\n- Searching `[\"12345\", \"56789\", \"11123\"]` for `[\"78\", \"11\"]` returns `true`.\n- Searching the same grid for `[\"89\", \"23\"]` returns `false`.\n",
+
+  "examples": [
+
+    {
+
+      "input": "grid = [12345; 56789; 11123], pattern = [78; 12]",
+
+      "output": "true"
+
+    },
+
+    {
+
+      "input": "grid = [12345; 56789; 11123], pattern = [89; 12]",
+
+      "output": "false"
+
+    }
+
+  ],
+
+  "hints": [
+
+    "Try every top-left position where the pattern could still fit.",
+
+    "For each candidate, compare every pattern row against the matching grid substring.",
+
+    "Stop as soon as one row mismatches; the straightforward scan is quadratic for fixed-size patterns."
+
+  ],
+
+  "inputSyntax": "Input: grid rows, then |, then pattern rows, for example: 12345;56789;11123 | 78;12",
+
+  "sampleInput": "12345;56789;11123 | 78;12",
+
+  "intendedTime": "O(n^2)",
+
+  "intendedSpace": "O(1)"
+
+}
+

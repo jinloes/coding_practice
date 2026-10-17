@@ -1,0 +1,30 @@
+{
+  "id": "leaf-values-left-to-right",
+  "title": "Leaf Values Left To Right",
+  "topic": "Binary Trees",
+  "difficulty": "Easy",
+  "statement": "Collect the values stored in a binary tree's leaves from left to right.\n\nContract\n- `root` may be null. Return an empty list for an empty tree.\n- A leaf is a node with no left or right child.\n- Return only leaf values, preserving the order in which they appear from the left edge of the tree to the right edge. Do not mutate the tree.\n\nExamples\n`leafValues(tree(1, 2, 3, 4, 5, null, 6))` => `[4, 5, 6]`\n`leafValues(tree(7))` => `[7]`\n`leafValues(null)` => `[]`\n",
+  "examples": [
+    {
+      "input": "`leafValues(tree(1, 2, 3, 4, 5, null, 6))`",
+      "output": "`[4, 5, 6]`"
+    },
+    {
+      "input": "`leafValues(tree(7))`",
+      "output": "`[7]`"
+    },
+    {
+      "input": "`leafValues(null)`",
+      "output": "`[]`"
+    }
+  ],
+  "hints": [
+    "First define exactly when a node is a leaf.",
+    "A preorder-style DFS can visit the left child before the right child.",
+    "Add a value only when both child references are null. Intended complexity: O(n) time and O(h) stack space."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [1, 2, 3, 4, 5, null, 6]",
+  "sampleInput": "[1, 2, 3, 4, 5, null, 6]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

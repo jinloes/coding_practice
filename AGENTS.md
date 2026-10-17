@@ -38,7 +38,7 @@ Use Gradle from the repository root.
 
 The tracked repository (~1.6 MB) is larger than one agent context window; the plugin alone fits comfortably.
 
-- Scope work to one module. Repo-wide reviews or audits should run one module or area at a time (for example `practice-plugin/`, then the algorithm modules, then `system_design/`) and merge findings afterward, rather than loading everything at once.
+- Scope work to one module. Repo-wide reviews or audits should run one module or area at a time (for example `practice-plugin/`, then the platform and regex modules, then `system_design/`) and merge findings afterward, rather than loading everything at once.
 - `system_design/*.excalidraw` diagrams are hidden from ripgrep-based search by the root `.ignore`. Open one directly only when the task is about that diagram.
 - Keep source and test files under about 20 KB so they can be read in one pass; split oversized files by responsibility.
 

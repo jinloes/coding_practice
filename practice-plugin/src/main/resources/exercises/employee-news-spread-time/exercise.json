@@ -1,0 +1,30 @@
+{
+  "id": "employee-news-spread-time",
+  "title": "Employee News Spread Time",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Given a management tree and each manager's forwarding delay, compute when the last employee hears the news.\n\nContract\n- `n` is the number of employees labeled `0` through `n - 1`.\n- `headId` is the root manager. `manager[i]` is `-1` for the head and otherwise names employee `i`'s direct manager.\n- When an employee is informed at time `t`, they inform each direct report at time `t + informTime[i]`.\n- Return the earliest time by which every employee has been informed. The management relation is a valid tree.\n\nExamples\n`minutesToInformAll(1, 0, [-1], [0])` => `0`\n`minutesToInformAll(6, 2, [2,2,-1,2,2,2], [0,0,1,0,0,0])` => `1`\n`minutesToInformAll(7, 6, [1,2,3,4,5,6,-1], [0,6,5,4,3,2,1])` => `21`\n",
+  "examples": [
+    {
+      "input": "`minutesToInformAll(1, 0, [-1], [0])`",
+      "output": "`0`"
+    },
+    {
+      "input": "`minutesToInformAll(6, 2, [2,2,-1,2,2,2], [0,0,1,0,0,0])`",
+      "output": "`1`"
+    },
+    {
+      "input": "`minutesToInformAll(7, 6, [1,2,3,4,5,6,-1], [0,6,5,4,3,2,1])`",
+      "output": "`21`"
+    }
+  ],
+  "hints": [
+    "Build the direct-report lists from the manager array.",
+    "The time to a report is the manager arrival time plus that manager's inform time.",
+    "A DFS or BFS from the head visits each employee once and tracks the maximum arrival time. Intended complexity: O(n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: n headId manager array then informTime array, for example: 6 2 [2,2,-1,2,2,2] [0,0,1,0,0,0]",
+  "sampleInput": "6 2 [2,2,-1,2,2,2] [0,0,1,0,0,0]",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "linked-list-intersection-with-cycles",
+  "title": "Linked List Intersection With Cycles",
+  "topic": "Linked Lists",
+  "difficulty": "Hard",
+  "statement": "Find a shared node between two singly linked lists that may contain cycles.\n\nContract\n- `first` and `second` may be null. Either list may be acyclic or cyclic. Nodes are compared by object identity.\n- If the lists share a node before entering a cycle, return the earliest such shared node using the acyclic-prefix order.\n- If they do not share before the cycle but their cycles are the same ring, return the cycle-entry node of `first`.\n- If they share no reachable node, return null. Do not mutate either list.\n\nExamples\n- Two acyclic lists that share tail `8 -> 9` return node `8`.\n- Lists with separate prefixes entering the same cycle return the first list cycle entry when no earlier shared node exists.\n- Lists with disjoint cycles return null.\n",
+  "examples": [
+    {
+      "input": "acyclic shared tail [8, 9]",
+      "output": "node 8"
+    },
+    {
+      "input": "two prefixes entering the same cycle",
+      "output": "first list cycle entry"
+    },
+    {
+      "input": "two disjoint cycles",
+      "output": "null"
+    }
+  ],
+  "hints": [
+    "Find the cycle entry of each list with Floyd algorithm.",
+    "If neither list has a cycle, solve ordinary acyclic intersection; if exactly one has a cycle, they cannot overlap.",
+    "When both have cycles, first check for a shared prefix before equal entries, otherwise walk one cycle to see if the other entry is on the same ring."
+  ],
+  "inputSyntax": "Input: one named scenario, for example: shared-cycle",
+  "sampleInput": "shared-cycle",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

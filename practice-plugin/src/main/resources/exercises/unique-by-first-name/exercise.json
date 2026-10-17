@@ -1,0 +1,30 @@
+{
+  "id": "unique-by-first-name",
+  "title": "Unique By First Name",
+  "topic": "Arrays",
+  "difficulty": "Easy",
+  "statement": "Return one directory entry for each first name.\n\nContract\n- `people` is non-null. Each entry has a non-blank `first` and `last` name.\n- Return a new list sorted by first name ascending. If several entries share a first name, keep the one that appeared earliest in the input.\n- Do not mutate the input list.\n\nExamples\n- `uniqueByFirstName([Ada Lovelace, Bob Stone, Ada Byron])` returns `[Ada Lovelace, Bob Stone]`.\n- `uniqueByFirstName([Zoe Zed, Amy Able, Zoe Young])` returns `[Amy Able, Zoe Zed]`.\n- `uniqueByFirstName([])` returns `[]`.\n",
+  "examples": [
+    {
+      "input": "Ada:Lovelace Bob:Stone Ada:Byron",
+      "output": "[Ada Lovelace, Bob Stone]"
+    },
+    {
+      "input": "Zoe:Zed Amy:Able Zoe:Young",
+      "output": "[Amy Able, Zoe Zed]"
+    },
+    {
+      "input": "empty list",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Track the first entry seen for each first name before thinking about order.",
+    "After duplicates are removed, only the remaining entries need to be sorted by first name.",
+    "A linked map plus a final sort gives the intended O(n log n) time and O(n) extra space."
+  ],
+  "inputSyntax": "Input: first:last pairs separated by spaces, for example: Ada:Lovelace Bob:Stone Ada:Byron",
+  "sampleInput": "Ada:Lovelace Bob:Stone Ada:Byron",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

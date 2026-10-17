@@ -1,0 +1,26 @@
+{
+  "id": "in-memory-file-system",
+  "title": "In-Memory File System",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Implement a tiny in-memory file system rooted at `/`.\n\nContract\n- Construct an empty file system with `new Solution()`.\n- `ls(path)` returns sorted child names for a directory, a singleton list containing the file name for a file, or an empty list for a missing path.\n- `mkdir(path)` creates all missing directories along the path. Calling it for `/` is allowed and changes nothing.\n- `addContentToFile(filePath, content)` creates the file and parent directories if needed, then appends `content`.\n- `readContentFromFile(filePath)` returns the complete content of an existing file. Tests only read files that exist.\n\nExamples\n- After `mkdir /a/b` and `add /a/b/c.txt hi`, `ls /a/b` returns `[c.txt]`.\n- Adding ` there` to `/a/b/c.txt` makes reading it return `hi there`.\n",
+  "examples": [
+    {
+      "input": "mkdir /a/b, add /a/b/c.txt hi, ls /a/b",
+      "output": "[c.txt]"
+    },
+    {
+      "input": "add /a/b/c.txt hi, add /a/b/c.txt ' there', read /a/b/c.txt",
+      "output": "hi there"
+    }
+  ],
+  "hints": [
+    "A directory node needs a map from names to child nodes.",
+    "Use a sorted map or sort directory names when listing.",
+    "While walking a path, create intermediate directory nodes only for operations that promise to create them."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: mkdir /a/b, add /a/b/c.txt hi, ls /a/b, read /a/b/c.txt",
+  "sampleInput": "mkdir /a/b, add /a/b/c.txt hi, ls /a/b, read /a/b/c.txt",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

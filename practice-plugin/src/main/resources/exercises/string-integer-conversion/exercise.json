@@ -1,0 +1,30 @@
+{
+  "id": "string-integer-conversion",
+  "title": "String Integer Conversion",
+  "topic": "Math",
+  "difficulty": "Easy",
+  "statement": "Convert between 32-bit signed integers and their decimal text representation without using parsing helpers.\n\nContract\n- `stringToInt` receives a non-empty decimal string in 32-bit signed range, optionally starting with `-`.\n- `intToString` receives any Java `int`, including `0` and `Integer.MIN_VALUE`.\n- Do not call `Integer.parseInt`, `Integer.toString`, `String.valueOf`, or formatting APIs in the learner implementation.\n- Return the exact base-10 representation with no leading zeroes except for the value zero itself.\n\nExamples\n- `stringToInt(\"0\")` returns `0`.\n- `stringToInt(\"-2048\")` returns `-2048`.\n- `intToString(12345)` returns `\"12345\"`.\n",
+  "examples": [
+    {
+      "input": "operation = parse, value = 0",
+      "output": "0"
+    },
+    {
+      "input": "operation = parse, value = -2048",
+      "output": "-2048"
+    },
+    {
+      "input": "operation = format, value = 12345",
+      "output": "12345"
+    }
+  ],
+  "hints": [
+    "For parsing, remember the sign and accumulate one digit at a time.",
+    "For formatting, repeatedly take the last decimal digit and reverse the collected digits at the end.",
+    "Handle zero and the most negative integer explicitly or accumulate as a negative value to avoid overflow. The fixed 32-bit range gives O(1) time and space."
+  ],
+  "inputSyntax": "Input: parse or format, then a pipe, then the value, for example: parse | -2048",
+  "sampleInput": "parse | -2048",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "odd-even-position-buckets",
+  "title": "Odd And Even Position Buckets",
+  "topic": "Linked Lists",
+  "difficulty": "Easy",
+  "statement": "Split linked-list values by their positions.\n\nContract\n- `head` may be `null`. Positions are zero-based as you follow `next` links.\n- Return a list containing exactly two lists. The first list holds values from even positions; the second holds values from odd positions.\n- Preserve the encounter order inside each bucket. Do not mutate the input nodes.\n\nExamples\n- Values `[10, 11, 12, 13, 14]` produce `[[10, 12, 14], [11, 13]]`.\n- A one-node list `[5]` produces `[[5], []]`.\n- An empty list produces `[[], []]`.\n",
+  "examples": [
+    {
+      "input": "list = [10, 11, 12, 13, 14]",
+      "output": "[[10, 12, 14], [11, 13]]"
+    },
+    {
+      "input": "list = [5]",
+      "output": "[[5], []]"
+    },
+    {
+      "input": "list = []",
+      "output": "[[], []]"
+    }
+  ],
+  "hints": [
+    "Keep a position counter while walking the list.",
+    "Even positions and odd positions can be appended to separate result lists.",
+    "One pass is enough, and the returned buckets hold the copied values. Intended complexity: O(n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: linked-list values, for example: [10, 11, 12, 13, 14]",
+  "sampleInput": "[10, 11, 12, 13, 14]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

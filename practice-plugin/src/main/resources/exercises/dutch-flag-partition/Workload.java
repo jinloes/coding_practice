@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT="call"; static final int[] SIZES={4096,8192,16384,32768,65536}; private Workload(){} static Object prepare(int size){ int[] values=new int[size]; for(int i=0;i<size;i++) values[i]=(i*31)%97; return values; } static void run(Object state){ int[] values=(int[])state; Solution.partition(values, values.length/2); } static int units(int size){ return 1; } }

@@ -1,0 +1,30 @@
+{
+  "id": "minimum-interval-point-cover",
+  "title": "Minimum Interval Point Cover",
+  "topic": "Intervals",
+  "difficulty": "Medium",
+  "statement": "Choose as few points as possible so every closed interval contains at least one chosen point.\n\nContract\n- `intervals` is non-null. Every interval has `start <= end` and both endpoints are inclusive.\n- Return a sorted `int[]` containing a minimum-size set of points that covers all intervals.\n- When several minimum covers exist, return the one produced by repeatedly choosing the smallest possible ending point among the remaining intervals.\n- Do not mutate the input array or its interval objects.\n\nExamples\n- `minimumCoverPoints([1, 3], [2, 5], [6, 7])` returns `[3, 7]`.\n- `minimumCoverPoints([1, 2], [2, 3], [3, 4])` returns `[2, 4]`.\n- `minimumCoverPoints([])` returns `[]`.\n",
+  "examples": [
+    {
+      "input": "intervals = [[1, 3], [2, 5], [6, 7]]",
+      "output": "[3, 7]"
+    },
+    {
+      "input": "intervals = [[1, 2], [2, 3], [3, 4]]",
+      "output": "[2, 4]"
+    },
+    {
+      "input": "intervals = []",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Sort intervals by their ending point, not by their starting point.",
+    "After choosing an endpoint, it covers every interval whose start is at or before that point.",
+    "Skip all covered intervals, then choose the next uncovered interval's end. Intended complexity: O(n log n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: closed intervals as [start,end] pairs, for example: [1,3] [2,5] [6,7]",
+  "sampleInput": "[1,3] [2,5] [6,7]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

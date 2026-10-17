@@ -11,6 +11,16 @@
     "axis-square-counter",
     "reverse-digits",
     "rotate-square-matrix",
-    "add-strings"
+    "add-strings",
+    "offline-random-sample",
+    "reservoir-sample",
+    "weighted-random-choice",
+    "enumerate-primes",
+    "base-conversion",
+    "base-digit-validator",
+    "integer-palindrome",
+    "rectangle-intersection",
+    "pascal-triangle-rows",
+    "string-integer-conversion"
   ]
 }

@@ -1,0 +1,30 @@
+{
+  "id": "longest-k-distinct-substring",
+  "title": "Longest K-Distinct Substring",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Find the longest substring containing at most k distinct characters.\n\nContract\n- `text` is non-null. Characters are compared exactly as Java `char` values.\n- Return the length of the longest contiguous substring that contains no more than `k` different characters.\n- Return `0` when `k <= 0` or the string is empty.\n\nExamples\n- `longestAtMostKDistinct(\"eceba\", 2)` returns `3`.\n- `longestAtMostKDistinct(\"aa\", 1)` returns `2`.\n- `longestAtMostKDistinct(\"abc\", 0)` returns `0`.\n",
+  "examples": [
+    {
+      "input": "text = \"eceba\", k = 2",
+      "output": "3"
+    },
+    {
+      "input": "text = \"aa\", k = 1",
+      "output": "2"
+    },
+    {
+      "input": "text = \"abc\", k = 0",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Use a window with two indices.",
+    "Track character counts in the current window and shrink from the left while too many distinct characters remain.",
+    "After every valid expansion, update the best length. This gives O(n) time and O(k) space."
+  ],
+  "inputSyntax": "Input: text followed by k, for example: eceba 2",
+  "sampleInput": "eceba 2",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "deduplicate-linked-list",
+  "title": "Deduplicate Linked List",
+  "topic": "Linked Lists",
+  "difficulty": "Easy",
+  "statement": "Remove repeated values from an unsorted singly linked list.\n\nContract\n- `head` may be null. Values may be any `int`.\n- Keep the first node for each distinct value and remove later nodes whose value has already appeared.\n- Preserve the relative order and identity of retained nodes, and return the original head when it is retained.\n- You may use extra storage to remember values.\n\nExamples\n- `removeDuplicates([1, 2, 1, 3, 2])` returns `[1, 2, 3]`.\n- `removeDuplicates([4, 4, 4])` returns `[4]`.\n- `removeDuplicates([])` returns null.\n",
+  "examples": [
+    {
+      "input": "[1, 2, 1, 3, 2]",
+      "output": "[1, 2, 3]"
+    },
+    {
+      "input": "[4, 4, 4]",
+      "output": "[4]"
+    },
+    {
+      "input": "[]",
+      "output": "null"
+    }
+  ],
+  "hints": [
+    "Walk the list once while remembering every value you have kept.",
+    "When the next node is a duplicate, bypass it instead of advancing the previous pointer.",
+    "Only advance the previous pointer when the next node is retained. Intended complexity: O(n) time and O(n) extra space."
+  ],
+  "inputSyntax": "Input: list values, for example: [1, 2, 1, 3, 2]",
+  "sampleInput": "[1, 2, 1, 3, 2]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

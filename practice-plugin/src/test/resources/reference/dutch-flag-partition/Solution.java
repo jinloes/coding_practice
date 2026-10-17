@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+public class Solution { public static void partition(int[] numbers,int pivotIndex){ if(numbers.length==0) return; int pivot=numbers[pivotIndex], smaller=0, equal=0, larger=numbers.length-1; while(equal<=larger){ if(numbers[equal]<pivot) swap(numbers,smaller++,equal++); else if(numbers[equal]==pivot) equal++; else swap(numbers,equal,larger--); } } private static void swap(int[] a,int i,int j){ int t=a[i]; a[i]=a[j]; a[j]=t; } }

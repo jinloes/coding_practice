@@ -1,0 +1,30 @@
+{
+  "id": "best-three-score-average",
+  "title": "Best Three Score Average",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Given score records, find the student whose best three scores have the largest average.\n\nContract\n- `records` is non-null. Each record has a non-null student name and an integer score.\n- Only the three highest scores for each student are considered. Students with fewer than three records are ignored.\n- Return the name with the largest top-three total. Break ties by the lexicographically smallest name.\n- Return the empty string when no student has three scores. Do not mutate `records`.\n\nExamples\n- `bestThreeAverage([Ada:90, Ada:95, Ada:100, Bob:100, Bob:70, Bob:60])` returns `Ada`.\n- `bestThreeAverage([Nia:50, Nia:80, Omar:90])` returns the empty string.\n- `bestThreeAverage([Amy:90, Amy:80, Amy:70, Bea:85, Bea:80, Bea:75])` returns `Amy`.\n",
+  "examples": [
+    {
+      "input": "records = [Ada:90, Ada:95, Ada:100, Bob:100, Bob:70, Bob:60]",
+      "output": "Ada"
+    },
+    {
+      "input": "records = [Nia:50, Nia:80, Omar:90]",
+      "output": "empty string"
+    },
+    {
+      "input": "records = [Amy:90, Amy:80, Amy:70, Bea:85, Bea:80, Bea:75]",
+      "output": "Amy"
+    }
+  ],
+  "hints": [
+    "Group the scores by student before making comparisons.",
+    "A min-heap capped at size three keeps just one student's best three scores.",
+    "Compare sums rather than averages because every eligible student has exactly three kept scores. Intended complexity: O(n) time and O(s) space for s students."
+  ],
+  "inputSyntax": "Input: comma-separated name:score records, for example: Ada:90,Ada:95,Ada:100,Bob:100,Bob:70,Bob:60",
+  "sampleInput": "Ada:90,Ada:95,Ada:100,Bob:100,Bob:70,Bob:60",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -12,6 +12,15 @@
     "wildcard-parentheses-check",
     "task-cooldown-schedule",
     "reachable-end",
-    "max-subarray-sum"
+    "max-subarray-sum",
+    "salary-cap-threshold",
+    "team-photo-feasibility",
+    "longest-zigzag-subsequence",
+    "minimum-rescue-boats",
+    "optimal-task-pair-assignment",
+    "minimum-interval-point-cover",
+    "minimize-total-wait-time",
+    "reorganize-adjacent-characters",
+    "cinema-schedule-gaps"
   ]
 }

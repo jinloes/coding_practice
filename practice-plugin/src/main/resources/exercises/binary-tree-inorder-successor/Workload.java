@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT="node"; static final int[] SIZES={4095,8191,16383,32767,65535}; private Workload(){} record State(Solution.TreeNode root,Solution.TreeNode target){} static Object prepare(int size){ Solution.TreeNode[] a=new Solution.TreeNode[size]; for(int i=0;i<size;i++)a[i]=new Solution.TreeNode(i); for(int i=0;i<size;i++){ if(2*i+1<size)a[i].left=a[2*i+1]; if(2*i+2<size)a[i].right=a[2*i+2]; } return new State(a[0],a[size-2]); } static void run(Object state){ State s=(State)state; Solution.inorderSuccessor(s.root,s.target); } static int units(int size){ return 1; } }
+

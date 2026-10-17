@@ -9,6 +9,10 @@
     "insert-interval",
     "remove-overlapping-intervals",
     "minimum-meeting-rooms",
-    "interval-query-min"
+    "interval-query-min",
+    "summarize-integer-ranges",
+    "minimum-interval-point-cover",
+    "tweet-counts-by-frequency",
+    "cinema-schedule-gaps"
   ]
 }

@@ -1,0 +1,30 @@
+{
+  "id": "word-count-report",
+  "title": "Word Count Report",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Count normalized words in a block of text and return a deterministic report.\n\nContract\n- `text` is non-null and may be empty or all whitespace.\n- Split on whitespace. For each token, remove leading and trailing non-letter-or-digit characters, then lowercase the remaining text.\n- Discard tokens that become empty.\n- Return strings of the form `count word`, sorted first by word length and then lexicographically.\n\nExamples\n- `countWords(\"Red fish, red fish!\")` returns `[\"2 red\", \"2 fish\"]`.\n- `countWords(\"One two two three.\")` returns `[\"1 one\", \"2 two\", \"1 three\"]`.\n- `countWords(\" ... \")` returns `[]`.\n",
+  "examples": [
+    {
+      "input": "text = Red fish, red fish!",
+      "output": "[2 red, 2 fish]"
+    },
+    {
+      "input": "text = One two two three.",
+      "output": "[1 one, 2 two, 1 three]"
+    },
+    {
+      "input": "text =  ... ",
+      "output": "[]"
+    }
+  ],
+  "hints": [
+    "Normalize every token before counting so punctuation and case do not split the same word.",
+    "A map from word to count gives the frequency table in one pass.",
+    "Sort the map entries by word length and then by word to make the output stable. Intended complexity: O(n log n) time from sorting distinct words and O(n) space."
+  ],
+  "inputSyntax": "Input: text to count, for example: Red fish, red fish!",
+  "sampleInput": "Red fish, red fish!",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

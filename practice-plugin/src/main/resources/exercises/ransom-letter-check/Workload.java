@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT = "character"; static final int[] SIZES = {4096,8192,16384,32768,65536}; private Workload() {} static Object prepare(int size) { String magazine = "abcde".repeat(size / 5 + 1); String letter = "edcba".repeat(size / 10); return new String[]{letter, magazine}; } static void run(Object state) { String[] data = (String[]) state; if (!Solution.canConstruct(data[0], data[1])) throw new IllegalStateException(); } static int units(int size) { return 1; } }

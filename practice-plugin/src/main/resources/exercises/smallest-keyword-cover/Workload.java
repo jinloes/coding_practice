@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT = "word"; static final int[] SIZES = {256,512,1024,2048,4096}; private Workload() {} static Object prepare(int size) { String[] words = new String[size]; String[] keywords = new String[size / 2]; for (int i = 0; i < keywords.length; i++) { keywords[i] = "k" + i; words[i] = keywords[i]; } for (int i = keywords.length; i < size; i++) words[i] = "f" + i; return new Object[]{words, keywords}; } static void run(Object state) { Object[] data = (Object[]) state; String[] keywords = (String[]) data[1]; int[] range = Solution.smallestCover((String[]) data[0], keywords); if (range[0] != 0 || range[1] != keywords.length - 1) throw new IllegalStateException(); } static int units(int size) { return 1; } }
+

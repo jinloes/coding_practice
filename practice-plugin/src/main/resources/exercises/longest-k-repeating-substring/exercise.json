@@ -1,0 +1,30 @@
+{
+  "id": "longest-k-repeating-substring",
+  "title": "Longest K-Repeating Substring",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Find the longest substring in which every character that appears does so at least k times.\n\nContract\n- `text` is non-null. Characters are compared exactly as Java `char` values.\n- Return the length of the longest contiguous substring whose distinct characters each occur at least `k` times inside that substring.\n- If `k <= 1`, the whole string qualifies. If no non-empty substring qualifies, return `0`.\n\nExamples\n- `longestSubstring(\"aaabb\", 3)` returns `3`.\n- `longestSubstring(\"ababbc\", 2)` returns `5`.\n- `longestSubstring(\"abc\", 2)` returns `0`.\n",
+  "examples": [
+    {
+      "input": "text = \"aaabb\", k = 3",
+      "output": "3"
+    },
+    {
+      "input": "text = \"ababbc\", k = 2",
+      "output": "5"
+    },
+    {
+      "input": "text = \"abc\", k = 2",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "A weak character appears fewer than k times in a candidate range and cannot be inside any valid substring spanning it.",
+    "Split around weak characters and solve each remaining segment.",
+    "If no weak character exists, the whole segment is valid. The workload repeats a fixed representative input, so measured complexity is O(n)."
+  ],
+  "inputSyntax": "Input: text followed by k, for example: aaabb 3",
+  "sampleInput": "aaabb 3",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

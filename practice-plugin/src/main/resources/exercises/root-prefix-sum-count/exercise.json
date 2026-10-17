@@ -1,0 +1,27 @@
+{
+  "id": "root-prefix-sum-count",
+  "title": "Root Prefix Sum Count",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Count root-to-node prefixes whose values add to a target.\n\nContract\n- `root` may be null; nodes hold integer values.\n- Count only downward paths that start at the root and end at any node.\n- Return 0 for an empty tree.\n\nExamples\n- `[5, 3, -1, 2, 1, null, 4]`, target `8` returns `2`.\n- `[1, 2, 3]`, target `1` returns `1`.\n",
+  "examples": [
+    {
+      "input": "root = [5, 3, -1, 2, 1, null, 4], target = 8",
+      "output": "2"
+    },
+    {
+      "input": "root = [1, 2, 3], target = 1",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Carry a running sum from the root.",
+    "A node counts when the running sum including it equals the target.",
+    "Visit each node once. Intended complexity: O(n) time and O(h) call stack space."
+  ],
+  "inputSyntax": "Input: a level-order tree, then target=<sum>, for example: [5, 3, -1, 2, 1, null, 4] target=8",
+  "sampleInput": "[5, 3, -1, 2, 1, null, 4] target=8",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}
+

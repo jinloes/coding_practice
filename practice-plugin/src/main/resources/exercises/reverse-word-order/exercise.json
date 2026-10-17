@@ -1,0 +1,30 @@
+{
+  "id": "reverse-word-order",
+  "title": "Reverse Word Order",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Return the words of a sentence in the opposite order.\n\nContract\n- `text` is non-null and may be empty.\n- Words are maximal runs of non-space characters separated by one or more space characters.\n- Ignore leading and trailing spaces, and join the reversed words with exactly one space.\n- Return an empty string when there are no words.\n\nExamples\n- `reverseWords(\"time to code\")` returns `\"code to time\"`.\n- `reverseWords(\"  hello   world  \")` returns `\"world hello\"`.\n- `reverseWords(\"solo\")` returns `\"solo\"`.\n",
+  "examples": [
+    {
+      "input": "text = time to code",
+      "output": "code to time"
+    },
+    {
+      "input": "text =   hello   world  ",
+      "output": "world hello"
+    },
+    {
+      "input": "text = solo",
+      "output": "solo"
+    }
+  ],
+  "hints": [
+    "Trim away outer spaces before splitting into words.",
+    "Scan from the end and append each word as you encounter it.",
+    "Avoid preserving the original spacing; the output has exactly one space between words. Intended complexity: O(n) time and O(n) space for the returned string."
+  ],
+  "inputSyntax": "Input: a sentence, for example: time to code",
+  "sampleInput": "time to code",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

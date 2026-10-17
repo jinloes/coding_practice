@@ -1,0 +1,26 @@
+{
+  "id": "binary-root-path-sum",
+  "title": "Binary Root Path Sum",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Add the binary numbers represented by every root-to-leaf path.\n\nContract\n- `root` may be null and every node value is `0` or `1`.\n- Interpret each root-to-leaf path as a binary number with the root as the most significant bit.\n- Return the sum of all path numbers; a null tree contributes 0.\n\nExamples\n- `[1, 0, 1, 0, 1]` has paths `100`, `101`, and `11`, summing to `12`.\n- `[1]` returns `1`.\n",
+  "examples": [
+    {
+      "input": "root = [1, 0, 1, 0, 1]",
+      "output": "12"
+    },
+    {
+      "input": "root = [1]",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Carry the prefix value as you descend.",
+    "Appending a binary digit is a left shift plus that digit.",
+    "Only leaves add their current value to the answer. Intended complexity: O(n) time."
+  ],
+  "inputSyntax": "Input: a level-order binary-digit tree, for example: [1, 0, 1, 0, 1]",
+  "sampleInput": "[1, 0, 1, 0, 1]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -1,0 +1,20 @@
+{
+  "id": "link-tree-level-neighbors",
+  "title": "Link Tree Level Neighbors",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "Connect every node in a binary tree to its neighbor on the same level.\n\nContract\n- `connect(root)` receives a binary tree whose nodes have `left`, `right`, and `next` fields.\n- Mutate the existing nodes so each node's `next` points to the node immediately to its right at the same depth.\n- The rightmost node at each level must have `next == null`. Existing `next` values should be overwritten.\n- Return the original root. A null root returns null.\n\nExamples\n- In a tree with root `1` and children `2` and `3`, node `2.next` becomes node `3` and node `3.next` is null.\n- On the next level of `1,2,3,4,5,null,7`, the links are `4 -> 5 -> 7 -> null`.\n",
+  "examples": [
+    {"input": "level order [1, 2, 3]", "output": "levels by next: 1# 2->3#"},
+    {"input": "level order [1, 2, 3, 4, 5, null, 7]", "output": "levels by next: 1# 2->3# 4->5->7#"}
+  ],
+  "hints": [
+    "A breadth-first traversal naturally sees nodes in left-to-right level order.",
+    "Keep the previous node in the current level and link it to the node you just removed from the queue.",
+    "After finishing a level, explicitly clear the last node's next pointer."
+  ],
+  "inputSyntax": "Input: level-order tree values with null for missing children, for example: [1, 2, 3, 4, 5, null, 7]",
+  "sampleInput": "[1, 2, 3, 4, 5, null, 7]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "subset-sum-decision",
+  "title": "Subset Sum Decision",
+  "topic": "Backtracking",
+  "difficulty": "Medium",
+  "statement": "Decide whether some subset of non-negative numbers adds exactly to a target.\n\nContract\n- `numbers` is non-null and contains non-negative integers. `target` may be any integer.\n- Each value can be used at most once. The empty subset is allowed, so target `0` is always reachable.\n- Return `false` for negative targets. Do not mutate `numbers`.\n\nExamples\n- `hasSubsetSum(new int[]{2, 4, 8}, 6)` returns `true`.\n- `hasSubsetSum(new int[]{5, 10, 12}, 1)` returns `false`.\n- `hasSubsetSum(new int[]{7, 3}, 0)` returns `true`.\n",
+  "examples": [
+    {
+      "input": "numbers = [2, 4, 8], target = 6",
+      "output": "true"
+    },
+    {
+      "input": "numbers = [5, 10, 12], target = 1",
+      "output": "false"
+    },
+    {
+      "input": "numbers = [7, 3], target = 0",
+      "output": "true"
+    }
+  ],
+  "hints": [
+    "At each value, the brute-force choice is take it or skip it.",
+    "A boolean table of reachable sums avoids exploring identical remaining targets repeatedly.",
+    "Update reachable sums from high to low so one value is not reused in the same step. The workload makes the target proportional to n, so intended time is O(n^2); allocation measurement is expected to classify the compact boolean table as O(1)."
+  ],
+  "inputSyntax": "Input: an array followed by the target, for example: [2, 4, 8] 6",
+  "sampleInput": "[2, 4, 8] 6",
+  "intendedTime": "O(n^2)",
+  "intendedSpace": "O(1)"
+}

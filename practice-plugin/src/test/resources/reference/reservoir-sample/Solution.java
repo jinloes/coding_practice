@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+import java.util.ArrayList; import java.util.Iterator; import java.util.List; import java.util.Random;
+public class Solution { public static int[] sample(Iterator<Integer> values,int k,Random random){ if(k<=0) return new int[0]; List<Integer> reservoir=new ArrayList<>(k); int seen=0; while(values.hasNext()){ int value=values.next(); seen++; if(reservoir.size()<k) reservoir.add(value); else { int chosen=random.nextInt(seen); if(chosen<k) reservoir.set(chosen,value); } } int[] result=new int[reservoir.size()]; for(int i=0;i<result.length;i++) result[i]=reservoir.get(i); return result; } }

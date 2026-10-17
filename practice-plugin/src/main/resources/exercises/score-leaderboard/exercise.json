@@ -1,0 +1,30 @@
+{
+  "id": "score-leaderboard",
+  "title": "Score Leaderboard",
+  "topic": "Data Structures",
+  "difficulty": "Easy",
+  "statement": "Maintain player scores and answer the sum of the highest scores currently on the board.\n\nContract\n- `new Solution()` creates an empty leaderboard.\n- `addScore(playerId, score)` adds `score` to that player's current score, creating the player when needed. Scores and totals fit in `int`.\n- `top(k)` returns the sum of the highest `k` player scores. If fewer than `k` players exist, sum every player. When `k <= 0`, return 0.\n- `reset(playerId)` removes that player's score if present; resetting a missing player changes nothing.\n- Ties between players do not affect the returned sum.\n\nExamples\n- After scores 1->50, 2->80, and 3->20, `top(2)` returns 130.\n- Adding 25 more points to player 1 changes that player to 75, so `top(2)` returns 155.\n- Resetting player 2 leaves players 1 and 3, so `top(5)` returns 95.\n",
+  "examples": [
+    {
+      "input": "add 1 50, add 2 80, add 3 20, top 2",
+      "output": "130"
+    },
+    {
+      "input": "add 1 50, add 2 80, add 1 25, top 2",
+      "output": "155"
+    },
+    {
+      "input": "add 1 75, add 2 80, add 3 20, reset 2, top 5",
+      "output": "95"
+    }
+  ],
+  "hints": [
+    "A direct map from player ID to score is enough for correctness.",
+    "For `top(k)`, collect current scores and sort them descending before summing the first k.",
+    "More advanced structures can improve query speed, but the intended reference keeps the implementation simple: each top query is O(n log n), and the workload measures O(n log n) over the board size."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: add 1 50, add 2 80, add 3 20, top 2",
+  "sampleInput": "add 1 50, add 2 80, add 3 20, top 2",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

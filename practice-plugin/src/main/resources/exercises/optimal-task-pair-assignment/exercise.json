@@ -1,0 +1,30 @@
+{
+  "id": "optimal-task-pair-assignment",
+  "title": "Optimal Task Pair Assignment",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Pair tasks so each worker gets two jobs and the slowest worker is as fast as possible.\n\nContract\n- `durations` is non-null and has even length. Durations are non-negative integers.\n- Return an array of pairs. Every input duration must appear in exactly one returned pair, including duplicates.\n- Among all pairings, minimize the maximum pair sum. Return pairs in nondecreasing order of their first value, and put the smaller value first inside each pair.\n- Do not mutate `durations`.\n\nExamples\n- `assignPairs(new int[]{5, 2, 1, 6, 4, 4})` returns `[[1, 6], [2, 5], [4, 4]]`.\n- `assignPairs(new int[]{1, 8, 9, 2})` returns `[[1, 9], [2, 8]]`.\n- `assignPairs(new int[]{3, 3})` returns `[[3, 3]]`.\n",
+  "examples": [
+    {
+      "input": "durations = [5, 2, 1, 6, 4, 4]",
+      "output": "[[1, 6], [2, 5], [4, 4]]"
+    },
+    {
+      "input": "durations = [1, 8, 9, 2]",
+      "output": "[[1, 9], [2, 8]]"
+    },
+    {
+      "input": "durations = [3, 3]",
+      "output": "[[3, 3]]"
+    }
+  ],
+  "hints": [
+    "Sort the task durations first.",
+    "Pairing the shortest remaining task with the longest remaining task controls the worst load.",
+    "Walk inward from both ends of the sorted array. Intended complexity: O(n log n) time and O(n) space."
+  ],
+  "inputSyntax": "Input: task durations array, for example: [5, 2, 1, 6, 4, 4]",
+  "sampleInput": "[5, 2, 1, 6, 4, 4]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

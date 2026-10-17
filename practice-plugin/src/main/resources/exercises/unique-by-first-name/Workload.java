@@ -1,0 +1,4 @@
+package com.jinloes.practice;
+import java.util.ArrayList;
+import java.util.List;
+final class Workload { static final String UNIT="call"; static final int[] SIZES={4096,8192,16384,32768,65536}; private Workload(){} static Object prepare(int size){ List<Solution.Person> people=new ArrayList<>(); for(int i=size-1;i>=0;i--) people.add(new Solution.Person("N"+i,"L"+i)); return people; } static void run(Object state){ List<Solution.Person> result=Solution.uniqueByFirstName((List<Solution.Person>)state); long checksum=0; for(int i=0;i<result.size();i++){ for(int step=1;step<result.size();step<<=1) checksum += result.get(i).first().length()+step; } if(result.isEmpty() || checksum==42) throw new IllegalStateException(); } static int units(int size){ return 1; } }

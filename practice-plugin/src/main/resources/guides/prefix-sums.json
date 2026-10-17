@@ -6,6 +6,9 @@
   "exercises": [
     "subarray-sum-count",
     "product-except-self",
-    "max-subarray-sum"
+    "max-subarray-sum",
+    "weighted-random-choice",
+    "two-target-subarrays-min-length",
+    "root-prefix-sum-count"
   ]
 }

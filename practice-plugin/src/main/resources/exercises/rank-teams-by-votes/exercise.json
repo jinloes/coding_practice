@@ -1,0 +1,30 @@
+{
+  "id": "rank-teams-by-votes",
+  "title": "Rank Teams By Votes",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Rank teams from ballots that list every team once.\n\nContract\n- `votes` is non-null. If it is empty, return the empty string. Otherwise every vote contains the same distinct uppercase team letters.\n- Teams are compared by who received more first-place votes, then more second-place votes, and so on through every position.\n- If all position counts tie, the alphabetically smaller team letter ranks first.\n\nExamples\n- `rankTeams([ABC, ACB, ABC, ACB, ACB])` returns `ACB`.\n- `rankTeams([WXYZ, XYZW])` returns `XWYZ`.\n- `rankTeams([])` returns ``.\n",
+  "examples": [
+    {
+      "input": "[ABC, ACB, ABC, ACB, ACB]",
+      "output": "ACB"
+    },
+    {
+      "input": "[WXYZ, XYZW]",
+      "output": "XWYZ"
+    },
+    {
+      "input": "[]",
+      "output": "empty string"
+    }
+  ],
+  "hints": [
+    "Count how often each team appears at each ballot position.",
+    "The comparison is lexicographic over those count arrays, but larger counts should come first.",
+    "Remember the final alphabetical tie-breaker; relying on map iteration order is not deterministic."
+  ],
+  "inputSyntax": "Input: vote strings in a bracketed list, for example: [ABC, ACB, ABC, ACB, ACB]",
+  "sampleInput": "[ABC, ACB, ABC, ACB, ACB]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

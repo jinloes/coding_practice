@@ -14,6 +14,22 @@
     "group-anagrams",
     "top-k-frequent",
     "sudoku-board-check",
-    "least-recently-used-cache"
+    "least-recently-used-cache",
+    "unique-by-first-name",
+    "rank-teams-by-votes",
+    "remove-selected-characters",
+    "best-three-score-average",
+    "group-equal-keys-in-place",
+    "alien-word-sort",
+    "all-one-key-counter",
+    "chained-hash-table",
+    "score-leaderboard",
+    "ransom-letter-check",
+    "nearest-repeated-word-distance",
+    "smallest-keyword-cover",
+    "palindrome-permutation-check",
+    "word-count-report",
+    "in-memory-file-system",
+    "popularity-tracker"
   ]
 }

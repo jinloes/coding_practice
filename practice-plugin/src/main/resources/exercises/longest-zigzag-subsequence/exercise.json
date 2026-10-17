@@ -1,0 +1,26 @@
+{
+  "id": "longest-zigzag-subsequence",
+  "title": "Longest Zigzag Subsequence",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Find the longest subsequence whose comparisons alternate direction.\n\nContract\n- `numbers` is non-null and may be empty. Values may repeat.\n- Return the maximum length of a subsequence where successive differences strictly alternate between positive and negative.\n- Equal neighbouring chosen values do not create either direction and should not extend the zigzag. Do not mutate `numbers`.\n\nExamples\n- `longestZigZag(new int[]{1, 7, 4, 9, 2, 5})` returns `6`.\n- `longestZigZag(new int[]{1, 1, 1})` returns `1`.\n",
+  "examples": [
+    {
+      "input": "numbers = [1, 7, 4, 9, 2, 5]",
+      "output": "6"
+    },
+    {
+      "input": "numbers = [1, 1, 1]",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Only the sign of the latest non-zero difference matters.",
+    "Keep two lengths: one ending with an upward move and one ending with a downward move.",
+    "When the next difference is positive, extend the best downward-ending subsequence, and vice versa."
+  ],
+  "inputSyntax": "Input: integer values, for example: [1, 7, 4, 9, 2, 5]",
+  "sampleInput": "[1, 7, 4, 9, 2, 5]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

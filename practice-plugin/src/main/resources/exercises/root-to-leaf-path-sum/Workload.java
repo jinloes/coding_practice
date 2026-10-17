@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+class Workload { static final String UNIT="nodes"; static final int[] SIZES={1000,2000,4000,8000}; static Object prepare(int size){ Solution.TreeNode r=new Solution.TreeNode(1), c=r; for(int i=1;i<size;i++){ c.left=new Solution.TreeNode(1); c=c.left; } return r; } static void run(Object st){ if(Solution.hasPathSum((Solution.TreeNode)st,-1)) throw new IllegalStateException(); } static int units(int size){ return size; } }

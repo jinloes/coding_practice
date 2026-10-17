@@ -1,0 +1,26 @@
+{
+  "id": "sort-increasing-decreasing-array",
+  "title": "Sort Increasing-Decreasing Array",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Sort values presented as alternating monotonic runs.\n\nContract\n- `values` is non-null and may be empty. It is a concatenation of runs whose direction alternates, starting nondecreasing.\n- Return all values in ascending order in a new array and do not mutate the input.\n- Negative values and duplicates are allowed.\n\nExamples\n- `[1, 4, 9, 8, 3, 2, 6, 7]` returns `[1, 2, 3, 4, 6, 7, 8, 9]`.\n- `[5, 4, 4, 1]` returns `[1, 4, 4, 5]`.\n",
+  "examples": [
+    {
+      "input": "values = [1, 4, 9, 8, 3, 2, 6, 7]",
+      "output": "[1, 2, 3, 4, 6, 7, 8, 9]"
+    },
+    {
+      "input": "values = [5, 4, 4, 1]",
+      "output": "[1, 4, 4, 5]"
+    }
+  ],
+  "hints": [
+    "Turn each monotonic run into an ascending sorted run.",
+    "Reverse the decreasing runs before merging.",
+    "Merge the sorted runs with a heap. Intended complexity: O(n log r) time for r runs."
+  ],
+  "inputSyntax": "Input: an integer array, for example: [1, 4, 9, 8, 3, 2, 6, 7]",
+  "sampleInput": "[1, 4, 9, 8, 3, 2, 6, 7]",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

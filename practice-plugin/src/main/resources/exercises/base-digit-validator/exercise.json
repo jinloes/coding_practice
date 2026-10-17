@@ -1,0 +1,30 @@
+{
+  "id": "base-digit-validator",
+  "title": "Base Digit Validator",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Decide whether a piece of text is a valid unsigned whole number in a chosen base.\n\nContract\n- `digits` may be any `String`; `base` must be between 2 and 36 inclusive.\n- Digits `0` through `9` have values 0 through 9, and letters `A` through `Z` or `a` through `z` have values 10 through 35.\n- A leading `0x` or `0X` is allowed only when `base == 16`, and at least one digit must remain after the prefix.\n- Return `true` only when every remaining character is a digit whose value is strictly less than `base`. Null, empty text, signs, spaces, underscores, and invalid bases return `false`.\n\nExamples\n- `isValidForBase(\"10110\", 2)` returns `true`.\n- `isValidForBase(\"0Xff\", 16)` returns `true`.\n- `isValidForBase(\"128\", 8)` returns `false`.\n",
+  "examples": [
+    {
+      "input": "digits = \"10110\", base = 2",
+      "output": "true"
+    },
+    {
+      "input": "digits = \"0Xff\", base = 16",
+      "output": "true"
+    },
+    {
+      "input": "digits = \"128\", base = 8",
+      "output": "false"
+    }
+  ],
+  "hints": [
+    "Convert each character to its numeric value instead of building a list of all valid characters.",
+    "Handle the optional hexadecimal prefix before checking the remaining digits.",
+    "Reject invalid bases and use `Character.digit(ch, base)` or equivalent logic. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: digits followed by base, for example: 0xFF 16",
+  "sampleInput": "0xFF 16",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

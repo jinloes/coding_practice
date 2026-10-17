@@ -1,0 +1,52 @@
+{
+
+  "id": "summarize-integer-ranges",
+
+  "title": "Summarize Integer Ranges",
+
+  "topic": "Arrays",
+
+  "difficulty": "Easy",
+
+  "statement": "Turn a sorted list of distinct integers into compact range labels.\n\nContract\n- `numbers` is non-null, sorted in ascending order, and contains no duplicates. It may be empty and values may be negative.\n- Return one string for each maximal consecutive run. A single value is written as the value itself; a longer run is written as `start-end`.\n- Preserve the order of the runs and do not mutate `numbers`.\n\nExamples\n- `summarize(new int[]{0, 1, 2, 4, 5, 7})` returns `[\"0-2\", \"4-5\", \"7\"]`.\n- `summarize(new int[]{-3, -2, 0, 2, 3, 4})` returns `[\"-3--2\", \"0\", \"2-4\"]`.\n",
+
+  "examples": [
+
+    {
+
+      "input": "numbers = [0, 1, 2, 4, 5, 7]",
+
+      "output": "[0-2, 4-5, 7]"
+
+    },
+
+    {
+
+      "input": "numbers = [-3, -2, 0, 2, 3, 4]",
+
+      "output": "[-3--2, 0, 2-4]"
+
+    }
+
+  ],
+
+  "hints": [
+
+    "Scan from the start of each run until the next value is not exactly one larger.",
+
+    "Delay writing a label until you know the run final value.",
+
+    "Each input value belongs to exactly one run, so the intended solution is one pass with output-sized space."
+
+  ],
+
+  "inputSyntax": "Input: sorted distinct integers, for example: [0, 1, 2, 4, 5, 7]",
+
+  "sampleInput": "[0, 1, 2, 4, 5, 7]",
+
+  "intendedTime": "O(n)",
+
+  "intendedSpace": "O(1)"
+
+}
+

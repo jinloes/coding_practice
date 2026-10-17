@@ -22,6 +22,9 @@
     "min-cost-connect-points",
     "signal-delay-time",
     "rising-water-path",
-    "cheapest-flights-k-stops"
+    "cheapest-flights-k-stops",
+    "employee-news-spread-time",
+    "grid-obstacle-shortest-path",
+    "grouped-dependency-order"
   ]
 }

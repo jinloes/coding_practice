@@ -1,0 +1,30 @@
+{
+  "id": "high-access-employees",
+  "title": "High Access Employees",
+  "topic": "Sliding Window",
+  "difficulty": "Medium",
+  "statement": "Find employees who badge in too frequently.\n\nContract\n- `accesses` is non-null. Each access has an employee name and a four-character `HHmm` time on a single day.\n- Return employee names, sorted alphabetically, for anyone with at least three accesses in a window strictly shorter than 60 minutes.\n- Multiple accesses at the same minute count separately. Do not mutate the input list.\n\nExamples\n- `alice@0830 alice@0850 alice@0920 bob@1200` returns `[alice]`.\n- `amy@1000 amy@1030 amy@1100` returns `[]` because the span is exactly 60 minutes.\n- `zoe@0000 zoe@0000 zoe@0001` returns `[zoe]`.\n",
+  "examples": [
+    {
+      "input": "alice@0830 alice@0850 alice@0920 bob@1200",
+      "output": "[alice]"
+    },
+    {
+      "input": "amy@1000 amy@1030 amy@1100",
+      "output": "[]"
+    },
+    {
+      "input": "zoe@0000 zoe@0000 zoe@0001",
+      "output": "[zoe]"
+    }
+  ],
+  "hints": [
+    "Group times by employee before checking windows.",
+    "Sort each employee's minutes and look at every block of three consecutive accesses.",
+    "A three-access block identifies a qualifying employee when its last time minus first time is less than 60 minutes."
+  ],
+  "inputSyntax": "Input: name@HHmm access entries separated by spaces, for example: alice@0830 alice@0850 alice@0920 bob@1200",
+  "sampleInput": "alice@0830 alice@0850 alice@0920 bob@1200",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

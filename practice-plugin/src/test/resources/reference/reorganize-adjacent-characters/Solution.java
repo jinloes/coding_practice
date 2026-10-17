@@ -1,0 +1,3 @@
+package com.jinloes.practice;
+import java.util.*;
+public class Solution { private record E(char c,int n){} public static String reorganize(String text){ int[] counts=new int[26]; int max=0; for(char c:text.toCharArray()){max=Math.max(max,++counts[c-'a']);} if(max>(text.length()+1)/2)return ""; PriorityQueue<E> h=new PriorityQueue<>((a,b)->a.n!=b.n?Integer.compare(b.n,a.n):Character.compare(a.c,b.c)); for(int i=0;i<26;i++)if(counts[i]>0)h.add(new E((char)('a'+i),counts[i])); StringBuilder out=new StringBuilder(text.length()); E held=null; while(!h.isEmpty()){ E e=h.remove(); out.append(e.c); if(held!=null)h.add(held); held=e.n>1?new E(e.c,e.n-1):null; } return out.toString(); } }

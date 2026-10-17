@@ -1,0 +1,30 @@
+{
+  "id": "binary-tree-boundary-values",
+  "title": "Binary Tree Boundary Values",
+  "topic": "Binary Trees",
+  "difficulty": "Medium",
+  "statement": "List the values on the outside edge of a binary tree in counter-clockwise order.\n\nContract\n- `root` may be null. Return an empty list for an empty tree.\n- For a non-empty tree, return the root, then the left boundary excluding leaves, then all leaves left to right, then the right boundary excluding leaves in bottom-up order.\n- A single-node tree returns that one value once. Do not duplicate leaves or mutate the tree.\n\nExamples\n`boundaryValues(tree(1, 2, 3, 4, 5, 6, 7))` => `[1, 2, 4, 5, 6, 7, 3]`\n`boundaryValues(tree(1, null, 2, 3, 4))` => `[1, 3, 4, 2]`\n`boundaryValues(null)` => `[]`\n",
+  "examples": [
+    {
+      "input": "`boundaryValues(tree(1, 2, 3, 4, 5, 6, 7))`",
+      "output": "`[1, 2, 4, 5, 6, 7, 3]`"
+    },
+    {
+      "input": "`boundaryValues(tree(1, null, 2, 3, 4))`",
+      "output": "`[1, 3, 4, 2]`"
+    },
+    {
+      "input": "`boundaryValues(null)`",
+      "output": "`[]`"
+    }
+  ],
+  "hints": [
+    "Separate the outside into left edge, leaves, and right edge.",
+    "Leaves belong to the leaf phase, so skip them when collecting the side boundaries.",
+    "Collect the right boundary top-down into a temporary list, then append it reversed. Intended complexity: O(n) time and O(h) extra stack space plus the result."
+  ],
+  "inputSyntax": "Input: the tree in level order with null for missing children, for example: [1, 2, 3, 4, 5, 6, 7]",
+  "sampleInput": "[1, 2, 3, 4, 5, 6, 7]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

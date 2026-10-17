@@ -1,0 +1,2 @@
+package com.jinloes.practice;
+final class Workload { static final String UNIT = "character"; static final int[] SIZES = {4096,8192,16384,32768,65536}; private Workload() {} static Object prepare(int size) { return "abccba".repeat(size / 6 + 1); } static void run(Object state) { if (!Solution.canPermutePalindrome((String) state)) throw new IllegalStateException(); } static int units(int size) { return 1; } }

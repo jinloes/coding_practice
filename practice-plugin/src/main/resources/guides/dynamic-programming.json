@@ -28,6 +28,14 @@
     "distinct-subsequence-count",
     "edit-distance",
     "balloon-burst-max",
-    "dot-star-matching"
+    "dot-star-matching",
+    "max-grid-path-sum",
+    "longest-zigzag-subsequence",
+    "max-stock-profit-two-transactions",
+    "subset-sum-decision",
+    "pascal-triangle-rows",
+    "multiplier-end-pick-score",
+    "microwave-timer-min-cost",
+    "max-painting-profit"
   ]
 }

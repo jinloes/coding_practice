@@ -1,0 +1,26 @@
+{
+  "id": "minimum-rescue-boats",
+  "title": "Minimum Rescue Boats",
+  "topic": "Greedy",
+  "difficulty": "Medium",
+  "statement": "Pair people into the fewest weight-limited boats.\n\nContract\n- `people` is non-null and may be empty. Each weight is positive and no single weight exceeds `limit`.\n- Each boat may carry at most two people, and their combined weight must be at most `limit`. Return the minimum number of boats needed for everyone.\n- Do not mutate `people`.\n\nExamples\n- `minBoats(new int[]{1, 2}, 3)` returns `1`.\n- `minBoats(new int[]{3, 2, 2, 1}, 3)` returns `3`.\n",
+  "examples": [
+    {
+      "input": "people = [1, 2], limit = 3",
+      "output": "1"
+    },
+    {
+      "input": "people = [3, 2, 2, 1], limit = 3",
+      "output": "3"
+    }
+  ],
+  "hints": [
+    "Sort the weights so you can reason about the lightest and heaviest remaining people.",
+    "The heaviest remaining person must take a boat now; pair them with the lightest person only if that fits.",
+    "After that decision, remove the heaviest person and repeat with two pointers."
+  ],
+  "inputSyntax": "Input: people weights followed by the boat limit, for example: [3, 2, 2, 1] 3",
+  "sampleInput": "[3, 2, 2, 1] 3",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

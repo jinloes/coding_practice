@@ -1,0 +1,30 @@
+{
+  "id": "substring-index",
+  "title": "Substring Index",
+  "topic": "Strings",
+  "difficulty": "Easy",
+  "statement": "Find where a pattern first appears inside a larger string.\n\nContract\n- `text` and `pattern` may be null. Return `-1` if either argument is null.\n- Return the zero-based index of the first occurrence of `pattern` in `text`, or `-1` when it is absent.\n- The empty pattern is found at index `0`, including in an empty text.\n- Do not use `String.indexOf`, `String.contains`, or regular expressions in the implementation. Do not mutate either input.\n\nExamples\n- `substringIndex(\"abc123\", \"abc\")` returns `0`.\n- `substringIndex(\"abc123\", \"c12\")` returns `2`.\n- `substringIndex(\"abc123\", \"xyz\")` returns `-1`.\n",
+  "examples": [
+    {
+      "input": "text = \"abc123\", pattern = \"abc\"",
+      "output": "0"
+    },
+    {
+      "input": "text = \"abc123\", pattern = \"c12\"",
+      "output": "2"
+    },
+    {
+      "input": "text = \"abc123\", pattern = \"xyz\"",
+      "output": "-1"
+    }
+  ],
+  "hints": [
+    "A direct nested scan is a useful baseline: try every starting position and compare the pattern characters.",
+    "When a partial match fails, keep information about the longest pattern prefix that is also a suffix of what already matched.",
+    "Build a KMP prefix table for the pattern, then scan the text once. Intended complexity: O(n) time for the combined input length and O(n) extra space for the pattern table."
+  ],
+  "inputSyntax": "Input: text, then pattern separated by |, for example: abc123|c12",
+  "sampleInput": "abc123|c12",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

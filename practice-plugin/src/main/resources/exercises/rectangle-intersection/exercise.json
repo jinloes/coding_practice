@@ -1,0 +1,30 @@
+{
+  "id": "rectangle-intersection",
+  "title": "Rectangle Intersection",
+  "topic": "Math",
+  "difficulty": "Medium",
+  "statement": "Find the positive-area overlap of two axis-aligned rectangles.\n\nContract\n- Rectangles are non-null and described by their lower-left corner `x`, `y`, plus positive `width` and `height`.\n- Return a new `Rectangle` describing the area shared by both inputs, or `null` when they do not overlap with positive width and positive height.\n- Rectangles that only touch along an edge or at a corner do not intersect for this exercise.\n- Coordinates may be negative. Use wide arithmetic for edge calculations so large coordinates do not overflow.\n\nExamples\n- `intersection(rect(0, 0, 4, 3), rect(2, 1, 4, 4))` returns `rect(2, 1, 2, 2)`.\n- `intersection(rect(0, 0, 2, 2), rect(2, 0, 2, 2))` returns `null`.\n- `intersection(rect(-3, -2, 4, 4), rect(-1, -5, 3, 5))` returns `rect(-1, -2, 2, 2)`.\n",
+  "examples": [
+    {
+      "input": "first = (0, 0, 4, 3), second = (2, 1, 4, 4)",
+      "output": "(2, 1, 2, 2)"
+    },
+    {
+      "input": "first = (0, 0, 2, 2), second = (2, 0, 2, 2)",
+      "output": "null"
+    },
+    {
+      "input": "first = (-3, -2, 4, 4), second = (-1, -5, 3, 5)",
+      "output": "(-1, -2, 2, 2)"
+    }
+  ],
+  "hints": [
+    "Compute each rectangle's left, right, bottom, and top edges.",
+    "The overlap starts at the larger left/bottom edge and ends at the smaller right/top edge.",
+    "There is an intersection only when both overlap lengths are positive. Intended complexity: O(1) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: two rectangles as x y width height; x y width height, for example: 0 0 4 3; 2 1 4 4",
+  "sampleInput": "0 0 4 3; 2 1 4 4",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

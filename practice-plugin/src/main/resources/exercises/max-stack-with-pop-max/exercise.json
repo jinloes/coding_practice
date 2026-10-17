@@ -1,0 +1,26 @@
+{
+  "id": "max-stack-with-pop-max",
+  "title": "Max Stack With Pop Max",
+  "topic": "Stacks",
+  "difficulty": "Hard",
+  "statement": "Build a stack of integers that can also reveal and remove the current maximum value.\n\nContract\n- Construct an empty stack with `new Solution()`.\n- `push(x)` places `x` on top. `pop()` removes and returns the top value. `top()` returns the top value without removing it.\n- `peekMax()` returns the largest value currently in the stack.\n- `popMax()` removes and returns the largest value; if the maximum occurs more than once, remove the one closest to the top.\n- Tests only call read/remove operations when the stack is non-empty.\n\nExamples\n- Pushing `5, 1, 5`, then calling `top()` returns `5`.\n- Continuing from that stack, `popMax()` returns `5`, and the remaining top is `1`.\n",
+  "examples": [
+    {
+      "input": "ops = push 5, push 1, push 5, top, popMax, top, peekMax, pop",
+      "output": "[5, 5, 1, 5, 1]"
+    },
+    {
+      "input": "ops = push -2, push 7, push 7, popMax, popMax, pop",
+      "output": "[7, 7, -2]"
+    }
+  ],
+  "hints": [
+    "Keep the normal stack order separately from the ordering by value.",
+    "Give each pushed value a strictly increasing sequence number so equal maxima can be ordered by recency.",
+    "A balanced tree keyed by stack position and another keyed by value plus position supports each operation in logarithmic time."
+  ],
+  "inputSyntax": "Input: operations separated by commas, for example: push 5, push 1, push 5, top, popMax, top",
+  "sampleInput": "push 5, push 1, push 5, top, popMax, top",
+  "intendedTime": "O(log n)",
+  "intendedSpace": "O(1)"
+}

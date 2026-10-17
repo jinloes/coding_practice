@@ -1,0 +1,30 @@
+{
+  "id": "rolling-hit-counter",
+  "title": "Rolling Hit Counter",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Design a counter that records event timestamps and reports how many landed inside the latest 300-second rolling window.\n\nContract\n- Create a new `Solution` with an empty history and a fixed 300-second window.\n- `hit(timestamp)` records one event at that integer timestamp. Calls are made with nondecreasing timestamps, and multiple hits at the same timestamp are distinct.\n- `hitsInLastWindow(timestamp)` returns the number of recorded hits with time strictly greater than `timestamp - 300` and less than or equal to `timestamp`. Older hits may be discarded.\n- Timestamps are non-negative `int` values.\n\nExamples\n`hit(1), hit(2), hit(300), hitsInLastWindow(300)` => `3`\n`hit(1), hit(301), hitsInLastWindow(301)` => `1`\n`hit(5), hit(5), hit(304), hitsInLastWindow(304)` => `3`\n",
+  "examples": [
+    {
+      "input": "`hit(1), hit(2), hit(300), hitsInLastWindow(300)`",
+      "output": "`3`"
+    },
+    {
+      "input": "`hit(1), hit(301), hitsInLastWindow(301)`",
+      "output": "`1`"
+    },
+    {
+      "input": "`hit(5), hit(5), hit(304), hitsInLastWindow(305)`",
+      "output": "`3`"
+    }
+  ],
+  "hints": [
+    "Keep every timestamp in a queue before optimizing.",
+    "When a query or hit arrives, remove timestamps at or before `current - 300`.",
+    "Compress equal timestamps into `(time, count)` entries so repeated hits do not require repeated cleanup work. Intended complexity: O(1) amortized time per operation and O(1) space because the window is fixed at 300 seconds."
+  ],
+  "inputSyntax": "Input: semicolon-separated operations hit <time> and count <time>, for example: hit 1; hit 2; hit 300; count 300",
+  "sampleInput": "hit 1; hit 2; hit 300; count 300",
+  "intendedTime": "O(1)",
+  "intendedSpace": "O(1)"
+}

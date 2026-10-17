@@ -18,6 +18,10 @@
     "rot-spread-time",
     "nearest-gate-distance",
     "rising-water-path",
-    "longest-increasing-grid-path"
+    "longest-increasing-grid-path",
+    "grid-pattern-search",
+    "max-grid-path-sum",
+    "row-column-sorted-matrix-search",
+    "grid-obstacle-shortest-path"
   ]
 }
