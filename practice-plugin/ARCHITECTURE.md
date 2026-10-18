@@ -114,7 +114,7 @@ selected guide or, when no guide is selected, the selected track, `LimitsDialog`
 execution limits, and `PracticeViews` provides stateless Swing building blocks;
 none of them hold panel state. Pass marks come from
 `ManagedPracticeProgress.passedExerciseIds()`, derived from stored history.
-`ExerciseCellRenderer`, `ResultsView`, `PracticeActions` (the run toolbar and
+`ExerciseCellRenderer`, `ResultsView`, `HintButton`, `PracticeActions` (the run toolbar and
 title actions), and `CustomInputPrompt` are the native Swing pieces.
 
 #### Problem and Study Guide pages

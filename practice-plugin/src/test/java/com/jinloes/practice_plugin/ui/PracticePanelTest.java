@@ -4,6 +4,9 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.testFramework.EdtTestUtil;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
+import com.intellij.ui.components.JBList;
+import com.intellij.util.ui.UIUtil;
+import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.run.PracticeRunner;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
@@ -12,8 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -121,6 +127,41 @@ class PracticePanelTest {
             assertThat(filters.shownGuide()).isNull();
             assertThat(filters.visible(Set.of())).containsExactlyElementsOf(ExerciseCatalog.all());
         });
+    }
+
+    @Test
+    void revealNextHintIsDisabledWithItsReasonUntilAnAttemptIsSelected() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticePanel panel = new PracticePanel(fixture.getProject());
+            try {
+                @SuppressWarnings("unchecked")
+                JBList<Exercise> list = UIUtil.findComponentsOfType(panel, JBList.class).stream()
+                        .filter(candidate -> candidate.getModel().getSize() > 0
+                                && candidate.getModel().getElementAt(0) instanceof Exercise)
+                        .findFirst().orElseThrow();
+                Exercise withoutAttempts = ExerciseCatalog.all().stream()
+                        .filter(exercise -> attemptsOf(exercise).isEmpty())
+                        .findFirst().orElseThrow();
+                list.setSelectedValue(withoutAttempts, true);
+                assertThat(list.getSelectedValue()).isEqualTo(withoutAttempts);
+
+                var button = panel.hintButton().component();
+                assertThat(button.isEnabled())
+                        .as("an exercise without attempts is selected, so no attempt is selected")
+                        .isFalse();
+                assertThat(button.getToolTipText()).isEqualTo("Start or resume an attempt to reveal hints");
+            } finally {
+                Disposer.dispose(panel);
+            }
+        });
+    }
+
+    private static List<ManagedPracticeWorkspace.Attempt> attemptsOf(Exercise exercise) {
+        try {
+            return ManagedPracticeWorkspace.get().attempts(exercise.id());
+        } catch (IOException error) {
+            throw new UncheckedIOException(error);
+        }
     }
 
     @Test

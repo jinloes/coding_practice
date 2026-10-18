@@ -15,6 +15,8 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** The Results tab: a status banner and check history above the latest details or run output. */
 final class ResultsView {
@@ -75,6 +77,54 @@ final class ResultsView {
         setBanner(AllIcons.General.Error, "Action failed");
         history.setText("");
         setOutput(text);
+    }
+
+    /** Shows the banner for a finished example or custom-input run, chosen from its finished text. */
+    void showRunFinished(String text) {
+        RunBanner run = runBanner(text);
+        setBanner(switch (run.outcome()) {
+            case STALE -> AllIcons.General.Warning;
+            case PASSED -> AllIcons.RunConfigurations.TestPassed;
+            case FAILED -> AllIcons.RunConfigurations.TestFailed;
+            case ERROR -> AllIcons.RunConfigurations.TestError;
+            case INFO -> AllIcons.General.Information;
+        }, run.text());
+        history.setText("");
+    }
+
+    enum RunOutcome { STALE, PASSED, FAILED, INFO, ERROR }
+
+    record RunBanner(RunOutcome outcome, String text) {}
+
+    private static final Pattern EXIT_CODE = Pattern.compile("session finished \\(exit (-?\\d+)\\)");
+
+    /** Maps a finished run's text to its banner; the text contract comes from {@code RunDecisions}. */
+    static RunBanner runBanner(String text) {
+        String finished = text == null ? "" : text;
+        if (finished.startsWith("STALE:")) {
+            return new RunBanner(RunOutcome.STALE, "Example result is stale");
+        }
+        Matcher exit = EXIT_CODE.matcher(finished);
+        if (exit.find()) {
+            String code = exit.group(1);
+            boolean succeeded = "0".equals(code);
+            if (finished.contains("Example session finished (exit ")) {
+                return succeeded ? new RunBanner(RunOutcome.PASSED, "Examples passed")
+                        : new RunBanner(RunOutcome.FAILED,
+                        "Examples did not finish successfully (exit " + code + "); see the Run console");
+            }
+            if (finished.contains("Input session finished (exit ")) {
+                return succeeded
+                        ? new RunBanner(RunOutcome.INFO, "Input run finished; see the Run console for the output")
+                        : new RunBanner(RunOutcome.ERROR,
+                        "Input run did not complete (exit " + code + "); see the Run console");
+            }
+        }
+        if (finished.startsWith("Example compilation") || finished.startsWith("Example launch")
+                || finished.contains("example runner is not owned")) {
+            return new RunBanner(RunOutcome.ERROR, "Examples could not run; see details below");
+        }
+        return new RunBanner(RunOutcome.INFO, "Run finished");
     }
 
     void showMessage(String title, String text) {

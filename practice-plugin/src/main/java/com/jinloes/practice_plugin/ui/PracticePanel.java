@@ -69,6 +69,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     private final JBTabbedPane tabs = new JBTabbedPane();
     private final JBTextArea hints = PracticeViews.textArea();
     private final ResultsView results = new ResultsView();
+    private final HintButton hintButton = new HintButton(() -> guarded(this::revealHint));
     private final JBLabel status = new JBLabel("Choose an exercise.");
     private final ActionToolbar toolbar;
     private final List<AnAction> titleActions = new ArrayList<>();
@@ -124,7 +125,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         JPanel hintPanel = new JPanel(new BorderLayout());
         hintPanel.add(new JBScrollPane(hints), BorderLayout.CENTER);
         JPanel hintActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        button(hintActions, "Reveal Next Hint", this::revealHint);
+        hintActions.add(hintButton.component());
         hintPanel.add(hintActions, BorderLayout.SOUTH);
         tabs.addTab("Hints", hintPanel);
         tabs.addTab("Results", results.component());
@@ -258,11 +259,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         }
         progress.getState().selectedAttempts.put(exercise.id(), attempt.id());
         var entry = progress.entry(attempt.id(), exercise.id());
-        hints.setText(String.join("\n\n", exercise.hints().subList(
-                0, Math.min(entry.hintsRevealed, exercise.hints().size()))));
-        if (hints.getText().isEmpty()) {
-            hints.setText("Hints are optional. Reveal one only when you want help.");
-        }
+        hints.setText(HintButton.revealedText(exercise.hints(), entry.hintsRevealed));
         status.setText("Attempt " + attempt.id() + ": " + ResultsView.label(entry.status));
         results.showEntry(entry);
         if (!entry.checkedFingerprint.isEmpty()) {
@@ -390,6 +387,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     }
 
     private void updateButtons() {
+        hintButton.update(selectedAttemptOrNull() != null);
         toolbar.updateActionsAsync();
     }
 
@@ -407,6 +405,10 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
 
     private ManagedPracticeWorkspace.Attempt selectedAttemptOrNull() {
         return (ManagedPracticeWorkspace.Attempt) attempts.getSelectedItem();
+    }
+
+    HintButton hintButton() {
+        return hintButton;
     }
 
     private boolean isLegacyWorkspace() {
@@ -454,7 +456,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         } else if (checking && attempt != null && exercise != null) {
             results.showStatus(progress.entry(attempt.id(), exercise.id()));
         } else {
-            results.showMessage("Run finished", "");
+            results.showRunFinished(text);
         }
         results.showOutput(text);
         if (hasUnsavedAttemptFile()) {

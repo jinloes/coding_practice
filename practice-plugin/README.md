@@ -71,7 +71,10 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    **Debug With Input...** prompts the same way and launches that case under the
    debugger. Every mode uses a temporary native Application configuration, so a
    breakpoint in the solution gives IntelliJ's usual stepping and variable
-   inspection.
+   inspection. After a run the **Results** banner says whether the examples
+   passed, did not finish successfully, or could not run; custom input only
+   points you to the Run console. **Reveal Next Hint** is available once an
+   attempt is started or resumed.
 5. **Check Solution** copies the saved solution and bundled tests to a unique
    plugin-owned workspace, then executes examples and additional correctness cases
    with Java 17 compatibility. Read
