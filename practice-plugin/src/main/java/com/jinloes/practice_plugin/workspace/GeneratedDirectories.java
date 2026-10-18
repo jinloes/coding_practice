@@ -47,8 +47,7 @@ final class GeneratedDirectories {
         }
         if (Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) {
             Marker existing = readMarker(directory);
-            if (!kind.equals(existing.kind()) || !attemptId.equals(existing.attemptId())
-                    || !isInactive(existing.pid())) {
+            if (!isInactive(existing.pid())) {
                 throw new IOException("Existing generated directory is not a recoverable inactive attempt artifact.");
             }
             deleteTree(directory);

@@ -21,6 +21,11 @@ public final class PracticeWorkspace {
 
     private PracticeWorkspace() {}
 
+    @FunctionalInterface
+    interface MarkerReader {
+        String read(Path marker) throws IOException;
+    }
+
     public record Attempt(String id, String exerciseId, String revision, Path directory) {
         public Path solution() {
             return directory.resolve(ManagedPracticeWorkspace.SOLUTION_PATH);
@@ -28,11 +33,15 @@ public final class PracticeWorkspace {
     }
 
     public static boolean isWorkspace(Path root) {
+        return isWorkspace(root, Files::readString);
+    }
+
+    static boolean isWorkspace(Path root, MarkerReader reader) {
         if (!Files.isRegularFile(root.resolve(MARKER))) {
             return false;
         }
         try {
-            return "schema=1".equals(Files.readString(root.resolve(MARKER)).trim());
+            return "schema=1".equals(reader.read(root.resolve(MARKER)).trim());
         } catch (IOException e) {
             java.util.logging.Logger.getLogger(PracticeWorkspace.class.getName())
                     .log(java.util.logging.Level.WARNING, "Cannot read practice workspace marker: " + root, e);

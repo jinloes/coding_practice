@@ -167,6 +167,20 @@ class OwnedDirectoryTest {
     }
 
     @Test
+    void preservesCandidateWhenFilterCannotDecideOwnership() throws Exception {
+        OwnedDirectory owned = base("owned");
+        Path uncertain = owned.resolve("uncertain");
+        owned.create(uncertain, "schema=1\npid=" + deadPid() + "\n");
+        Files.writeString(uncertain.resolve("payload"), "keep", StandardCharsets.UTF_8);
+
+        owned.cleanupAbandoned((candidate, marker) -> {
+            throw new SecurityException("ACL changed while checking");
+        });
+
+        assertThat(uncertain.resolve("payload")).hasContent("keep");
+    }
+
+    @Test
     void preservesEverythingWhenTheOwnedBaseIsMissingOrSymlinked() throws Exception {
         OwnedDirectory missing = base("never-created");
         missing.cleanupAbandoned((candidate, marker) -> true);
@@ -182,6 +196,22 @@ class OwnedDirectoryTest {
         symlinked.cleanupAbandoned((candidate, marker) -> true);
 
         assertThat(child).as("a symlinked owned base is never walked").isDirectory();
+    }
+
+    @Test
+    void preservesEverythingWhenTheOwnedBaseCannotBeListed() throws Exception {
+        OwnedDirectory normal = base("owned");
+        Path child = normal.resolve("child");
+        normal.create(child, "schema=1\npid=" + deadPid() + "\n");
+        Files.writeString(child.resolve("payload"), "keep", StandardCharsets.UTF_8);
+        OwnedDirectory failingList = OwnedDirectory.under(
+                normal.base(), MARKER, directory -> {
+                    throw new IOException("directory disappeared");
+                });
+
+        failingList.cleanupAbandoned((candidate, marker) -> true);
+
+        assertThat(child.resolve("payload")).hasContent("keep");
     }
 
     private OwnedDirectory base(String name) {

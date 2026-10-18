@@ -30,6 +30,11 @@ public final class VerificationWorkspace {
     private final OwnedDirectory owned;
     private final Path resultDirectory;
 
+    @FunctionalInterface
+    interface ResourceOpener {
+        InputStream open(String path);
+    }
+
     public static VerificationWorkspace create(
             ManagedPracticeWorkspace.Attempt attempt,
             ExerciseCatalog.Exercise exercise,
@@ -44,13 +49,23 @@ public final class VerificationWorkspace {
             ExerciseCatalog.Exercise exercise,
             String fingerprint
     ) throws IOException {
+        return createAt(base, attempt, exercise, fingerprint, VerificationWorkspace.class::getResourceAsStream);
+    }
+
+    static VerificationWorkspace createAt(
+            Path base,
+            ManagedPracticeWorkspace.Attempt attempt,
+            ExerciseCatalog.Exercise exercise,
+            String fingerprint,
+            ResourceOpener opener
+    ) throws IOException {
         Path normalizedBase = base.toAbsolutePath().normalize();
         OwnedDirectory owned = owned(normalizedBase);
         Path root = owned.resolve(UUID.randomUUID().toString());
         owned.create(root, markerText("created", -1, fingerprint));
         VerificationWorkspace workspace = new VerificationWorkspace(normalizedBase, root);
         try {
-            workspace.writeProject(attempt, exercise);
+            workspace.writeProject(attempt, exercise, opener);
             return workspace;
         } catch (IOException | RuntimeException failure) {
             workspace.deleteOwnedTree();
@@ -132,7 +147,10 @@ public final class VerificationWorkspace {
         });
     }
 
-    private void writeProject(ManagedPracticeWorkspace.Attempt attempt, ExerciseCatalog.Exercise exercise)
+    private void writeProject(
+            ManagedPracticeWorkspace.Attempt attempt,
+            ExerciseCatalog.Exercise exercise,
+            ResourceOpener opener)
             throws IOException {
         Path source = root.resolve(ManagedPracticeWorkspace.SOLUTION_PATH);
         Path tests = root.resolve("src/test/java/com/jinloes/practice");
@@ -140,20 +158,20 @@ public final class VerificationWorkspace {
         Files.createDirectories(tests);
         Files.copy(attempt.solution(), source);
         Files.writeString(source.resolveSibling("Workload.java"),
-                ExerciseCatalog.resource(exercise, "Workload.java"), StandardCharsets.UTF_8);
+                readResource(opener, "/exercises/" + exercise.id() + "/Workload.java"), StandardCharsets.UTF_8);
         Files.writeString(source.resolveSibling("ComplexityProbe.java"),
-                ExerciseCatalog.harness("ComplexityProbe.java"), StandardCharsets.UTF_8);
+                readResource(opener, "/harness/ComplexityProbe.java"), StandardCharsets.UTF_8);
         Files.writeString(tests.resolve("ExamplesTest.java"),
-                ExerciseCatalog.resource(exercise, "ExamplesTest.java"), StandardCharsets.UTF_8);
+                readResource(opener, "/exercises/" + exercise.id() + "/ExamplesTest.java"), StandardCharsets.UTF_8);
         Files.writeString(tests.resolve("CorrectnessTest.java"),
-                ExerciseCatalog.resource(exercise, "CorrectnessTest.java"), StandardCharsets.UTF_8);
+                readResource(opener, "/exercises/" + exercise.id() + "/CorrectnessTest.java"), StandardCharsets.UTF_8);
         Files.writeString(root.resolve("settings.gradle"), "rootProject.name = 'algorithm-practice-verification'\n",
                 StandardCharsets.UTF_8);
-        Files.writeString(root.resolve("build.gradle"), buildScript(), StandardCharsets.UTF_8);
+        Files.writeString(root.resolve("build.gradle"), buildScript(opener), StandardCharsets.UTF_8);
         for (String name : BOOTSTRAP) {
             Path destination = root.resolve(name);
             Files.createDirectories(destination.getParent());
-            try (InputStream input = VerificationWorkspace.class.getResourceAsStream("/bootstrap/" + name)) {
+            try (InputStream input = opener.open("/bootstrap/" + name)) {
                 if (input == null) {
                     throw new IOException("Plugin is missing Gradle bootstrap resource: " + name);
                 }
@@ -222,8 +240,12 @@ public final class VerificationWorkspace {
     private record Marker(String state, long pid) {
     }
 
-    private static String buildScript() throws IOException {
-        try (InputStream input = VerificationWorkspace.class.getResourceAsStream(BUILD_SCRIPT)) {
+    static String buildScript() throws IOException {
+        return buildScript(VerificationWorkspace.class::getResourceAsStream);
+    }
+
+    private static String buildScript(ResourceOpener opener) throws IOException {
+        try (InputStream input = opener.open(BUILD_SCRIPT)) {
             if (input == null) {
                 throw new IOException("Plugin is missing Gradle verification script resource: " + BUILD_SCRIPT);
             }
@@ -232,6 +254,15 @@ public final class VerificationWorkspace {
                 throw new IOException("Verification build script was packaged with unreplaced placeholders.");
             }
             return script;
+        }
+    }
+
+    private static String readResource(ResourceOpener opener, String path) throws IOException {
+        try (InputStream input = opener.open(path)) {
+            if (input == null) {
+                throw new IOException("Plugin is missing verification resource: " + path);
+            }
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 }

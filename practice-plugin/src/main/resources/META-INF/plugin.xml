@@ -12,6 +12,7 @@
     <depends>com.intellij.gradle</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
     <depends>JUnit</depends>
+    <depends optional="true" config-file="practice-jcef.xml">com.intellij.modules.jcef</depends>
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Practice" anchor="right"
                     factoryClass="com.jinloes.practice_plugin.ui.PracticeToolWindowFactory"/>

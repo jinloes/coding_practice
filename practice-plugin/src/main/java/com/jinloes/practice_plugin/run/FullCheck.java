@@ -104,43 +104,66 @@ final class FullCheck {
             return handler;
         } catch (IOException | ExecutionException | IllegalArgumentException exception) {
             if (workspace != null) {
-                try {
-                    workspace.markFinished("launch-failed");
-                    workspace.cleanupAfterRun();
-                } catch (IOException ignored) {
-                    // Preserve uncertain workspaces.
-                }
+                cleanupLaunchFailure(workspace);
             }
             throw exception;
         }
     }
 
-    private void scheduleWatchdog(ProcessHandler handler, RunSession.RunControl control, Path resultRoot,
+    void scheduleWatchdog(ProcessHandler handler, RunSession.RunControl control, Path resultRoot,
                                   long setupStarted, int suiteSeconds) {
-        control.watchdog(AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
-            if (handler.isProcessTerminated()) {
-                return;
-            }
-            control.captureChildrenOf(handler);
-            try {
-                Path started = resultRoot.resolve("started");
-                boolean expired = Files.isRegularFile(started)
-                        ? System.currentTimeMillis() - Files.getLastModifiedTime(started).toMillis() > suiteSeconds * 1000L
-                        : System.nanoTime() - setupStarted > SETUP_LIMIT_NANOS;
-                if (expired) {
-                    control.requestStop(TIMED_OUT, Files.isRegularFile(started)
-                            ? "Tests exceeded " + suiteSeconds + " seconds. The owned process tree was stopped."
-                            : "Setup/compilation exceeded five minutes. Check SDK, network, and Run output.");
-                    stop.run();
-                }
-            } catch (IOException exception) {
-                control.requestStop(RUNNER_ERROR, "Cannot inspect execution timer: " + exception.getMessage());
-                stop.run();
-            }
-        }, 0, 250, TimeUnit.MILLISECONDS));
+        control.watchdog(AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() ->
+                runWatchdogTick(handler, control, resultRoot, setupStarted, suiteSeconds),
+                0, 250, TimeUnit.MILLISECONDS));
         if (handler.isProcessTerminated()) {
             control.cancelWatchdog();
         }
+    }
+
+    void runWatchdogTick(ProcessHandler handler, RunSession.RunControl control, Path resultRoot,
+                         long setupStarted, int suiteSeconds) {
+        runWatchdogTick(handler, control, suiteSeconds, () -> timerState(resultRoot, setupStarted));
+    }
+
+    void runWatchdogTick(ProcessHandler handler, RunSession.RunControl control, int suiteSeconds, TimerReader timer) {
+        if (handler.isProcessTerminated()) {
+            return;
+        }
+        control.captureChildrenOf(handler);
+        try {
+            WatchdogStop expired = watchdogStop(timer.read(), suiteSeconds);
+            if (expired != null) {
+                control.requestStop(expired.reason(), expired.details());
+                stop.run();
+            }
+        } catch (IOException exception) {
+            control.requestStop(RUNNER_ERROR, "Cannot inspect execution timer: " + exception.getMessage());
+            stop.run();
+        }
+    }
+
+    static TimerState timerState(Path resultRoot, long setupStarted) throws IOException {
+        Path started = resultRoot.resolve("started");
+        boolean testsStarted = Files.isRegularFile(started);
+        return new TimerState(testsStarted, testsStarted
+                ? System.currentTimeMillis() - Files.getLastModifiedTime(started).toMillis()
+                : System.nanoTime() - setupStarted);
+    }
+
+    static WatchdogStop watchdogStop(TimerState timer, int suiteSeconds) {
+        return watchdogStop(timer.testsStarted(), timer.elapsed(), suiteSeconds);
+    }
+
+    static WatchdogStop watchdogStop(boolean testsStarted, long elapsed, int suiteSeconds) {
+        if (testsStarted && elapsed > suiteSeconds * 1000L) {
+            return new WatchdogStop(TIMED_OUT,
+                    "Tests exceeded " + suiteSeconds + " seconds. The owned process tree was stopped.");
+        }
+        if (!testsStarted && elapsed > SETUP_LIMIT_NANOS) {
+            return new WatchdogStop(TIMED_OUT,
+                    "Setup/compilation exceeded five minutes. Check SDK, network, and Run output.");
+        }
+        return null;
     }
 
     private void finish(
@@ -157,36 +180,44 @@ final class FullCheck {
             if (control.stopReason() != null) {
                 result = stoppedResult(control);
             } else {
-                String phase = Files.isRegularFile(workspace.resultDirectory().resolve("phase"))
-                        ? Files.readString(workspace.resultDirectory().resolve("phase")) : "setup";
-                result = exitCode != 0 && phase.equals("compiling")
-                        ? new CheckResult(COMPILATION_FAILED, 0, 0,
-                        "Compilation failed. See the Run console for file and line diagnostics.")
-                        : TestReports.read(workspace.resultDirectory(), exercise.fullCount(), exitCode);
+                String phase = phaseOrSetup(workspace.resultDirectory());
+                result = resultForPhase(phase, exitCode,
+                        () -> TestReports.read(workspace.resultDirectory(), exercise.fullCount(), exitCode));
                 result = withMeasuredComplexity(result, exercise, workspace);
             }
             if (!fingerprint.equals(attempts.fingerprint(attempt))) {
                 result = staleResult(result);
             }
         } catch (IOException | UncheckedIOException | IllegalArgumentException exception) {
-            result = new CheckResult(RUNNER_ERROR, 0, 0, exception.getMessage());
+            result = resultProcessingFailure(exception);
         } finally {
             try {
                 workspace.markFinished(fingerprint);
                 workspace.cleanupAfterRun();
             } catch (IOException cleanupFailure) {
-                result = new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
-                        "Verification cleanup failed: " + cleanupFailure.getMessage());
+                result = cleanupFailureResult(result, cleanupFailure);
             }
             completion.finished(attempt, fingerprint, result);
         }
+    }
+
+    static String phaseOrSetup(Path resultDirectory) throws IOException {
+        Path phase = resultDirectory.resolve("phase");
+        return Files.isRegularFile(phase) ? Files.readString(phase) : "setup";
+    }
+
+    static CheckResult resultForPhase(String phase, int exitCode, ReportReader reports) throws IOException {
+        return exitCode != 0 && phase.equals("compiling")
+                ? new CheckResult(COMPILATION_FAILED, 0, 0,
+                "Compilation failed. See the Run console for file and line diagnostics.")
+                : reports.read();
     }
 
     /**
      * Attaches the scaling measurement to a passing result. The probe only runs after the suite
      * passes, and a missing or unreadable report never changes the verdict.
      */
-    private static CheckResult withMeasuredComplexity(
+    static CheckResult withMeasuredComplexity(
             CheckResult result,
             ExerciseCatalog.Exercise exercise,
             VerificationWorkspace workspace
@@ -194,23 +225,70 @@ final class FullCheck {
         if (result.status() != CheckResult.Status.PASSED) {
             return result;
         }
+        return withMeasuredComplexity(result, exercise.intendedTime(), exercise.intendedSpace(),
+                workspace.resultDirectory());
+    }
+
+    static CheckResult withMeasuredComplexity(
+            CheckResult result,
+            String intendedTime,
+            String intendedSpace,
+            Path resultDirectory
+    ) {
+        if (result.status() != CheckResult.Status.PASSED) {
+            return result;
+        }
         try {
-            return ComplexityAnalysis.read(workspace.resultDirectory())
+            return ComplexityAnalysis.read(resultDirectory)
                     .map(report -> result.withComplexity(
-                            report.render(exercise.intendedTime(), exercise.intendedSpace())))
+                            report.render(intendedTime, intendedSpace)))
                     .orElse(result);
         } catch (IOException | RuntimeException failure) {
             return result.withComplexity("Scaling measurement unavailable: " + failure.getMessage());
         }
     }
 
-    private static CheckResult stoppedResult(RunSession.RunControl control) {
+    static CheckResult stoppedResult(RunSession.RunControl control) {
         return new CheckResult(control.stopReason(), 0, 0, control.stopDetails() != null ? control.stopDetails()
                 : "Run cancelled. No passing result was recorded.");
     }
 
-    private static CheckResult staleResult(CheckResult result) {
+    static CheckResult staleResult(CheckResult result) {
         return new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
                 "STALE: files changed during this run. Check the current solution again.\n" + result.details());
+    }
+
+    static CheckResult resultProcessingFailure(Exception exception) {
+        return new CheckResult(RUNNER_ERROR, 0, 0, exception.getMessage());
+    }
+
+    static CheckResult cleanupFailureResult(CheckResult result, IOException cleanupFailure) {
+        return new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
+                "Verification cleanup failed: " + cleanupFailure.getMessage());
+    }
+
+    static void cleanupLaunchFailure(VerificationWorkspace workspace) {
+        try {
+            workspace.markFinished("launch-failed");
+            workspace.cleanupAfterRun();
+        } catch (IOException ignored) {
+            // Preserve uncertain workspaces.
+        }
+    }
+
+    record TimerState(boolean testsStarted, long elapsed) {
+    }
+
+    record WatchdogStop(CheckResult.Status reason, String details) {
+    }
+
+    @FunctionalInterface
+    interface ReportReader {
+        CheckResult read() throws IOException;
+    }
+
+    @FunctionalInterface
+    interface TimerReader {
+        TimerState read() throws IOException;
     }
 }

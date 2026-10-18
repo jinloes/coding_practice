@@ -30,6 +30,8 @@ practice-plugin/
   src/test/java/com/jinloes/practice_plugin/
   src/test/resources/reference/<id>/Solution.java
   src/test/resources/known-wrong/<id>/Solution.java
+  web/                      React + Mantine pages (Vite, TypeScript)
+    src/types.ts            JSON contract mirrored by ui/PageJson.java
 ```
 
 ## Package Responsibilities
@@ -39,9 +41,9 @@ practice-plugin/
 | `app` | Cross-package application use cases | `LegacyImportService` |
 | `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
-| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
+| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `ResultsView`, `PracticeActions`, `ExerciseCellRenderer`, `PageView` (`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
 | `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
@@ -53,11 +55,12 @@ types depend on UI or persistent-state types.
 Run from `practice-plugin/`:
 
 ```bash
-../gradlew test
-../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
-../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
-../gradlew buildPlugin
-../gradlew runIde
+./gradlew test
+./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
+./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
+./gradlew check            # full suite plus the coverage gate
+./gradlew buildPlugin
+./gradlew runIde
 ```
 
 The build is standalone and is deliberately not included by the repository
@@ -73,6 +76,25 @@ idle machine.
 
 Set `idePath` in `practice-plugin/gradle.properties` or user-level Gradle
 properties to use a local IDE. Never commit a real machine path.
+
+### Web pages
+
+`processResources` builds `web/` with a Gradle-downloaded Node (`npm ci`, then
+`npm run build`), so no local Node is needed for the plugin build. To iterate on
+the pages in a browser with sample data:
+
+```bash
+cd web && npm ci && npm run dev
+```
+
+- Change `web/src/types.ts` and `ui/PageJson.java` together, and update
+  `PageJsonTest`.
+- New page actions need a `PageEvent.Type`, a handler in
+  `PracticePanel.onPageEvent`, and a `PageEventTest` case.
+- Pages must work offline: Vite inlines all JS and CSS into one `index.html`,
+  so do not add runtime CDN or font URLs.
+- `HtmlPageView` is the fallback when JCEF is unavailable and in unit tests.
+  Keep it showing the same information, without the interactivity.
 
 ## Coding Conventions
 
@@ -107,6 +129,35 @@ properties to use a local IDE. Never commit a real machine path.
   parsing, and generated source behavior when changing those areas.
 - The runtime-only JUnit 4 dependency exists only because the IntelliJ fixture
   bootstrap references legacy APIs.
+
+### Coverage Gate
+
+JaCoCo runs with every `test` task and writes
+`build/reports/jacoco/test/html/index.html`. `jacocoTestCoverageVerification`
+is part of `check`. It reads the last run's `build/jacoco/test.exec`, so it can
+also run after test failures with `--continue`.
+
+- **Gated:** every package except `ui`, measured on the instrumented classes
+  (`instrumentCode`). The test IDE loads plugin classes with `PathClassLoader`,
+  which is why the test task sets `includeNoLocationClasses`.
+- **Minimums:** 98% line and 92% branch, a ratchet just below the 2026-10
+  baseline of 98.2% line and 92.8% branch (Windows, Developer Mode on so the
+  symlink tests run). Raise the minimums as coverage improves; never lower
+  them. Without symlink support, the symlink-safety tests fail and coverage
+  drops below the gate.
+- **Known uncoverable misses (not excluded, just accepted):**
+  - Branches that IntelliJ's `@NotNull` instrumentation adds, such as
+    `getState()` returns and some anonymous IDE wrappers.
+  - `Os.IS_WINDOWS` ternaries, which take only one side per OS.
+  - JVM invariants such as a missing SHA-256 `MessageDigest`.
+  - A few IDE race and launch-failure paths in `PracticeRunner` and `FullCheck`.
+  New code must not add to this list without a reason.
+- **Excluded, with reasons:**
+  - `ui/**`: Swing and JCEF components need a live IDE or browser. Its pure
+    logic is still tested directly (`PageJsonTest`, `PageEventTest`,
+    `HtmlPageViewTest`, `StudyGuideViewTest`, `MarkdownHtmlTest`).
+- To add an exclusion, change `coverageExclusions` in `build.gradle` and add
+  the class and its reason to the list above.
 
 ## Adding An Exercise
 

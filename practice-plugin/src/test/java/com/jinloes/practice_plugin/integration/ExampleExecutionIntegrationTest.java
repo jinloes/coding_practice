@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
     @Test
@@ -321,6 +322,20 @@ class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
             assertThat(runner.isRunning()).isFalse();
             assertThat(ManagedPracticeProgress.get().entry(attempt.id(), attempt.exerciseId()).status)
                     .isEqualTo("NOT_RUN");
+    }
+
+    @Test
+    void missingAttemptReportsAStartFailure() throws Exception {
+            PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
+
+            assertThatThrownBy(() -> EdtTestUtil.runInEdtAndWait(() -> runner.runExamples("missing-attempt")))
+                    .isInstanceOf(com.intellij.execution.ExecutionException.class)
+                    .hasMessageContaining("Invalid managed attempt ID: missing-attempt");
+            assertThatThrownBy(() -> EdtTestUtil.runInEdtAndWait(() -> runner.debugExamples("missing-attempt")))
+                    .isInstanceOf(com.intellij.execution.ExecutionException.class)
+                    .hasMessageContaining("Invalid managed attempt ID: missing-attempt");
+
+            assertThat(runner.isRunning()).isFalse();
     }
 
     private static String slowPairSum() {

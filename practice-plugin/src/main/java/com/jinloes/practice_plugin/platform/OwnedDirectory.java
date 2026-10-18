@@ -7,6 +7,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -33,10 +34,25 @@ import java.util.Properties;
 public final class OwnedDirectory {
     private final Path ownedBase;
     private final String markerName;
+    private final DirectoryLister directoryLister;
 
     private OwnedDirectory(Path ownedBase, String markerName) {
+        this(ownedBase, markerName, path -> {
+            try (var entries = Files.list(path)) {
+                return entries.toList();
+            }
+        });
+    }
+
+    private OwnedDirectory(Path ownedBase, String markerName, DirectoryLister directoryLister) {
         this.ownedBase = ownedBase;
         this.markerName = markerName;
+        this.directoryLister = directoryLister;
+    }
+
+    @FunctionalInterface
+    interface DirectoryLister {
+        List<Path> list(Path directory) throws IOException;
     }
 
     /**
@@ -45,6 +61,10 @@ public final class OwnedDirectory {
      */
     public static OwnedDirectory under(Path ownedBase, String markerName) {
         return new OwnedDirectory(ownedBase.toAbsolutePath().normalize(), markerName);
+    }
+
+    static OwnedDirectory under(Path ownedBase, String markerName, DirectoryLister directoryLister) {
+        return new OwnedDirectory(ownedBase.toAbsolutePath().normalize(), markerName, directoryLister);
     }
 
     /** Decides whether an owned directory with this marker may be deleted. */
@@ -98,10 +118,9 @@ public final class OwnedDirectory {
         requireOwned(directory);
         Path normalized = directory.toAbsolutePath().normalize();
         Path marker = normalized.resolve(markerName);
+        // NOFOLLOW_LINKS type checks are false for symlinks, so they also reject redirected entries.
         if (!Files.isDirectory(normalized, LinkOption.NOFOLLOW_LINKS)
-                || Files.isSymbolicLink(normalized)
                 || !Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS)
-                || Files.isSymbolicLink(marker)
                 || !normalized.getParent().toRealPath().equals(ownedBase.toRealPath())) {
             throw new IOException("Refusing to modify an unmarked plugin-owned directory.");
         }
@@ -133,11 +152,11 @@ public final class OwnedDirectory {
      * others.
      */
     public void cleanupAbandoned(MarkerFilter filter) {
-        if (!Files.isDirectory(ownedBase, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(ownedBase)) {
+        if (!Files.isDirectory(ownedBase, LinkOption.NOFOLLOW_LINKS)) {
             return;
         }
-        try (var entries = Files.list(ownedBase)) {
-            for (Path candidate : entries.toList()) {
+        try {
+            for (Path candidate : directoryLister.list(ownedBase)) {
                 try {
                     if (filter.deletable(candidate, readMarker(candidate))) {
                         deleteTree(candidate);

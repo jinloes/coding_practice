@@ -23,32 +23,44 @@ public final class ExampleLibraries {
     }
 
     public static List<String> names() {
-        try (InputStream input = ExampleLibraries.class.getResourceAsStream(INDEX)) {
+        return names(ExampleLibraries.class::getResourceAsStream);
+    }
+
+    static List<String> names(ExerciseCatalog.ResourceOpener opener) {
+        try (InputStream input = opener.open(INDEX)) {
             if (input == null) {
                 throw new IllegalStateException("The plugin is missing its bundled example libraries index.");
             }
-            List<String> names = new String(input.readAllBytes(), StandardCharsets.UTF_8).lines()
-                    .map(String::trim)
-                    .filter(line -> !line.isEmpty())
-                    .toList();
-            if (names.isEmpty() || names.stream().anyMatch(name -> !name.matches(JAR_PATTERN))) {
-                throw new IllegalStateException("The bundled example libraries index is malformed.");
-            }
-            return names;
+            return names(new String(input.readAllBytes(), StandardCharsets.UTF_8));
         } catch (IOException exception) {
             throw new IllegalStateException("Cannot read the bundled example libraries index.", exception);
         }
+    }
+
+    static List<String> names(String index) {
+        List<String> names = index.lines()
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .toList();
+        if (names.isEmpty() || names.stream().anyMatch(name -> !name.matches(JAR_PATTERN))) {
+            throw new IllegalStateException("The bundled example libraries index is malformed.");
+        }
+        return names;
     }
 
     /**
      * Copies every bundled jar into {@code directory}, which must not already hold them.
      */
     public static List<Path> extractTo(Path directory) throws IOException {
+        return extractTo(directory, ExampleLibraries.class::getResourceAsStream);
+    }
+
+    static List<Path> extractTo(Path directory, ExerciseCatalog.ResourceOpener opener) throws IOException {
         Files.createDirectories(directory);
         List<Path> jars = new ArrayList<>();
-        for (String name : names()) {
+        for (String name : names(opener)) {
             Path target = directory.resolve(name);
-            try (InputStream input = ExampleLibraries.class.getResourceAsStream(BASE + name)) {
+            try (InputStream input = opener.open(BASE + name)) {
                 if (input == null) {
                     throw new IOException("Missing bundled example library: " + name);
                 }

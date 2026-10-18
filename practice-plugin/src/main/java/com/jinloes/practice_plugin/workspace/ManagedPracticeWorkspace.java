@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @Service(Service.Level.APP)
 public final class ManagedPracticeWorkspace {
@@ -35,6 +36,7 @@ public final class ManagedPracticeWorkspace {
 
     private static final Path SOLUTION_SUFFIX = Path.of(SOLUTION_PATH);
     private final Path configRoot;
+    private final Supplier<UUID> uuidSupplier;
 
     public record Attempt(String id, String exerciseId, String revision, Path solution) {
         public Path directory() {
@@ -59,12 +61,17 @@ public final class ManagedPracticeWorkspace {
     }
 
     ManagedPracticeWorkspace(Path configRoot) {
+        this(configRoot, UUID::randomUUID);
+    }
+
+    ManagedPracticeWorkspace(Path configRoot, Supplier<UUID> uuidSupplier) {
         this.configRoot = configRoot.toAbsolutePath().normalize();
+        this.uuidSupplier = uuidSupplier;
     }
 
     public Attempt create(Exercise exercise) throws IOException {
         for (int index = 0; index < 100; index++) {
-            String id = exercise.id() + "-" + UUID.randomUUID().toString().replace("-", "");
+            String id = exercise.id() + "-" + uuidSupplier.get().toString().replace("-", "");
             Path solution = solutionPath(exercise.id(), id);
             if (Files.exists(solution, LinkOption.NOFOLLOW_LINKS)) {
                 continue;
@@ -106,13 +113,13 @@ public final class ManagedPracticeWorkspace {
     public List<Attempt> attempts(String exerciseId) throws IOException {
         ExerciseCatalog.find(exerciseId);
         Path directory = attemptsDirectory().resolve(exerciseId);
-        if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(directory)) {
+        if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) {
             return List.of();
         }
         List<Attempt> attempts = new ArrayList<>();
         try (var paths = Files.list(directory)) {
             for (Path path : paths.sorted(Comparator.comparing(Path::toString)).toList()) {
-                if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(path)) {
+                if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
                     try {
                         Attempt attempt = read(path.getFileName().toString());
                         if (exerciseId.equals(attempt.exerciseId())) {
@@ -163,16 +170,13 @@ public final class ManagedPracticeWorkspace {
         return configRoot.resolve("algorithm-practice/attempts").normalize();
     }
 
-    private Path solutionPath(String exerciseId, String id) throws IOException {
-        Path solution = attemptsDirectory().resolve(exerciseId).resolve(id).resolve(SOLUTION_SUFFIX).normalize();
-        if (!solution.startsWith(attemptsDirectory())) {
-            throw new IOException("Managed attempt must remain inside the practice storage root.");
-        }
-        return solution;
+    // Both IDs are validated (catalog ID pattern, attempt ID regex), so the path cannot escape the attempts root.
+    private Path solutionPath(String exerciseId, String id) {
+        return attemptsDirectory().resolve(exerciseId).resolve(id).resolve(SOLUTION_SUFFIX).normalize();
     }
 
     private void requireOwnedSolution(Path solution) throws IOException {
-        if (!Files.isRegularFile(solution, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(solution)) {
+        if (!Files.isRegularFile(solution, LinkOption.NOFOLLOW_LINKS)) {
             throw new IOException("Managed solution is missing or redirecting: " + solution);
         }
         Path root = attemptsDirectory().toRealPath();

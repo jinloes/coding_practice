@@ -21,6 +21,9 @@ class FailureTextTest {
                 .isEqualTo("handles a one element array");
         assertThat(FailureText.humanize("usesLongArithmeticAtIntegerBoundaries"))
                 .isEqualTo("uses long arithmetic at integer boundaries");
+        assertThat(FailureText.humanize("parsesURL"))
+                .as("an acronym is kept as one word except for the first lowercase normalization")
+                .isEqualTo("parses uRL");
     }
 
     @Test
@@ -30,6 +33,8 @@ class FailureTextTest {
                 .startsWith("Visible example: finds typical pair\n");
         assertThat(FailureText.render(CORRECTNESS, "findsTypicalPair()", "T", "boom", ""))
                 .startsWith("Hidden case: finds typical pair\n");
+        assertThat(FailureText.render("com.jinloes.practice.CustomHarness", "findsTypicalPair()", "T", "boom", ""))
+                .startsWith("CustomHarness: finds typical pair\n");
     }
 
     @Test
@@ -95,6 +100,19 @@ class FailureTextTest {
     }
 
     @Test
+    void liftsTheAssertJDescriptionWithCompactBracketFormatting() {
+        String message = "[case context]\nexpected true but was false";
+
+        assertThat(FailureText.render(CORRECTNESS, "checksAFlag()", "T", message, ""))
+                .isEqualTo("""
+                        Hidden case: checks a flag
+                            case context
+                            expected true but was false
+
+                        """);
+    }
+
+    @Test
     void keepsADescriptionThatContainsBracketsIntact() {
         String message = "[search([1, 2, 3], 4) must return -1 because the target is absent]\n"
                 + "expected: -1 but was: 2";
@@ -103,6 +121,9 @@ class FailureTextTest {
                 .as("array arguments contain brackets of their own")
                 .contains("search([1, 2, 3], 4) must return -1 because the target is absent")
                 .contains("expected: -1 but was: 2");
+        assertThat(FailureText.render(CORRECTNESS, "handlesAnAbsentTarget()", "T",
+                "[description without newline] expected failure", ""))
+                .contains("[description without newline] expected failure");
     }
 
     @Test
@@ -110,12 +131,31 @@ class FailureTextTest {
         assertThat(FailureText.render(CORRECTNESS, "overflows()", "java.lang.ArithmeticException", "", ""))
                 .as("an exception thrown without a message still has a type worth naming")
                 .contains("java.lang.ArithmeticException");
+        assertThat(FailureText.render(CORRECTNESS, "overflows()", null, null, ""))
+                .as("missing type and message should not invent a reason")
+                .isEqualTo("Hidden case: overflows\n\n");
     }
 
     @Test
     void rendersWithoutAFrameWhenNoLearnerCodeAppears() {
         assertThat(FailureText.render(CORRECTNESS, "x()", "T", "m", "at org.junit.Thing.go(Thing.java:1)"))
                 .as("no invented frame")
+                .isEqualTo("Hidden case: x\n    m\n\n");
+    }
+
+    @Test
+    void causeTypeHandlesMissingAndDetailFreeCauses() {
+        assertThat(FailureText.causeType(null)).isEmpty();
+        assertThat(FailureText.causeType("""
+                java.lang.AssertionError
+                Caused by: java.lang.IllegalArgumentException
+                \tat com.jinloes.practice.Solution.findPair(Solution.java:3)
+                """)).isEqualTo("java.lang.IllegalArgumentException");
+    }
+
+    @Test
+    void renderAcceptsMissingTrace() {
+        assertThat(FailureText.render(CORRECTNESS, "x()", "T", "m", null))
                 .isEqualTo("Hidden case: x\n    m\n\n");
     }
 }

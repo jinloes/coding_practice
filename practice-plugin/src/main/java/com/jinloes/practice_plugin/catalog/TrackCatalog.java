@@ -49,8 +49,12 @@ public final class TrackCatalog {
                 .toList();
     }
 
-    private static String read(String path) {
-        try (InputStream input = TrackCatalog.class.getResourceAsStream(path)) {
+    static String read(String path) {
+        return read(path, TrackCatalog.class::getResourceAsStream);
+    }
+
+    static String read(String path, ExerciseCatalog.ResourceOpener opener) {
+        try (InputStream input = opener.open(path)) {
             if (input == null) {
                 throw new IllegalStateException("Missing track resource: " + path);
             }

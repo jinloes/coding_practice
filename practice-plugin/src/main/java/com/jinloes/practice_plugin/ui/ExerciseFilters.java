@@ -1,7 +1,7 @@
 package com.jinloes.practice_plugin.ui;
 
 import com.intellij.ui.DocumentAdapter;
-import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.SearchTextField;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.GuideCatalog;
@@ -30,11 +30,11 @@ final class ExerciseFilters {
     private final JComboBox<String> difficulty = new JComboBox<>();
     private final JComboBox<String> progress =
             new JComboBox<>(new String[]{"All progress", "Passed before", "Not passed"});
-    private final JBTextField search = new JBTextField();
+    private final SearchTextField search = new SearchTextField(false);
 
     ExerciseFilters() {
-        search.getEmptyText().setText("Search exercises");
-        search.getAccessibleContext().setAccessibleName("Search exercises");
+        search.getTextEditor().getEmptyText().setText("Search exercises");
+        search.getTextEditor().getAccessibleContext().setAccessibleName("Search exercises");
         guide.addItem(ALL_GUIDES);
         GuideCatalog.all().forEach(guide::addItem);
         guide.setRenderer(PracticeViews.labelled(Guide.class, Guide::title));
@@ -71,7 +71,7 @@ final class ExerciseFilters {
         topic.addActionListener(event -> changed.run());
         difficulty.addActionListener(event -> changed.run());
         progress.addActionListener(event -> changed.run());
-        search.getDocument().addDocumentListener(new DocumentAdapter() {
+        search.addDocumentListener(new DocumentAdapter() {
             @Override
             protected void textChanged(@NotNull javax.swing.event.DocumentEvent event) {
                 changed.run();
@@ -122,6 +122,25 @@ final class ExerciseFilters {
 
     void selectTrack(String id) {
         track.setSelectedItem(id == null ? ALL_TRACKS : TrackCatalog.find(id));
+    }
+
+    /**
+     * Clears whichever filters would hide {@code exercise}: the search, topic, difficulty, and progress
+     * filters, and the guide or track only when it does not include the exercise.
+     */
+    void reveal(Exercise exercise) {
+        search.setText("");
+        topic.setSelectedIndex(0);
+        difficulty.setSelectedIndex(0);
+        progress.setSelectedIndex(0);
+        Guide selected = selectedGuide();
+        if (selected != null && !selected.exercises().contains(exercise)) {
+            guide.setSelectedItem(ALL_GUIDES);
+        }
+        Guide selectedTrack = selectedTrack();
+        if (selectedTrack != null && !selectedTrack.exercises().contains(exercise)) {
+            track.setSelectedItem(ALL_TRACKS);
+        }
     }
 
     void selectDifficulty(String value) {

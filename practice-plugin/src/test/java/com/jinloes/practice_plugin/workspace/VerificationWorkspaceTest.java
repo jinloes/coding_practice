@@ -1,6 +1,7 @@
 package com.jinloes.practice_plugin.workspace;
 
 import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -11,6 +12,9 @@ import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -133,6 +137,145 @@ class VerificationWorkspaceTest {
     }
 
     @Test
+    void creationFailureCleansUpThePartiallyWrittenWorkspace() throws Exception {
+        ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
+        var attempt = store.create(ExerciseCatalog.find("pair-sum"));
+        String fingerprint = store.fingerprint(attempt);
+        Files.delete(attempt.solution());
+        Path system = temporary.resolve("system");
+
+        assertThatThrownBy(() -> VerificationWorkspace.createAt(
+                system, attempt, ExerciseCatalog.find("pair-sum"), fingerprint))
+                .isInstanceOf(Exception.class);
+
+        Path verification = system.resolve("algorithm-practice/verification");
+        if (Files.isDirectory(verification)) {
+            try (var entries = Files.list(verification)) {
+                assertThat(entries.toList()).isEmpty();
+            }
+        }
+    }
+
+    @Test
+    void refusesToCleanUpWorkspacesThatHaveNotFinished() throws Exception {
+        ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
+        var attempt = store.create(ExerciseCatalog.find("pair-sum"));
+        String fingerprint = store.fingerprint(attempt);
+        VerificationWorkspace workspace = VerificationWorkspace.createAt(
+                temporary.resolve("system"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint);
+
+        assertThat(workspace.resultDirectory()).isEqualTo(workspace.root().resolve(".practice-results"));
+        assertThatThrownBy(workspace::cleanupAfterRun)
+                .isInstanceOf(Exception.class)
+                .hasMessageContaining("still active");
+
+        workspace.markFinished(fingerprint);
+        workspace.cleanupAfterRun();
+    }
+
+    @Test
+    void defaultFactoryCreatesAWorkspaceUnderTheIdeSystemPath() throws Exception {
+        ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
+        var attempt = store.create(ExerciseCatalog.find("pair-sum"));
+        String fingerprint = store.fingerprint(attempt);
+
+        VerificationWorkspace workspace = VerificationWorkspace.create(
+                attempt, ExerciseCatalog.find("pair-sum"), fingerprint);
+
+        assertThat(workspace.root()).isDirectory();
+        workspace.markFinished(fingerprint);
+        workspace.cleanupAfterRun();
+    }
+
+
+    @Test
+    void packagedBuildScriptLoaderUsesTheDefaultResourcePath() throws Exception {
+        assertThat(VerificationWorkspace.buildScript())
+                .contains("plugins", "mavenCentral()")
+                .doesNotContainPattern("@[A-Z_]+@");
+    }
+
+    @Test
+    void defaultCleanupAbandonedRemovesFinishedWorkspacesUnderTheIdeSystemPath() throws Exception {
+        Path verification = Path.of(PathManager.getSystemPath(), "algorithm-practice", "verification");
+        Path finished = verification.resolve("finished-" + System.nanoTime());
+        writeVerificationMarker(finished, "schema=1\nstate=finished\npid=0\nfingerprint=f\n");
+
+        VerificationWorkspace.cleanupAbandoned();
+
+        assertThat(finished).doesNotExist();
+    }
+
+    @Test
+    void malformedRecoveryMarkersArePreservedForManualInspection() throws Exception {
+        Path system = temporary.resolve("system");
+        Path verification = system.resolve("algorithm-practice/verification");
+        Path badSchema = verification.resolve("bad-schema");
+        Path badPid = verification.resolve("bad-pid");
+        Path badState = verification.resolve("bad-state");
+        Path blankFingerprint = verification.resolve("blank-fingerprint");
+        writeVerificationMarker(badSchema, "schema=2\nstate=finished\npid=-1\nfingerprint=f\n");
+        writeVerificationMarker(badPid, "schema=1\nstate=active\npid=abc\nfingerprint=f\n");
+        writeVerificationMarker(badState, "schema=1\nstate=paused\npid=-1\nfingerprint=f\n");
+        writeVerificationMarker(blankFingerprint, "schema=1\nstate=finished\npid=0\nfingerprint=   \n");
+
+        VerificationWorkspace.cleanupAbandoned(system);
+
+        assertThat(badSchema).isDirectory();
+        assertThat(badPid).isDirectory();
+        assertThat(badState).isDirectory();
+        assertThat(blankFingerprint).isDirectory();
+    }
+
+
+    @Test
+    void recoveryTreatsNonPositiveAndAbsentProcessHandlesAsInactive() throws Exception {
+        Path system = temporary.resolve("system");
+        Path verification = system.resolve("algorithm-practice/verification");
+        Path nonPositive = verification.resolve("non-positive");
+        Path absentHandle = verification.resolve("absent-handle");
+        writeVerificationMarker(nonPositive, "schema=1\nstate=active\npid=0\nfingerprint=f\n");
+        writeVerificationMarker(absentHandle, "schema=1\nstate=active\npid=" + deadPid() + "\nfingerprint=f\n");
+
+        VerificationWorkspace.cleanupAbandoned(system);
+
+        assertThat(nonPositive).doesNotExist();
+        assertThat(absentHandle).doesNotExist();
+    }
+
+    @Test
+    void missingPackagedResourcesAndUnsubstitutedBuildPlaceholdersFailCreation() throws Exception {
+        ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
+        var attempt = store.create(ExerciseCatalog.find("pair-sum"));
+        String fingerprint = store.fingerprint(attempt);
+
+        assertThatThrownBy(() -> VerificationWorkspace.createAt(
+                temporary.resolve("missing-bootstrap"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
+                path -> path.equals("/bootstrap/gradlew.bat") ? null : resource(path)))
+                .isInstanceOf(Exception.class)
+                .hasMessageContaining("Gradle bootstrap resource");
+
+        assertThatThrownBy(() -> VerificationWorkspace.createAt(
+                temporary.resolve("missing-build-script"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
+                path -> path.equals("/gradle/verification-build.gradle") ? null : resource(path)))
+                .isInstanceOf(Exception.class)
+                .hasMessageContaining("verification script resource");
+
+        assertThatThrownBy(() -> VerificationWorkspace.createAt(
+                temporary.resolve("placeholder"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
+                path -> path.equals("/gradle/verification-build.gradle")
+                        ? bytes("plugins { id '@UNREPLACED@' }\n") : resource(path)))
+                .isInstanceOf(Exception.class)
+                .hasMessageContaining("unreplaced placeholders");
+
+        assertThatThrownBy(() -> VerificationWorkspace.createAt(
+                temporary.resolve("missing-exercise-resource"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
+                path -> path.endsWith("/Workload.java") ? null : resource(path)))
+                .isInstanceOf(Exception.class)
+                .hasMessageContaining("verification resource");
+    }
+
+    @Test
     void userFacingCleanupRemovesOnlyDeadPluginOwnedFallbackSdks() throws Exception {
         IdeaProjectTestFixture fixture = EdtTestUtil.runInEdtAndGet(() -> {
             IdeaProjectTestFixture created = IdeaTestFixtureFactory.getFixtureFactory()
@@ -167,5 +310,26 @@ class VerificationWorkspaceTest {
 
         assertThat(mirrorIndex).as("exact Google Maven Central mirror entry").isGreaterThanOrEqualTo(0);
         assertThat(centralIndex).as("mavenCentral() fallback after the Google mirror").isGreaterThan(mirrorIndex);
+    }
+
+    private static void writeVerificationMarker(Path directory, String marker) throws Exception {
+        Files.createDirectories(directory);
+        Files.writeString(directory.resolve(".algorithm-practice-verification"), marker);
+    }
+
+    private static InputStream resource(String path) {
+        return VerificationWorkspace.class.getResourceAsStream(path);
+    }
+
+    private static long deadPid() {
+        long candidate = 999_999_999L;
+        while (ProcessHandle.of(candidate).isPresent()) {
+            candidate--;
+        }
+        return candidate;
+    }
+
+    private static InputStream bytes(String text) {
+        return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
     }
 }

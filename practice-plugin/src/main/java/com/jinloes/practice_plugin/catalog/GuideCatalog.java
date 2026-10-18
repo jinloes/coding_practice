@@ -150,8 +150,12 @@ public final class GuideCatalog {
         return primitive.getAsString();
     }
 
-    private static String read(String path) {
-        try (InputStream input = GuideCatalog.class.getResourceAsStream(path)) {
+    static String read(String path) {
+        return read(path, GuideCatalog.class::getResourceAsStream);
+    }
+
+    static String read(String path, ExerciseCatalog.ResourceOpener opener) {
+        try (InputStream input = opener.open(path)) {
             if (input == null) {
                 throw new IllegalStateException("Missing guide resource: " + path);
             }

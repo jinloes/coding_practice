@@ -114,6 +114,36 @@ selected guide or, when no guide is selected, the selected track, `LimitsDialog`
 execution limits, and `PracticeViews` provides stateless Swing building blocks;
 none of them hold panel state. Pass marks come from
 `ManagedPracticeProgress.passedExerciseIds()`, derived from stored history.
+`ExerciseCellRenderer`, `ResultsView`, `PracticeActions` (the run toolbar and
+title actions), and `CustomInputPrompt` are the native Swing pieces.
+
+#### Problem and Study Guide pages
+
+The Problem and Study Guide tabs are `PageView`s that show an immutable
+`PracticePage` (`Problem` or `Study`, plus the passed IDs). There are two
+implementations:
+
+- `ReactPageView` hosts the React/Mantine app from `web/` in a JCEF browser.
+  The panel pushes state by calling `window.practiceRender(json)`, where
+  `PageJson` serializes the page and the current IDE `Theme`. The page sends
+  clicks back through a `JBCefJSQuery` as JSON that `PageEvent` parses, and the
+  panel handles them on the EDT. A page can only ask to select an exercise,
+  guide, or track; it cannot run code or touch files.
+- `HtmlPageView` is the fallback: a non-interactive Swing `JEditorPane` that
+  reuses `PracticeViews.problemText` and `StudyGuideView.html`.
+
+JCEF is the optional bundled plugin `com.intellij.modules.jcef`. `plugin.xml`
+declares it as an optional dependency whose `practice-jcef.xml` registers the
+`ReactPages` application service (`JcefReactPages`). `PageView.create` uses the
+React view only when that service exists, JCEF is supported, and the bundled
+`/web/index.html` is present. Otherwise, and always in unit-test mode, it uses
+the HTML fallback, so no code outside `JcefReactPages` and `ReactPageView`
+references JCEF classes.
+
+`PageJson` mirrors `web/src/types.ts`; change both together. Statement,
+summary, and lesson fields are escaped by `MarkdownHtml` before the page inserts
+them as HTML. Gson's HTML-safe escaping keeps the JSON safe to embed in a
+script.
 
 ### `workspace`
 
@@ -259,7 +289,10 @@ The standalone Gradle build:
 - replaces dependency and Java release tokens in
   `gradle/verification-build.gradle`;
 - packages exercise, study guide, practice track, harness, and plugin
-  descriptor resources.
+  descriptor resources;
+- downloads a pinned Node (node-gradle), runs `npm ci` and the `webUi` task in
+  `web/`, and packages the single self-contained `web/index.html` it produces.
+  The page loads no network resources.
 
 Runtime code must not assume dependency jar filenames. It consumes the generated
 library index.

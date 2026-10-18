@@ -5,29 +5,20 @@ import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.GuideCatalog;
 import com.jinloes.practice_plugin.catalog.GuideCatalog.Guide;
 
-import javax.swing.JComponent;
-import javax.swing.JEditorPane;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The Study Guide tab: the selected guide's lesson, or a practice track's notes, and its problems grouped
- * by difficulty.
+ * The Swing HTML fallback for the Study Guide tab: the selected guide's lesson, or a practice track's notes,
+ * and its problems grouped by difficulty. The React page in {@code web/} renders the same content when JCEF
+ * is available.
  */
 final class StudyGuideView {
-    private final JEditorPane pane = PracticeViews.htmlPane();
-
-    JComponent component() {
-        return pane;
+    private StudyGuideView() {
     }
 
-    /** Shows {@code guide}, or, when it is null, which guides and practice tracks include {@code selected}. */
-    void show(Guide guide, Exercise selected, Set<String> passed) {
-        pane.setText("<html><body>" + html(guide, selected, passed) + "</body></html>");
-        pane.setCaretPosition(0);
-    }
-
+    /** Renders {@code guide}, or, when it is null, which guides and practice tracks include {@code selected}. */
     static String html(Guide guide, Exercise selected, Set<String> passed) {
         if (guide == null) {
             return chooser(selected);

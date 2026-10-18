@@ -1,6 +1,8 @@
 plugins {
     id 'java'
+    id 'jacoco'
     id 'org.jetbrains.intellij.platform' version '2.19.0'
+    id 'com.github.node-gradle.node' version '7.1.0'
 }
 
 group = 'com.jinloes.coding_practice'
@@ -38,7 +40,8 @@ dependencies {
         } else {
             intellijIdea('2026.2.3')
         }
-        bundledPlugins('com.intellij.java', 'com.intellij.gradle', 'org.jetbrains.plugins.gradle', 'JUnit')
+        bundledPlugins('com.intellij.java', 'com.intellij.gradle', 'org.jetbrains.plugins.gradle', 'JUnit',
+                'com.intellij.modules.jcef')
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform.INSTANCE)
     }
     testImplementation platform("org.junit:junit-bom:$junitBomVersion")
@@ -71,6 +74,59 @@ test {
     systemProperty 'practice.test.classpath', sourceSets.test.runtimeClasspath.asPath
     systemProperty 'idea.load.plugins.id', 'com.jinloes.practice'
     systemProperty 'practice.catalog.only', providers.gradleProperty('catalogOnly').getOrElse('')
+    // The test IDE loads plugin classes through PathClassLoader, which JaCoCo only sees with this option.
+    jacoco {
+        includeNoLocationClasses = true
+        excludes = ['jdk.internal.*']
+    }
+    finalizedBy 'jacocoTestReport'
+}
+
+jacoco {
+    toolVersion = '0.8.15'
+}
+
+// Coverage is enforced on the logic packages. The ui package and the classes below need a running IDE,
+// JCEF, or OS privileges that unit tests do not have; keep this list short and justify each entry in CODE-MAP.md.
+def coverageExclusions = [
+        'com/jinloes/practice_plugin/ui/**',
+]
+
+def coverageClasses = files(tasks.named('instrumentCode')).asFileTree.matching {
+    exclude coverageExclusions
+}
+
+tasks.named('jacocoTestReport') {
+    classDirectories.setFrom(coverageClasses)
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// A ratchet just below the measured baseline: raise these when coverage improves, never lower them.
+// Reads the last test run's data instead of depending on test, so it can also run after test failures
+// with --continue. Run it after the full suite; a partial run under-reports coverage.
+def coverageVerification = tasks.named('jacocoTestCoverageVerification') {
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
+    classDirectories.setFrom(coverageClasses)
+    mustRunAfter 'test'
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                minimum = 0.98
+            }
+            limit {
+                counter = 'BRANCH'
+                minimum = 0.92
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn coverageVerification
 }
 
 tasks.named('wrapper') {
@@ -90,7 +146,26 @@ def exampleLibrariesIndex = tasks.register('exampleLibrariesIndex') {
     }
 }
 
+// The React pages in web/ build with a Gradle-managed Node, so contributors need no local Node install.
+node {
+    download = true
+    version = '24.22.0'
+    npmInstallCommand = 'ci'
+    nodeProjectDir = file('web')
+}
+
+def webUi = tasks.register('webUi', com.github.gradle.node.npm.task.NpmTask) {
+    description = 'Builds the React pages into one self-contained build/web/index.html.'
+    dependsOn tasks.named('npmInstall')
+    npmCommand = ['run', 'build']
+    inputs.dir('web/src')
+    inputs.files('web/index.html', 'web/package.json', 'web/package-lock.json', 'web/tsconfig.json',
+            'web/vite.config.ts')
+    outputs.dir(layout.buildDirectory.dir('web'))
+}
+
 tasks.named('processResources') {
+    from(webUi) { into 'web' }
     from('gradlew') { into 'bootstrap' }
     from('gradlew.bat') { into 'bootstrap' }
     from('gradle/wrapper') { into 'bootstrap/gradle/wrapper' }

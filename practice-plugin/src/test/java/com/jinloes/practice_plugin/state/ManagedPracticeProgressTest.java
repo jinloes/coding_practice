@@ -87,6 +87,38 @@ class ManagedPracticeProgressTest {
     }
 
     @Test
+    void loadStateBackfillsCollectionsForOlderPersistentState() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        ManagedPracticeProgress.Data state = new ManagedPracticeProgress.Data();
+        state.attempts = null;
+        state.selectedAttempts = null;
+        state.legacyMappings = null;
+
+        progress.loadState(state);
+
+        assertThat(progress.getState().attempts).isEmpty();
+        assertThat(progress.getState().selectedAttempts).isEmpty();
+        assertThat(progress.getState().legacyMappings).isEmpty();
+        progress.recordImport("/legacy", "attempt", "managed");
+        assertThat(progress.importedAttempt("/legacy", "attempt")).isEqualTo("managed");
+    }
+
+    @Test
+    void recordsNonBlankComplexityAndKeepsBlankUpdatesFromErasingIt() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        String attemptId = "pair-sum-0123456789abcdef0123456789abcdef";
+
+        progress.record(attemptId, "pair-sum", "first",
+                new CheckResult(CheckResult.Status.PASSED, 3, 0, "passed", "O(n)"));
+        progress.record(attemptId, "pair-sum", "second",
+                new CheckResult(CheckResult.Status.ASSERTION_FAILED, 3, 1, "failed", ""));
+
+        ManagedPracticeProgress.Entry entry = progress.entry(attemptId, "pair-sum");
+        assertThat(entry.complexity).isEqualTo("O(n)");
+        assertThat(entry.status).isEqualTo("ASSERTION_FAILED");
+    }
+
+    @Test
     void rejectsEveryLimitOutsideItsDocumentedRange() {
         assertInvalid(0, 5, 256);
         assertInvalid(301, 301, 256);

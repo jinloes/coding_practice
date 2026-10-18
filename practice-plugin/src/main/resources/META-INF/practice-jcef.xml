@@ -1,0 +1,7 @@
+<idea-plugin>
+    <!-- Loaded only when the bundled Web Browser (JCEF) plugin is present. -->
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceInterface="com.jinloes.practice_plugin.ui.ReactPages"
+                            serviceImplementation="com.jinloes.practice_plugin.ui.JcefReactPages"/>
+    </extensions>
+</idea-plugin>

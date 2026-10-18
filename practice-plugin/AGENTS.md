@@ -25,24 +25,53 @@ optional background reading.
 
 ## Scope
 
-These rules apply to plugin source, tests, build configuration, and exercise
-content under `src/main/resources/exercises/`.
+These rules apply to plugin source, tests, build configuration, the React pages
+under `web/`, and exercise content under `src/main/resources/exercises/`.
+
+The Problem and Study Guide tabs are React + Mantine pages in `web/`, rendered
+in JCEF with a Swing HTML fallback. Keep `web/src/types.ts` and
+`ui/PageJson.java` in sync, and see the "Web pages" section of `CODE-MAP.md`.
 
 ## Build And Test
 
 Run from `practice-plugin/` with the repository wrapper:
 
 ```bash
-../gradlew test
-../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
-../gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
-../gradlew runIde
+./gradlew test
+./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
+./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
+./gradlew runIde
 ```
 
 `-PcatalogOnly` limits the slow per-exercise catalog checks to the listed
 exercise IDs; the full catalog takes several minutes. Use the smallest relevant
 test first, then run the full plugin test suite before
 finishing a code change.
+
+## Code Coverage
+
+Every set of changes must keep or raise coverage. Before finishing a code
+change, run the full suite with the coverage gate:
+
+```bash
+./gradlew check
+# Where a known flaky test stops `check` (for example, a complexity probe):
+./gradlew test jacocoTestCoverageVerification --continue
+```
+
+- On Windows, enable Developer Mode so the symlink-safety tests can create
+  symlinks; without it they fail and coverage drops below the gate.
+- Add tests for every new or changed line and branch in the gated packages
+  (everything except `ui`). Open `build/reports/jacoco/test/html/index.html`
+  and confirm the changed classes have no new uncovered lines or branches.
+- The minimums in `build.gradle` are a ratchet. Raise them when coverage goes
+  up. Never lower them, and never add a coverage exclusion to get a change
+  through. An exclusion is only for code that cannot run in unit tests (it
+  needs a live IDE, JCEF, or OS privileges); record why in `CODE-MAP.md`.
+- `ui` is excluded from the gate but still needs tests for its pure logic,
+  such as `PageJson`, `PageEvent`, `StudyGuideView`, and `MarkdownHtml`.
+- Never report coverage from a partial run as the result; `-PcatalogOnly` and
+  `--tests` runs under-report.
 
 ## Java And Test Conventions
 

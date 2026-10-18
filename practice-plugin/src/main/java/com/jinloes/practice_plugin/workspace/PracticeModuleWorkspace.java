@@ -51,14 +51,27 @@ public final class PracticeModuleWorkspace implements Disposable {
     private static final String EXAMPLE_LIBRARY = "algorithm-practice-example-libraries";
     private final Project project;
     private final GeneratedDirectories generated;
+    private final CompilerLauncher compilerLauncher;
+    private final long compileTimeoutSeconds;
     private final Set<RunnerAndConfigurationSettings> temporaryConfigurations = new LinkedHashSet<>();
     private final Map<String, Module> modules = new LinkedHashMap<>();
     private Sdk sdk;
     private Sdk ownedFallbackSdk;
 
     public PracticeModuleWorkspace(Project project) {
+        this(project, PracticeModuleWorkspace::launchCompiler, 30);
+    }
+
+    PracticeModuleWorkspace(Project project, CompilerLauncher compilerLauncher, long compileTimeoutSeconds) {
         this.project = project;
         generated = new GeneratedDirectories(project);
+        this.compilerLauncher = compilerLauncher;
+        this.compileTimeoutSeconds = compileTimeoutSeconds;
+    }
+
+    @FunctionalInterface
+    interface CompilerLauncher {
+        Process start(List<String> command, Path diagnostics) throws IOException;
     }
 
     public static PracticeModuleWorkspace get(Project project) {
@@ -174,7 +187,7 @@ public final class PracticeModuleWorkspace implements Disposable {
         Path diagnostics = output.resolve("compiler.log");
         Process process = null;
         try {
-            process = new ProcessBuilder(
+            List<String> command = List.of(
                     compiler.toString(),
                     "--release", "17",
                     "-encoding", "UTF-8",
@@ -182,13 +195,11 @@ public final class PracticeModuleWorkspace implements Disposable {
                     "-classpath", ExampleLibraries.classpath(exampleLibraries(attempt)),
                     "-d", output.toString(),
                     attempt.solution().toString(),
-                    runner.toString())
-                    .redirectErrorStream(true)
-                    .redirectOutput(diagnostics.toFile())
-                    .start();
-            if (!process.waitFor(30, TimeUnit.SECONDS)) {
+                    runner.toString());
+            process = compilerLauncher.start(command, diagnostics);
+            if (!process.waitFor(compileTimeoutSeconds, TimeUnit.SECONDS)) {
                 process.destroyForcibly();
-                throw new ExecutionException("Example compilation exceeded 30 seconds.");
+                throw new ExecutionException("Example compilation exceeded " + compileTimeoutSeconds + " seconds.");
             }
             if (process.exitValue() != 0) {
                 String outputText = Files.readString(diagnostics, StandardCharsets.UTF_8);
@@ -298,7 +309,7 @@ public final class PracticeModuleWorkspace implements Disposable {
         Path libs = generated.base(GeneratedDirectories.HARNESSES).resolve(attempt.id()).resolve("libs").normalize();
         List<Path> jars = ExampleLibraries.names().stream().map(libs::resolve).toList();
         for (Path jar : jars) {
-            if (!Files.isRegularFile(jar, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(jar)) {
+            if (!Files.isRegularFile(jar, LinkOption.NOFOLLOW_LINKS)) {
                 throw new ExecutionException("Bundled example libraries are missing from the generated harness.");
             }
         }
@@ -368,6 +379,13 @@ public final class PracticeModuleWorkspace implements Disposable {
         }
         JavaSdkVersion version = JavaSdk.getInstance().getVersion(candidate);
         return version != null && version.isAtLeast(JavaSdkVersion.JDK_17);
+    }
+
+    private static Process launchCompiler(List<String> command, Path diagnostics) throws IOException {
+        return new ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .redirectOutput(diagnostics.toFile())
+                .start();
     }
 
     private record Marker(String kind, String attemptId, long pid) {}

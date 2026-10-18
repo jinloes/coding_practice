@@ -20,26 +20,42 @@ final class BoundedProcessHandler extends KillableColoredProcessHandler {
 
     @Override
     public void destroyProcess() {
-        cancelled.run();
+        cancel(cancelled);
         super.destroyProcess();
     }
 
     @Override
     public void killProcess() {
-        cancelled.run();
+        cancel(cancelled);
         super.killProcess();
     }
 
     @Override
     public synchronized void coloredTextAvailable(@NotNull String text, @NotNull Key outputType) {
-        if (captured >= LIMIT) {
+        OutputChunk chunk = clip(text, captured);
+        if (chunk.skip()) {
             return;
         }
-        int length = Math.min(text.length(), LIMIT - captured);
-        super.coloredTextAvailable(text.substring(0, length), outputType);
-        captured += length;
-        if (captured == LIMIT) {
+        super.coloredTextAvailable(chunk.text(), outputType);
+        captured = chunk.captured();
+        if (chunk.truncated()) {
             super.coloredTextAvailable("\n[Practice console truncated at 128 KiB.]\n", ProcessOutputTypes.SYSTEM);
         }
+    }
+
+    static void cancel(Runnable cancelled) {
+        cancelled.run();
+    }
+
+    static OutputChunk clip(String text, int captured) {
+        if (captured >= LIMIT) {
+            return new OutputChunk("", captured, false, true);
+        }
+        int length = Math.min(text.length(), LIMIT - captured);
+        int next = captured + length;
+        return new OutputChunk(text.substring(0, length), next, next == LIMIT, false);
+    }
+
+    record OutputChunk(String text, int captured, boolean truncated, boolean skip) {
     }
 }

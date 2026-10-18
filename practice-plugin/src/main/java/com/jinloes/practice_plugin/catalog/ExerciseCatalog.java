@@ -33,6 +33,11 @@ public final class ExerciseCatalog {
     private ExerciseCatalog() {
     }
 
+    @FunctionalInterface
+    interface ResourceOpener {
+        InputStream open(String path);
+    }
+
     public record Exercise(
             String id,
             String title,
@@ -113,8 +118,12 @@ public final class ExerciseCatalog {
         return read("/exercises/" + exercise.id() + "/" + filename);
     }
 
-    private static String read(String path) {
-        try (InputStream input = ExerciseCatalog.class.getResourceAsStream(path)) {
+    static String read(String path) {
+        return read(path, ExerciseCatalog.class::getResourceAsStream);
+    }
+
+    static String read(String path, ResourceOpener opener) {
+        try (InputStream input = opener.open(path)) {
             if (input == null) {
                 throw new IllegalArgumentException("Unknown exercise resource: " + path);
             }
@@ -134,7 +143,11 @@ public final class ExerciseCatalog {
     }
 
     static List<String> indexedIds() {
-        List<String> ids = read(INDEX).lines().map(String::strip).filter(line -> !line.isEmpty()).toList();
+        return indexedIds(read(INDEX));
+    }
+
+    static List<String> indexedIds(String index) {
+        List<String> ids = index.lines().map(String::strip).filter(line -> !line.isEmpty()).toList();
         Set<String> seen = new HashSet<>();
         for (String id : ids) {
             if (!VALID_ID.matcher(id).matches()) {
@@ -148,9 +161,24 @@ public final class ExerciseCatalog {
     }
 
     private static Exercise loadExercise(String id) {
+        return loadExercise(
+                id,
+                read("/exercises/" + id + "/exercise.json"),
+                read("/exercises/" + id + "/ExampleRunner.java"),
+                read("/exercises/" + id + "/ExamplesTest.java"),
+                read("/exercises/" + id + "/CorrectnessTest.java"));
+    }
+
+    static Exercise loadExercise(
+            String id,
+            String manifestJson,
+            String runner,
+            String examplesTest,
+            String correctnessTest
+    ) {
         JsonObject manifest;
         try {
-            manifest = JsonParser.parseString(read("/exercises/" + id + "/exercise.json")).getAsJsonObject();
+            manifest = JsonParser.parseString(manifestJson).getAsJsonObject();
         } catch (JsonParseException | IllegalStateException exception) {
             throw new IllegalStateException("Malformed exercise manifest for " + id, exception);
         }
@@ -158,14 +186,12 @@ public final class ExerciseCatalog {
             throw new IllegalStateException("Exercise manifest ID does not match its directory: " + id);
         }
         String inputSyntax = text(manifest, id, "inputSyntax");
-        String runner = read("/exercises/" + id + "/ExampleRunner.java");
         if (!runner.contains(inputSyntax)) {
             throw new IllegalStateException(
                     "Exercise " + id + " documents input syntax its ExampleRunner usage text does not show");
         }
-        int exampleCount = countTests(read("/exercises/" + id + "/ExamplesTest.java"), id + "/ExamplesTest.java");
-        int fullCount = exampleCount
-                + countTests(read("/exercises/" + id + "/CorrectnessTest.java"), id + "/CorrectnessTest.java");
+        int exampleCount = countTests(examplesTest, id + "/ExamplesTest.java");
+        int fullCount = exampleCount + countTests(correctnessTest, id + "/CorrectnessTest.java");
         return new Exercise(
                 id,
                 text(manifest, id, "title"),
@@ -224,7 +250,7 @@ public final class ExerciseCatalog {
      * stripper cannot classify fails the load rather than producing a count the UI would show to a
      * learner as the number of hidden tests.
      */
-    private static int countTests(String source, String label) {
+    static int countTests(String source, String label) {
         int count = 0;
         var matcher = TEST_ANNOTATION.matcher(stripCommentsAndLiterals(source, label));
         while (matcher.find()) {

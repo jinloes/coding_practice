@@ -14,5 +14,6 @@ public final class PracticeToolWindowFactory implements ToolWindowFactory, DumbA
         var content = ContentFactory.getInstance().createContent(panel, "", false);
         content.setDisposer(panel);
         toolWindow.getContentManager().addContent(content);
+        toolWindow.setTitleActions(panel.titleActions());
     }
 }

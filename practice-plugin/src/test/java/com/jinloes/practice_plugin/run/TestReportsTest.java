@@ -76,6 +76,21 @@ class TestReportsTest {
     }
 
     @Test
+    void prefersErrorsOverFailuresWhenBothArePresentOnOneCase() throws Exception {
+        Path reports = reportDirectory();
+        String both = caseXml(
+                "failsTwice",
+                "<failure type=\"org.opentest4j.AssertionFailedError\" message=\"wrong answer\">wrong</failure>"
+                        + "<error type=\"java.lang.IllegalStateException\" message=\"crashed\">crashed</error>");
+        writeFullReport(reports, both + passingCases(PAIR_SUM.exampleCount() - 1));
+
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
+
+        assertThat(result.status()).isEqualTo(RUNTIME_ERROR);
+        assertThat(result.details()).contains("crashed").doesNotContain("wrong answer");
+    }
+
+    @Test
     void classifiesAWrappedCrashAsARuntimeErrorRatherThanAWrongAnswer() throws Exception {
         Path reports = reportDirectory();
         String failure = caseXml(
@@ -113,6 +128,52 @@ class TestReportsTest {
         assertThat(result.status()).isEqualTo(TIMED_OUT);
         assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isEqualTo(1);
+    }
+
+    @Test
+    void classifiesWrappedTimeoutFailures() throws Exception {
+        Path reports = reportDirectory();
+        String timeout = caseXml(
+                "timesOut",
+                "<failure type=\"java.lang.AssertionError\" message=\"wrapped timeout\">"
+                        + "java.lang.AssertionError: wrapped timeout\n"
+                        + "Caused by: java.util.concurrent.TimeoutException: 5 seconds"
+                        + "</failure>");
+        writeFullReport(reports, timeout + passingCases(PAIR_SUM.exampleCount() - 1));
+
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
+
+        assertThat(result.status()).isEqualTo(TIMED_OUT);
+    }
+
+    @Test
+    void emptyFailureTypesRemainAssertionFailures() throws Exception {
+        Path reports = reportDirectory();
+        String failure = caseXml("fails", "<failure message=\"wrong\">wrong</failure>");
+        writeFullReport(reports, failure + passingCases(PAIR_SUM.exampleCount() - 1));
+
+        CheckResult result = TestReports.read(reports, PAIR_SUM.fullCount(), 0);
+
+        assertThat(result.status()).isEqualTo(ASSERTION_FAILED);
+        assertThat(result.details()).contains("wrong");
+    }
+
+    @Test
+    void failureDetailsAreCapped() throws Exception {
+        Path reports = reportDirectory();
+        StringBuilder failures = new StringBuilder();
+        for (int i = 0; i < 400; i++) {
+            failures.append(caseXml("failureCase" + i,
+                    "<failure type=\"org.opentest4j.AssertionFailedError\" message=\""
+                            + "x".repeat(100) + "\">trace</failure>"));
+        }
+        writeSuite(reports, "TEST-Examples.xml", EXAMPLES, failures.toString());
+        writeSuite(reports, "TEST-Correctness.xml", CORRECTNESS, "");
+
+        CheckResult result = TestReports.read(reports, 400, 0);
+
+        assertThat(result.status()).isEqualTo(ASSERTION_FAILED);
+        assertThat(result.details()).hasSizeLessThanOrEqualTo(24_000);
     }
 
     @Test
@@ -160,6 +221,16 @@ class TestReportsTest {
         assertThat(result.tests()).isEqualTo(PAIR_SUM.fullCount());
         assertThat(result.failures()).isZero();
         assertThat(result.details()).contains("Incomplete test run");
+    }
+
+    @Test
+    void rejectsOversizedReportFilesBeforeParsing() throws Exception {
+        Path reports = reportDirectory();
+        writeRaw(reports, "TEST-Examples.xml", "x".repeat(2_000_001));
+
+        assertThatThrownBy(() -> TestReports.read(reports, 1, 0))
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("2 MB limit");
     }
 
     @Test

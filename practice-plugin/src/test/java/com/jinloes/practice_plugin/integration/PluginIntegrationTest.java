@@ -74,6 +74,7 @@ class PluginIntegrationTest {
         EdtTestUtil.runInEdtAndWait(() -> {
             assertThat(PluginManagerCore.getPlugin(PluginId.getId("com.jinloes.practice"))).isNotNull();
             assertThat(ManagedPracticeProgress.get()).isNotNull();
+            assertThat(new LegacyImportService()).isNotNull();
             assertThat(PracticeModuleWorkspace.get(fixture.getProject())).isNotNull();
             assertThat(fixture.getProject().getService(PracticeRunner.class).isRunning()).isFalse();
         });
@@ -143,7 +144,9 @@ class PluginIntegrationTest {
         Path legacyRoot = temporary.resolve("legacy");
         LegacyWorkspaceFixture.create(legacyRoot);
         var legacy = LegacyWorkspaceFixture.createAttempt(legacyRoot, ExerciseCatalog.find("pair-sum"));
+        var unselectedLegacy = LegacyWorkspaceFixture.createAttempt(legacyRoot, ExerciseCatalog.find("binary-search"));
         Files.writeString(legacy.solution(), "learner-owned legacy solution");
+        Files.writeString(unselectedLegacy.solution(), "learner-owned unselected legacy solution");
         PracticeProgress legacyProgress = PracticeProgress.get(fixture.getProject());
         var legacyEntry = legacyProgress.entry(legacy.id(), legacy.exerciseId());
         legacyEntry.status = "PASSED";
@@ -170,13 +173,16 @@ class PluginIntegrationTest {
         var second = legacyImport.importLegacy(legacyRoot, legacyProgress, progress);
 
         String managedId = progress.importedAttempt(legacyRoot.toRealPath().toString(), legacy.id());
-        assertThat(first.imported()).isEqualTo(1);
+        String unselectedManagedId = progress.importedAttempt(legacyRoot.toRealPath().toString(), unselectedLegacy.id());
+        assertThat(first.imported()).isEqualTo(2);
         assertThat(first.skipped()).isGreaterThanOrEqualTo(5);
         assertThat(first.summary()).contains("Originals were unchanged");
         assertThat(second.imported()).isZero();
         assertThat(second.skipped()).isGreaterThan(first.skipped());
         assertThat(managed.attempts("pair-sum")).hasSize(managedBefore + 1);
         assertThat(managed.read(managedId).solution()).hasContent("learner-owned legacy solution");
+        assertThat(managed.read(unselectedManagedId).solution())
+                .hasContent("learner-owned unselected legacy solution");
         assertThat(progress.importedAttempt(legacyRoot.toRealPath().toString(), legacy.id()))
                 .isEqualTo(managedId);
         var migrated = progress.entry(managedId, "pair-sum");
@@ -188,6 +194,7 @@ class PluginIntegrationTest {
         assertThat(migrated.tests).isZero();
         assertThat(migrated.failures).isZero();
         assertThat(progress.getState().selectedAttempts).containsEntry("pair-sum", managedId);
+        assertThat(progress.getState().selectedAttempts).doesNotContainEntry("binary-search", unselectedManagedId);
         assertThat(progress.getState().testSeconds).isEqualTo(9);
         assertThat(progress.getState().suiteSeconds).isEqualTo(90);
         assertThat(progress.getState().heapMb).isEqualTo(384);

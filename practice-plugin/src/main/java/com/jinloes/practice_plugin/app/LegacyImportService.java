@@ -47,7 +47,6 @@ public final class LegacyImportService {
         }
         Path attemptsRoot = root.resolve("attempts");
         if (!Files.isDirectory(attemptsRoot, LinkOption.NOFOLLOW_LINKS)
-                || Files.isSymbolicLink(attemptsRoot)
                 || !attemptsRoot.toRealPath().equals(root.resolve("attempts"))) {
             throw new IOException("The legacy attempts directory must not redirect.");
         }
@@ -57,9 +56,7 @@ public final class LegacyImportService {
         try (var entries = Files.list(attemptsRoot)) {
             for (Path entry : entries.sorted(Comparator.comparing(Path::toString)).toList()) {
                 if (!Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS)
-                        || Files.isSymbolicLink(entry)
-                        || !Files.isRegularFile(entry.resolve(".practice-attempt"), LinkOption.NOFOLLOW_LINKS)
-                        || Files.isSymbolicLink(entry.resolve(".practice-attempt"))) {
+                        || !Files.isRegularFile(entry.resolve(".practice-attempt"), LinkOption.NOFOLLOW_LINKS)) {
                     skipped++;
                     continue;
                 }

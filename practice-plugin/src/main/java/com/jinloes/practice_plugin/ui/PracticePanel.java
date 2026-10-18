@@ -1,21 +1,27 @@
 package com.jinloes.practice_plugin.ui;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.icons.AllIcons;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.actionSystem.ActionToolbar;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.ui.OnePixelSplitter;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextArea;
+import com.intellij.util.ui.JBFont;
 import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.app.LegacyImportService;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
@@ -30,22 +36,23 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
+import javax.swing.ListSelectionModel;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
-final class PracticePanel extends JPanel implements Disposable {
+final class PracticePanel extends JPanel implements Disposable, PracticeActions.RunControls {
+    private static final int PROBLEM_TAB = 0;
+    private static final int GUIDE_TAB = 1;
+
     private final Project project;
     private final ManagedPracticeProgress progress;
     private final ManagedPracticeWorkspace workspace;
@@ -55,20 +62,21 @@ final class PracticePanel extends JPanel implements Disposable {
     private final DefaultListModel<Exercise> model = new DefaultListModel<>();
     private final JBList<Exercise> exercises = new JBList<>(model);
     private final ExerciseFilters filters = new ExerciseFilters();
+    private final JBLabel count = new JBLabel();
     private final JComboBox<ManagedPracticeWorkspace.Attempt> attempts = new JComboBox<>();
-    private final JEditorPane statement = PracticeViews.htmlPane();
-    private final StudyGuideView studyGuide = new StudyGuideView();
+    private final PageView problem;
+    private final PageView guide;
+    private final JBTabbedPane tabs = new JBTabbedPane();
     private final JBTextArea hints = PracticeViews.textArea();
-    private final JBTextArea results = PracticeViews.textArea();
-    private final JLabel status = new JLabel("Choose an exercise.");
-    private final JButton runExamples = new JButton("Run Examples");
-    private final JButton runWithInput = new JButton("Run With Input...");
-    private final JButton debugWithInput = new JButton("Debug With Input...");
-    private final JButton check = new JButton("Check Solution");
-    private final JButton stop = new JButton("Stop");
-    private final Map<String, String> lastInput = new HashMap<>();
+    private final ResultsView results = new ResultsView();
+    private final JBLabel status = new JBLabel("Choose an exercise.");
+    private final ActionToolbar toolbar;
+    private final List<AnAction> titleActions = new ArrayList<>();
+    private final CustomInputPrompt input = new CustomInputPrompt();
+    private Set<String> passed = Set.of();
     private boolean updatingAttempts;
     private boolean disposed;
+    private boolean checking;
     private int selectionGeneration;
 
     /**
@@ -78,66 +86,70 @@ final class PracticePanel extends JPanel implements Disposable {
     private final Consumer<String> runOutput = this::showRunOutput;
 
     PracticePanel(Project project) {
-        super(new BorderLayout(6, 6));
+        super(new BorderLayout(0, 6));
         this.project = project;
         progress = ManagedPracticeProgress.get();
         workspace = ManagedPracticeWorkspace.get();
         legacyImport = new LegacyImportService(workspace);
         runner = project.getService(PracticeRunner.class);
         tasks = new BackgroundTasks(project, () -> !disposed, this::error);
+        problem = PageView.create(this, this::onPageEvent);
+        guide = PageView.create(this, this::onPageEvent);
         setBorder(JBUI.Borders.empty(8));
 
-        JPanel header = new JPanel(new GridLayout(0, 1, 4, 4));
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        button(actions, "Limits", () -> LimitsDialog.edit(project, progress));
-        button(actions, "Clean Generated Artifacts", this::cleanGeneratedArtifacts);
+        titleActions.add(PracticeActions.action("Limits", "Edit run and check limits",
+                AllIcons.General.Settings, () -> true, () -> guarded(() -> LimitsDialog.edit(project, progress))));
+        titleActions.add(PracticeActions.action("Clean Generated Artifacts",
+                "Remove inactive generated practice artifacts", AllIcons.Actions.GC,
+                () -> !runner.isRunning(), this::cleanGeneratedArtifacts));
         if (isLegacyWorkspace()) {
-            button(actions, "Import Legacy Attempts", this::importLegacyAttempts);
+            titleActions.add(PracticeActions.action("Import Legacy Attempts",
+                    "Import attempts from this legacy practice project", AllIcons.ToolbarDecorator.Import,
+                    () -> true, () -> guarded(this::importLegacyAttempts)));
         }
-        header.add(actions);
+
+        JPanel header = new JPanel(new GridLayout(0, 1, 4, 4));
         filters.addTo(header);
+        count.setFont(JBFont.small());
+        count.setForeground(UIUtil.getContextHelpForeground());
+        header.add(count);
         add(header, BorderLayout.NORTH);
 
-        exercises.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        exercises.setCellRenderer(PracticeViews.labelled(Exercise.class,
-                exercise -> exercise.title() + "  [" + exercise.difficulty() + "]"));
+        exercises.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        exercises.setCellRenderer(new ExerciseCellRenderer(() -> passed));
+        exercises.getEmptyText().setText("No exercises match these filters");
         exercises.getAccessibleContext().setAccessibleName("Exercises");
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Problem", new JBScrollPane(statement));
-        tabs.addTab("Study Guide", new JBScrollPane(studyGuide.component()));
+        tabs.addTab("Problem", problem.component());
+        tabs.addTab("Study Guide", guide.component());
         JPanel hintPanel = new JPanel(new BorderLayout());
         hintPanel.add(new JBScrollPane(hints), BorderLayout.CENTER);
-        button(hintPanel, "Reveal Next Hint", this::revealHint);
+        JPanel hintActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        button(hintActions, "Reveal Next Hint", this::revealHint);
+        hintPanel.add(hintActions, BorderLayout.SOUTH);
         tabs.addTab("Hints", hintPanel);
-        tabs.addTab("Results", new JBScrollPane(results));
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JBScrollPane(exercises), tabs);
-        split.setResizeWeight(0.3);
+        tabs.addTab("Results", results.component());
+        OnePixelSplitter split = new OnePixelSplitter(true, 0.35f);
+        split.setFirstComponent(new JBScrollPane(exercises));
+        split.setSecondComponent(tabs);
         add(split, BorderLayout.CENTER);
 
         attempts.getAccessibleContext().setAccessibleName("Saved attempts");
         attempts.setRenderer(PracticeViews.labelled(
                 ManagedPracticeWorkspace.Attempt.class, ManagedPracticeWorkspace.Attempt::id));
+        JPanel editing = new JPanel(new BorderLayout(4, 0));
+        editing.add(new JBLabel("Attempt:"), BorderLayout.WEST);
+        editing.add(attempts, BorderLayout.CENTER);
+        JPanel attemptButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        button(attemptButtons, "Start / Resume", this::startOrResume);
+        button(attemptButtons, "New Attempt", this::newAttempt);
+        editing.add(attemptButtons, BorderLayout.EAST);
+        toolbar = PracticeActions.runToolbar(this, this);
         JPanel footer = new JPanel(new GridLayout(0, 1, 4, 4));
-        footer.add(attempts);
-        JPanel editing = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        button(editing, "Start / Resume", this::startOrResume);
-        button(editing, "New Attempt", this::newAttempt);
         footer.add(editing);
-        JPanel executions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        executions.add(runExamples);
-        executions.add(runWithInput);
-        executions.add(debugWithInput);
-        executions.add(check);
-        executions.add(stop);
-        footer.add(executions);
+        footer.add(toolbar.getComponent());
         footer.add(status);
         add(footer, BorderLayout.SOUTH);
 
-        runExamples.addActionListener(event -> guarded(() -> runner.runExamples(selectedAttempt().id())));
-        runWithInput.addActionListener(event -> promptForInput(false));
-        debugWithInput.addActionListener(event -> promptForInput(true));
-        check.addActionListener(event -> guarded(() -> runner.check(selectedAttempt().id())));
-        stop.addActionListener(event -> runner.stop());
         runner.addListener(runOutput);
         exercises.addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting()) {
@@ -154,7 +166,7 @@ final class PracticePanel extends JPanel implements Disposable {
             filter();
             refreshGuide();
             if (filters.shownGuide() != null) {
-                tabs.setSelectedIndex(1);
+                tabs.setSelectedIndex(GUIDE_TAB);
             }
         });
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
@@ -169,15 +181,46 @@ final class PracticePanel extends JPanel implements Disposable {
         filter();
     }
 
+    /** The tool window title bar actions: limits, cleanup, and legacy import for legacy projects. */
+    List<AnAction> titleActions() {
+        return List.copyOf(titleActions);
+    }
+
     private void filter() {
+        passed = progress.passedExerciseIds();
         Exercise previous = exercises.getSelectedValue();
         model.clear();
-        filters.visible(progress.passedExerciseIds()).forEach(model::addElement);
+        filters.visible(passed).forEach(model::addElement);
+        updateCount();
         if (previous != null && model.contains(previous)) {
             exercises.setSelectedValue(previous, true);
         } else if (!model.isEmpty()) {
             exercises.setSelectedIndex(0);
         }
+    }
+
+    private void updateCount() {
+        long shownPassed = java.util.stream.IntStream.range(0, model.size())
+                .filter(index -> passed.contains(model.get(index).id())).count();
+        count.setText(model.size() + " exercises · " + shownPassed + " passed");
+    }
+
+    private void onPageEvent(PageEvent event) {
+        guarded(() -> {
+            switch (event.type()) {
+                case SELECT_EXERCISE -> selectExercise(ExerciseCatalog.find(event.id()));
+                case SELECT_GUIDE -> filters.selectGuide(event.id());
+                case SELECT_TRACK -> filters.selectTrack(event.id());
+            }
+        });
+    }
+
+    private void selectExercise(Exercise exercise) {
+        if (!model.contains(exercise)) {
+            filters.reveal(exercise);
+        }
+        exercises.setSelectedValue(exercise, true);
+        tabs.setSelectedIndex(PROBLEM_TAB);
     }
 
     private void showExercise() {
@@ -186,12 +229,9 @@ final class PracticePanel extends JPanel implements Disposable {
         updatingAttempts = true;
         attempts.removeAllItems();
         updatingAttempts = false;
-        showStatement(exercise == null
-                ? "<p>No exercises match these filters.</p>"
-                : PracticeViews.problemText(exercise));
+        refreshPages();
         hints.setText("Start or resume an attempt to reveal hints.");
-        results.setText("");
-        refreshGuide();
+        results.clear();
         updateButtons();
         if (exercise != null) {
             background("Loading practice attempts", () -> workspace.attempts(exercise.id()), loaded -> {
@@ -223,17 +263,14 @@ final class PracticePanel extends JPanel implements Disposable {
         if (hints.getText().isEmpty()) {
             hints.setText("Hints are optional. Reveal one only when you want help.");
         }
-        status.setText("Managed attempt ready. " + entry.status);
-        results.setText(entry.status + "\n" + entry.details + "\nLast full check: " + entry.checkedAt
-                + "\nMost recent pass: " + entry.lastPassedAt
-                + (entry.complexity == null || entry.complexity.isBlank()
-                        ? "" : "\n\n" + entry.complexity));
+        status.setText("Attempt " + attempt.id() + ": " + ResultsView.label(entry.status));
+        results.showEntry(entry);
         if (!entry.checkedFingerprint.isEmpty()) {
             background("Checking result freshness", () -> workspace.fingerprint(attempt), hash -> {
                 if (attempt.equals(selectedAttemptOrNull())
                         && (!hash.equals(entry.checkedFingerprint) || hasUnsavedAttemptFile())) {
                     status.setText("Edited since last check; previous result is stale.");
-                    results.append("\nSTALE: check the current solution again.");
+                    results.markStale("check the current solution again.");
                 }
             });
         }
@@ -273,53 +310,66 @@ final class PracticePanel extends JPanel implements Disposable {
         Path legacyRoot = root().toRealPath();
         background("Importing legacy attempts", () -> legacyImport.importLegacy(
                 legacyRoot, PracticeProgress.get(project), progress), imported -> {
-            results.setText(imported.summary());
             showExercise();
+            results.showMessage("Legacy import finished", imported.summary());
+            tabs.setSelectedComponent(results.component());
         });
     }
 
     private void openSolution(ManagedPracticeWorkspace.Attempt attempt) {
-        background("Opening solution", () -> {
-            try {
-                PracticeModuleWorkspace.get(project).open(attempt);
-            } catch (ExecutionException exception) {
-                throw new IOException(exception.getMessage(), exception);
-            }
-            var file = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(attempt.solution());
-            if (file == null) {
-                throw new IOException("Solution file is missing: " + attempt.solution());
-            }
-            return file;
-        }, file -> FileEditorManager.getInstance(project).openFile(file, true));
+        background("Opening solution", () -> AttemptFiles.prepare(project, attempt),
+                file -> FileEditorManager.getInstance(project).openFile(file, true));
     }
 
-    private void promptForInput(boolean debug) {
+    @Override
+    public boolean canRun() {
+        return selectedAttemptOrNull() != null && !runner.isRunning();
+    }
+
+    @Override
+    public boolean isRunning() {
+        return runner.isRunning();
+    }
+
+    @Override
+    public void runExamples() {
+        launch(false, () -> runner.runExamples(selectedAttempt().id()));
+    }
+
+    @Override
+    public void check() {
+        launch(true, () -> runner.check(selectedAttempt().id()));
+    }
+
+    @Override
+    public void stop() {
+        runner.stop();
+    }
+
+    @Override
+    public void runWithInput(boolean debug) {
         ManagedPracticeWorkspace.Attempt attempt = selectedAttemptOrNull();
         if (attempt == null) {
             error("Start or resume an attempt first.");
             return;
         }
-        Exercise exercise = ExerciseCatalog.find(attempt.exerciseId());
-        String previous = lastInput.getOrDefault(exercise.id(), exercise.sampleInput());
-        String input = Messages.showInputDialog(
-                project,
-                exercise.inputSyntax(),
-                (debug ? "Debug " : "Run ") + exercise.title() + " With Input",
-                null,
-                previous,
-                null);
-        if (input == null || input.isBlank()) {
+        String trimmed = input.ask(project, ExerciseCatalog.find(attempt.exerciseId()), debug);
+        if (trimmed == null) {
             return;
         }
-        String trimmed = input.trim();
-        lastInput.put(exercise.id(), trimmed);
-        guarded(() -> {
+        launch(false, () -> {
             if (debug) {
                 runner.debugExamples(attempt.id(), trimmed);
             } else {
                 runner.runExamples(attempt.id(), trimmed);
             }
         });
+    }
+
+    private void launch(boolean fullCheck, Action action) {
+        checking = fullCheck;
+        tabs.setSelectedComponent(results.component());
+        guarded(action);
     }
 
     private void revealHint() throws IOException {
@@ -340,12 +390,7 @@ final class PracticePanel extends JPanel implements Disposable {
     }
 
     private void updateButtons() {
-        boolean ready = selectedAttemptOrNull() != null && !runner.isRunning();
-        runExamples.setEnabled(ready);
-        runWithInput.setEnabled(ready);
-        debugWithInput.setEnabled(ready);
-        check.setEnabled(ready);
-        stop.setEnabled(runner.isRunning());
+        toolbar.updateActionsAsync();
     }
 
     private boolean hasUnsavedAttemptFile() {
@@ -372,19 +417,10 @@ final class PracticePanel extends JPanel implements Disposable {
         return Path.of(Objects.requireNonNull(project.getBasePath()));
     }
 
-    private void showStatement(String html) {
-        statement.setText("<html><body>" + html + "</body></html>");
-        statement.setCaretPosition(0);
-    }
-
     private void button(JPanel panel, String title, Action action) {
         JButton button = new JButton(title);
         button.addActionListener(event -> guarded(action));
-        if (panel.getLayout() instanceof BorderLayout) {
-            panel.add(button, BorderLayout.SOUTH);
-        } else {
-            panel.add(button);
-        }
+        panel.add(button);
     }
 
     private void guarded(Action action) {
@@ -401,7 +437,7 @@ final class PracticePanel extends JPanel implements Disposable {
 
     private void error(String text) {
         status.setText("Action failed; see Results.");
-        results.setText(text);
+        results.showError(text);
         NotificationGroupManager.getInstance().getNotificationGroup("Algorithm Practice")
                 .createNotification(text, NotificationType.ERROR).notify(project);
     }
@@ -410,20 +446,38 @@ final class PracticePanel extends JPanel implements Disposable {
         if (disposed) {
             return;
         }
-        results.setText(text);
-        if (hasUnsavedAttemptFile()) {
-            results.append("\nSTALE: there are unsaved changes. Check again after saving.");
+        boolean running = runner.isRunning();
+        var attempt = selectedAttemptOrNull();
+        Exercise exercise = exercises.getSelectedValue();
+        if (running) {
+            results.showRunning();
+        } else if (checking && attempt != null && exercise != null) {
+            results.showStatus(progress.entry(attempt.id(), exercise.id()));
+        } else {
+            results.showMessage("Run finished", "");
         }
-        results.setCaretPosition(0);
-        status.setText(runner.isRunning() ? "Running..." : "Run finished; see Results.");
-        if (!runner.isRunning()) {
-            refreshGuide();
+        results.showOutput(text);
+        if (hasUnsavedAttemptFile()) {
+            results.markStale("there are unsaved changes. Check again after saving.");
+        }
+        status.setText(running ? "Running..." : "Run finished; see Results.");
+        if (!running) {
+            passed = progress.passedExerciseIds();
+            updateCount();
+            exercises.repaint();
+            refreshPages();
         }
         updateButtons();
     }
 
+    private void refreshPages() {
+        Exercise selected = exercises.getSelectedValue();
+        problem.show(new PracticePage.Problem(selected, passed));
+        refreshGuide();
+    }
+
     private void refreshGuide() {
-        studyGuide.show(filters.shownGuide(), exercises.getSelectedValue(), progress.passedExerciseIds());
+        guide.show(new PracticePage.Study(filters.shownGuide(), exercises.getSelectedValue(), passed));
     }
 
     @Override

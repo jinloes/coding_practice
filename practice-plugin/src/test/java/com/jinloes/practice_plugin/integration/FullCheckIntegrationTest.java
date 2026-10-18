@@ -3,6 +3,7 @@ package com.jinloes.practice_plugin.integration;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
@@ -128,8 +129,84 @@ class FullCheckIntegrationTest extends PracticeExecutionTestBase {
         assertThatThrownBy(() -> runner.runExamples(attempt.id()))
                 .isInstanceOf(com.intellij.execution.ExecutionException.class)
                 .hasMessageContaining("already active");
+        assertThatThrownBy(() -> start(attempt.id()))
+                .isInstanceOf(com.intellij.execution.ExecutionException.class)
+                .hasMessageContaining("already active");
         runner.stop();
         awaitFullCheck(check);
+    }
+
+    @Test
+    void runnerListenersCanBeRemoved() {
+        PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
+        java.util.function.Consumer<String> listener = ignored -> {};
+
+        runner.addListener(listener);
+        assertThat(runner.listenerCount()).isPositive();
+        runner.removeListener(listener);
+
+        assertThat(runner.listenerCount()).isZero();
+    }
+
+    @Test
+    void fullCheckRunConfigurationPersistsAttemptAndRejectsInvalidLaunches() throws Exception {
+        var factory = ConfigurationTypeUtil.findConfigurationType(PracticeConfigurationType.class)
+                .getConfigurationFactories()[0];
+        PracticeRunConfiguration configuration = EdtTestUtil.runInEdtAndGet(() ->
+                new PracticeRunConfiguration(fixture.getProject(), factory, "Check"));
+
+        configuration.attemptId = "not valid";
+        assertThatThrownBy(configuration::checkConfiguration)
+                .isInstanceOf(com.intellij.execution.configurations.RuntimeConfigurationError.class)
+                .hasMessageContaining("Select an attempt");
+        configuration.attemptId = "missing-attempt";
+        assertThatThrownBy(configuration::checkConfiguration)
+                .isInstanceOf(com.intellij.execution.configurations.RuntimeConfigurationError.class)
+                .hasMessageContaining("managed attempt");
+
+        configuration.attemptId = attempt.id();
+        configuration.checkConfiguration();
+        var editor = configuration.getConfigurationEditor();
+        assertThat(editor.getComponent()).isInstanceOf(javax.swing.JLabel.class);
+        editor.resetFrom(configuration);
+        editor.applyTo(configuration);
+
+        org.jdom.Element element = new org.jdom.Element("configuration");
+        configuration.writeExternal(element);
+        PracticeRunConfiguration restored = EdtTestUtil.runInEdtAndGet(() ->
+                new PracticeRunConfiguration(fixture.getProject(), factory, "Restored"));
+        restored.readExternal(element);
+        assertThat(restored.attemptId).isEqualTo(attempt.id());
+
+        var environment = EdtTestUtil.runInEdtAndGet(() ->
+                ExecutionEnvironmentBuilder.create(DefaultRunExecutor.getRunExecutorInstance(),
+                        RunManager.getInstance(fixture.getProject()).createConfiguration("Full check", factory))
+                        .build());
+        assertThat(configuration.getState(DefaultRunExecutor.getRunExecutorInstance(), environment))
+                .isInstanceOf(com.intellij.execution.configurations.CommandLineState.class);
+        assertThatThrownBy(() -> configuration.getState(DefaultDebugExecutor.getDebugExecutorInstance(), environment))
+                .isInstanceOf(com.intellij.execution.ExecutionException.class)
+                .hasMessageContaining("Use Debug With Input");
+
+        PracticeRunConfiguration missing = EdtTestUtil.runInEdtAndGet(() ->
+                new PracticeRunConfiguration(fixture.getProject(), factory, "Missing"));
+        missing.attemptId = "missing-attempt";
+        var missingEnvironment = EdtTestUtil.runInEdtAndGet(() ->
+                ExecutionEnvironmentBuilder.create(DefaultRunExecutor.getRunExecutorInstance(),
+                        RunManager.getInstance(fixture.getProject()).createConfiguration("Missing check", factory))
+                        .build());
+        var state = missing.getState(DefaultRunExecutor.getRunExecutorInstance(), missingEnvironment);
+        assertThatThrownBy(() -> state.execute(DefaultRunExecutor.getRunExecutorInstance(),
+                ProgramRunner.getRunner(DefaultRunExecutor.EXECUTOR_ID, missingEnvironment.getRunProfile())))
+                .isInstanceOf(com.intellij.execution.ExecutionException.class)
+                .hasMessageContaining("Cannot start managed check");
+
+        PracticeRunConfiguration.Options options = new PracticeRunConfiguration.Options();
+        assertThat(options).isInstanceOf(com.intellij.execution.configurations.RunConfigurationOptions.class);
+        PracticeConfigurationType type = new PracticeConfigurationType();
+        assertThat(type.getConfigurationFactories()[0].getId()).isEqualTo("AlgorithmPractice");
+        assertThat(type.getConfigurationFactories()[0].createTemplateConfiguration(fixture.getProject()))
+                .isInstanceOf(PracticeRunConfiguration.class);
     }
 
     private ManagedCheck launchFullCheck() throws Exception {

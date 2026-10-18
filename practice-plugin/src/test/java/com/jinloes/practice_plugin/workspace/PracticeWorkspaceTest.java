@@ -150,6 +150,38 @@ class PracticeWorkspaceTest {
     }
 
     @Test
+    void reportsNonWorkspaceRootsAndUnreadableWorkspaceMarkersAsUnsupported() throws Exception {
+        Path missing = tempDir.resolve("missing-marker");
+        Files.createDirectories(missing);
+        assertThat(PracticeWorkspace.isWorkspace(missing)).isFalse();
+
+        Path directoryMarker = tempDir.resolve("directory-marker");
+        Files.createDirectories(directoryMarker.resolve(PracticeWorkspace.MARKER));
+        assertThat(PracticeWorkspace.isWorkspace(directoryMarker)).isFalse();
+        assertThatThrownBy(() -> PracticeWorkspace.readAttempt(directoryMarker, "pair-sum-anything"))
+                .isInstanceOf(IOException.class);
+
+        Path unreadable = tempDir.resolve("unreadable-marker");
+        Files.createDirectories(unreadable);
+        Files.writeString(unreadable.resolve(PracticeWorkspace.MARKER), "schema=1\n");
+        assertThat(PracticeWorkspace.isWorkspace(unreadable, marker -> {
+            throw new IOException("deleted while reading");
+        })).isFalse();
+    }
+
+    @Test
+    void rejectsAttemptsWithUnsupportedExerciseRevision() throws Exception {
+        Path root = createWorkspace();
+        PracticeWorkspace.Attempt attempt = LegacyWorkspaceFixture.createAttempt(root, PAIR_SUM);
+        Files.writeString(attempt.directory().resolve(".practice-attempt"),
+                "exercise=pair-sum\nrevision=2\ncreated=2026-01-01T00:00:00Z\n");
+
+        assertThatThrownBy(() -> PracticeWorkspace.readAttempt(root, attempt.id()))
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("Unsupported exercise revision");
+    }
+
+    @Test
     @Tag("gradle-integration")
     void generatedWorkspaceRunsOnlyTheSelectedAttemptAndRejectsAStalePass() throws Exception {
         Path root = createWorkspace();

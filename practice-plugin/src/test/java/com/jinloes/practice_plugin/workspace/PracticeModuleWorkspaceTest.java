@@ -2,6 +2,7 @@ package com.jinloes.practice_plugin.workspace;
 
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.application.PathManager;
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
@@ -20,8 +21,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PracticeModuleWorkspaceTest {
     @TempDir Path temporary;
@@ -62,8 +65,11 @@ class PracticeModuleWorkspaceTest {
                 PracticeModuleWorkspace.get(fixture.getProject()).open(first));
         var secondModule = EdtTestUtil.runInEdtAndGet(() ->
                 PracticeModuleWorkspace.get(fixture.getProject()).open(second));
+        var reopenedFirstModule = EdtTestUtil.runInEdtAndGet(() ->
+                PracticeModuleWorkspace.get(fixture.getProject()).open(first));
 
         assertThat(firstModule).isNotSameAs(secondModule);
+        assertThat(reopenedFirstModule).isSameAs(firstModule);
         assertThat(ModuleManager.getInstance(fixture.getProject()).getModules())
                 .contains(firstModule, secondModule);
         assertThat(ModuleRootManager.getInstance(firstModule).getSdk()).isNotNull();
@@ -108,6 +114,63 @@ class PracticeModuleWorkspaceTest {
     }
 
     @Test
+    void preparingAHarnessAgainReplacesThePreviousMarkedHarness() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+        var support = PracticeModuleWorkspace.get(fixture.getProject());
+        Path firstRunner = EdtTestUtil.runInEdtAndGet(() ->
+                support.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId())));
+        Path harness = firstRunner.getParent().getParent().getParent().getParent().getParent();
+        Files.writeString(harness.resolve("stale"), "old generated file");
+
+        Path secondRunner = EdtTestUtil.runInEdtAndGet(() ->
+                support.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId())));
+
+        assertThat(secondRunner).isEqualTo(firstRunner);
+        assertThat(harness.resolve("stale")).doesNotExist();
+        assertThat(secondRunner).content().contains("class ExampleRunner");
+    }
+
+    @Test
+    void clearExampleHarnessPreservesAHarnessWhoseMarkerNoLongerValidates() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+        var support = PracticeModuleWorkspace.get(fixture.getProject());
+        Path runner = EdtTestUtil.runInEdtAndGet(() ->
+                support.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId())));
+        Path harness = runner.getParent().getParent().getParent().getParent().getParent();
+        Files.writeString(harness.resolve(".algorithm-practice-generated"),
+                "schema=2\nkind=harness\nattempt=" + attempt.id() + "\npid=1\n");
+
+        EdtTestUtil.runInEdtAndWait(() -> support.clearExampleHarness(attempt));
+
+        assertThat(harness).isDirectory();
+    }
+
+    @Test
+    void clearingAnUnpreparedHarnessIsANoOp() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+
+        EdtTestUtil.runInEdtAndWait(() ->
+                PracticeModuleWorkspace.get(fixture.getProject()).clearExampleHarness(attempt));
+
+        assertThat(generatedBase("harnesses").resolve(attempt.id())).doesNotExist();
+    }
+
+    @Test
+    void prepareExampleHarnessReportsExistingHarnessWhoseOwnershipCannotBeRevalidated() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+        var support = PracticeModuleWorkspace.get(fixture.getProject());
+        Path runner = EdtTestUtil.runInEdtAndGet(() ->
+                support.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId())));
+        Path harness = runner.getParent().getParent().getParent().getParent().getParent();
+        Files.writeString(harness.resolve(".algorithm-practice-generated"),
+                "schema=2\nkind=harness\nattempt=" + attempt.id() + "\npid=1\n");
+
+        assertThatThrownBy(() -> EdtTestUtil.runInEdtAndGet(() ->
+                support.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId()))))
+                .hasMessageContaining("Cannot prepare the generated example runner");
+    }
+
+    @Test
     void prefersAUsableHostSdkButNeverSetsOneWhenMissing() throws Exception {
         var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
         var hostSdk = JavaSdk.getInstance().createJdk(
@@ -122,6 +185,42 @@ class PracticeModuleWorkspaceTest {
 
         assertThat(ModuleRootManager.getInstance(module).getSdk()).isSameAs(hostSdk);
         assertThat(ProjectRootManager.getInstance(fixture.getProject()).getProjectSdk()).isSameAs(hostSdk);
+    }
+
+    @Test
+    void usesARegisteredJdkWhenTheProjectHasNoSdk() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+        var tableSdk = JavaSdk.getInstance().createJdk(
+                "Managed practice table JDK", System.getProperty("java.home"), false);
+        EdtTestUtil.runInEdtAndWait(() -> WriteAction.run(() ->
+                ProjectJdkTable.getInstance().addJdk(tableSdk, fixture.getTestRootDisposable())));
+
+        var module = EdtTestUtil.runInEdtAndGet(() ->
+                PracticeModuleWorkspace.get(fixture.getProject()).open(attempt));
+
+        assertThat(ModuleRootManager.getInstance(module).getSdk()).isSameAs(tableSdk);
+        assertThat(ProjectRootManager.getInstance(fixture.getProject()).getProjectSdk()).isNull();
+    }
+
+    @Test
+    void javaHomeSelectsAJdkOnDemandAndTemporaryConfigurationTrackingIsIdempotent() throws Exception {
+        PracticeModuleWorkspace support = PracticeModuleWorkspace.get(fixture.getProject());
+
+        assertThat(support.javaHome()).isDirectory();
+        support.track(null);
+        support.untrack(null);
+        assertThat(support.cleanupGeneratedArtifacts()).isTrue();
+    }
+
+    @Test
+    void openFailsWithoutRecreatingMissingManagedRoots() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+        deleteTree(attempt.directory());
+
+        assertThatThrownBy(() -> EdtTestUtil.runInEdtAndGet(() ->
+                PracticeModuleWorkspace.get(fixture.getProject()).open(attempt)))
+                .hasMessageContaining("Cannot prepare the managed Java module");
+        assertThat(attempt.directory()).doesNotExist();
     }
 
     @Test
@@ -165,7 +264,7 @@ class PracticeModuleWorkspaceTest {
         Files.writeString(redirectTarget.resolve("keep"), "keep");
         Path redirect = harnesses.resolve("redirect");
         Files.createSymbolicLink(redirect, redirectTarget);
-        Process activeProcess = new ProcessBuilder("sleep", "30").start();
+        Process activeProcess = sleepingProcess();
         Path active = writeMarker(harnesses.resolve(activeId), "harness", activeId,
                 Long.toString(activeProcess.pid()));
         try {
@@ -183,6 +282,46 @@ class PracticeModuleWorkspaceTest {
             activeProcess.destroyForcibly();
             activeProcess.waitFor();
         }
+    }
+
+    @Test
+    void cleanupRemovesOnlyDeadOwnedFallbackSdksWithParseableNames() throws Exception {
+        String prefix = "Algorithm Practice IDE JDK ";
+        String malformedName = prefix + "not-a-pid";
+        String noSeparatorName = prefix + deadPid();
+        String staleName = prefix + deadPid() + "-module-workspace";
+        Sdk malformed = JavaSdk.getInstance().createJdk(malformedName, System.getProperty("java.home"), false);
+        Sdk noSeparator = JavaSdk.getInstance().createJdk(noSeparatorName, System.getProperty("java.home"), false);
+        Sdk stale = JavaSdk.getInstance().createJdk(staleName, System.getProperty("java.home"), false);
+        try {
+            EdtTestUtil.runInEdtAndWait(() -> WriteAction.run(() -> {
+                ProjectJdkTable.getInstance().addJdk(malformed);
+                ProjectJdkTable.getInstance().addJdk(noSeparator);
+                ProjectJdkTable.getInstance().addJdk(stale);
+            }));
+
+            assertThat(PracticeModuleWorkspace.get(fixture.getProject()).cleanupGeneratedArtifacts()).isTrue();
+
+            assertThat(ProjectJdkTable.getInstance().findJdk(malformedName)).isSameAs(malformed);
+            assertThat(ProjectJdkTable.getInstance().findJdk(noSeparatorName)).isSameAs(noSeparator);
+            assertThat(ProjectJdkTable.getInstance().findJdk(staleName)).isNull();
+        } finally {
+            removeJdk(malformedName);
+            removeJdk(noSeparatorName);
+            removeJdk(staleName);
+        }
+    }
+
+    @Test
+    void cleanupDisposesOpenModules() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+        var support = PracticeModuleWorkspace.get(fixture.getProject());
+        var module = EdtTestUtil.runInEdtAndGet(() -> support.open(attempt));
+
+        assertThat(support.cleanupGeneratedArtifacts()).isTrue();
+
+        assertThat(module.isDisposed()).isTrue();
+        assertThat(ModuleManager.getInstance(fixture.getProject()).getModules()).doesNotContain(module);
     }
 
     private Path generatedBase(String kind) {
@@ -212,5 +351,33 @@ class PracticeModuleWorkspaceTest {
             candidate--;
         }
         return candidate;
+    }
+
+    private static void deleteTree(Path root) throws Exception {
+        if (!Files.exists(root)) {
+            return;
+        }
+        try (var paths = Files.walk(root)) {
+            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                Files.delete(path);
+            }
+        }
+    }
+
+    private static void removeJdk(String name) throws Exception {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            Sdk remaining = ProjectJdkTable.getInstance().findJdk(name);
+            if (remaining != null) {
+                WriteAction.run(() -> ProjectJdkTable.getInstance().removeJdk(remaining));
+            }
+        });
+    }
+
+    private static Process sleepingProcess() throws Exception {
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            return new ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive",
+                    "-Command", "Start-Sleep -Seconds 30").start();
+        }
+        return new ProcessBuilder("sleep", "30").start();
     }
 }

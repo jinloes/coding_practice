@@ -38,6 +38,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.jinloes.practice_plugin.run.CheckResult.Status.CANCELLED;
+import static com.jinloes.practice_plugin.run.RunDecisions.exampleFinishedText;
+import static com.jinloes.practice_plugin.run.RunDecisions.exampleInstallPreflight;
+import static com.jinloes.practice_plugin.run.RunDecisions.exampleResultText;
+import static com.jinloes.practice_plugin.run.RunDecisions.exampleRunnerOwned;
+import static com.jinloes.practice_plugin.run.RunDecisions.exampleStart;
+import static com.jinloes.practice_plugin.run.RunDecisions.fullCheckMessage;
+import static com.jinloes.practice_plugin.run.RunDecisions.normalizedInput;
 
 @Service(Service.Level.PROJECT)
 public final class PracticeRunner implements Disposable {
@@ -77,25 +84,12 @@ public final class PracticeRunner implements Disposable {
                 if (examples == null) {
                     return;
                 }
-                RunSession.RunControl control = examples.control();
-                control.active(handler);
-                if (control.stopReason() == CANCELLED) {
-                    control.captureChildrenOf(handler);
-                    control.terminateOwnedChildren();
-                    handler.destroyProcess();
-                    return;
-                }
-                String verb = examples.debug() ? "Debugging" : "Running";
-                message(examples.input().isEmpty()
-                        ? verb + " visible examples."
-                        : verb + " the solution on: " + examples.input());
+                handleExampleProcessStarted(examples, handler);
             }
 
             @Override
             public void processNotStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment) {
-                if (examplesFor(environment) != null) {
-                    finishExamples("Example launch did not complete. See the IDE notification and Run console.");
-                }
+                handleExampleProcessNotStarted(examplesFor(environment));
             }
 
             @Override
@@ -103,12 +97,27 @@ public final class PracticeRunner implements Disposable {
                                           @NotNull ProcessHandler handler, int exitCode) {
                 RunSession.ExampleSession examples = examplesFor(environment);
                 if (examples != null) {
-                    finishExamples((examples.input().isEmpty() ? "Example session" : "Input session")
-                            + " finished (exit " + exitCode
-                            + "). Use Check Solution to update correctness progress.");
+                    finishExamples(exampleFinishedText(examples.input(), exitCode));
                 }
             }
         });
+    }
+
+    void handleExampleProcessStarted(RunSession.ExampleSession examples, ProcessHandler handler) {
+        RunSession.RunControl control = examples.control();
+        control.active(handler);
+        RunDecisions.ExampleStart start = exampleStart(examples);
+        if (start.cancelled()) {
+            stopOwnedExampleProcess(control, handler);
+            return;
+        }
+        message(start.message());
+    }
+
+    void handleExampleProcessNotStarted(RunSession.ExampleSession examples) {
+        if (examples != null) {
+            finishExamples("Example launch did not complete. See the IDE notification and Run console.");
+        }
     }
 
     /** The example run this environment belongs to, or null when the event is not ours. */
@@ -187,7 +196,7 @@ public final class PracticeRunner implements Disposable {
 
     private void launchExamples(String attemptId, String input, boolean debug) throws ExecutionException {
         ensureIdle();
-        String argument = input == null ? "" : input.trim();
+        String argument = normalizedInput(input);
         runAfterSavingDocuments(() -> launchExamplesAfterSave(attemptId, argument, debug));
     }
 
@@ -236,19 +245,18 @@ public final class PracticeRunner implements Disposable {
     ) {
         try {
             WriteIntentReadAction.runThrowable(() -> {
-                if (project.isDisposed()
-                        || !(session.get() instanceof RunSession.ExampleSession current)
-                        || current.control().stopReason() == CANCELLED) {
-                    finishExamples("Example launch cancelled.");
+                RunDecisions.ExampleInstallPreflight preflight = exampleInstallPreflight(project.isDisposed(), session.get());
+                if (!preflight.proceed()) {
+                    finishExamples(preflight.message());
                     return;
                 }
+                RunSession.ExampleSession current = preflight.current();
                 requireModelAccess();
                 var expectedModule = PracticeModuleWorkspace.get(project).open(attempt);
                 var runnerFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(runner);
                 var psiFile = runnerFile == null ? null : PsiManager.getInstance(project).findFile(runnerFile);
                 var module = runnerFile == null ? null : ModuleUtilCore.findModuleForFile(runnerFile, project);
-                if (!(psiFile instanceof PsiJavaFile javaFile) || javaFile.getClasses().length != 1
-                        || module == null || module.isDisposed() || module != expectedModule) {
+                if (!(psiFile instanceof PsiJavaFile javaFile) || !exampleRunnerOwned(javaFile, module, expectedModule)) {
                     finishExamples("Generated example runner is not owned by the attempt module.");
                     return;
                 }
@@ -277,9 +285,7 @@ public final class PracticeRunner implements Disposable {
         control.requestCancel();
         ProcessHandler handler = control.active();
         if (handler != null && !handler.isProcessTerminated()) {
-            control.captureChildrenOf(handler);
-            control.terminateOwnedChildren();
-            handler.destroyProcess();
+            stopOwnedExampleProcess(control, handler);
         }
     }
 
@@ -298,9 +304,7 @@ public final class PracticeRunner implements Disposable {
                     if (!project.isDisposed()) {
                         ManagedPracticeProgress.get().record(
                                 attempt.id(), attempt.exerciseId(), fingerprint, completed);
-                        message("Managed attempt: " + attempt.id() + "\nFull check: " + completed.status()
-                                + "\n" + completed.details()
-                                + (completed.complexity().isBlank() ? "" : "\n\n" + completed.complexity()));
+                        message(fullCheckMessage(attempt, completed));
                     }
                 }));
     }
@@ -322,20 +326,19 @@ public final class PracticeRunner implements Disposable {
                         RunManager.getInstance(project).removeConfiguration(settings);
                     }
                     if (attempt != null && !project.isDisposed()) {
-                        PracticeModuleWorkspace.get(project).clearExampleHarness(attempt);
-                        if (fingerprint != null && resultText.contains("session finished (exit 0)")) {
-                            try {
-                                if (!fingerprint.equals(attempts.fingerprint(attempt))) {
-                                    resultText = "STALE: files changed during the example run; run the current solution again.";
-                                }
-                            } catch (IOException exception) {
-                                resultText = "Example result is unavailable: " + exception.getMessage();
-                            }
-                        }
+                        ManagedPracticeWorkspace.Attempt finishedAttempt = attempt;
+                        PracticeModuleWorkspace.get(project).clearExampleHarness(finishedAttempt);
+                        resultText = exampleResultText(resultText, fingerprint,
+                                () -> attempts.fingerprint(finishedAttempt));
                     }
                     message(resultText);
                 }
         ));
+    }
+
+    @TestOnly
+    RunSession replaceSessionForTest(RunSession next) {
+        return session.getAndSet(next);
     }
 
     private void ensureIdle() throws ExecutionException {
@@ -399,6 +402,12 @@ public final class PracticeRunner implements Disposable {
                 listeners.forEach(each -> each.accept(text));
             }
         });
+    }
+
+    static void stopOwnedExampleProcess(RunSession.RunControl control, ProcessHandler handler) {
+        control.captureChildrenOf(handler);
+        control.terminateOwnedChildren();
+        handler.destroyProcess();
     }
 
     @Override
