@@ -46,15 +46,18 @@ class StudyGuideViewTest {
 
     @Test
     void saysWhenALevelHasNoProblemsYet() {
-        var guide = GuideCatalog.find("graphs");
-        assertThat(guide.exercisesAt("Easy")).as("precondition: graphs has no Easy problems").isEmpty();
+        var guide = GuideCatalog.all().stream()
+                .filter(candidate -> candidate.exercisesAt("Easy").isEmpty() && !candidate.exercisesAt("Hard").isEmpty())
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("precondition: some guide has no Easy problems"));
+        var hard = guide.exercisesAt("Hard").get(0);
 
-        String html = StudyGuideView.html(guide, null, Set.of("course-schedule"));
+        String html = StudyGuideView.html(guide, null, Set.of(hard.id()));
 
         assertThat(html)
                 .contains("<h3>Easy (0/0 passed)</h3><p>No Easy problems in this guide yet.</p>")
                 .contains("<h3>Hard (1/" + guide.exercisesAt("Hard").size() + " passed)</h3>")
-                .contains("<li>Course Schedule (passed)</li>");
+                .contains("<li>" + MarkdownHtml.inline(hard.title()) + " (passed)</li>");
     }
 
     @Test

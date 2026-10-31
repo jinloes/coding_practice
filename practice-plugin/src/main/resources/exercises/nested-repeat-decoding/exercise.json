@@ -1,0 +1,30 @@
+{
+  "id": "nested-repeat-decoding",
+  "title": "Nested Repeat Decoding",
+  "topic": "Stacks",
+  "difficulty": "Medium",
+  "statement": "Expand a compact string in which `k[text]` means `text` written `k` times.\n\nContract\n- `encoded` is a non-null string, possibly empty, made only of lowercase letters `a`-`z`, digits, `[`, and `]`.\n- It is always well formed. Digits appear only as a count `k` written immediately before a `[`; each count is between `1` and `300` with no leading zeros. Every `[` follows a count and has a matching `]`.\n- `k[text]` decodes to the decoded `text` repeated `k` times. Groups may nest, may sit next to plain letters, and may be empty: `2[]` decodes to the empty string.\n- Return the fully decoded string. Its length is at most `100,000`.\n\nExamples\n- `decode(\"3[a]2[bc]\")` returns `\"aaabcbc\"`.\n- `decode(\"2[x3[y]]z\")` returns `\"xyyyxyyyz\"`: the inner group gives `yyy`, so each outer repetition is `xyyy`.\n- `decode(\"10[k]\")` returns `\"kkkkkkkkkk\"`, because counts can have more than one digit.\n",
+  "examples": [
+    {
+      "input": "encoded = \"3[a]2[bc]\"",
+      "output": "\"aaabcbc\""
+    },
+    {
+      "input": "encoded = \"2[x3[y]]z\"",
+      "output": "\"xyyyxyyyz\""
+    },
+    {
+      "input": "encoded = \"10[k]\"",
+      "output": "\"kkkkkkkkkk\""
+    }
+  ],
+  "hints": [
+    "Each `]` closes the most recently opened group, so inner groups always finish first. That last-opened, first-closed order is exactly what a stack models.",
+    "Keep the text built so far at the current level. When a count and `[` arrive, push the count and the current text and start a fresh level; when `]` arrives, pop them and append the finished level, repeated count times, to the restored text.",
+    "Counts can have several digits, so accumulate `count = count * 10 + digit` until the `[`. Build text with `StringBuilder` and `String.repeat` instead of repeated string concatenation. Intended complexity: O(n) time and O(n) space for inputs with bounded nesting, where n is the length of the decoded string."
+  ],
+  "inputSyntax": "Input: an encoded string of lowercase letters, counts, and brackets, for example: 2[x3[y]]z",
+  "sampleInput": "2[x3[y]]z",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

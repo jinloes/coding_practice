@@ -14,9 +14,10 @@ class TrackCatalogTest {
 
     @Test
     void listsTheTracksWithTheirExercisesEasiestFirst() {
-        assertThat(TrackCatalog.all()).extracting(Guide::id).containsExactly("blind-75", "neetcode-150", "google");
+        assertThat(TrackCatalog.all()).extracting(Guide::id)
+                .containsExactly("blind-75", "neetcode-150", "google", "apple");
         assertThat(TrackCatalog.all()).extracting(Guide::title)
-                .containsExactly("Blind 75", "NeetCode 150", "Google");
+                .containsExactly("Blind 75", "NeetCode 150", "Google", "Apple");
         for (Guide track : TrackCatalog.all()) {
             assertThat(track.exercises()).extracting(exercise -> GuideCatalog.DIFFICULTIES.indexOf(exercise.difficulty()))
                     .as("%s lists Easy, then Medium, then Hard", track.id())
@@ -57,6 +58,18 @@ class TrackCatalogTest {
             }
         }
         assertThat(TrackCatalog.find("google").summary()).contains("Approximate");
+        assertThat(TrackCatalog.find("apple").summary()).contains("Approximate");
+    }
+
+    @Test
+    void appleCoversEveryDifficultyWithDistinctExercises() {
+        Guide apple = TrackCatalog.find("apple");
+        assertThat(apple.exercises()).doesNotHaveDuplicates();
+        for (String difficulty : GuideCatalog.DIFFICULTIES) {
+            assertThat(apple.exercisesAt(difficulty)).as("Apple %s exercises", difficulty).isNotEmpty();
+        }
+        assertThat(apple.exercises()).extracting(Exercise::id)
+                .contains("region-recolor", "nested-repeat-decoding", "infix-expression-value");
     }
 
     @Test
@@ -72,6 +85,8 @@ class TrackCatalogTest {
                 .containsExactly("blind-75", "neetcode-150", "google");
         assertThat(TrackCatalog.containing("queens-placement")).extracting(Guide::id)
                 .containsExactly("neetcode-150");
+        assertThat(TrackCatalog.containing("least-recently-used-cache")).extracting(Guide::id)
+                .containsExactly("neetcode-150", "google", "apple");
         assertThat(TrackCatalog.containing("roman-to-integer")).isEmpty();
         assertThatThrownBy(() -> TrackCatalog.find("missing"))
                 .isInstanceOf(IllegalArgumentException.class)

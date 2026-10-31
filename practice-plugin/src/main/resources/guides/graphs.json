@@ -25,6 +25,7 @@
     "cheapest-flights-k-stops",
     "employee-news-spread-time",
     "grid-obstacle-shortest-path",
-    "grouped-dependency-order"
+    "grouped-dependency-order",
+    "region-recolor"
   ]
 }

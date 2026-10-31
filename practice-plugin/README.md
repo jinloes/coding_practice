@@ -83,7 +83,7 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    the same isolated process measures how the saved solution scales and reports
    the result alongside the exercise's intended complexity.
 
-The catalog includes 267 exercises (65 Easy, 171 Medium, 31 Hard). Browse them
+The catalog includes 270 exercises (66 Easy, 172 Medium, 32 Hard). Browse them
 in the Practice tool window by topic, difficulty, guide, or track;
 `src/main/resources/exercises/index.txt` lists every exercise ID in display order.
 Each has an explicit contract and three optional hints. The last hint discusses
@@ -119,6 +119,9 @@ through a curated set of problems. Bundled tracks:
 - **Google**: problems whose patterns are commonly reported in Google coding
   interviews. Company tracks are approximate and are not copied from any
   company-tag service.
+- **Apple**: Easy, Medium, and Hard problems whose patterns are commonly
+  reported in Apple coding interviews, including string parsing, grid and
+  image transforms, and small data-structure designs.
 
 Tracks are hand curated from the plugin's own original exercises; they are not
 official, verified, or leaked question lists. The **Study Guide** tab shows the

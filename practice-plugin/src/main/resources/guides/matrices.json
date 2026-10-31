@@ -22,6 +22,7 @@
     "grid-pattern-search",
     "max-grid-path-sum",
     "row-column-sorted-matrix-search",
-    "grid-obstacle-shortest-path"
+    "grid-obstacle-shortest-path",
+    "region-recolor"
   ]
 }

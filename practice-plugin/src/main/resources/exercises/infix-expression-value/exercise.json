@@ -1,0 +1,30 @@
+{
+  "id": "infix-expression-value",
+  "title": "Infix Expression Value",
+  "topic": "Stacks",
+  "difficulty": "Hard",
+  "statement": "Evaluate an ordinary arithmetic expression with the four basic operators and parentheses.\n\nContract\n- `expression` is a non-null, non-empty string made only of digits, spaces, `+`, `-`, `*`, `/`, `(`, and `)`. Spaces may appear between tokens but never inside a number.\n- It is always well formed. Numbers are non-negative decimal literals. Parentheses are balanced and nest at most `1,000` levels deep.\n- `*` and `/` bind more tightly than `+` and `-`, and operators of equal precedence apply left to right: `10 - 3 - 2` is `5`.\n- A `-` may also be unary, but only at the very start of the expression or right after `(`; it negates the term that follows, as in `-(2 + 3)` or `(-4) * 2`. Every other operator is binary.\n- Division truncates toward zero, as Java's `/` on `int` does. No division by zero occurs, and every literal, every subexpression's value, and the result fit in an `int`. Do not call a scripting engine or other evaluator.\n\nExamples\n- `evaluate(\"1 + 2 * 3\")` returns `7`, because multiplication happens first.\n- `evaluate(\"(1 + 2) * 3\")` returns `9`.\n- `evaluate(\"-(8 - 3) / 2\")` returns `-2`: the parenthesized value is `5`, `5 / 2` truncates to `2`, and the unary minus negates it.\n",
+  "examples": [
+    {
+      "input": "expression = \"1 + 2 * 3\"",
+      "output": "7"
+    },
+    {
+      "input": "expression = \"(1 + 2) * 3\"",
+      "output": "9"
+    },
+    {
+      "input": "expression = \"-(8 - 3) / 2\"",
+      "output": "-2"
+    }
+  ],
+  "hints": [
+    "Without parentheses, an expression is a sum and difference of terms, where each term is a product or quotient of numbers. Parentheses turn any subexpression back into a single number.",
+    "Scan once with a value stack and an operator stack. Before pushing an operator, apply every pending operator of equal or higher precedence, stopping at `(`; on `)`, apply operators back to the matching `(`. A recursive descent parser with one method per precedence level works equally well.",
+    "A `-` found where an operand is expected is unary: pushing a `0` before it turns it into an ordinary subtraction. Apply each operator with the older value as the left operand, and let Java's `int` division truncate. Intended complexity: O(n) time and O(n) space, where n is the length of the expression."
+  ],
+  "inputSyntax": "Input: an arithmetic expression using integers, + - * /, and parentheses, for example: 2 * (3 + 4) - 10 / 3",
+  "sampleInput": "2 * (3 + 4) - 10 / 3",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

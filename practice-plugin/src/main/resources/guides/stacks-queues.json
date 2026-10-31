@@ -16,6 +16,8 @@
     "rolling-hit-counter",
     "max-stack-with-pop-max",
     "sort-stack-with-stack",
-    "sunset-view-buildings"
+    "sunset-view-buildings",
+    "nested-repeat-decoding",
+    "infix-expression-value"
   ]
 }

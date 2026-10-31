@@ -265,3 +265,6 @@ cinema-schedule-gaps
 link-tree-level-neighbors
 grid-obstacle-shortest-path
 grouped-dependency-order
+region-recolor
+nested-repeat-decoding
+infix-expression-value

@@ -1,0 +1,30 @@
+{
+  "id": "region-recolor",
+  "title": "Region Recolor",
+  "topic": "Matrices",
+  "difficulty": "Easy",
+  "statement": "Paint a new color over the region of an image that contains a chosen pixel.\n\nContract\n- `image` is a non-empty rectangular `int[][]` with at least one column. Every value is a non-negative color.\n- `row` and `col` name a pixel inside the image, and `color` is a non-negative color.\n- The region is the start pixel plus every pixel reachable from it through a chain of up, down, left, or right steps that only visits pixels with the start pixel's original color. Diagonal pixels are not connected.\n- Return the image with every region pixel set to `color` and every other pixel unchanged. You may update `image` in place and return it; tests check only the returned array.\n- When `color` already equals the start pixel's color, the image is returned unchanged.\n\nExamples\n- Rows `[1, 1, 1]`, `[1, 1, 0]`, `[1, 0, 1]` recolored from row 1, column 1 to `2` become `[2, 2, 2]`, `[2, 2, 0]`, `[2, 0, 1]`. The bottom-right `1` touches the region only diagonally, so it keeps its color.\n- Rows `[0, 0]`, `[0, 0]` recolored from row 0, column 0 to `0` stay the same.\n- Rows `[1, 2, 1]`, `[2, 1, 2]`, `[1, 2, 1]` recolored from row 1, column 1 to `7` change only the center pixel.\n",
+  "examples": [
+    {
+      "input": "image = [[1, 1, 1], [1, 1, 0], [1, 0, 1]], row = 1, col = 1, color = 2",
+      "output": "[[2, 2, 2], [2, 2, 0], [2, 0, 1]]"
+    },
+    {
+      "input": "image = [[0, 0], [0, 0]], row = 0, col = 0, color = 0",
+      "output": "[[0, 0], [0, 0]]"
+    },
+    {
+      "input": "image = [[1, 2, 1], [2, 1, 2], [1, 2, 1]], row = 1, col = 1, color = 7",
+      "output": "[[1, 2, 1], [2, 7, 2], [1, 2, 1]]"
+    }
+  ],
+  "hints": [
+    "The pixels to repaint form one connected component: the start pixel and its same-colored edge neighbors, then their same-colored neighbors, and so on.",
+    "Remember the original color, then explore outward from the start with a stack or queue, repainting each matching up, down, left, or right neighbor as you add it so no pixel is added twice.",
+    "Return right away when the new color equals the original; otherwise repainted pixels still match and the search never ends. A recursive search can go as deep as the region is large, so an explicit stack is safer for big images. Intended complexity: O(n) time and O(n) space, where n is the number of pixels."
+  ],
+  "inputSyntax": "Input: start row, start column, and a one-digit new color, then image rows of digits separated by spaces, for example: 1 1 2 111 110 101",
+  "sampleInput": "1 1 2 111 110 101",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}
