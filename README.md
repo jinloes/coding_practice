@@ -1,6 +1,6 @@
 # Coding Practice
 
-A Java repository for practicing algorithms, data structures, concurrency, and regex engine work. Algorithm and data structure problems live in the IntelliJ practice plugin (`practice-plugin`).
+A Java repository for practicing algorithms, data structures, concurrency, regex engine work, and system design. Algorithm and data structure problems live in the IntelliJ practice plugin (`practice-plugin`); system design problems live in the System Design Practice plugin (`system-design-plugin`).
 
 ## What Is In This Repository
 
@@ -35,6 +35,12 @@ A four-week study plan for key management, cryptography, secrets management, and
 
 This directory contains design diagrams and explorations. It is documentation-oriented and is not currently part of the Gradle multi-module build.
 
+### System Design Interview Practice
+
+- `system-design-plugin`
+
+A standalone JetBrains plugin that presents original system design problems, lets you answer with an Excalidraw diagram and notes, and grades your answer like an interviewer through your own GitHub Copilot CLI. See [system-design-plugin/README.md](system-design-plugin/README.md).
+
 ## Tech Stack
 
 - Java 17 for most modules
@@ -67,6 +73,15 @@ from any open project, and supports local correctness checks, native debugging,
 and saved progress. Existing plugin-created practice projects can be imported
 without changing their files. It is intentionally not included in the root
 multi-module build.
+
+## System Design Practice Plugin
+
+[`system-design-plugin/`](system-design-plugin/README.md) is an independent
+JetBrains plugin build for system design interview practice. It works in any
+JetBrains IDE with JCEF, stores durable attempts (an Excalidraw diagram plus
+`notes.md`), and requests interviewer-style feedback through the user's
+installed Copilot CLI with every tool disabled. Build it from its own directory
+with its own wrapper; it is not included in the root multi-module build.
 
 ## Project Layout
 

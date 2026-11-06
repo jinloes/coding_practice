@@ -1,0 +1,21 @@
+{
+  "id": "chat-messaging",
+  "title": "Real-Time Chat",
+  "difficulty": "Hard",
+  "summary": "Deliver one-to-one and small group messages in real time with history and receipts.",
+  "statement": "Design a chat service for a mobile and web app.\n\nFunctional requirements:\n- One-to-one conversations and groups of up to 200 members.\n- Messages arrive in real time when the recipient is online and are stored for later otherwise.\n- Message history is available on every device a user signs in on.\n- Sent, delivered, and read indicators, plus online presence.\n\nScale to assume:\n- 100 million daily active users.\n- 20 billion messages per day.\n- Messages within one conversation must appear in the same order for every member.",
+  "hints": [
+    "How does the server push a message to a phone or browser the moment it arrives? Think about the long-lived connection.",
+    "Once you have many connection servers, how does a sender's server find the server holding the recipient's connection?",
+    "Pick a storage layout that makes 'load the latest 50 messages of this conversation' cheap."
+  ],
+  "expectations": [
+    "Clarifies group size limits, ordering guarantees, multi-device sync, retention, and whether end-to-end encryption is in scope.",
+    "Estimates messages per second (hundreds of thousands) and storage per year, and concurrent connections per gateway server.",
+    "Uses persistent connections (WebSockets or similar) through a gateway tier, with a session registry mapping users to gateway servers.",
+    "Routes messages through a durable queue or log and stores them in a store partitioned by conversation and sorted by time or sequence number.",
+    "Assigns per-conversation sequence numbers for ordering and uses client-generated IDs for idempotent retries.",
+    "Falls back to mobile push notifications for offline users and syncs missed messages on reconnect using a per-device cursor.",
+    "Handles presence with heartbeats and TTLs and discusses the fan-out cost of large groups and read receipts."
+  ]
+}

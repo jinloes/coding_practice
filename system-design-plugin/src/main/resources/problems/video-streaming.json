@@ -1,0 +1,21 @@
+{
+  "id": "video-streaming",
+  "title": "Video Streaming Platform",
+  "difficulty": "Hard",
+  "summary": "Let creators upload videos and stream them smoothly to viewers worldwide.",
+  "statement": "Design a platform where creators upload videos and viewers watch them on phones, TVs, and browsers.\n\nFunctional requirements:\n- Creators upload videos up to several gigabytes; uploads can resume after a dropped connection.\n- Videos become watchable in multiple resolutions shortly after upload.\n- Viewers get smooth playback that adapts to their network speed.\n- Show view counts and a basic recommendation list.\n\nScale to assume:\n- 500,000 hours of video uploaded per day.\n- 1 billion viewing hours per day across the world.\n- Viewing is heavily skewed toward a small fraction of popular videos.",
+  "hints": [
+    "Break the upload-to-watchable path into stages. Which stages can run in parallel?",
+    "How does a player switch quality mid-stream without stopping?",
+    "Most bytes served are for popular videos. How does that shape where you store and serve them?"
+  ],
+  "expectations": [
+    "Clarifies supported devices, maximum upload size, time-to-availability, and whether live streaming is in scope.",
+    "Estimates upload storage per day across renditions and egress bandwidth, showing why a CDN is essential.",
+    "Uses resumable chunked uploads straight to object storage via pre-signed URLs.",
+    "Transcodes asynchronously with a queue of jobs that split videos into segments processed in parallel into multiple bitrates.",
+    "Serves adaptive bitrate streaming (segmented formats with manifests) from a CDN with origin shielding.",
+    "Keeps video metadata in a database separate from the media files and counts views asynchronously.",
+    "Discusses tiered storage for the long tail, regional replication, and handling transcoding failures with retries."
+  ]
+}

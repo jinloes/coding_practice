@@ -120,3 +120,22 @@ One two-way edge remains: `state.ManagedPracticeProgress` imports `run.CheckResu
 `run.PracticeRunner` imports `state.ManagedPracticeProgress`. `CheckResult` is a result value, not
 run machinery, so the natural fix is to move it to a layer both can depend on. That has not been
 done, and this document says so rather than drawing a diagram that is cleaner than the code.
+
+## System Design Practice Plugin (`system-design-plugin`)
+
+`system-design-plugin/` is a second standalone plugin (ID `com.jinloes.systemdesign`) for practicing
+system design interviews: original problems, an embedded Excalidraw editor plus `notes.md` for each
+attempt, and interviewer-style feedback from the user's own Copilot CLI running with every tool
+disabled. It depends only on the IntelliJ Platform and JCEF, so it runs in any JetBrains IDE, and it
+shares no code with `practice-plugin`.
+
+Like `practice-plugin`, it is a separate Gradle build absent from the root `settings.gradle`. It has
+its own wrapper and builds its React pages with Gradle-managed Node:
+
+```
+cd system-design-plugin && ./gradlew build
+```
+
+Problems are per-problem data in `system-design-plugin/src/main/resources/problems/<id>.json`. See
+[system-design-plugin/ARCHITECTURE.md](system-design-plugin/ARCHITECTURE.md) for components, storage,
+and the privacy boundary.

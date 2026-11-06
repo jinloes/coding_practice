@@ -1,0 +1,21 @@
+{
+  "id": "distributed-cache",
+  "title": "Distributed In-Memory Cache",
+  "difficulty": "Medium",
+  "summary": "Build a horizontally scalable key-value cache shared by many services.",
+  "statement": "Design a distributed in-memory cache cluster used by many application services to speed up reads.\n\nFunctional requirements:\n- `get`, `set` with a time-to-live, and `delete` operations on string keys and byte values.\n- Memory is bounded; the cache evicts entries when full.\n- Nodes can be added or removed without remapping most keys.\n- Losing one node must not take the whole cache down.\n\nScale to assume:\n- 10 TB of cached data in total.\n- 5 million operations per second at peak.\n- Sub-millisecond latency for most operations within a data center.",
+  "hints": [
+    "How does a client decide which node owns a key, and what happens to that decision when a node joins?",
+    "Pick an eviction policy and the data structure that makes it constant time per operation.",
+    "A single very popular key can overload one node. What would you do about it?"
+  ],
+  "expectations": [
+    "Clarifies consistency expectations, value sizes, persistence (none or optional), and whether the cache is look-aside or read-through.",
+    "Sizes the cluster from total memory and per-node throughput, including replication overhead.",
+    "Partitions keys with consistent hashing and virtual nodes, with routing in a client library or proxy.",
+    "Uses LRU or a similar eviction policy implemented with a hash map plus linked list, and lazy plus periodic TTL expiry.",
+    "Replicates to followers for availability and discusses failover and the consistency tradeoffs of asynchronous replication.",
+    "Mitigates hot keys with replication or client-side local caching and prevents stampedes with request coalescing or jittered TTLs.",
+    "Discusses cache invalidation strategies with the backing database and the risk of stale reads."
+  ]
+}

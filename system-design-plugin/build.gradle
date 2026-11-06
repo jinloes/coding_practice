@@ -1,0 +1,147 @@
+plugins {
+    id 'java'
+    id 'jacoco'
+    id 'org.jetbrains.intellij.platform' version '2.19.0'
+    id 'com.github.node-gradle.node' version '7.1.0'
+}
+
+group = 'com.jinloes.coding_practice'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+dependencies {
+    intellijPlatform {
+        if (providers.gradleProperty('idePath').isPresent()) {
+            local(providers.gradleProperty('idePath').get())
+        } else {
+            intellijIdea('2026.2.3')
+        }
+        bundledPlugins('com.intellij.modules.jcef')
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform.INSTANCE)
+    }
+    // Lists the account's models for the settings dialog. JNA serves only the SDK's in-process mode, which an
+    // explicit cliPath never selects, and the IDE loads its own JNA native library.
+    implementation('com.github:copilot-sdk-java:1.0.28') {
+        exclude group: 'net.java.dev.jna'
+    }
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
+    // The IDE fixture bootstrap references legacy TestCase; authored tests remain Jupiter.
+    testRuntimeOnly('junit:junit:4.13.2') {
+        transitive = false
+    }
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        name = 'System Design Practice'
+        ideaVersion {
+            sinceBuild = '262.10968.63'
+            untilBuild = '262.*'
+        }
+    }
+    pluginVerification {
+        ides {
+            current()
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+    // Lets tests launch FakeCopilotCli as a separate JVM.
+    systemProperty 'design.test.classpath', sourceSets.test.runtimeClasspath.asPath
+    systemProperty 'idea.load.plugins.id', 'com.jinloes.systemdesign'
+    // The test IDE loads plugin classes through PathClassLoader, which JaCoCo only sees with this option.
+    jacoco {
+        includeNoLocationClasses = true
+        excludes = ['jdk.internal.*']
+    }
+    finalizedBy 'jacocoTestReport'
+}
+
+jacoco {
+    toolVersion = '0.8.15'
+}
+
+// Coverage is enforced on the logic packages. The ui package needs a running IDE and JCEF;
+// keep logic out of it and justify any further exclusion in CODE-MAP.md.
+def coverageExclusions = [
+        'com/jinloes/system_design_plugin/ui/**',
+]
+
+def coverageClasses = files(tasks.named('instrumentCode')).asFileTree.matching {
+    exclude coverageExclusions
+}
+
+tasks.named('jacocoTestReport') {
+    classDirectories.setFrom(coverageClasses)
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+def coverageVerification = tasks.named('jacocoTestCoverageVerification') {
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
+    classDirectories.setFrom(coverageClasses)
+    mustRunAfter 'test'
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                minimum = 0.98
+            }
+            limit {
+                counter = 'BRANCH'
+                minimum = 0.92
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn coverageVerification
+}
+
+tasks.named('wrapper') {
+    gradleVersion = '9.3.1'
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+// The web pages build with a Gradle-managed Node, so contributors need no local Node install.
+node {
+    download = true
+    version = '24.22.0'
+    npmInstallCommand = 'ci'
+    nodeProjectDir = file('web')
+}
+
+def webUi = tasks.register('webUi', com.github.gradle.node.npm.task.NpmTask) {
+    description = 'Builds the tool window and Excalidraw editor pages into build/web.'
+    dependsOn tasks.named('npmInstall')
+    npmCommand = ['run', 'build']
+    inputs.dir('web/src')
+    inputs.dir('web/scripts')
+    inputs.files('web/index.html', 'web/editor.html', 'web/vite.config.ts', 'web/tsconfig.json',
+            'web/package.json', 'web/package-lock.json')
+    outputs.dir(layout.buildDirectory.dir('web'))
+}
+
+tasks.named('processResources') {
+    from(webUi) { into 'web' }
+}

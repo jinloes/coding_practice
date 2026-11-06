@@ -1,0 +1,21 @@
+{
+  "id": "notification-service",
+  "title": "Notification Delivery Service",
+  "difficulty": "Medium",
+  "summary": "Send email, SMS, and push notifications reliably on behalf of other services.",
+  "statement": "Design a shared notification service that other teams call to notify users.\n\nFunctional requirements:\n- Channels: mobile push, email, and SMS.\n- Callers send an event and a template; the service fills in user details and preferences.\n- Users can opt out per channel and per category, and set quiet hours.\n- Some notifications are scheduled for a future time.\n- Callers can see whether each notification was delivered.\n\nScale to assume:\n- 1 billion notifications per day, with marketing campaigns causing spikes ten times the average.\n- Security alerts such as password resets must go out within seconds even during a campaign.",
+  "hints": [
+    "Third-party providers are slow and sometimes down. How do you keep that from blocking callers?",
+    "Retries can send the same message twice. What would you store to prevent duplicates?",
+    "How do you keep a large marketing campaign from delaying a password reset?"
+  ],
+  "expectations": [
+    "Clarifies channels, priorities, preferences and opt-outs, templating, scheduling, and delivery tracking requirements.",
+    "Estimates average and peak send rates and provider rate limits per channel.",
+    "Accepts requests through an API that validates and enqueues, then processes asynchronously with per-channel worker pools.",
+    "Separates queues or priorities so critical notifications are isolated from bulk campaigns.",
+    "Uses idempotency keys and a delivery log to avoid duplicates under retries, with exponential backoff and dead-letter queues.",
+    "Checks user preferences, quiet hours, and per-user frequency caps before sending.",
+    "Tracks provider callbacks for delivery status and supports provider failover."
+  ]
+}

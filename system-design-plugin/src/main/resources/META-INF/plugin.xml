@@ -1,0 +1,19 @@
+<idea-plugin>
+    <id>com.jinloes.systemdesign</id>
+    <name>System Design Practice</name>
+    <vendor>jinloes</vendor>
+    <description><![CDATA[
+      Practice original system design interview problems. Sketch the design in an
+      embedded Excalidraw editor, write requirements and estimates in notes, and ask
+      GitHub Copilot (through your own Copilot CLI, with every tool disabled) for
+      interviewer-style feedback. Feedback is advisory and only sent when you ask.
+    ]]></description>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.jcef</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="System Design" anchor="right"
+                    factoryClass="com.jinloes.system_design_plugin.ui.DesignToolWindowFactory"/>
+        <fileEditorProvider implementation="com.jinloes.system_design_plugin.ui.DiagramEditorProvider"/>
+        <notificationGroup id="System Design Practice" displayType="BALLOON"/>
+    </extensions>
+</idea-plugin>

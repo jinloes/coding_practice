@@ -1,0 +1,21 @@
+{
+  "id": "news-feed",
+  "title": "Social News Feed",
+  "difficulty": "Hard",
+  "summary": "Show each user a ranked feed of recent posts from the accounts they follow.",
+  "statement": "Design the home feed of a social app where users follow other accounts and see their recent posts.\n\nFunctional requirements:\n- Users publish short posts that may include images.\n- The home feed shows posts from followed accounts, newest or ranked first, with infinite scroll.\n- New posts from followed accounts should appear within a few seconds.\n\nScale to assume:\n- 300 million daily active users, each opening the feed about 10 times a day.\n- On average a user follows 200 accounts; some accounts have tens of millions of followers.\n- 50 million new posts per day.",
+  "hints": [
+    "Compare building each feed when it is read with building it when a post is written. Which users break each approach?",
+    "Think about what is stored in a precomputed feed entry and how large one user's feed list needs to be.",
+    "Pagination over a constantly changing list is tricky. What cursor would you hand back to the client?"
+  ],
+  "expectations": [
+    "Clarifies ranking versus chronological order, feed freshness, and the media path for images.",
+    "Estimates feed read QPS (tens of thousands per second) and fan-out write volume, and notes the celebrity skew.",
+    "Discusses fan-out on write versus fan-out on read and chooses a hybrid that pulls posts from very popular accounts at read time.",
+    "Stores precomputed feeds as bounded lists of post IDs in a cache or wide-column store and hydrates post content separately.",
+    "Uses cursor-based pagination (post ID or timestamp) rather than offsets.",
+    "Serves images through object storage and a CDN, separate from the feed service.",
+    "Handles unfollows, deletions, inactive users (skip fan-out), and backfill when a user follows someone new."
+  ]
+}

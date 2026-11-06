@@ -24,3 +24,8 @@ gradlew*
 !practice-plugin/src/main/java/com/jinloes/practice_plugin/workspace/GradleWorkspaceImport.java
 practice-plugin/.intellijPlatform/
 practice-plugin/web/node_modules/
+!system-design-plugin/gradlew
+!system-design-plugin/gradlew.bat
+!system-design-plugin/gradle/
+system-design-plugin/.intellijPlatform/
+system-design-plugin/web/node_modules/

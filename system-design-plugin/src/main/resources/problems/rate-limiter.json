@@ -1,0 +1,21 @@
+{
+  "id": "rate-limiter",
+  "title": "API Rate Limiter",
+  "difficulty": "Medium",
+  "summary": "Cap how often each client may call an API across a fleet of servers.",
+  "statement": "Design a rate limiting component that sits in front of a public API and rejects callers who exceed their allowance.\n\nFunctional requirements:\n- Limits are configured per API key and per endpoint, for example 100 requests per minute.\n- Rejected calls return a clear error and tell the caller when to retry.\n- Limits apply across every API server, not per server.\n- Operators can change limits without redeploying.\n\nScale to assume:\n- 200 API servers handling 500,000 requests per second in total.\n- The check must add only a couple of milliseconds to each request.",
+  "hints": [
+    "Write down two or three limiting algorithms and what kinds of bursts each one allows at a window boundary.",
+    "The counters must be shared by all servers. Where do they live, and how do you update them atomically?",
+    "Decide what the API should do when the limiter itself is slow or unavailable."
+  ],
+  "expectations": [
+    "Clarifies identity (API key, user, IP), limit granularity, hard versus soft limits, and whether the limiter is a library, sidecar, or gateway.",
+    "Compares fixed window, sliding log, sliding window counter, and token bucket, including memory cost and boundary bursts.",
+    "Stores counters in a shared low-latency store such as an in-memory cluster and uses atomic increments or scripts to avoid race conditions.",
+    "Returns HTTP 429 with retry headers and remaining-quota headers.",
+    "Keeps configuration in a separate store pushed or cached at the servers so limits change without deploys.",
+    "Chooses fail-open or fail-closed explicitly when the counter store is unavailable and discusses local fallback limits.",
+    "Addresses hot keys, sharding counters by key, clock skew, and multi-region consistency tradeoffs."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "web-crawler",
+  "title": "Web Crawler",
+  "difficulty": "Medium",
+  "summary": "Fetch and store billions of web pages politely for a search index.",
+  "statement": "Design a crawler that discovers and downloads web pages to feed a search index.\n\nFunctional requirements:\n- Start from a seed list and follow links to discover new pages.\n- Re-crawl pages periodically, more often for pages that change often.\n- Respect robots rules and do not overload any single website.\n- Store raw page content for downstream indexing.\n\nScale to assume:\n- 5 billion pages fetched per month.\n- Average page size of 100 KB.\n- Many pages are duplicates or near-duplicates of one another.",
+  "hints": [
+    "The list of URLs to fetch next is the heart of the system. How would you prioritize it and keep it polite per host?",
+    "How do you know you have already seen a URL, or a page with the same content, at this scale?",
+    "List what can go wrong when following links on the open web and how you would protect the crawler."
+  ],
+  "expectations": [
+    "Clarifies freshness goals, content types, politeness rules, and what downstream indexing needs.",
+    "Estimates fetch rate (thousands of pages per second), bandwidth, and storage per month.",
+    "Designs a URL frontier with priority queues and per-host queues that enforce politeness delays.",
+    "Deduplicates URLs (normalized URL set or Bloom filter) and content (checksums or similarity hashes).",
+    "Caches robots rules and DNS lookups per host and distributes hosts across workers by consistent hashing.",
+    "Stores raw pages in object or blob storage with metadata in a separate store.",
+    "Guards against crawler traps, infinite URL spaces, malformed pages, and slow servers with timeouts and depth limits."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "url-shortener",
+  "title": "Link Shortening Service",
+  "difficulty": "Easy",
+  "summary": "Turn long links into short codes and redirect visitors quickly.",
+  "statement": "Design a service that turns a long web address into a short code such as `sho.rt/Xk9a2` and sends anyone who opens the short link to the original address.\n\nFunctional requirements:\n- Create a short link for a long URL, optionally with a custom alias.\n- Redirect a short link to its original URL.\n- Links may carry an optional expiry time.\n- Show the owner a click count per link.\n\nScale to assume:\n- 50 million new links per month.\n- Reads outnumber writes about 100 to 1.\n- Redirects should feel instant, well under 100 ms at the 99th percentile.",
+  "hints": [
+    "Estimate how many codes you need over ten years, then pick a code length and alphabet that covers it with room to spare.",
+    "Compare generating codes from a counter, from random values with collision checks, and from a hash of the URL. What does each cost you?",
+    "Redirects dominate traffic. Where would you cache, and what happens to click counting if every redirect writes to the database?"
+  ],
+  "expectations": [
+    "Clarifies read/write ratio, link lifetime, custom aliases, and whether the same long URL maps to one or many codes.",
+    "Estimates storage over years and redirect QPS (thousands per second, with peaks) and sizes the code space (for example 7 base62 characters).",
+    "Defines a create API and a redirect endpoint returning 301 or 302, and explains the analytics tradeoff between them.",
+    "Chooses a key generation scheme (counter ranges, pre-generated key pool, or random with uniqueness check) and handles collisions and custom alias conflicts.",
+    "Uses a key-value or wide-column store keyed by code, with a read-through cache in front for hot links.",
+    "Moves click counting off the redirect path, for example through an asynchronous queue or log with batched aggregation.",
+    "Handles expiry, abuse (malicious URLs, enumeration of codes), and rate limiting of creation."
+  ]
+}
