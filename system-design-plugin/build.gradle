@@ -65,6 +65,8 @@ test {
     useJUnitPlatform()
     // Lets tests launch FakeCopilotCli as a separate JVM.
     systemProperty 'design.test.classpath', sourceSets.test.runtimeClasspath.asPath
+    // Lets the catalog test compare the manifest files with the catalog's problem list.
+    systemProperty 'design.problems.dir', file('src/main/resources/problems').absolutePath
     systemProperty 'idea.load.plugins.id', 'com.jinloes.systemdesign'
     // The test IDE loads plugin classes through PathClassLoader, which JaCoCo only sees with this option.
     jacoco {

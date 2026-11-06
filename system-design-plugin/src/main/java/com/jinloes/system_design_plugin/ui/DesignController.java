@@ -26,6 +26,7 @@ import com.jinloes.system_design_plugin.interview.InterviewPrompt;
 import com.jinloes.system_design_plugin.state.DesignProgress;
 import com.jinloes.system_design_plugin.web.PageEvent;
 import com.jinloes.system_design_plugin.web.PageState;
+import com.jinloes.system_design_plugin.web.ToolWindowView;
 import com.jinloes.system_design_plugin.web.WebAssets;
 import com.jinloes.system_design_plugin.workspace.DesignWorkspace;
 import com.jinloes.system_design_plugin.workspace.DesignWorkspace.Attempt;
@@ -39,9 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -52,8 +50,6 @@ import java.util.concurrent.atomic.AtomicLong;
 /** Drives the tool window: turns page events into workspace actions and renders state back into the page. */
 final class DesignController implements Disposable {
     private static final Logger LOG = Logger.getInstance(DesignController.class);
-    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MMM d, HH:mm")
-            .withZone(ZoneId.systemDefault());
 
     private final Project project;
     private final BrowserPage page;
@@ -260,48 +256,39 @@ final class DesignController implements Disposable {
 
     private PageState.View view(String problemId, boolean isRunning, String currentError) {
         DesignProgress progress = DesignProgress.get();
-        if (problemId == null || !DesignCatalog.exists(problemId)) {
-            return new PageState.View(progress.reviewedProblemIds(), null, List.of(), "", 0, isRunning, null,
-                    false, currentError);
-        }
-        Problem problem = DesignCatalog.find(problemId);
         DesignWorkspace workspace = DesignWorkspace.get();
-        List<Attempt> attempts;
-        try {
-            attempts = new ArrayList<>(workspace.attempts(problemId));
-        } catch (IOException exception) {
-            attempts = new ArrayList<>();
-            currentError = currentError.isEmpty() ? "Could not list attempts: " + exception.getMessage() : currentError;
-        }
-        attempts.sort(Comparator.comparing(DesignController::created).thenComparing(Attempt::id));
-        List<PageState.AttemptInfo> infos = new ArrayList<>();
-        for (int index = 0; index < attempts.size(); index++) {
-            Attempt attempt = attempts.get(index);
-            infos.add(new PageState.AttemptInfo(attempt.id(),
-                    "Attempt " + (index + 1) + " (" + DATE.format(created(attempt).toInstant()) + ")"));
-        }
-        String selectedId = progress.selectedAttempt(problemId);
-        Optional<Attempt> selected = attempts.stream().filter(attempt -> attempt.id().equals(selectedId)).findFirst();
-        if (selected.isEmpty() && !attempts.isEmpty()) {
-            selected = Optional.of(attempts.get(attempts.size() - 1));
-        }
-        if (selected.isEmpty()) {
-            return new PageState.View(progress.reviewedProblemIds(), problem, infos, "", 0, isRunning, null,
-                    false, currentError);
-        }
-        Attempt attempt = selected.get();
-        int hints = progress.getState().attempts.containsKey(attempt.id())
-                ? progress.getState().attempts.get(attempt.id()).hintsRevealed : 0;
-        InterviewFeedback.Stored feedback = null;
-        boolean stale = false;
-        try {
-            feedback = workspace.latestFeedback(attempt, InterviewFeedback.Stored::fromJson).orElse(null);
-            stale = feedback != null && workspace.isStale(attempt, feedback.fingerprint());
-        } catch (IOException exception) {
-            LOG.debug("Could not read feedback", exception);
-        }
-        return new PageState.View(progress.reviewedProblemIds(), problem, infos, attempt.id(), hints, isRunning,
-                feedback, stale, currentError);
+        ToolWindowView.AttemptStore store = new ToolWindowView.AttemptStore() {
+            @Override
+            public List<ToolWindowView.AttemptEntry> attempts(String problem) throws IOException {
+                return workspace.attempts(problem).stream()
+                        .map(attempt -> new ToolWindowView.AttemptEntry(attempt.id(), created(attempt)))
+                        .toList();
+            }
+
+            @Override
+            public Optional<InterviewFeedback.Stored> latestFeedback(String attemptId) throws IOException {
+                try {
+                    return workspace.latestFeedback(workspace.read(attemptId), InterviewFeedback.Stored::fromJson);
+                } catch (IOException exception) {
+                    LOG.debug("Could not read feedback", exception);
+                    throw exception;
+                }
+            }
+
+            @Override
+            public boolean isStale(String attemptId, String fingerprint) throws IOException {
+                try {
+                    return workspace.isStale(workspace.read(attemptId), fingerprint);
+                } catch (IOException exception) {
+                    LOG.debug("Could not read feedback", exception);
+                    throw exception;
+                }
+            }
+        };
+        return ToolWindowView.build(problemId, isRunning, currentError, progress.reviewedProblemIds(),
+                progress::selectedAttempt, attemptId -> progress.getState().attempts.containsKey(attemptId)
+                        ? progress.getState().attempts.get(attemptId).hintsRevealed : 0,
+                store, ZoneId.systemDefault());
     }
 
     private static FileTime created(Attempt attempt) {

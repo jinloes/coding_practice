@@ -10,7 +10,8 @@ it runs in any JetBrains IDE (2026.2) that has the embedded browser.
 
 ## Install and run
 
-Run from `system-design-plugin/`:
+Requires JDK 25 (the Gradle toolchain); point `JAVA_HOME` at it or put its `java`
+on `PATH`. Run from `system-design-plugin/`:
 
 ```bash
 ./gradlew runIde        # start a sandbox IDE with the plugin

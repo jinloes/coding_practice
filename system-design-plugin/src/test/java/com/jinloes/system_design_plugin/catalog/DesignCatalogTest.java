@@ -8,6 +8,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,8 +18,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DesignCatalogTest {
 
     @Test
-    void loadsEightProblemsThatMatchTheirManifests() throws IOException {
-        assertThat(DesignCatalog.all()).hasSize(8);
+    void loadsEveryManifestAndOnlyListedOnes() throws IOException {
+        String directory = System.getProperty("design.problems.dir");
+        assertThat(directory).as("design.problems.dir is set by the Gradle test task").isNotBlank();
+        List<String> manifests;
+        try (var files = Files.list(Path.of(directory))) {
+            manifests = files.map(path -> path.getFileName().toString())
+                    .filter(name -> name.endsWith(".json"))
+                    .map(name -> name.substring(0, name.length() - ".json".length()))
+                    .toList();
+        }
+        assertThat(manifests).isNotEmpty();
+        assertThat(DesignCatalog.all()).extracting(Problem::id).containsExactlyInAnyOrderElementsOf(manifests);
         assertThat(DesignCatalog.all()).extracting(Problem::id).doesNotHaveDuplicates();
         assertThat(DesignCatalog.all()).extracting(Problem::title).doesNotHaveDuplicates();
         for (Problem problem : DesignCatalog.all()) {

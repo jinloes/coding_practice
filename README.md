@@ -45,6 +45,7 @@ A standalone JetBrains plugin that presents original system design problems, let
 
 - Java 17 for most modules
 - Java 21 for `regex`
+- Java 25 for the standalone `practice-plugin` and `system-design-plugin` builds
 - Gradle multi-module build
 - JUnit Jupiter and AssertJ for tests
 

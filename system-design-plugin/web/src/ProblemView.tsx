@@ -105,7 +105,7 @@ export function ProblemView({ state, problem }: { state: PageState; problem: Sel
       </Group>
 
       {state.error !== '' && (
-        <Alert color="red" title="Feedback failed" style={{ whiteSpace: 'pre-wrap' }}>
+        <Alert color="red" title="Something went wrong" style={{ whiteSpace: 'pre-wrap' }}>
           {state.error}
         </Alert>
       )}

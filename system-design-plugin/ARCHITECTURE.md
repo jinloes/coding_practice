@@ -23,7 +23,7 @@ helpers (`OwnedDirectory`, `MarkdownHtml`) were copied deliberately.
 | `workspace` | Attempt creation, lookup, ownership checks, fingerprints, feedback files | `PathManager` for the default root only |
 | `state` | `DesignProgress` persistent state: selections, hints, verdicts, settings | Application service |
 | `interview` | Diagram summary, prompt, feedback schema, Copilot CLI process, model list | Process handler, `EnvironmentUtil`; Copilot Java SDK |
-| `web` | Page contract: asset URL mapping, page events, state JSON | None |
+| `web` | Page contract: asset URL mapping, page events, state JSON, and tool-window view assembly (`ToolWindowView`) | None |
 | `ui` | Tool window, JCEF pages, diagram `FileEditor`, settings dialog | Full IDE |
 
 Everything outside `ui` is unit tested with the coverage gate. `ui` needs a live

@@ -11,7 +11,7 @@ Package root: `src/main/java/com/jinloes/system_design_plugin/`.
 | `workspace` | `DesignWorkspace` (attempts, `ownerOfDiagram`, fingerprint and staleness, feedback files) |
 | `state` | `DesignProgress` (persistent selections, hints, verdicts, interviewer settings) |
 | `interview` | `DiagramSummary`, `InterviewPrompt`, `InterviewFeedback` (schema, parsing, stored form), `CopilotInterviewer` (CLI process) |
-| `web` | `WebAssets` (private origin and URL mapping), `PageEvent` (page and editor messages), `PageState` (tool window JSON), `MarkdownHtml` |
+| `web` | `WebAssets` (private origin and URL mapping), `PageEvent` (page and editor messages), `PageState` (tool window JSON), `ToolWindowView` (builds `PageState.View` from attempts, progress, and feedback), `MarkdownHtml` |
 | `ui` | `DesignToolWindowFactory`, `DesignController` (events and rendering), `BrowserPage` and `WebAssetHandler` (JCEF page and request filter), `DiagramEditorProvider` and `DiagramEditor`, `InterviewerSettingsDialog`, `IdeTheme` |
 
 Resources: `src/main/resources/problems/<id>.json`, `notes-template.md`, and

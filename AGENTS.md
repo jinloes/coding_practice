@@ -18,7 +18,7 @@ Use Gradle from the repository root.
 
 ## Coding And Test Conventions
 
-- Use Java 17 for all modules except `regex`, which uses Java 21.
+- Use Java 17 for the root Gradle modules except `regex`, which uses Java 21. The standalone `practice-plugin` and `system-design-plugin` builds use a Java 25 toolchain.
 - Use JUnit 5 annotations: `@Test`, `@BeforeEach`, `@AfterEach`, `@BeforeAll`, `@AfterAll`, `@Disabled`.
 - Use AssertJ assertions (`assertThat(...)`) instead of JUnit assertions.
 - Do not introduce JUnit 4 or Hamcrest in tests.
