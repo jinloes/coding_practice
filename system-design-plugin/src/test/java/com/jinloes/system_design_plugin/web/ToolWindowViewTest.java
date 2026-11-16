@@ -17,7 +17,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
@@ -32,11 +31,11 @@ class ToolWindowViewTest {
 
     private static final class FakeStore implements AttemptStore {
         private final List<AttemptEntry> attempts;
-        private final Map<String, InterviewFeedback.Stored> feedback = new HashMap<>();
+        private final Map<String, List<InterviewFeedback.Stored>> feedback = new HashMap<>();
         private IOException listFailure;
         private IOException feedbackFailure;
-        private IOException staleFailure;
-        private boolean stale;
+        private IOException fingerprintFailure;
+        private String currentFingerprint = "fp";
 
         FakeStore(AttemptEntry... attempts) {
             this.attempts = List.of(attempts);
@@ -52,19 +51,19 @@ class ToolWindowViewTest {
         }
 
         @Override
-        public Optional<InterviewFeedback.Stored> latestFeedback(String attemptId) throws IOException {
+        public List<InterviewFeedback.Stored> feedbackHistory(String attemptId) throws IOException {
             if (feedbackFailure != null) {
                 throw feedbackFailure;
             }
-            return Optional.ofNullable(feedback.get(attemptId));
+            return feedback.getOrDefault(attemptId, List.of());
         }
 
         @Override
-        public boolean isStale(String attemptId, String fingerprint) throws IOException {
-            if (staleFailure != null) {
-                throw staleFailure;
+        public String fingerprint(String attemptId) throws IOException {
+            if (fingerprintFailure != null) {
+                throw fingerprintFailure;
             }
-            return stale;
+            return currentFingerprint;
         }
     }
 
@@ -146,29 +145,38 @@ class ToolWindowViewTest {
     }
 
     @Test
-    void showsTheLatestFeedbackAndWhetherItIsStale() {
+    void showsReviewHistoryAndComputesPerReviewStaleness() {
         FakeStore store = new FakeStore(entry("a", "2026-01-01T00:00:00Z"));
-        InterviewFeedback.Stored feedback = stored();
-        store.feedback.put("a", feedback);
+        InterviewFeedback.Stored latest = new InterviewFeedback.Stored(
+                InterviewFeedback.unparsed("latest"), "fp-2", "model", "t2");
+        InterviewFeedback.Stored earlier = new InterviewFeedback.Stored(
+                InterviewFeedback.unparsed("earlier"), "fp-1", "model", "t1");
+        store.feedback.put("a", List.of(latest, earlier));
+        store.currentFingerprint = "fp-2";
 
         View fresh = build(PROBLEM.id(), "", NO_SELECTION, NO_HINTS, store);
-        store.stale = true;
-        View stale = build(PROBLEM.id(), "", NO_SELECTION, NO_HINTS, store);
-
-        assertThat(fresh.feedback()).isSameAs(feedback);
+        assertThat(fresh.feedback()).isSameAs(latest);
         assertThat(fresh.stale()).isFalse();
-        assertThat(stale.feedback()).isSameAs(feedback);
+        assertThat(fresh.reviews()).containsExactly(
+                new PageState.Review(latest, false),
+                new PageState.Review(earlier, true));
+
+        store.currentFingerprint = "fp-3";
+        View stale = build(PROBLEM.id(), "", NO_SELECTION, NO_HINTS, store);
+        assertThat(stale.feedback()).isSameAs(latest);
         assertThat(stale.stale()).isTrue();
+        assertThat(stale.reviews()).extracting(PageState.Review::stale).containsExactly(true, true);
     }
 
     @Test
     void noFeedbackIsNeverStale() {
         FakeStore store = new FakeStore(entry("a", "2026-01-01T00:00:00Z"));
-        store.stale = true;
+        store.currentFingerprint = "changed";
 
         View view = build(PROBLEM.id(), "", NO_SELECTION, NO_HINTS, store);
 
         assertThat(view.feedback()).isNull();
+        assertThat(view.reviews()).isEmpty();
         assertThat(view.stale()).isFalse();
     }
 
@@ -189,13 +197,14 @@ class ToolWindowViewTest {
     @Test
     void unreadableFeedbackShowsNoFeedbackWithoutAnError() {
         FakeStore store = new FakeStore(entry("a", "2026-01-01T00:00:00Z"));
-        store.feedback.put("a", stored());
+        store.feedback.put("a", List.of(stored()));
         store.feedbackFailure = new IOException("corrupt");
 
         View view = build(PROBLEM.id(), "", NO_SELECTION, NO_HINTS, store);
 
         assertThat(view.selectedAttempt()).isEqualTo("a");
         assertThat(view.feedback()).isNull();
+        assertThat(view.reviews()).isEmpty();
         assertThat(view.stale()).isFalse();
         assertThat(view.error()).isEmpty();
     }
@@ -204,9 +213,9 @@ class ToolWindowViewTest {
     void aStalenessFailureKeepsTheFeedbackAndTreatsItAsCurrent() {
         FakeStore store = new FakeStore(entry("a", "2026-01-01T00:00:00Z"));
         InterviewFeedback.Stored feedback = stored();
-        store.feedback.put("a", feedback);
-        store.stale = true;
-        store.staleFailure = new IOException("unreadable notes");
+        store.feedback.put("a", List.of(feedback));
+        store.currentFingerprint = "different";
+        store.fingerprintFailure = new IOException("unreadable notes");
 
         View view = build(PROBLEM.id(), "", NO_SELECTION, NO_HINTS, store);
 

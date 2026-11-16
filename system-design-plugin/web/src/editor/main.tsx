@@ -12,15 +12,16 @@ import {
 } from '@excalidraw/excalidraw';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import type { EditorMessage } from '../types';
+import { SaveTracker } from './saveTracker';
 
 declare global {
   interface Window {
     /** Called by the plugin with the diagram file's text and whether the IDE theme is dark. */
     designLoad?: (scene: string, dark: boolean) => void;
-    /** Called by the plugin to save pending changes now; replies with a `flushed` message. */
-    designFlush?: () => void;
-    /** Called by the plugin after a save; an empty message means it succeeded. */
-    designSaveResult?: (error: string) => void;
+    /** Called by the plugin to save pending changes now; replies with a sequenced `flushed` message. */
+    designFlush?: (seq: number) => void;
+    /** Called by the plugin after a save with its sequence number; an empty message means it succeeded. */
+    designSaveResult?: (seq: number, error: string) => void;
     /** Called by the plugin when the IDE theme changes. */
     designTheme?: (dark: boolean) => void;
     /** Injected by the plugin after load, followed by a `designbridge` window event; forwards a JSON message to Java. */
@@ -57,64 +58,48 @@ function Editor() {
   const [dark, setDark] = useState(false);
   const [error, setError] = useState('');
   const api = useRef<ExcalidrawImperativeAPI | null>(null);
-  // Content of the scene as loaded; the first change event that still matches it only records the baseline.
-  const loadedContent = useRef('');
-  const baseline = useRef<string | null>(null);
-  const dirty = useRef(false);
-  const savedBytes = useRef('');
-  const pending = useRef<{ bytes: string; signature: string } | null>(null);
+  const tracker = useRef(new SaveTracker());
   const timer = useRef<number | undefined>(undefined);
 
   const save = useCallback(() => {
     window.clearTimeout(timer.current);
     timer.current = undefined;
     const excalidraw = api.current;
-    if (!excalidraw || !dirty.current) {
+    if (!excalidraw) {
       return;
     }
     const bytes = serialize(excalidraw);
     const current = signature(excalidraw);
-    if (bytes === savedBytes.current) {
-      dirty.current = false;
+    const command = tracker.current.prepareSave(bytes, current);
+    if (!command) {
       return;
     }
-    pending.current = { bytes, signature: current };
-    post({ type: 'save', scene: bytes });
+    post({ type: 'save', seq: command.seq, scene: command.bytes });
   }, []);
 
   useEffect(() => {
     window.designLoad = (scene, isDark) => {
       let parsed: unknown = null;
+      let loadError = '';
       try {
         parsed = JSON.parse(scene);
-        setError('');
       } catch {
-        setError('The diagram file is not valid JSON. Drawing here will replace it.');
+        loadError = 'The diagram file is not valid JSON. Drawing here will replace it.';
       }
       const data = restore(parsed as Parameters<typeof restore>[0], null, null);
-      loadedContent.current = content(serializeAsJSON(data.elements, data.appState, data.files, 'local'));
-      baseline.current = null;
-      dirty.current = false;
-      savedBytes.current = scene;
+      const normalized = content(serializeAsJSON(data.elements, data.appState, data.files, 'local'));
+      const next = tracker.current.reset(scene, normalized, loadError);
+      setError(next.error);
       setDark(isDark);
       setLoaded((previous) => ({ key: (previous?.key ?? 0) + 1, data }));
     };
-    window.designFlush = () => {
+    window.designFlush = (seq) => {
       save();
-      post({ type: 'flushed' });
+      post({ type: 'flushed', seq });
     };
-    window.designSaveResult = (message) => {
-      const saved = pending.current;
-      pending.current = null;
-      if (message !== '' || !saved) {
-        setError(message);
-        return;
-      }
-      savedBytes.current = saved.bytes;
-      if (baseline.current === saved.signature) {
-        dirty.current = false;
-      }
-      setError('');
+    window.designSaveResult = (seq, message) => {
+      const next = tracker.current.handleResult(seq, message);
+      setError(next.error);
     };
     window.designTheme = setDark;
     // The plugin injects designSend after the page loads, which is usually after this effect runs.
@@ -137,15 +122,9 @@ function Editor() {
       return;
     }
     const current = signature(excalidraw);
-    if (baseline.current === null && content(serialize(excalidraw)) === loadedContent.current) {
-      baseline.current = current;
+    if (!tracker.current.recordChange(current, () => content(serialize(excalidraw)))) {
       return;
     }
-    if (current === baseline.current) {
-      return;
-    }
-    baseline.current = current;
-    dirty.current = true;
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(save, SAVE_DELAY_MS);
   }, [save]);

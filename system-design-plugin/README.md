@@ -6,7 +6,7 @@ requirements, estimates, and APIs in `notes.md`, and on request get
 interviewer-style feedback from GitHub Copilot through your own Copilot CLI.
 
 The plugin depends only on the IntelliJ Platform and the bundled JCEF plugin, so
-it runs in any JetBrains IDE (2026.2) that has the embedded browser.
+it runs in any JetBrains IDE (2026.2+) that has the embedded browser.
 
 ## Install and run
 
@@ -14,7 +14,8 @@ Requires JDK 25 (the Gradle toolchain); point `JAVA_HOME` at it or put its `java
 on `PATH`. Run from `system-design-plugin/`:
 
 ```bash
-./gradlew runIde        # start a sandbox IDE with the plugin
+./gradlew runLocalIde   # start a sandbox IDE using the newest installed IntelliJ build
+./gradlew runIde        # start a sandbox IDE using the pinned target platform
 ./gradlew buildPlugin   # build/distributions/system-design-plugin-1.0-SNAPSHOT.zip
 ```
 
@@ -35,7 +36,8 @@ the web pages.
    gaps for each rubric dimension, follow-up questions, and expectations you
    missed. Problems with feedback show a **Reviewed** mark.
 5. Keep editing. When the notes or the diagram change after a review, the
-   feedback is marked **stale** until you request it again.
+   feedback is marked **stale** until you request it again. Earlier reviews on
+   the same attempt remain available from the review history selector.
 
 The rubric dimensions are: Requirements and scope, Capacity estimates, API and
 data model, High-level architecture, Deep dives and scalability, Reliability and

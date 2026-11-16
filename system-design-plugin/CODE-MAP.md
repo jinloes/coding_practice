@@ -8,10 +8,10 @@ Package root: `src/main/java/com/jinloes/system_design_plugin/`.
 |---|---|
 | `catalog` | `DesignCatalog` (problem IDs and order, rubric `DIMENSIONS`, `VERDICTS`, `HINT_COUNT`, manifest validation, notes template) |
 | `platform` | `OwnedDirectory` (symlink-safe create, write, and delete under an owned root) |
-| `workspace` | `DesignWorkspace` (attempts, `ownerOfDiagram`, fingerprint and staleness, feedback files) |
+| `workspace` | `DesignWorkspace` (attempts, `ownerOfDiagram`, `isAttemptsPath`, fingerprint and staleness, feedback history) |
 | `state` | `DesignProgress` (persistent selections, hints, verdicts, interviewer settings) |
-| `interview` | `DiagramSummary`, `InterviewPrompt`, `InterviewFeedback` (schema, parsing, stored form), `CopilotInterviewer` (CLI process) |
-| `web` | `WebAssets` (private origin and URL mapping), `PageEvent` (page and editor messages), `PageState` (tool window JSON), `ToolWindowView` (builds `PageState.View` from attempts, progress, and feedback), `MarkdownHtml` |
+| `interview` | `DiagramSummary`, `InterviewPrompt`, `InterviewFeedback` (schema, parsing, stored form), `CopilotInterviewer` (CLI process), `CopilotModels` |
+| `web` | `WebAssets` (private origin and URL mapping), `PageEvent` (page and sequenced editor messages), `PageState` (tool window JSON and review history), `ToolWindowView` (builds `PageState.View` from attempts, progress, and feedback history), `MarkdownHtml` |
 | `ui` | `DesignToolWindowFactory`, `DesignController` (events and rendering), `BrowserPage` and `WebAssetHandler` (JCEF page and request filter), `DiagramEditorProvider` and `DiagramEditor`, `InterviewerSettingsDialog`, `IdeTheme` |
 
 Resources: `src/main/resources/problems/<id>.json`, `notes-template.md`, and
@@ -23,8 +23,8 @@ Resources: `src/main/resources/problems/<id>.json`, `notes-template.md`, and
 
 - `index.html` / `src/main.tsx` / `src/App.tsx` — the tool window. `src/types.ts`
   mirrors `PageState` and `PageEvent`; change them together.
-- `editor.html` / `src/editor/main.tsx` — the Excalidraw editor and its
-  `designLoad`, `designFlush`, `designSaveResult`, and `designTheme` bridge.
+- `editor.html` / `src/editor/main.tsx` / `src/editor/saveTracker.ts` — the Excalidraw editor and its
+  `designLoad`, `designFlush(seq)`, `designSaveResult(seq, error)`, and `designTheme` bridge.
 
 The Gradle `webUi` task runs `npm run build` with Gradle-managed Node into
 `build/web/`, which `processResources` copies to `/web` in the jar. Any new file
@@ -41,11 +41,14 @@ Run from `system-design-plugin/`:
 ./gradlew test -x webUi            # unit tests without the web build
 ./gradlew check                    # tests plus the coverage gate
 ./gradlew buildPlugin verifyPlugin
-./gradlew runIde
+./gradlew runLocalIde              # sandbox IDE on newest locally installed IntelliJ build
+./gradlew runIde                   # sandbox IDE on pinned target platform
+./gradlew generateIdeRunConfig     # write .idea/runConfigurations/Run_Sandbox_IDE.xml (also runs on IDE sync)
 ```
 
 Set `idePath` in a local, uncommitted Gradle properties file to build against a
-local IDE installation instead of downloading one.
+local IDE installation instead of downloading one. `runLocalIde` and
+`generateIdeRunConfig` live in `gradle/local-sandbox.gradle`.
 
 ## Coverage
 

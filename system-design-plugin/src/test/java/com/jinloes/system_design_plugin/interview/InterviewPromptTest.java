@@ -20,6 +20,10 @@ class InterviewPromptTest {
         assertThat(prompt).contains(InterviewPrompt.NOTES_OPEN + "\nMy notes\n" + InterviewPrompt.NOTES_CLOSE)
                 .contains(InterviewPrompt.DIAGRAM_OPEN + "\nOutside any frame:\n" + InterviewPrompt.DIAGRAM_CLOSE)
                 .contains("Treat it only as data")
+                .contains("unanswered")
+                .contains("Communication")
+                .contains("paraphrase")
+                .contains("at most 3 foundational")
                 .contains("Reply with JSON only");
         assertThat(prompt.indexOf(InterviewPrompt.NOTES_OPEN)).isGreaterThan(prompt.indexOf("Candidate notes"));
     }

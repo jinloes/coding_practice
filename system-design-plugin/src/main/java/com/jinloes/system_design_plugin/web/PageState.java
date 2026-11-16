@@ -34,15 +34,30 @@ public final class PageState {
     public record AttemptInfo(String id, String label) {
     }
 
-    /** Everything the tool window shows. {@code selected} and {@code feedback} may be {@code null}. */
+    /** One saved review of an attempt and whether the attempt has changed since that review. */
+    public record Review(InterviewFeedback.Stored stored, boolean stale) {
+        public Review {
+            Objects.requireNonNull(stored, "stored");
+        }
+    }
+
+    /** Everything the tool window shows. {@code selected} may be {@code null}; {@code reviews} is newest first. */
     public record View(Set<String> reviewed, Problem selected, List<AttemptInfo> attempts, String selectedAttempt,
-                       int hintsRevealed, boolean running, InterviewFeedback.Stored feedback, boolean stale,
-                       String error) {
+                       int hintsRevealed, boolean running, List<Review> reviews, String error) {
         public View {
             reviewed = Set.copyOf(reviewed);
             attempts = List.copyOf(attempts);
             selectedAttempt = Objects.requireNonNullElse(selectedAttempt, "");
+            reviews = List.copyOf(reviews);
             error = Objects.requireNonNullElse(error, "");
+        }
+
+        public InterviewFeedback.Stored feedback() {
+            return reviews.isEmpty() ? null : reviews.get(0).stored();
+        }
+
+        public boolean stale() {
+            return !reviews.isEmpty() && reviews.get(0).stale();
         }
     }
 
@@ -63,8 +78,13 @@ public final class PageState {
         state.add("problems", problems);
         state.add("selected", view.selected() == null ? null : selected(view));
         state.addProperty("running", view.running());
-        state.add("feedback", view.feedback() == null ? null : feedback(view.feedback()));
-        state.addProperty("stale", view.feedback() != null && view.stale());
+        JsonArray reviews = new JsonArray();
+        for (Review item : view.reviews()) {
+            reviews.add(review(item));
+        }
+        state.add("reviews", reviews);
+        state.add("feedback", view.reviews().isEmpty() ? null : review(view.reviews().get(0)));
+        state.addProperty("stale", view.stale());
         state.addProperty("error", view.error());
         return GSON.toJson(state);
     }
@@ -93,7 +113,8 @@ public final class PageState {
         return selected;
     }
 
-    private static JsonObject feedback(InterviewFeedback.Stored stored) {
+    private static JsonObject review(Review item) {
+        InterviewFeedback.Stored stored = item.stored();
         InterviewFeedback feedback = stored.feedback();
         JsonObject json = new JsonObject();
         json.addProperty("parsed", feedback.parsed());
@@ -101,12 +122,12 @@ public final class PageState {
         json.addProperty("summary", feedback.summary());
         JsonArray dimensions = new JsonArray();
         for (InterviewFeedback.Dimension dimension : feedback.dimensions()) {
-            JsonObject item = new JsonObject();
-            item.addProperty("name", dimension.name());
-            item.addProperty("score", dimension.score());
-            item.add("strengths", GSON.toJsonTree(dimension.strengths()));
-            item.add("gaps", GSON.toJsonTree(dimension.gaps()));
-            dimensions.add(item);
+            JsonObject dim = new JsonObject();
+            dim.addProperty("name", dimension.name());
+            dim.addProperty("score", dimension.score());
+            dim.add("strengths", GSON.toJsonTree(dimension.strengths()));
+            dim.add("gaps", GSON.toJsonTree(dimension.gaps()));
+            dimensions.add(dim);
         }
         json.add("dimensions", dimensions);
         json.add("followUpQuestions", GSON.toJsonTree(feedback.followUpQuestions()));
@@ -114,6 +135,7 @@ public final class PageState {
         json.addProperty("raw", feedback.raw());
         json.addProperty("model", stored.model());
         json.addProperty("createdAt", stored.createdAt());
+        json.addProperty("stale", item.stale());
         return json;
     }
 }

@@ -1,4 +1,5 @@
-import { Alert, Badge, Code, Group, List, Paper, Stack, Table, Text } from '@mantine/core';
+import { useState } from 'react';
+import { Alert, Badge, Code, Group, List, Paper, Select, Stack, Table, Text } from '@mantine/core';
 import { SectionLabel } from './ProblemView';
 import type { Feedback } from './types';
 
@@ -10,21 +11,63 @@ const VERDICT_COLORS: Record<string, string> = {
   'No hire': 'red',
 };
 
+function formatTimestamp(createdAt: string): string {
+  if (createdAt === '') {
+    return '';
+  }
+  const parsed = Date.parse(createdAt);
+  if (!Number.isFinite(parsed)) {
+    return createdAt;
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(parsed));
+}
+
 /** Interviewer feedback. All text is model output and is rendered as plain text, never as HTML. */
-export function FeedbackView({ feedback, stale }: { feedback: Feedback; stale: boolean }) {
+export function FeedbackView({ reviews }: { reviews: Feedback[] }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  if (reviews.length === 0) {
+    return null;
+  }
+  const index = selectedIndex < reviews.length ? selectedIndex : 0;
+  const feedback = reviews[index];
+  const formattedDate = formatTimestamp(feedback.createdAt);
+
   return (
     <Paper withBorder p="sm">
       <Stack gap="sm">
         <Group gap="xs" justify="space-between">
           <SectionLabel>Interviewer feedback</SectionLabel>
           <Text size="xs" c="dimmed">
-            {[feedback.model, feedback.createdAt].filter((part) => part !== '').join(' · ')}
+            {[feedback.model, formattedDate].filter((part) => part !== '').join(' · ')}
           </Text>
         </Group>
-        {stale && (
+        {reviews.length > 1 && (
+          <Select
+            aria-label="Review history"
+            size="xs"
+            allowDeselect={false}
+            data={reviews.map((item, i) => ({
+              value: String(i),
+              label: `Review ${reviews.length - i}${i === 0 ? ' (latest)' : ''}${item.verdict ? ` — ${item.verdict}` : ''}`,
+            }))}
+            value={String(index)}
+            onChange={(value) => value !== null && setSelectedIndex(Number(value))}
+          />
+        )}
+        {index === 0 && feedback.stale && (
           <Alert color="yellow" title="Out of date">
             Your diagram or notes changed after this review. Ask for feedback again to grade the latest version.
           </Alert>
+        )}
+        {index > 0 && (
+          <Text size="xs" c="dimmed">
+            Viewing an earlier review of this attempt.
+          </Text>
         )}
         {feedback.parsed ? <Structured feedback={feedback} /> : <Raw raw={feedback.raw} />}
       </Stack>

@@ -7,10 +7,15 @@ import com.jinloes.system_design_plugin.catalog.DesignCatalog;
 import com.jinloes.system_design_plugin.catalog.DesignCatalog.Problem;
 import com.jinloes.system_design_plugin.interview.InterviewFeedback;
 import com.jinloes.system_design_plugin.web.PageState.AttemptInfo;
+import com.jinloes.system_design_plugin.web.PageState.Review;
 import com.jinloes.system_design_plugin.web.PageState.Theme;
 import com.jinloes.system_design_plugin.web.PageState.View;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -26,8 +31,9 @@ class PageStateTest {
     }
 
     private static View view(Problem selected, int hints, InterviewFeedback.Stored feedback, boolean stale) {
+        List<Review> reviews = feedback == null ? List.of() : List.of(new Review(feedback, stale));
         return new View(Set.of(PROBLEM.id()), selected, List.of(new AttemptInfo("a1", "Attempt 1")), "a1", hints,
-                false, feedback, stale, null);
+                false, reviews, null);
     }
 
     private static InterviewFeedback feedbackMissing(String expectation) {
@@ -55,7 +61,7 @@ class PageStateTest {
 
     @Test
     void serializesThemeAndProblemListDerivedFromCatalog() {
-        JsonObject state = render(new View(Set.of(PROBLEM.id()), null, List.of(), null, 0, true, null, true, "Oops"));
+        JsonObject state = render(new View(Set.of(PROBLEM.id()), null, List.of(), null, 0, true, List.of(), "Oops"));
 
         assertThat(state.getAsJsonObject("theme").get("background").getAsString()).isEqualTo("#000000");
         assertThat(state.getAsJsonObject("theme").get("dark").getAsBoolean()).isTrue();
@@ -71,6 +77,7 @@ class PageStateTest {
         }
         assertThat(state.get("selected").isJsonNull()).isTrue();
         assertThat(state.get("feedback").isJsonNull()).isTrue();
+        assertThat(state.getAsJsonArray("reviews")).isEmpty();
         assertThat(state.get("stale").getAsBoolean()).isFalse();
         assertThat(state.get("running").getAsBoolean()).isTrue();
         assertThat(state.get("error").getAsString()).isEqualTo("Oops");
@@ -144,5 +151,39 @@ class PageStateTest {
         assertThat(feedback.get("parsed").getAsBoolean()).isFalse();
         assertThat(feedback.get("raw").getAsString()).isEqualTo("not json");
         assertThat(feedback.getAsJsonArray("dimensions")).isEmpty();
+        assertThat(feedback.get("stale").getAsBoolean()).isFalse();
+    }
+
+    @Test
+    void serializesOrderedReviewHistoryWithPerReviewStaleness() {
+        InterviewFeedback.Stored newest = new InterviewFeedback.Stored(
+                InterviewFeedback.parse("latest raw"), "fp2", "m2", "2026-02-01T00:00:00Z");
+        InterviewFeedback.Stored older = new InterviewFeedback.Stored(
+                InterviewFeedback.parse("older raw"), "fp1", "m1", "2026-01-01T00:00:00Z");
+        View view = new View(Set.of(PROBLEM.id()), PROBLEM, List.of(new AttemptInfo("a1", "Attempt 1")), "a1", 0,
+                false, List.of(new Review(newest, false), new Review(older, true)), null);
+
+        JsonObject state = render(view);
+        assertThat(view.feedback()).isEqualTo(newest);
+        assertThat(view.stale()).isFalse();
+        JsonArray reviews = state.getAsJsonArray("reviews");
+        assertThat(reviews).hasSize(2);
+        assertThat(reviews.get(0).getAsJsonObject().get("raw").getAsString()).isEqualTo("latest raw");
+        assertThat(reviews.get(0).getAsJsonObject().get("stale").getAsBoolean()).isFalse();
+        assertThat(reviews.get(1).getAsJsonObject().get("raw").getAsString()).isEqualTo("older raw");
+        assertThat(reviews.get(1).getAsJsonObject().get("stale").getAsBoolean()).isTrue();
+        assertThat(state.get("stale").getAsBoolean()).isFalse();
+    }
+
+    @Test
+    void sampleStateUsesCatalogDimensionsAndVerdicts() throws IOException {
+        String sampleFile = System.getProperty("design.web.sample");
+        assertThat(sampleFile).as("design.web.sample is set by the Gradle test task").isNotBlank();
+        String sample = Files.readString(Path.of(sampleFile), StandardCharsets.UTF_8);
+
+        for (String dimension : DesignCatalog.DIMENSIONS) {
+            assertThat(sample).contains("'" + dimension + "'");
+        }
+        assertThat(DesignCatalog.VERDICTS).anyMatch(verdict -> sample.contains("verdict: '" + verdict + "'"));
     }
 }

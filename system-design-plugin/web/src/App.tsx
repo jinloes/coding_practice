@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import {
   Badge,
   Box,
+  Button,
   createTheme,
   Group,
   MantineProvider,
@@ -12,12 +13,13 @@ import {
   type CSSVariablesResolver,
 } from '@mantine/core';
 import { send, snapshot, subscribe } from './bridge';
-import { difficultyColor, ProblemView } from './ProblemView';
+import { difficultyColor, ProblemView, SectionLabel } from './ProblemView';
 import type { ProblemItem, Theme } from './types';
 
 
 export function App() {
   const state = useSyncExternalStore(subscribe, snapshot);
+  const [listCollapsed, setListCollapsed] = useState(false);
   const theme = state?.theme;
   const mantine = useMemo(() => (theme ? mantineTheme(theme) : undefined), [theme]);
   const resolver = useMemo(() => (theme ? variables(theme) : undefined), [theme]);
@@ -36,11 +38,25 @@ export function App() {
   if (!state || !theme) {
     return null;
   }
+  const showProblemList = !state.selected || !listCollapsed;
   return (
     <MantineProvider theme={mantine} cssVariablesResolver={resolver} forceColorScheme={theme.dark ? 'dark' : 'light'}>
       <Box p="md">
         <Stack gap="md">
-          <ProblemList problems={state.problems} />
+          {state.selected && (
+            <Group justify="space-between" align="center">
+              <SectionLabel>Problems</SectionLabel>
+              <Button
+                variant="subtle"
+                size="compact-xs"
+                aria-expanded={showProblemList}
+                onClick={() => setListCollapsed((collapsed) => !collapsed)}
+              >
+                {showProblemList ? 'Hide problems' : 'Change problem'}
+              </Button>
+            </Group>
+          )}
+          {showProblemList && <ProblemList problems={state.problems} />}
           {state.selected ? (
             <ProblemView state={state} problem={state.selected} />
           ) : (
@@ -58,27 +74,29 @@ function ProblemList({ problems }: { problems: ProblemItem[] }) {
   return (
     <Paper withBorder className="problem-list" role="list" aria-label="Problems">
       {problems.map((problem) => (
-        <NavLink
-          key={problem.id}
-          role="listitem"
-          active={problem.selected}
-          variant="light"
-          label={problem.title}
-          description={problem.summary}
-          onClick={() => send({ type: 'selectProblem', id: problem.id })}
-          rightSection={
-            <Group gap={4} wrap="nowrap">
-              {problem.reviewed && (
-                <Badge color="teal" variant="light" size="xs" aria-label="Reviewed">
-                  Reviewed
+        <div key={problem.id} role="listitem">
+          <NavLink
+            component="button"
+            active={problem.selected}
+            aria-current={problem.selected ? 'true' : undefined}
+            variant="light"
+            label={problem.title}
+            description={problem.summary}
+            onClick={() => send({ type: 'selectProblem', id: problem.id })}
+            rightSection={
+              <Group gap={4} wrap="nowrap">
+                {problem.reviewed && (
+                  <Badge color="teal" variant="light" size="xs" aria-label="Reviewed">
+                    Reviewed
+                  </Badge>
+                )}
+                <Badge color={difficultyColor(problem.difficulty)} variant="light" size="xs">
+                  {problem.difficulty}
                 </Badge>
-              )}
-              <Badge color={difficultyColor(problem.difficulty)} variant="light" size="xs">
-                {problem.difficulty}
-              </Badge>
-            </Group>
-          }
-        />
+              </Group>
+            }
+          />
+        </div>
       ))}
     </Paper>
   );

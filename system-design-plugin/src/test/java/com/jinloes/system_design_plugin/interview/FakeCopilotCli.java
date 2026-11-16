@@ -10,9 +10,10 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
- * A stand-in for the Copilot CLI used by {@link CopilotInterviewerTest}. Its first argument (the "executable")
- * is a properties file scripting the behavior: {@code record} (directory for argv, stdin, and working-directory
- * listings), {@code stdout}, {@code stdoutRepeat}, {@code stderr}, {@code exit}, {@code sleepMillis}, and
+ * A stand-in for the Copilot CLI used by {@link CopilotInterviewerTest} and {@link CopilotInterviewerStdinTest}.
+ * Its first argument (the "executable") is a properties file scripting the behavior: {@code record} (directory for
+ * argv, stdin, and working-directory listings), {@code stdout}, {@code stdoutRepeat}, {@code stderr}, {@code exit},
+ * {@code sleepMillis}, {@code hangBeforeStdin} (sleep {@code sleepMillis} before reading stdin), and
  * {@code exitImmediately} (exit with code 3 without reading stdin).
  */
 final class FakeCopilotCli {
@@ -27,6 +28,9 @@ final class FakeCopilotCli {
         if (Boolean.parseBoolean(script.getProperty("exitImmediately"))) {
             System.exit(3);
         }
+        if (Boolean.parseBoolean(script.getProperty("hangBeforeStdin"))) {
+            Thread.sleep(Long.parseLong(script.getProperty("sleepMillis", "0")));
+        }
         byte[] stdin;
         try (InputStream input = System.in) {
             stdin = input.readAllBytes();
@@ -40,7 +44,9 @@ final class FakeCopilotCli {
             Files.writeString(record.resolve("cwd.txt"), cwd + "\n" + entries
                     .map(path -> path.getFileName().toString()).sorted().collect(Collectors.joining("\n")));
         }
-        Thread.sleep(Long.parseLong(script.getProperty("sleepMillis", "0")));
+        if (!Boolean.parseBoolean(script.getProperty("hangBeforeStdin"))) {
+            Thread.sleep(Long.parseLong(script.getProperty("sleepMillis", "0")));
+        }
         String stdout = script.getProperty("stdout", "");
         int repeat = Integer.parseInt(script.getProperty("stdoutRepeat", "1"));
         for (int index = 0; index < repeat; index++) {

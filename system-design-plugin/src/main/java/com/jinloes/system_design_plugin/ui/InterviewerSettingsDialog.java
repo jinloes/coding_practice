@@ -53,14 +53,18 @@ final class InterviewerSettingsDialog extends DialogWrapper {
     private volatile boolean closed;
     private JComponent content;
 
-    private InterviewerSettingsDialog(Project project, DesignProgress.Data data, int timeoutSeconds) {
+    private InterviewerSettingsDialog(Project project, CopilotInterviewer.Settings settings) {
         super(project);
-        cliPath.setText(data.cliPath);
+        cliPath.setText(settings.cliPath());
         cliPath.addBrowseFolderListener(project, FileChooserDescriptorFactory.singleFile()
                 .withTitle("Copilot CLI Executable"));
+        String initialModel = settings.model() == null ? "" : settings.model().strip();
         model.setEditable(true);
-        model.setModel(new DefaultComboBoxModel<>(new String[]{""}));
-        model.setSelectedItem(data.model == null ? "" : data.model);
+        DefaultComboBoxModel<String> initialItems = new DefaultComboBoxModel<>(
+                CopilotModels.dropdownIds(List.of(), initialModel).toArray(String[]::new));
+        initialItems.setSelectedItem(initialModel);
+        model.setModel(initialItems);
+        model.setSelectedItem(initialModel);
         model.setRenderer(new ColoredListCellRenderer<>() {
             @Override
             protected void customizeCellRenderer(@NotNull JList<? extends String> list, String id, int index,
@@ -74,7 +78,7 @@ final class InterviewerSettingsDialog extends DialogWrapper {
             }
         });
         status.setForeground(UIUtil.getContextHelpForeground());
-        timeout = new JSpinner(new SpinnerNumberModel(timeoutSeconds, DesignProgress.MIN_TIMEOUT_SECONDS,
+        timeout = new JSpinner(new SpinnerNumberModel(settings.timeoutSeconds(), DesignProgress.MIN_TIMEOUT_SECONDS,
                 DesignProgress.MAX_TIMEOUT_SECONDS, 30));
         reload = new Alarm(Alarm.ThreadToUse.SWING_THREAD, getDisposable());
         setTitle("System Design Interviewer");
@@ -91,12 +95,10 @@ final class InterviewerSettingsDialog extends DialogWrapper {
     }
 
     static void edit(Project project, DesignProgress progress) {
-        DesignProgress.Data data = progress.getState();
-        InterviewerSettingsDialog dialog = new InterviewerSettingsDialog(project, data, progress.timeoutSeconds());
+        InterviewerSettingsDialog dialog = new InterviewerSettingsDialog(project, progress.settings());
         if (dialog.showAndGet()) {
-            data.cliPath = dialog.cliPath.getText().strip();
-            data.model = dialog.modelText();
-            data.timeoutSeconds = (int) dialog.timeout.getValue();
+            progress.updateSettings(dialog.cliPath.getText().strip(), dialog.modelText(),
+                    (int) dialog.timeout.getValue());
         }
     }
 
@@ -138,16 +140,26 @@ final class InterviewerSettingsDialog extends DialogWrapper {
     }
 
     private void showModels(List<CopilotModels.Model> models) {
-        String typed = modelText();
+        JTextComponent editor = (JTextComponent) model.getEditor().getEditorComponent();
+        String raw = editor.getText();
+        String stripped = raw.strip();
+        boolean focused = editor.hasFocus();
+        int caret = editor.getCaretPosition();
         names.clear();
-        DefaultComboBoxModel<String> items = new DefaultComboBoxModel<>();
-        items.addElement("");
         for (CopilotModels.Model entry : models) {
             names.put(entry.id(), entry.name());
-            items.addElement(entry.id());
         }
+        DefaultComboBoxModel<String> items = new DefaultComboBoxModel<>();
+        for (String id : CopilotModels.dropdownIds(models, stripped)) {
+            items.addElement(id);
+        }
+        items.setSelectedItem(stripped);
         model.setModel(items);
-        model.setSelectedItem(typed);
+        model.setSelectedItem(stripped);
+        if (focused && !raw.equals(editor.getText())) {
+            editor.setText(raw);
+            editor.setCaretPosition(Math.max(0, Math.min(caret, raw.length())));
+        }
     }
 
     @Override

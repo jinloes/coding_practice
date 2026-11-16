@@ -1,0 +1,198 @@
+import groovy.json.JsonSlurper
+import groovy.xml.XmlUtil
+
+// Discovers the newest locally installed IntelliJ IDEA (IU preferred over IC) and configures
+// the runLocalIde sandbox task plus the .idea/runConfigurations/Run_Sandbox_IDE.xml helper.
+
+def idePathProperty = providers.gradleProperty('idePath').filter { !it.isBlank() }
+
+def parseBuild = { String buildNumber ->
+    (buildNumber ?: '').tokenize('.-').collect { it.isInteger() ? it.toInteger() : 0 }
+}
+
+def compareBuilds = { List<Integer> left, List<Integer> right ->
+    int len = Math.max(left.size(), right.size())
+    for (int i = 0; i < len; i++) {
+        int cmp = (i < left.size() ? left[i] : 0) <=> (i < right.size() ? right[i] : 0)
+        if (cmp != 0) return cmp
+    }
+    return 0
+}
+
+boolean ideLookupDone = false
+File cachedDetectedIde = null
+
+def findLatestInstalledIde = { ->
+    if (ideLookupDone) {
+        return cachedDetectedIde
+    }
+    ideLookupDone = true
+
+    if (idePathProperty.isPresent()) {
+        def explicit = file(idePathProperty.get())
+        cachedDetectedIde = explicit.isDirectory() ? explicit : null
+        return cachedDetectedIde
+    }
+
+    def home = System.getProperty('user.home') ?: ''
+    def localAppData = System.getenv('LOCALAPPDATA') ?: "$home/AppData/Local"
+    def programFiles = System.getenv('ProgramFiles') ?: 'C:/Program Files'
+    def slurper = new JsonSlurper()
+    def candidates = new LinkedHashSet<File>()
+
+    [
+            new File(localAppData, 'JetBrains/Toolbox/state.json'),
+            new File(home, 'Library/Application Support/JetBrains/Toolbox/state.json'),
+            new File(home, '.local/share/JetBrains/Toolbox/state.json'),
+    ].findAll { it.isFile() }.each { stateFile ->
+        try {
+            slurper.parse(stateFile)?.tools?.each { tool ->
+                if (tool?.toolId?.toString()?.startsWith('IDEA') && tool?.installLocation) {
+                    candidates.add(new File(tool.installLocation.toString()))
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    [
+            new File(localAppData, 'Programs'),
+            new File(programFiles, 'JetBrains'),
+            new File('/Applications'),
+            new File(home, 'Applications'),
+            new File('/opt'),
+    ].findAll { it.isDirectory() }.each { parent ->
+        parent.listFiles()?.each { child ->
+            def lower = child.name.toLowerCase(Locale.ROOT)
+            if (lower.contains('intellij idea') || child.name.startsWith('idea')) {
+                def macContents = new File(child, 'Contents')
+                candidates.add(macContents.isDirectory() ? macContents : child)
+            }
+        }
+    }
+
+    def valid = candidates.findAll { it?.isDirectory() }.findResults { dir ->
+        def infoFile = [new File(dir, 'product-info.json'), new File(dir, 'Resources/product-info.json')]
+                .find { it.isFile() }
+        if (infoFile == null) return null
+        try {
+            def info = slurper.parse(infoFile)
+            def code = info?.productCode?.toString()
+            if (code != 'IU' && code != 'IC') return null
+            return [dir: dir, build: parseBuild(info?.buildNumber?.toString()), ultimate: code == 'IU']
+        } catch (Exception ignored) {
+            return null
+        }
+    }
+
+    valid.sort { a, b ->
+        int cmp = compareBuilds(b.build, a.build)
+        cmp != 0 ? cmp : (b.ultimate <=> a.ultimate)
+    }
+    cachedDetectedIde = valid ? (valid[0].dir as File) : null
+    return cachedDetectedIde
+}
+
+def writeIfMissing = { File target, String content ->
+    if (!target.exists()) {
+        target.parentFile.mkdirs()
+        target.setText(content, 'UTF-8')
+    }
+}
+
+def ensureTrustedWorkspace = { File configDir, File workspaceDir ->
+    def trustedPathsXml = new File(configDir, 'options/trusted-paths.xml')
+    def escapedPath = XmlUtil.escapeXml(workspaceDir.absolutePath)
+    if (!trustedPathsXml.exists()) {
+        writeIfMissing(trustedPathsXml, """<application>
+  <component name="Trusted.Paths">
+    <option name="TRUSTED_PROJECT_PATHS">
+      <map>
+        <entry key="${escapedPath}" value="true" />
+      </map>
+    </option>
+  </component>
+</application>
+""")
+        return
+    }
+    def current = trustedPathsXml.getText('UTF-8')
+    if (!current.contains(escapedPath) && current.contains('</map>')) {
+        trustedPathsXml.setText(
+                current.replace('</map>', "        <entry key=\"${escapedPath}\" value=\"true\" />\n      </map>"),
+                'UTF-8')
+    }
+}
+
+intellijPlatformTesting {
+    runIde {
+        register('runLocalIde') {
+            localPath.convention(layout.dir(providers.provider { findLatestInstalledIde() }))
+            def sandboxWorkspace = file('.intellijPlatform/sandbox-workspace')
+            task {
+                description = 'Runs a sandbox IDE using the newest locally installed IntelliJ IDEA build.'
+                args(sandboxWorkspace.absolutePath)
+                doFirst {
+                    def ideaDir = new File(sandboxWorkspace, '.idea')
+                    writeIfMissing(new File(ideaDir, '.name'), 'System Design Sandbox')
+                    writeIfMissing(new File(ideaDir, 'misc.xml'), '''<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_25" />
+</project>
+''')
+                    writeIfMissing(new File(ideaDir, 'workspace.xml'), '''<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ToolWindowManager">
+    <layoutV2>
+      <window_info active="true" anchor="right" id="System Design" order="0" show_stripe_button="true" visible="true" weight="0.35" />
+    </layoutV2>
+  </component>
+</project>
+''')
+                    ensureTrustedWorkspace(sandboxConfigDirectory.get().asFile, sandboxWorkspace)
+                }
+            }
+        }
+    }
+}
+
+def writeSandboxRunConfiguration = {
+    def configFile = file('.idea/runConfigurations/Run_Sandbox_IDE.xml')
+    configFile.parentFile.mkdirs()
+    configFile.setText('''<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Sandbox IDE" type="GradleRunConfiguration" factoryName="Gradle">
+    <ExternalSystemSettings>
+      <option name="executionName" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$" />
+      <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="" />
+      <option name="taskDescriptions">
+        <list />
+      </option>
+      <option name="taskNames">
+        <list>
+          <option value="runLocalIde" />
+        </list>
+      </option>
+      <option name="vmOptions" />
+    </ExternalSystemSettings>
+    <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+    <DebugAllEnabled>false</DebugAllEnabled>
+    <RunAsTest>false</RunAsTest>
+    <method v="2" />
+  </configuration>
+</component>
+''', 'UTF-8')
+}
+
+tasks.register('generateIdeRunConfig') {
+    description = 'Generates the Run Sandbox IDE configuration under .idea/runConfigurations.'
+    doLast {
+        writeSandboxRunConfiguration()
+    }
+}
+
+if (Boolean.getBoolean('idea.sync.active')) {
+    writeSandboxRunConfiguration()
+}

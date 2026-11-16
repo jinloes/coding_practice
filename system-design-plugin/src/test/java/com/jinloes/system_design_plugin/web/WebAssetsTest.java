@@ -2,6 +2,10 @@ package com.jinloes.system_design_plugin.web;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,5 +52,28 @@ class WebAssetsTest {
         assertThat(WebAssets.isOwnOrigin("http://system-design.invalid/")).isFalse();
         assertThat(WebAssets.isOwnOrigin("bad url")).isFalse();
         assertThat(WebAssets.isOwnOrigin(null)).isFalse();
+    }
+
+    @Test
+    void resolvesEveryBuiltWebAssetWhenPresent() throws IOException {
+        String buildDir = System.getProperty("design.web.build.dir");
+        if (buildDir == null || buildDir.isBlank()) {
+            return;
+        }
+        Path root = Path.of(buildDir);
+        if (!Files.isDirectory(root)) {
+            return;
+        }
+        List<Path> builtFiles;
+        try (var paths = Files.walk(root)) {
+            builtFiles = paths.filter(Files::isRegularFile).toList();
+        }
+        assertThat(builtFiles).isNotEmpty();
+        for (Path file : builtFiles) {
+            String relative = "/" + root.relativize(file).toString().replace('\\', '/');
+            assertThat(WebAssets.resolve(WebAssets.ORIGIN + relative))
+                    .as("built web asset %s must match SAFE_PATH, MIME_TYPES, and /web classpath packaging", relative)
+                    .isPresent();
+        }
     }
 }

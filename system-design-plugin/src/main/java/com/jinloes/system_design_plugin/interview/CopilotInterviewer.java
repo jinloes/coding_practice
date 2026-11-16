@@ -105,8 +105,9 @@ public final class CopilotInterviewer {
                 throw new InterviewException("\"" + configured.strip() + "\" is not a valid path. "
                         + "Fix the Copilot CLI path in Interviewer settings or clear it to search PATH.");
             }
-            if (Files.isRegularFile(path)) {
-                return path.toString();
+            Path normalized = path.toAbsolutePath().normalize();
+            if (Files.isRegularFile(normalized)) {
+                return normalized.toString();
             }
             throw new InterviewException("Copilot CLI was not found at " + path
                     + ". Fix the path in Interviewer settings or clear it to search PATH.");
@@ -302,18 +303,21 @@ public final class CopilotInterviewer {
             throw new InterviewException("Could not start Copilot CLI: " + exception.getMessage());
         }
         handler.setShouldKillProcessSoftly(false);
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(settings.timeoutSeconds());
         Output output = new Output();
         handler.addProcessListener(output);
         handler.startNotify();
-        try (OutputStream input = handler.getProcessInput()) {
-            if (input != null) {
-                input.write(prompt.getBytes(StandardCharsets.UTF_8));
+        byte[] promptBytes = prompt.getBytes(StandardCharsets.UTF_8);
+        Thread.ofVirtual().name("system-design-interviewer-stdin").start(() -> {
+            try (OutputStream input = handler.getProcessInput()) {
+                if (input != null) {
+                    input.write(promptBytes);
+                }
+            } catch (IOException exception) {
+                // The process may exit or be killed before reading stdin; its exit code or stopReason explains why.
             }
-        } catch (IOException exception) {
-            // The process may exit before reading stdin; its exit code and output explain why.
-        }
+        });
 
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(settings.timeoutSeconds());
         String stopReason = null;
         while (!handler.waitFor(POLL_MILLIS)) {
             if (canceled.getAsBoolean()) {
@@ -321,11 +325,12 @@ public final class CopilotInterviewer {
             } else if (output.overflowed()) {
                 stopReason = "The interviewer produced more than " + (MAX_OUTPUT_BYTES / 1024)
                         + " KiB of output, so the review was stopped. Try again.";
-            } else if (System.nanoTime() > deadline) {
+            } else if (System.nanoTime() - deadline > 0) {
                 stopReason = "The interviewer did not answer within " + settings.timeoutSeconds()
                         + " seconds. Try again or raise the timeout in Interviewer settings.";
             }
             if (stopReason != null) {
+                handler.killProcess();
                 handler.destroyProcess();
                 handler.waitFor(5_000);
                 throw new InterviewException(stopReason);

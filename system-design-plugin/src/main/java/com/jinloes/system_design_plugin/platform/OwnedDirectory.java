@@ -18,8 +18,7 @@ import java.util.Properties;
  * class refuses to act whenever ownership cannot be positively re-established: an unmarked,
  * malformed, unreadable, symlinked, or out-of-base path is always preserved rather than removed.
  *
- * <p>The checks below are the strictest union of the per-workspace implementations this class
- * replaced:
+ * <p>Ownership requires every invariant below to hold before a tree is read or removed:
  * <ul>
  *   <li>the directory must be a <em>direct</em> child of the owned base, never a deeper descendant;
  *   <li>the directory's parent must resolve through symlinks to the owned base itself;

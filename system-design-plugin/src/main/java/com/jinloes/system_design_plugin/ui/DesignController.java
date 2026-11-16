@@ -64,13 +64,13 @@ final class DesignController implements Disposable {
     DesignController(Project project) {
         this.project = project;
         page = new BrowserPage(this, WebAssets.INDEX, this::onMessage, this::push);
-        Path attempts = DesignWorkspace.get().attemptsDirectory();
+        DesignWorkspace workspace = DesignWorkspace.get();
         ApplicationManager.getApplication().getMessageBus().connect(this)
                 .subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
                     @Override
                     public void after(@NotNull List<? extends VFileEvent> events) {
                         for (VFileEvent event : events) {
-                            if (event.getPath().startsWith(attempts.toString().replace('\\', '/'))) {
+                            if (workspace.isAttemptsPath(event.getPath())) {
                                 refresh.cancelAllRequests();
                                 refresh.addRequest(DesignController.this::push, 300);
                                 return;
@@ -170,9 +170,7 @@ final class DesignController implements Disposable {
         AtomicBoolean cancel = new AtomicBoolean();
         canceled = cancel;
         running = true;
-        DesignProgress.Data settings = DesignProgress.get().getState();
-        CopilotInterviewer.Settings run = new CopilotInterviewer.Settings(settings.cliPath, settings.model,
-                DesignProgress.get().timeoutSeconds());
+        CopilotInterviewer.Settings run = DesignProgress.get().settings();
         Problem problem = DesignCatalog.find(attempt.problemId());
         ProgressManager.getInstance().run(new Task.Backgroundable(project, "Getting interviewer feedback", true) {
             private String failure = "";
@@ -183,11 +181,27 @@ final class DesignController implements Disposable {
                 indicator = progressIndicator;
                 try {
                     CompletableFuture.allOf(flushes).get(DiagramEditor.FLUSH_MILLIS + 500, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    failure = cancel.get() || progressIndicator.isCanceled()
+                            ? "" : "Could not finish saving the open diagram before requesting feedback. Try again.";
+                    return;
                 } catch (Exception timeout) {
                     LOG.debug("Diagram flush before feedback did not complete", timeout);
+                    failure = cancel.get() || progressIndicator.isCanceled()
+                            ? "" : "Could not finish saving the open diagram before requesting feedback. Try again.";
+                    return;
                 }
                 if (!editors.isEmpty()) {
                     ApplicationManager.getApplication().invokeAndWait(() -> editors.forEach(DiagramEditor::writePending));
+                    Optional<String> saveError = editors.stream()
+                            .map(DiagramEditor::lastSaveError)
+                            .filter(message -> !message.isEmpty())
+                            .findFirst();
+                    if (saveError.isPresent()) {
+                        failure = saveError.get();
+                        return;
+                    }
                 }
                 try {
                     DesignWorkspace workspace = DesignWorkspace.get();
@@ -266,9 +280,9 @@ final class DesignController implements Disposable {
             }
 
             @Override
-            public Optional<InterviewFeedback.Stored> latestFeedback(String attemptId) throws IOException {
+            public List<InterviewFeedback.Stored> feedbackHistory(String attemptId) throws IOException {
                 try {
-                    return workspace.latestFeedback(workspace.read(attemptId), InterviewFeedback.Stored::fromJson);
+                    return workspace.feedbackHistory(workspace.read(attemptId), InterviewFeedback.Stored::fromJson);
                 } catch (IOException exception) {
                     LOG.debug("Could not read feedback", exception);
                     throw exception;
@@ -276,19 +290,17 @@ final class DesignController implements Disposable {
             }
 
             @Override
-            public boolean isStale(String attemptId, String fingerprint) throws IOException {
+            public String fingerprint(String attemptId) throws IOException {
                 try {
-                    return workspace.isStale(workspace.read(attemptId), fingerprint);
+                    return workspace.fingerprint(workspace.read(attemptId));
                 } catch (IOException exception) {
-                    LOG.debug("Could not read feedback", exception);
+                    LOG.debug("Could not fingerprint attempt", exception);
                     throw exception;
                 }
             }
         };
         return ToolWindowView.build(problemId, isRunning, currentError, progress.reviewedProblemIds(),
-                progress::selectedAttempt, attemptId -> progress.getState().attempts.containsKey(attemptId)
-                        ? progress.getState().attempts.get(attemptId).hintsRevealed : 0,
-                store, ZoneId.systemDefault());
+                progress::selectedAttempt, progress::hintsRevealed, store, ZoneId.systemDefault());
     }
 
     private static FileTime created(Attempt attempt) {

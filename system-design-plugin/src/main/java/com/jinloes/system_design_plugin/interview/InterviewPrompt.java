@@ -46,13 +46,24 @@ public final class InterviewPrompt {
                 .append("\n\n");
 
         prompt.append("""
+                ## Evaluation rules
+                - Treat empty starter-template headings or bullet prompts (such as bare `# Design notes`, \
+                `- Functional:`, or `- Traffic:`) with no candidate content beneath them as unanswered, not as \
+                completed sections.
+                - Score `Communication` on structure, clarity, explicit assumptions and tradeoffs, and consistency \
+                between the notes and diagram. Do not penalize for spoken delivery or for visual layout, colors, or \
+                embedded images that the text diagram summary omits.
+                - In `missedExpectations`, paraphrase missed concepts as concise topic-level gaps in your own words \
+                rather than copying items from the strong-answer list verbatim. If the submission is empty or barely \
+                started, list at most 3 foundational starting gaps instead of revealing the full checklist.
+
                 ## Response format
                 Reply with JSON only: no prose, no code fences. Use exactly this shape:
                 {"verdict": "<one of: %s>",
                  "summary": "<2-4 sentences>",
                  "dimensions": [{"name": "<rubric dimension>", "score": <1-4>, "strengths": ["..."], "gaps": ["..."]}],
                  "followUpQuestions": ["<questions you would ask next>"],
-                 "missedExpectations": ["<items from the strong-answer list the candidate did not cover>"]}
+                 "missedExpectations": ["<paraphrased topic-level gaps from the strong-answer list>"]}
                 Include every rubric dimension exactly once, using the names exactly as listed.
                 """.formatted(String.join(", ", DesignCatalog.VERDICTS)));
         return prompt.toString();

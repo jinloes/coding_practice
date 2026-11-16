@@ -47,6 +47,7 @@ export type Feedback = {
   raw: string;
   model: string;
   createdAt: string;
+  stale: boolean;
 };
 
 export type PageState = {
@@ -54,6 +55,7 @@ export type PageState = {
   problems: ProblemItem[];
   selected: SelectedProblem | null;
   running: boolean;
+  reviews: Feedback[];
   feedback: Feedback | null;
   stale: boolean;
   error: string;
@@ -66,4 +68,7 @@ export type PageEvent =
     }
   | { type: 'cancelFeedback' | 'openSettings' };
 
-export type EditorMessage = { type: 'ready' } | { type: 'flushed' } | { type: 'save'; scene: string };
+export type EditorMessage =
+  | { type: 'ready' }
+  | { type: 'flushed'; seq: number }
+  | { type: 'save'; seq: number; scene: string };

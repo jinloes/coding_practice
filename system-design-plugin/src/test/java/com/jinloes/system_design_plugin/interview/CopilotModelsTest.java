@@ -57,4 +57,19 @@ class CopilotModelsTest {
                 .last().extracting(CopilotModels.Model::id).isEqualTo("m199");
         assertThat(CopilotModels.from(null)).isEmpty();
     }
+
+    @Test
+    void dropdownIdsPreservesCustomTypedModelWithoutDuplicatingListedOnes() {
+        List<CopilotModels.Model> models = List.of(
+                new CopilotModels.Model("gpt-5", "GPT 5"),
+                new CopilotModels.Model("claude-sonnet", "Claude Sonnet"));
+
+        assertThat(CopilotModels.dropdownIds(models, null)).containsExactly("", "gpt-5", "claude-sonnet");
+        assertThat(CopilotModels.dropdownIds(models, "   ")).containsExactly("", "gpt-5", "claude-sonnet");
+        assertThat(CopilotModels.dropdownIds(models, " claude-sonnet "))
+                .containsExactly("", "gpt-5", "claude-sonnet");
+        assertThat(CopilotModels.dropdownIds(models, " custom-preview-1 "))
+                .containsExactly("", "custom-preview-1", "gpt-5", "claude-sonnet");
+        assertThat(CopilotModels.dropdownIds(null, "custom-only")).containsExactly("", "custom-only");
+    }
 }

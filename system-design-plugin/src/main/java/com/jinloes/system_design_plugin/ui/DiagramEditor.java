@@ -25,8 +25,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -40,11 +42,22 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
     private static final Gson GSON = new Gson();
     private static final Map<DiagramEditor, Boolean> OPEN = new WeakHashMap<>();
 
+    private record PendingSave(long seq, String scene) {
+    }
+
+    private record PendingFlush(long seq, CompletableFuture<Void> future) {
+    }
+
     private final VirtualFile file;
     private final BrowserPage page;
-    private final AtomicReference<String> pendingScene = new AtomicReference<>();
-    private final AtomicReference<CompletableFuture<Void>> flushed = new AtomicReference<>();
+    private final AtomicReference<PendingSave> pendingScene = new AtomicReference<>();
+    private final AtomicLong nextFlushSeq = new AtomicLong();
+    private final AtomicReference<PendingFlush> flushed = new AtomicReference<>();
     private volatile boolean valid = true;
+    private volatile boolean editorReady;
+    private long lastWrittenSeq;
+    private long lastHandledSeq;
+    private volatile String lastSaveError = "";
 
     DiagramEditor(Project project, VirtualFile file) {
         this.file = file;
@@ -83,20 +96,32 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
         PageEvent.EditorMessage message;
         try {
             message = PageEvent.parseEditor(json);
-        } catch (IllegalArgumentException rejected) {
-            page.execute("window.designSaveResult(" + GSON.toJson(rejected.getMessage()) + ");");
+        } catch (PageEvent.InvalidSceneException rejected) {
+            if (rejected.saveFailure()) {
+                recordRejectedSave(rejected.seq(), rejected.getMessage());
+                page.execute("window.designSaveResult(" + rejected.seq() + ", "
+                        + GSON.toJson(rejected.getMessage()) + ");");
+            } else {
+                failPendingFlush("Malformed diagram flush acknowledgement.");
+            }
             return;
         }
         switch (message.kind()) {
-            case READY -> ApplicationManager.getApplication().invokeLater(this::load, ignored -> !valid);
+            case READY -> {
+                failPendingFlush("Diagram editor reloaded.");
+                editorReady = true;
+                ApplicationManager.getApplication().invokeLater(this::load, ignored -> !valid);
+            }
             case SAVE -> {
-                pendingScene.set(message.scene());
+                PendingSave next = new PendingSave(message.seq(), message.scene());
+                pendingScene.accumulateAndGet(next,
+                        (prev, candidate) -> prev != null && prev.seq() > candidate.seq() ? prev : candidate);
                 ApplicationManager.getApplication().invokeLater(this::writePending, ignored -> !valid);
             }
             case FLUSHED -> {
-                CompletableFuture<Void> waiting = flushed.getAndSet(null);
-                if (waiting != null) {
-                    waiting.complete(null);
+                PendingFlush current = flushed.get();
+                if (current != null && current.seq() == message.seq() && flushed.compareAndSet(current, null)) {
+                    current.future().complete(null);
                 }
             }
         }
@@ -109,10 +134,12 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
             }
             file.refresh(false, false);
             String scene = new String(file.contentsToByteArray(false), StandardCharsets.UTF_8);
+            clearSaveState();
             page.execute("window.designLoad(" + GSON.toJson(scene) + ", " + IdeTheme.isDark() + ");");
         } catch (IOException | RuntimeException exception) {
             LOG.warn("Could not load " + file.getPath(), exception);
-            page.execute("window.designLoad('', " + IdeTheme.isDark() + ");window.designSaveResult("
+            clearSaveState();
+            page.execute("window.designLoad('', " + IdeTheme.isDark() + ");window.designSaveResult(-1, "
                     + GSON.toJson("Could not load the diagram: " + exception.getMessage()) + ");");
         }
     }
@@ -123,8 +150,8 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
 
     /** Writes the latest scene the page sent, if any. Must run on the EDT. */
     void writePending() {
-        String scene = pendingScene.getAndSet(null);
-        if (scene == null || !valid) {
+        PendingSave pending = pendingScene.getAndSet(null);
+        if (pending == null || !valid || !shouldWrite(pending.seq())) {
             return;
         }
         String error = "";
@@ -132,26 +159,88 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
             if (DesignWorkspace.get().ownerOfDiagram(file.toNioPath()).isEmpty()) {
                 throw new IOException("The diagram is no longer inside the practice workspace.");
             }
-            WriteAction.run(() -> file.setBinaryContent(scene.getBytes(StandardCharsets.UTF_8), -1, -1, this));
+            WriteAction.run(() -> file.setBinaryContent(pending.scene().getBytes(StandardCharsets.UTF_8), -1, -1, this));
         } catch (IOException | RuntimeException exception) {
             LOG.warn("Could not save " + file.getPath(), exception);
             error = "The diagram was not saved: " + exception.getMessage();
         }
-        page.execute("window.designSaveResult(" + GSON.toJson(error) + ");");
+        recordSaveOutcome(pending.seq(), error);
+        page.execute("window.designSaveResult(" + pending.seq() + ", " + GSON.toJson(error) + ");");
     }
 
-    /** Asks the page to save pending changes; completes when it confirms or after {@link #FLUSH_MILLIS}. */
+    String lastSaveError() {
+        return lastSaveError;
+    }
+
+    private synchronized void clearSaveState() {
+        pendingScene.set(null);
+        lastWrittenSeq = 0;
+        lastHandledSeq = 0;
+        lastSaveError = "";
+    }
+
+    private synchronized boolean shouldWrite(long seq) {
+        if (seq <= lastWrittenSeq) {
+            return false;
+        }
+        lastWrittenSeq = seq;
+        return true;
+    }
+
+    private synchronized void recordSaveOutcome(long seq, String error) {
+        if (seq >= lastHandledSeq) {
+            lastHandledSeq = seq;
+            lastSaveError = error;
+        }
+    }
+
+    private synchronized void recordRejectedSave(long seq, String error) {
+        if (seq < 0) {
+            PendingSave queued = pendingScene.get();
+            if (queued != null && queued.seq() > lastHandledSeq) {
+                lastHandledSeq = queued.seq();
+            }
+            lastHandledSeq++;
+            lastSaveError = error;
+        } else if (seq >= lastHandledSeq) {
+            lastHandledSeq = seq;
+            lastSaveError = error;
+        }
+    }
+
+    private void failPendingFlush(String reason) {
+        PendingFlush pending = flushed.getAndSet(null);
+        if (pending != null) {
+            pending.future().completeExceptionally(new CancellationException(reason));
+        }
+    }
+
+    /** Asks the page to save pending changes; completes when it confirms or fails after {@link #FLUSH_MILLIS}. */
     CompletableFuture<Void> requestFlush() {
-        if (!page.isLoaded()) {
+        if (!valid || !page.isLoaded() || !editorReady) {
             return CompletableFuture.completedFuture(null);
         }
-        CompletableFuture<Void> waiting = new CompletableFuture<>();
-        CompletableFuture<Void> previous = flushed.getAndSet(waiting);
+        long seq = nextFlushSeq.incrementAndGet();
+        CompletableFuture<Void> waiting = new CompletableFuture<Void>().orTimeout(FLUSH_MILLIS, TimeUnit.MILLISECONDS);
+        PendingFlush current = new PendingFlush(seq, waiting);
+        PendingFlush previous = flushed.getAndSet(current);
         if (previous != null) {
-            previous.complete(null);
+            waiting.whenComplete((result, failure) -> {
+                if (failure != null) {
+                    previous.future().completeExceptionally(failure);
+                } else {
+                    previous.future().complete(result);
+                }
+            });
         }
-        page.execute("window.designFlush && window.designFlush();");
-        return waiting.completeOnTimeout(null, FLUSH_MILLIS, TimeUnit.MILLISECONDS);
+        if (!valid || !editorReady) {
+            if (flushed.compareAndSet(current, null)) {
+                waiting.completeExceptionally(new CancellationException("Diagram editor closed."));
+            }
+            return waiting;
+        }
+        page.execute("window.designFlush && window.designFlush(" + seq + ");");
+        return waiting;
     }
 
     /** Flushes synchronously, bounded to {@link #FLUSH_MILLIS}. Must run on the EDT. */
@@ -209,6 +298,8 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
     @Override
     public void dispose() {
         valid = false;
+        editorReady = false;
+        failPendingFlush("Diagram editor closed.");
         synchronized (OPEN) {
             OPEN.remove(this);
         }

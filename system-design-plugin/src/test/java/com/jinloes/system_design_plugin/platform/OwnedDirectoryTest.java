@@ -12,9 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Guards the five ownership scenarios the superseded per-workspace implementations agreed on. Each
- * assertion states the decision the stricter original made, because widening what this class
- * deletes is irreversible for a learner.
+ * Verifies the ownership invariants required before any plugin-generated directory tree is read or
+ * deleted, because widening what {@link OwnedDirectory} removes is irreversible for a learner.
  */
 class OwnedDirectoryTest {
     private static final String MARKER = ".algorithm-practice-owned";

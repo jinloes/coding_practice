@@ -6,9 +6,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Converts the small Markdown subset exercise statements actually use into the HTML that Swing's
- * {@link javax.swing.text.html.HTMLEditorKit} understands: paragraphs, {@code -} bullet lists, and
- * {@code `inline code`}.
+ * Converts the restricted Markdown subset used in problem statements and hints into escaped HTML
+ * fragments for the bundled JCEF tool-window page: paragraphs ({@code <p>}), {@code -} bullet lists
+ * ({@code <ul><li>}), and {@code `inline code`} ({@code <code>}).
  *
  * <p>Statements are hard-wrapped in their manifests. A single newline inside a paragraph or bullet
  * is a soft break and is joined with a space, so the rendered text wraps to the panel width instead
@@ -82,6 +82,10 @@ public final class MarkdownHtml {
     }
 
     private static String escape(String text) {
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 }

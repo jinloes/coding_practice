@@ -33,8 +33,8 @@ IDE and JCEF and is verified manually with `runIde`.
 
 A problem has an id, title, difficulty, summary, statement, exactly three hints,
 and at least five interviewer-only expectations. Expectations are sent to the
-interviewer only; `PageState` never serializes them, and feedback may name only
-the ones the learner missed.
+interviewer only; `PageState` never serializes them, and feedback paraphrases
+missed expectations as topic-level gaps rather than quoting them verbatim.
 
 An attempt is `<config>/system-design-practice/attempts/<problem>/<attempt>/` with
 `design.excalidraw`, `notes.md`, and `feedback/`. Attempt IDs are random. Every
@@ -67,25 +67,32 @@ A VFS listener on the attempts root re-renders so the stale flag follows edits.
 The plugin injects `window.designSend` after each page load and then fires a
 `designbridge` window event. The diagram editor page posts `ready` once that bridge
 exists, receives `designLoad(scene, dark)`, and
-posts whole-scene `save` messages debounced by 300 ms. `PageEvent.parseEditor`
-rejects scenes over 10 MiB or that are not Excalidraw JSON; `DiagramEditor`
-re-checks ownership and writes through the VFS, then reports the result with
-`designSaveResult`. A failed save keeps the scene dirty and shows a banner.
-`designFlush` saves immediately and posts `flushed`; the IDE flushes, bounded to
-2 seconds, before a diagram tab closes, before app exit, and before feedback.
+posts sequenced whole-scene `save` (`{type, seq, scene}`) messages debounced by
+300 ms. `PageEvent.parseEditor` rejects scenes over 10 MiB or that are not
+Excalidraw JSON while preserving any extractable `seq`; `DiagramEditor`
+re-checks ownership, ignores superseded sequences, writes through the VFS, and
+reports the result with `designSaveResult(seq, error)`. A failed save keeps the
+scene dirty and shows a banner. `designFlush(seq)` saves immediately and posts a
+sequenced `flushed` (`{type, seq}`) message; once `ready` has arrived, the IDE
+flushes, bounded to 2 seconds, before a diagram tab closes, before app exit, and
+before feedback.
 
 ## Interviewer flow
 
-1. Save all documents and flush open diagram editors for the attempt.
+1. Save all documents and flush open diagram editors for the attempt; if a flush
+   times out or an open diagram has an unresolved save error, abort before
+   invoking the CLI so stale disk content is never graded.
 2. In a cancellable background task: fingerprint, read notes and diagram, and
-   build a text `DiagramSummary` (labeled shapes, standalone text, arrows as
-   connections, frames as sections; at most 500 elements).
+   build a text `DiagramSummary` (labeled shapes with duplicate disambiguation,
+   standalone text, directional and undirected connections, frames as sections;
+   at most 500 elements).
 3. `InterviewPrompt` embeds the statement, rubric, expectations, notes, and
    summary. Learner content is fenced with markers that are stripped from the
    content and bounded to 40,000 characters per section.
 4. `CopilotInterviewer` runs the CLI and parses the JSON reply. Invalid output is
    kept as a raw fallback (at most 64 KiB) rather than discarded.
-5. The feedback, fingerprint, model, and time are saved under `feedback/`, and the
+5. The feedback, fingerprint, model, and time are saved under `feedback/` (up to
+   20 reviews per attempt are surfaced newest-first in the tool window), and the
    attempt's verdict is recorded in `DesignProgress`.
 
 ## Privacy and security boundary

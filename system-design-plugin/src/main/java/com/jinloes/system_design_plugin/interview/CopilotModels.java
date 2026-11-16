@@ -44,6 +44,24 @@ public final class CopilotModels {
         return models;
     }
 
+    /**
+     * Builds the settings dropdown's model ID list: {@code ""} (CLI default) first, followed by {@code currentModel}
+     * when it is non-blank and absent from {@code models}, followed by each discovered model ID in order.
+     */
+    public static List<String> dropdownIds(List<Model> models, String currentModel) {
+        List<String> ids = new ArrayList<>();
+        ids.add("");
+        List<Model> entries = models == null ? List.of() : models;
+        String current = currentModel == null ? "" : currentModel.strip();
+        if (!current.isEmpty() && entries.stream().noneMatch(entry -> entry.id().equals(current))) {
+            ids.add(current);
+        }
+        for (Model entry : entries) {
+            ids.add(entry.id());
+        }
+        return List.copyOf(ids);
+    }
+
     private static boolean enabled(ModelInfo info) {
         if (info.getPolicy() == null) {
             return true;

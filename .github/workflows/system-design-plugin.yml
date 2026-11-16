@@ -1,0 +1,50 @@
+name: System Design Plugin
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'system-design-plugin/**'
+      - '.github/workflows/system-design-plugin.yml'
+  pull_request:
+    paths:
+      - 'system-design-plugin/**'
+      - '.github/workflows/system-design-plugin.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: system-design-plugin-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+          cache-dependency-path: |
+            system-design-plugin/build.gradle
+            system-design-plugin/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Cache npm packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-system-design-plugin-npm-${{ hashFiles('system-design-plugin/web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-system-design-plugin-npm-
+
+      - name: Run plugin checks and coverage gate
+        working-directory: system-design-plugin
+        run: bash ./gradlew check --no-daemon --console=plain

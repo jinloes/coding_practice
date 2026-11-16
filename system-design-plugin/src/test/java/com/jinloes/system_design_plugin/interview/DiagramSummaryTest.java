@@ -59,8 +59,66 @@ class DiagramSummaryTest {
                   - "Read heavy 100:1" -> diamond (unlabeled)
                   - [unconnected arrow] "API gateway" -> (nothing)
                   - [unconnected arrow] (nothing) -> "Postgres"
-                  - [unconnected line] (nothing) -> (nothing)
+                  - [unconnected line] (nothing) -- (nothing)
                   Other elements: 2 freedraw, 1 image""");
+    }
+
+    @Test
+    void preservesReverseBidirectionalAndUndirectedConnectors() {
+        String summary = DiagramSummary.summarize(scene(
+                shape("a", "rectangle", null), label("ta", "a", "Client"),
+                shape("b", "rectangle", null), label("tb", "b", "Gateway"),
+                "{\"id\":\"rev\",\"type\":\"arrow\",\"startBinding\":{\"elementId\":\"a\"},"
+                        + "\"endBinding\":{\"elementId\":\"b\"},\"startArrowhead\":\"arrow\",\"endArrowhead\":null}",
+                "{\"id\":\"bi\",\"type\":\"arrow\",\"startBinding\":{\"elementId\":\"a\"},"
+                        + "\"endBinding\":{\"elementId\":\"b\"},\"startArrowhead\":\"arrow\",\"endArrowhead\":\"arrow\"}",
+                "{\"id\":\"plain\",\"type\":\"arrow\",\"startBinding\":{\"elementId\":\"a\"},"
+                        + "\"endBinding\":{\"elementId\":\"b\"},\"startArrowhead\":null,\"endArrowhead\":null}",
+                "{\"id\":\"ln\",\"type\":\"line\",\"startBinding\":{\"elementId\":\"a\"},"
+                        + "\"endBinding\":{\"elementId\":\"b\"}}"));
+
+        assertThat(summary).contains(
+                "- \"Client\" -- \"Gateway\"",
+                "- \"Client\" <- \"Gateway\"",
+                "- \"Client\" <-> \"Gateway\"");
+    }
+
+    @Test
+    void resolvesBoundLabelsAndFramesBeyondFiveHundredCapAndDisambiguatesDuplicates() {
+        List<String> elements = new ArrayList<>();
+        elements.add("{\"id\":\"r1\",\"type\":\"rectangle\",\"frameId\":\"f1\",\"x\":10,\"y\":20}");
+        elements.add("{\"id\":\"r2\",\"type\":\"rectangle\",\"frameId\":\"f1\",\"x\":50,\"y\":20}");
+        elements.add(arrow("conn", "r2", "r1"));
+        for (int index = 0; index < DiagramSummary.MAX_ELEMENTS; index++) {
+            elements.add(shape("extra-" + index, "ellipse", null));
+        }
+        elements.add(label("l1", "r1", "Redis"));
+        elements.add(label("l2", "r2", "Redis"));
+        elements.add("{\"id\":\"f1\",\"type\":\"frame\",\"name\":\"Cache tier\"}");
+
+        String forward = DiagramSummary.summarize(scene(elements.toArray(String[]::new)));
+        assertThat(forward).contains("Frame \"Cache tier\":")
+                .contains("- rectangle \"Redis\" (#1)")
+                .contains("- rectangle \"Redis\" (#2)")
+                .contains("- \"Redis\" (#2) -> \"Redis\" (#1)")
+                .endsWith("[3 more elements omitted; only the first 500 are summarized]");
+
+        List<String> reversed = new ArrayList<>(List.of(
+                "{\"id\":\"r2\",\"type\":\"rectangle\",\"x\":50,\"y\":20}",
+                "{\"id\":\"r1\",\"type\":\"rectangle\",\"x\":10,\"y\":20}",
+                label("l2", "r2", "Redis"),
+                label("l1", "r1", "Redis"),
+                arrow("conn", "r2", "r1")));
+        String firstOrder = DiagramSummary.summarize(scene(reversed.toArray(String[]::new)));
+        Collections.reverse(reversed);
+        assertThat(DiagramSummary.summarize(scene(reversed.toArray(String[]::new)))).isEqualTo(firstOrder);
+
+        String connectedUnlabeled = DiagramSummary.summarize(scene(
+                "{\"id\":\"u2\",\"type\":\"rectangle\",\"x\":80,\"y\":10}",
+                "{\"id\":\"u1\",\"type\":\"rectangle\",\"x\":10,\"y\":10}",
+                arrow("a", "u1", "u2")));
+        assertThat(connectedUnlabeled).contains("- rectangle (unlabeled #1)", "- rectangle (unlabeled #2)",
+                "- rectangle (unlabeled #1) -> rectangle (unlabeled #2)");
     }
 
     @Test
@@ -70,6 +128,7 @@ class DiagramSummaryTest {
                 "{\"id\":\"f1\",\"type\":\"magicframe\",\"name\":\" \"}",
                 shape("svc", "rectangle", "f2"), label("t1", "svc", "Writer"),
                 shape("cache", "rectangle", "f1"), label("t2", "cache", "Cache"),
+                arrow("fconn", "f2", "f1"),
                 shape("loose", "rectangle", "missing-frame"),
                 "{\"id\":\"gone\",\"type\":\"rectangle\",\"isDeleted\":true}",
                 "{\"id\":\"kept\",\"type\":\"ellipse\",\"isDeleted\":false}",
@@ -80,6 +139,8 @@ class DiagramSummaryTest {
                   Components:
                   - ellipse (unlabeled)
                   - rectangle (unlabeled)
+                  Connections:
+                  - frame "Write path" -> frame "Untitled frame"
                 Frame "Untitled frame":
                   Components:
                   - rectangle "Cache"
@@ -118,6 +179,10 @@ class DiagramSummaryTest {
         assertThat(DiagramSummary.summarize("{\"elements\":{}}")).isEqualTo(DiagramSummary.MALFORMED);
         assertThat(DiagramSummary.summarize(scene())).isEqualTo(DiagramSummary.EMPTY);
         assertThat(DiagramSummary.summarize(scene("{\"id\":\"d\",\"type\":\"text\",\"isDeleted\":true}")))
+                .isEqualTo(DiagramSummary.EMPTY);
+        assertThat(DiagramSummary.summarize(scene("{\"id\":\"f\",\"type\":\"frame\",\"name\":\"Empty\"}")))
+                .isEqualTo(DiagramSummary.EMPTY);
+        assertThat(DiagramSummary.summarize(scene("{\"id\":\"blank\",\"type\":\"text\",\"text\":\"   \"}")))
                 .isEqualTo(DiagramSummary.EMPTY);
     }
 }

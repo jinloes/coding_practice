@@ -68,7 +68,15 @@ class MarkdownHtmlTest {
     @Test
     void inlineRendersWithoutBlockMarkup() {
         assertThat(MarkdownHtml.inline("pairSum([1, 2], 3)"))
-                .as("example inputs are placed inside an existing code element")
+                .as("revealed hints are rendered as inline fragments without block tags")
                 .isEqualTo("pairSum([1, 2], 3)");
+    }
+
+    @Test
+    void escapesSingleAndDoubleQuotesInsideAndOutsideCodeSpans() {
+        assertThat(MarkdownHtml.toHtml("Say \"hello\" and `'world'`."))
+                .isEqualTo("<p>Say &quot;hello&quot; and <code>&#39;world&#39;</code>.</p>");
+        assertThat(MarkdownHtml.inline("Header \"Authorization\" != 'none'"))
+                .isEqualTo("Header &quot;Authorization&quot; != &#39;none&#39;");
     }
 }

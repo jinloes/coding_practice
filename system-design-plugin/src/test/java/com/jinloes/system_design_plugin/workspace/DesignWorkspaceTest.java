@@ -4,6 +4,8 @@ import com.jinloes.system_design_plugin.catalog.DesignCatalog;
 import com.jinloes.system_design_plugin.catalog.DesignCatalog.Problem;
 import com.jinloes.system_design_plugin.workspace.DesignWorkspace.Attempt;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -14,6 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -184,7 +187,41 @@ class DesignWorkspaceTest {
         Files.writeString(attempt.feedbackDirectory().resolve("99999999999999999999.json"), "valid-overflow");
         Files.createDirectories(attempt.feedbackDirectory().resolve("9000.json"));
         assertThat(workspace.latestFeedback(attempt, DesignWorkspaceTest::parseValid)).contains("valid-2");
+        assertThat(workspace.feedbackHistory(attempt, DesignWorkspaceTest::parseValid))
+                .containsExactly("valid-2", "valid-1");
         assertThat(workspace.latestFeedback(attempt, text -> null)).isEmpty();
+
+        Attempt capped = workspace.create(SECOND);
+        assertThat(workspace.feedbackHistory(capped, text -> text)).isEmpty();
+        for (int index = 0; index < DesignWorkspace.MAX_FEEDBACK_HISTORY + 5; index++) {
+            workspace.saveFeedback(capped, "valid-" + index);
+        }
+        List<String> history = workspace.feedbackHistory(capped, DesignWorkspaceTest::parseValid);
+        assertThat(history).hasSize(DesignWorkspace.MAX_FEEDBACK_HISTORY);
+        assertThat(history.get(0)).isEqualTo("valid-24");
+        assertThat(history.get(DesignWorkspace.MAX_FEEDBACK_HISTORY - 1)).isEqualTo("valid-5");
+    }
+
+    @Test
+    void checksAttemptsPathsAtSegmentBoundaries() {
+        DesignWorkspace workspace = workspace();
+        String root = workspace.attemptsDirectory().toString().replace('\\', '/');
+
+        assertThat(workspace.isAttemptsPath(root)).isTrue();
+        assertThat(workspace.isAttemptsPath(root + "/url-shortener/a/notes.md")).isTrue();
+        assertThat(workspace.isAttemptsPath(root + "-backup/url-shortener/a/notes.md")).isFalse();
+        assertThat(workspace.isAttemptsPath(null)).isFalse();
+        assertThat(workspace.isAttemptsPath("   ")).isFalse();
+        assertThat(workspace.isAttemptsPath("bad\0path")).isFalse();
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    void matchesAttemptsPathsCaseInsensitivelyOnWindows() {
+        DesignWorkspace workspace = workspace();
+        String root = workspace.attemptsDirectory().toString().replace('\\', '/');
+        assertThat(workspace.isAttemptsPath(root.toLowerCase(Locale.ROOT) + "/url-shortener/notes.md")).isTrue();
+        assertThat(workspace.isAttemptsPath(root.toUpperCase(Locale.ROOT) + "/url-shortener/notes.md")).isTrue();
     }
 
     @Test

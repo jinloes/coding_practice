@@ -8,10 +8,27 @@ export function renderSample(): void {
     'Capacity estimates',
     'API and data model',
     'High-level architecture',
-    'Scalability and bottlenecks',
-    'Reliability and trade-offs',
+    'Deep dives and scalability',
+    'Reliability and tradeoffs',
     'Communication',
   ];
+  const latestReview = {
+    parsed: true,
+    verdict: 'Lean hire',
+    summary: 'A reasonable design with gaps in capacity planning.',
+    dimensions: dimensions.map((name, index) => ({
+      name,
+      score: (index % 4) + 1,
+      strengths: ['Clear components'],
+      gaps: index % 2 === 0 ? ['No numbers given'] : [],
+    })),
+    followUpQuestions: ['How would you handle hot links?'],
+    missedExpectations: ['Cache popular redirects'],
+    raw: '',
+    model: 'sample-model',
+    createdAt: '2024-01-01T00:00:00Z',
+    stale: true,
+  };
   const state: PageState = {
     theme: {
       dark: true,
@@ -38,22 +55,8 @@ export function renderSample(): void {
       selectedAttempt: 'a1',
     },
     running: false,
-    feedback: {
-      parsed: true,
-      verdict: 'Lean hire',
-      summary: 'A reasonable design with gaps in capacity planning.',
-      dimensions: dimensions.map((name, index) => ({
-        name,
-        score: (index % 4) + 1,
-        strengths: ['Clear components'],
-        gaps: index % 2 === 0 ? ['No numbers given'] : [],
-      })),
-      followUpQuestions: ['How would you handle hot links?'],
-      missedExpectations: ['Cache popular redirects'],
-      raw: '',
-      model: 'sample-model',
-      createdAt: '2024-01-01T00:00:00Z',
-    },
+    reviews: [latestReview],
+    feedback: latestReview,
     stale: true,
     error: '',
   };

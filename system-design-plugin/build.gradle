@@ -21,15 +21,16 @@ java {
     }
 }
 
+def idePath = providers.gradleProperty('idePath').filter { !it.isBlank() }
+
 dependencies {
     intellijPlatform {
-        if (providers.gradleProperty('idePath').isPresent()) {
-            local(providers.gradleProperty('idePath').get())
+        if (idePath.isPresent()) {
+            local(idePath.get())
         } else {
             intellijIdea('2026.2.3')
         }
         bundledPlugins('com.intellij.modules.jcef')
-        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform.INSTANCE)
     }
     // Lists the account's models for the settings dialog. JNA serves only the SDK's in-process mode, which an
     // explicit cliPath never selects, and the IDE loads its own JNA native library.
@@ -40,18 +41,13 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.assertj:assertj-core:3.26.3'
-    // The IDE fixture bootstrap references legacy TestCase; authored tests remain Jupiter.
-    testRuntimeOnly('junit:junit:4.13.2') {
-        transitive = false
-    }
 }
 
 intellijPlatform {
     pluginConfiguration {
-        name = 'System Design Practice'
         ideaVersion {
             sinceBuild = '262.10968.63'
-            untilBuild = '262.*'
+            untilBuild = provider { null }
         }
     }
     pluginVerification {
@@ -61,13 +57,22 @@ intellijPlatform {
     }
 }
 
-test {
+def webBuildDir = layout.buildDirectory.dir('web')
+
+tasks.named('test', Test) {
     useJUnitPlatform()
-    // Lets tests launch FakeCopilotCli as a separate JVM.
-    systemProperty 'design.test.classpath', sourceSets.test.runtimeClasspath.asPath
+    def problemsDir = layout.projectDirectory.dir('src/main/resources/problems').asFile.absolutePath
+    def webSample = layout.projectDirectory.file('web/src/sample.ts').asFile
+    def fakeCliClasspath = sourceSets.test.output.classesDirs + configurations.runtimeClasspath
+    inputs.file(webSample).withPathSensitivity(PathSensitivity.NONE)
     // Lets the catalog test compare the manifest files with the catalog's problem list.
-    systemProperty 'design.problems.dir', file('src/main/resources/problems').absolutePath
-    systemProperty 'idea.load.plugins.id', 'com.jinloes.systemdesign'
+    systemProperty 'design.problems.dir', problemsDir
+    systemProperty 'design.web.sample', webSample.absolutePath
+    doFirst {
+        // Excludes the IDE distribution so -Ddesign.test.classpath stays well below the Windows command-line limit.
+        systemProperty 'design.test.classpath', fakeCliClasspath.asPath
+        systemProperty 'design.web.build.dir', webBuildDir.get().asFile.absolutePath
+    }
     // The test IDE loads plugin classes through PathClassLoader, which JaCoCo only sees with this option.
     jacoco {
         includeNoLocationClasses = true
@@ -141,9 +146,11 @@ def webUi = tasks.register('webUi', com.github.gradle.node.npm.task.NpmTask) {
     inputs.dir('web/scripts')
     inputs.files('web/index.html', 'web/editor.html', 'web/vite.config.ts', 'web/tsconfig.json',
             'web/package.json', 'web/package-lock.json')
-    outputs.dir(layout.buildDirectory.dir('web'))
+    outputs.dir(webBuildDir)
 }
 
 tasks.named('processResources') {
     from(webUi) { into 'web' }
 }
+
+apply from: 'gradle/local-sandbox.gradle'

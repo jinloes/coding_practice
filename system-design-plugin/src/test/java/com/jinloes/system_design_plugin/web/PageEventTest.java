@@ -45,33 +45,69 @@ class PageEventTest {
 
     @Test
     void parsesEditorMessages() {
-        assertThat(PageEvent.parseEditor("{\"type\":\"ready\"}")).isEqualTo(new EditorMessage(EditorMessage.Kind.READY, null));
-        assertThat(PageEvent.parseEditor("{\"type\":\"flushed\"}"))
-                .isEqualTo(new EditorMessage(EditorMessage.Kind.FLUSHED, null));
-        String save = "{\"type\":\"save\",\"scene\":" + new Gson().toJson(SCENE) + "}";
-        assertThat(PageEvent.parseEditor(save)).isEqualTo(new EditorMessage(EditorMessage.Kind.SAVE, SCENE));
+        assertThat(PageEvent.parseEditor("{\"type\":\"ready\"}"))
+                .isEqualTo(new EditorMessage(EditorMessage.Kind.READY, 0L, null));
+        assertThat(PageEvent.parseEditor("{\"type\":\"flushed\",\"seq\":3}"))
+                .isEqualTo(new EditorMessage(EditorMessage.Kind.FLUSHED, 3L, null));
+        String save = "{\"type\":\"save\",\"seq\":7,\"scene\":" + new Gson().toJson(SCENE) + "}";
+        assertThat(PageEvent.parseEditor(save)).isEqualTo(new EditorMessage(EditorMessage.Kind.SAVE, 7L, SCENE));
     }
 
     @Test
     void rejectsBadEditorMessages() {
-        for (String json : new String[]{null, "{}", "{\"type\":\"selectProblem\",\"id\":\"a\"}",
-                "{\"type\":\"save\"}", "{\"type\":\"save\",\"scene\":\"not json\"}",
-                "{\"type\":\"save\",\"scene\":\"{}\"}", "{\"type\":\"save\",\"scene\":\"{\\\"type\\\":\\\"other\\\"}\"}",
-                "{\"type\":\"save\",\"scene\":\"{\\\"type\\\":{}}\"}"}) {
+        for (String json : new String[]{null, "[]", "{", "{}", "{\"type\":4}",
+                "{\"type\":\"selectProblem\",\"id\":\"a\"}",
+                "{\"type\":\"flushed\"}", "{\"type\":\"flushed\",\"seq\":0}",
+                "{\"type\":\"flushed\",\"seq\":-1}", "{\"type\":\"flushed\",\"seq\":\"3\"}",
+                "{\"type\":\"save\"}", "{\"type\":\"save\",\"seq\":0,\"scene\":\"{}\"}",
+                "{\"type\":\"save\",\"seq\":-1,\"scene\":\"{}\"}",
+                "{\"type\":\"save\",\"seq\":1.5,\"scene\":\"{}\"}",
+                "{\"type\":\"save\",\"seq\":\"1\",\"scene\":\"{}\"}",
+                "{\"type\":\"save\",\"seq\":1}",
+                "{\"type\":\"save\",\"seq\":1,\"scene\":\"not json\"}",
+                "{\"type\":\"save\",\"seq\":1,\"scene\":\"[]\"}",
+                "{\"type\":\"save\",\"seq\":1,\"scene\":\"{}\"}",
+                "{\"type\":\"save\",\"seq\":1,\"scene\":\"{\\\"type\\\":\\\"other\\\"}\"}",
+                "{\"type\":\"save\",\"seq\":1,\"scene\":\"{\\\"type\\\":{}}\"}"}) {
             assertThatThrownBy(() -> PageEvent.parseEditor(json)).as(String.valueOf(json))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(PageEvent.InvalidSceneException.class);
         }
+        assertThatThrownBy(() -> PageEvent.parseEditor("{\"type\":\"flushed\"}"))
+                .isInstanceOfSatisfying(PageEvent.InvalidSceneException.class,
+                        rejected -> assertThat(rejected.saveFailure()).isFalse());
+        assertThatThrownBy(() -> PageEvent.parseEditor("{\"type\":\"save\",\"seq\":11,"))
+                .isInstanceOfSatisfying(PageEvent.InvalidSceneException.class, rejected -> {
+                    assertThat(rejected.seq()).isEqualTo(11L);
+                    assertThat(rejected.saveFailure()).isTrue();
+                });
     }
 
     @Test
-    void rejectsOversizeScenes() {
-        String padding = "x".repeat(PageEvent.MAX_SCENE_BYTES);
-        String bigScene = "{\\\"type\\\":\\\"excalidraw\\\",\\\"p\\\":\\\"" + padding + "\\\"}";
-        assertThatThrownBy(() -> PageEvent.parseEditor("{\"type\":\"save\",\"scene\":\"" + bigScene + "\"}"))
-                .hasMessageContaining("was not saved");
+    void rejectsOversizeScenesPreservingExtractedSequenceWhenPresent() {
+        String overCharLimit = "x".repeat(PageEvent.MAX_SCENE_BYTES + 2_000);
+        String hugeScene = "{\\\"type\\\":\\\"excalidraw\\\",\\\"p\\\":\\\"" + overCharLimit + "\\\"}";
+        assertThatThrownBy(() -> PageEvent.parseEditor("{\"type\":\"save\",\"seq\":42,\"scene\":\"" + hugeScene + "\"}"))
+                .isInstanceOfSatisfying(PageEvent.InvalidSceneException.class, rejected -> {
+                    assertThat(rejected).hasMessageContaining("was not saved");
+                    assertThat(rejected.seq()).isEqualTo(42L);
+                    assertThat(rejected.saveFailure()).isTrue();
+                });
+        assertThatThrownBy(() -> PageEvent.parseEditor("{\"type\":\"save\",\"scene\":\"" + hugeScene + "\"}"))
+                .isInstanceOfSatisfying(PageEvent.InvalidSceneException.class, rejected -> {
+                    assertThat(rejected).hasMessageContaining("was not saved");
+                    assertThat(rejected.seq()).isEqualTo(-1L);
+                    assertThat(rejected.saveFailure()).isTrue();
+                });
         String multibyte = "é".repeat(PageEvent.MAX_SCENE_BYTES / 2 + 1);
         String scene = "{\\\"type\\\":\\\"excalidraw\\\",\\\"p\\\":\\\"" + multibyte + "\\\"}";
+        assertThatThrownBy(() -> PageEvent.parseEditor("{\"type\":\"save\",\"seq\":9,\"scene\":\"" + scene + "\"}"))
+                .isInstanceOfSatisfying(PageEvent.InvalidSceneException.class, rejected -> {
+                    assertThat(rejected).hasMessageContaining("was not saved");
+                    assertThat(rejected.seq()).isEqualTo(9L);
+                    assertThat(rejected.saveFailure()).isTrue();
+                });
         assertThatThrownBy(() -> PageEvent.parseEditor("{\"type\":\"save\",\"scene\":\"" + scene + "\"}"))
-                .hasMessageContaining("was not saved");
+                .isInstanceOf(PageEvent.InvalidSceneException.class);
+        assertThat(PageEvent.extractSeq("{\"seq\":0}")).isEqualTo(-1L);
     }
 }

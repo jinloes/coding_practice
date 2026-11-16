@@ -9,6 +9,7 @@ import com.jinloes.system_design_plugin.catalog.DesignCatalog.Problem;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -35,6 +36,7 @@ public final class DesignWorkspace {
     public static final String DIAGRAM = "design.excalidraw";
     public static final String NOTES = "notes.md";
     public static final String FEEDBACK = "feedback";
+    public static final int MAX_FEEDBACK_HISTORY = 20;
     public static final String EMPTY_SCENE = """
             {
               "type": "excalidraw",
@@ -87,6 +89,18 @@ public final class DesignWorkspace {
 
     public Path attemptsDirectory() {
         return configRoot.resolve("system-design-practice").resolve("attempts").normalize();
+    }
+
+    /** Whether a VFS path lies at or inside {@link #attemptsDirectory()}, respecting segment and OS path rules. */
+    public boolean isAttemptsPath(String vfsPath) {
+        if (vfsPath == null || vfsPath.isBlank()) {
+            return false;
+        }
+        try {
+            return Path.of(vfsPath).toAbsolutePath().normalize().startsWith(attemptsDirectory());
+        } catch (InvalidPathException invalid) {
+            return false;
+        }
     }
 
     public Attempt create(Problem problem) throws IOException {
@@ -216,10 +230,22 @@ public final class DesignWorkspace {
 
     /** The newest feedback file the parser accepts; files it rejects (corrupt or foreign) are skipped. */
     public <T> Optional<T> latestFeedback(Attempt attempt, Function<String, T> parser) throws IOException {
+        return readFeedback(attempt, parser, 1).stream().findFirst();
+    }
+
+    /**
+     * Up to {@link #MAX_FEEDBACK_HISTORY} valid feedback files for {@code attempt}, newest first; corrupt or
+     * foreign files are skipped.
+     */
+    public <T> List<T> feedbackHistory(Attempt attempt, Function<String, T> parser) throws IOException {
+        return readFeedback(attempt, parser, MAX_FEEDBACK_HISTORY);
+    }
+
+    private <T> List<T> readFeedback(Attempt attempt, Function<String, T> parser, int limit) throws IOException {
         Attempt stored = read(attempt.id());
         Path directory = stored.feedbackDirectory();
         if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) {
-            return Optional.empty();
+            return List.of();
         }
         List<Path> files;
         try (var paths = Files.list(directory)) {
@@ -228,17 +254,21 @@ public final class DesignWorkspace {
                     .sorted(Comparator.comparingLong(DesignWorkspace::feedbackMillis).reversed())
                     .toList();
         }
+        List<T> parsedItems = new ArrayList<>();
         for (Path file : files) {
             try {
                 T parsed = parser.apply(Files.readString(file, StandardCharsets.UTF_8));
                 if (parsed != null) {
-                    return Optional.of(parsed);
+                    parsedItems.add(parsed);
+                    if (parsedItems.size() == limit) {
+                        break;
+                    }
                 }
             } catch (IOException | RuntimeException ignored) {
                 // A corrupt file never hides older valid feedback.
             }
         }
-        return Optional.empty();
+        return List.copyOf(parsedItems);
     }
 
     private void requireOwned(Attempt attempt) throws IOException {

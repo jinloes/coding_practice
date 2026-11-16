@@ -74,7 +74,11 @@ export function ProblemView({ state, problem }: { state: PageState; problem: Sel
               onChange={(value) => value && send({ type: 'selectAttempt', id: value })}
             />
           )}
-          <Button size="xs" variant="default" onClick={() => send({ type: 'newAttempt', id: problem.id })}>
+          <Button
+            size="xs"
+            variant={problem.attempts.length === 0 ? 'filled' : 'default'}
+            onClick={() => send({ type: 'newAttempt', id: problem.id })}
+          >
             New attempt
           </Button>
           {attempt !== '' && (
@@ -110,7 +114,12 @@ export function ProblemView({ state, problem }: { state: PageState; problem: Sel
         </Alert>
       )}
 
-      {state.feedback && <FeedbackView feedback={state.feedback} stale={state.stale} />}
+      {state.reviews.length > 0 && (
+        <FeedbackView
+          key={`${attempt}:${state.reviews.length}:${state.reviews[0]?.createdAt ?? ''}`}
+          reviews={state.reviews}
+        />
+      )}
     </Stack>
   );
 }

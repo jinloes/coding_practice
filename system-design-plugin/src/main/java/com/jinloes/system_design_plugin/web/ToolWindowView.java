@@ -17,8 +17,8 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 /**
- * Builds the tool window's {@link PageState.View} from the selected problem, its attempts, progress, and the
- * latest feedback. Attempts are ordered by creation time, then ID, and labeled by that order.
+ * Builds the tool window's {@link PageState.View} from the selected problem, its attempts, progress, and their
+ * feedback history. Attempts are ordered by creation time, then ID, and labeled by that order.
  */
 public final class ToolWindowView {
     private ToolWindowView() {
@@ -28,13 +28,13 @@ public final class ToolWindowView {
     public record AttemptEntry(String id, FileTime created) {
     }
 
-    /** Read access to stored attempts and their feedback. */
+    /** Read access to stored attempts and their feedback history. */
     public interface AttemptStore {
         List<AttemptEntry> attempts(String problemId) throws IOException;
 
-        Optional<InterviewFeedback.Stored> latestFeedback(String attemptId) throws IOException;
+        List<InterviewFeedback.Stored> feedbackHistory(String attemptId) throws IOException;
 
-        boolean isStale(String attemptId, String fingerprint) throws IOException;
+        String fingerprint(String attemptId) throws IOException;
     }
 
     public static PageState.View build(String problemId, boolean running, String error, Set<String> reviewedIds,
@@ -42,7 +42,7 @@ public final class ToolWindowView {
                                        ToIntFunction<String> hintsRevealed, AttemptStore store, ZoneId zone) {
         String currentError = error;
         if (problemId == null || !DesignCatalog.exists(problemId)) {
-            return new PageState.View(reviewedIds, null, List.of(), "", 0, running, null, false, currentError);
+            return new PageState.View(reviewedIds, null, List.of(), "", 0, running, List.of(), currentError);
         }
         Problem problem = DesignCatalog.find(problemId);
         List<AttemptEntry> attempts;
@@ -67,19 +67,31 @@ public final class ToolWindowView {
             selected = Optional.of(attempts.get(attempts.size() - 1));
         }
         if (selected.isEmpty()) {
-            return new PageState.View(reviewedIds, problem, infos, "", 0, running, null, false, currentError);
+            return new PageState.View(reviewedIds, problem, infos, "", 0, running, List.of(), currentError);
         }
         String attemptId = selected.get().id();
         int hints = hintsRevealed.applyAsInt(attemptId);
-        InterviewFeedback.Stored feedback = null;
-        boolean stale = false;
+        List<PageState.Review> reviews = List.of();
         try {
-            feedback = store.latestFeedback(attemptId).orElse(null);
-            stale = feedback != null && store.isStale(attemptId, feedback.fingerprint());
+            List<InterviewFeedback.Stored> history = store.feedbackHistory(attemptId);
+            if (!history.isEmpty()) {
+                String currentFingerprint = currentFingerprint(store, attemptId);
+                reviews = history.stream()
+                        .map(entry -> new PageState.Review(entry,
+                                currentFingerprint != null && !currentFingerprint.equals(entry.fingerprint())))
+                        .toList();
+            }
         } catch (IOException exception) {
             // Unreadable feedback is shown as no feedback; the store reports the cause.
         }
-        return new PageState.View(reviewedIds, problem, infos, attemptId, hints, running, feedback, stale,
-                currentError);
+        return new PageState.View(reviewedIds, problem, infos, attemptId, hints, running, reviews, currentError);
+    }
+
+    private static String currentFingerprint(AttemptStore store, String attemptId) {
+        try {
+            return store.fingerprint(attemptId);
+        } catch (IOException exception) {
+            return null;
+        }
     }
 }
