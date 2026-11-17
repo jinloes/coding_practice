@@ -25,6 +25,9 @@ final class ResultsView {
     private final JBTextArea output = PracticeViews.textArea();
     private final JPanel panel = new JPanel(new BorderLayout());
 
+    private boolean displayedResult;
+    private boolean stale;
+
     ResultsView() {
         banner.setFont(JBFont.label().asBold().biggerOn(1));
         banner.setIconTextGap(JBUI.scale(6));
@@ -44,6 +47,8 @@ final class ResultsView {
     }
 
     void clear() {
+        displayedResult = false;
+        stale = false;
         setBanner(null, "");
         history.setText("");
         output.setText("");
@@ -51,6 +56,8 @@ final class ResultsView {
 
     /** Shows the saved result of the attempt's last full check. */
     void showEntry(ManagedPracticeProgress.Entry entry) {
+        displayedResult = !entry.checkedFingerprint.isEmpty();
+        stale = false;
         showStatus(entry);
         String details = entry.details == null ? "" : entry.details;
         String complexity = entry.complexity == null || entry.complexity.isBlank() ? "" : "\n\n" + entry.complexity;
@@ -59,12 +66,16 @@ final class ResultsView {
 
     /** Updates the banner and history from the saved entry without replacing the output. */
     void showStatus(ManagedPracticeProgress.Entry entry) {
+        displayedResult = !entry.checkedFingerprint.isEmpty();
+        stale = false;
         setBanner(icon(entry.status), label(entry.status));
         history.setText("Last full check: " + orNever(entry.checkedAt)
                 + "    Most recent pass: " + orNever(entry.lastPassedAt));
     }
 
     void showRunning() {
+        displayedResult = false;
+        stale = false;
         setBanner(AnimatedIcon.Default.INSTANCE, "Running...");
     }
 
@@ -74,6 +85,8 @@ final class ResultsView {
     }
 
     void showError(String text) {
+        displayedResult = false;
+        stale = false;
         setBanner(AllIcons.General.Error, "Action failed");
         history.setText("");
         setOutput(text);
@@ -81,7 +94,9 @@ final class ResultsView {
 
     /** Shows the banner for a finished example or custom-input run, chosen from its finished text. */
     void showRunFinished(String text) {
+        displayedResult = true;
         RunBanner run = runBanner(text);
+        stale = run.outcome() == RunOutcome.STALE;
         setBanner(switch (run.outcome()) {
             case STALE -> AllIcons.General.Warning;
             case PASSED -> AllIcons.RunConfigurations.TestPassed;
@@ -128,15 +143,33 @@ final class ResultsView {
     }
 
     void showMessage(String title, String text) {
+        displayedResult = false;
+        stale = false;
         setBanner(AllIcons.General.Information, title);
         history.setText("");
         setOutput(text);
     }
 
-    /** Marks the shown result as out of date with the solution and explains why. */
+    boolean hasDisplayedResult() {
+        return displayedResult;
+    }
+
+    String bannerText() {
+        return banner.getText();
+    }
+
+    String outputText() {
+        return output.getText();
+    }
+
+    /** Marks the shown result as out of date with the solution and explains why, at most once per result. */
     void markStale(String reason) {
+        if (stale) {
+            return;
+        }
+        stale = true;
         setBanner(AllIcons.General.Warning, banner.getText().isEmpty() ? "Stale" : banner.getText() + " (stale)");
-        output.append("\nSTALE: " + reason);
+        output.append((output.getText().isEmpty() ? "" : "\n") + "STALE: " + reason);
     }
 
     /** The banner text for a {@code CheckResult.Status} name; unknown names are shown as they are. */

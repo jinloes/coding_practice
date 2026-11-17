@@ -27,12 +27,18 @@ public final class TrackCatalog {
     private static final Map<String, Guide> BY_ID = TRACKS.stream()
             .collect(Collectors.toUnmodifiableMap(Guide::id, track -> track));
 
+    private static final Map<String, List<Guide>> BY_EXERCISE = GuideCatalog.indexByExercise(TRACKS);
+
     private TrackCatalog() {
     }
 
     public static List<Guide> all() {
         return TRACKS;
     }
+
+    public static boolean isTrack(String id) {
+        return BY_ID.containsKey(id);
+     }
 
     public static Guide find(String id) {
         Guide track = BY_ID.get(id);
@@ -44,9 +50,7 @@ public final class TrackCatalog {
 
     /** The tracks that include {@code exerciseId}, in track order. */
     public static List<Guide> containing(String exerciseId) {
-        return TRACKS.stream()
-                .filter(track -> track.exercises().stream().anyMatch(exercise -> exercise.id().equals(exerciseId)))
-                .toList();
+        return BY_EXERCISE.getOrDefault(exerciseId, List.of());
     }
 
     static String read(String path) {

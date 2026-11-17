@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -78,6 +79,39 @@ class LegacyImportServiceTest {
                 .hasMessageContaining("attempts directory must not redirect");
     }
 
+    @Test
+    void preservesCustomManagedLimitsAndSkipsInvalidLegacyLimits() throws IOException {
+        Path root = legacyRoot("limits");
+        Files.createDirectories(root.resolve("attempts"));
+
+        PracticeProgress invalidLegacy = new PracticeProgress();
+        invalidLegacy.getState().testSeconds = 0;
+        invalidLegacy.getState().suiteSeconds = 90;
+        invalidLegacy.getState().heapMb = 512;
+        ManagedPracticeProgress defaults = new ManagedPracticeProgress();
+
+        service().importLegacy(root, invalidLegacy, defaults);
+
+        assertThat(defaults.hasDefaultLimits())
+                .as("invalid legacy limits must not overwrite valid defaults")
+                .isTrue();
+
+        PracticeProgress validLegacy = new PracticeProgress();
+        validLegacy.getState().testSeconds = 9;
+        validLegacy.getState().suiteSeconds = 90;
+        validLegacy.getState().heapMb = 384;
+        ManagedPracticeProgress customized = new ManagedPracticeProgress();
+        customized.getState().testSeconds = 12;
+        customized.getState().suiteSeconds = 120;
+        customized.getState().heapMb = 512;
+
+        service().importLegacy(root, validLegacy, customized);
+
+        assertThat(customized.getState().testSeconds).isEqualTo(12);
+        assertThat(customized.getState().suiteSeconds).isEqualTo(120);
+        assertThat(customized.getState().heapMb).isEqualTo(512);
+    }
+
     private Path legacyRoot(String name) throws IOException {
         Path root = temporary.resolve(name);
         Files.createDirectories(root);
@@ -85,7 +119,7 @@ class LegacyImportServiceTest {
         return root;
     }
 
-    private static LegacyImportService service() {
+    private LegacyImportService service() {
         return new LegacyImportService(new ManagedPracticeWorkspace());
     }
 }

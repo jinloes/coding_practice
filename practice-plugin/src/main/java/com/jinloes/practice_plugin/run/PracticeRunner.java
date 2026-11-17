@@ -405,6 +405,9 @@ public final class PracticeRunner implements Disposable {
     }
 
     static void stopOwnedExampleProcess(RunSession.RunControl control, ProcessHandler handler) {
+        if (handler instanceof com.intellij.execution.process.KillableProcessHandler killable) {
+            killable.setShouldKillProcessSoftly(false);
+        }
         control.captureChildrenOf(handler);
         control.terminateOwnedChildren();
         handler.destroyProcess();

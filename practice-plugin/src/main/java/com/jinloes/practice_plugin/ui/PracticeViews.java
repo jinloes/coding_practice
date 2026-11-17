@@ -5,6 +5,9 @@ import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
+import com.jinloes.practice_plugin.catalog.GuideCatalog;
+import com.jinloes.practice_plugin.catalog.GuideCatalog.Guide;
+import com.jinloes.practice_plugin.catalog.TrackCatalog;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JEditorPane;
@@ -14,7 +17,10 @@ import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import java.awt.Component;
 import java.awt.Font;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /** Stateless Swing building blocks for {@link PracticePanel}. */
 final class PracticeViews {
@@ -38,8 +44,19 @@ final class PracticeViews {
     }
 
     static String problemText(Exercise exercise) {
-        StringBuilder html = new StringBuilder(MarkdownHtml.toHtml(exercise.statement()));
-        html.append("<p>Visible examples</p><ul>");
+        return problemText(exercise, Set.of());
+    }
+
+    static String problemText(Exercise exercise, Set<String> passed) {
+        StringBuilder html = new StringBuilder()
+                .append("<h2>").append(MarkdownHtml.inline(exercise.title()))
+                .append(passed.contains(exercise.id()) ? " (passed)" : "").append("</h2>")
+                .append("<p>").append(MarkdownHtml.inline(exercise.difficulty())).append(" &middot; ")
+                .append(MarkdownHtml.inline(exercise.topic())).append("<br>")
+                .append("Target: ").append(MarkdownHtml.inline(exercise.intendedTime())).append(" time, ")
+                .append(MarkdownHtml.inline(exercise.intendedSpace())).append(" space</p>")
+                .append(MarkdownHtml.toHtml(exercise.statement()))
+                .append("<p>Visible examples</p><ul>");
         for (int index = 0; index < exercise.examples().size(); index++) {
             var example = exercise.examples().get(index);
             html.append("<li>Example ").append(index + 1)
@@ -47,7 +64,22 @@ final class PracticeViews {
                     .append("</code><br>Output: <code>").append(MarkdownHtml.inline(example.output()))
                     .append("</code></li>");
         }
-        return html.append("</ul>").toString();
+        html.append("</ul><p>Custom input format<br><code>")
+                .append(MarkdownHtml.inline(exercise.inputSyntax()))
+                .append("</code></p>");
+        List<Guide> guides = GuideCatalog.containing(exercise.id());
+        html.append("<p>Study guides: ")
+                .append(guides.isEmpty() ? "Not part of any guide yet." : titles(guides))
+                .append("</p>");
+        List<Guide> tracks = TrackCatalog.containing(exercise.id());
+        if (!tracks.isEmpty()) {
+            html.append("<p>Practice tracks: ").append(titles(tracks)).append("</p>");
+        }
+        return html.toString();
+    }
+
+    private static String titles(List<Guide> guides) {
+        return guides.stream().map(guide -> MarkdownHtml.inline(guide.title())).collect(Collectors.joining(", "));
     }
 
     /**

@@ -1,104 +1,69 @@
 package com.jinloes.practice_plugin.workspace;
 
-import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.application.PathManager;
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.EdtTestUtil;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
+import com.jinloes.practice_plugin.catalog.ExampleLibraries;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class VerificationWorkspaceTest {
-    private static final String MIRROR_REPOSITORY =
-            "maven { url = uri('https://maven-central.storage-download.googleapis.com/maven2/') }";
-
     @TempDir
     Path temporary;
 
     @Test
-    void createsAnOwnedIsolatedProjectWithFreshReportsAndASharedGradleHome() throws Exception {
+    void createsAnOwnedOfflineWorkspaceWithBundledLibrariesAndDirectJavaCommand() throws Exception {
         ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
         var attempt = store.create(ExerciseCatalog.find("pair-sum"));
         String fingerprint = store.fingerprint(attempt);
         Path system = temporary.resolve("system");
+        Path javaHome = Path.of(System.getProperty("java.home"));
 
         VerificationWorkspace workspace = VerificationWorkspace.createAt(
                 system, attempt, ExerciseCatalog.find("pair-sum"), fingerprint);
 
         assertThat(workspace.root().resolve(".algorithm-practice-verification")).isRegularFile();
-        assertThat(workspace.root().resolve("src/main/java/com/jinloes/practice/Solution.java")).hasContent(
-                Files.readString(attempt.solution()));
+        assertThat(workspace.root().resolve("src/main/java/com/jinloes/practice/Solution.java"))
+                .hasContent(Files.readString(attempt.solution()));
+        assertThat(workspace.root().resolve("src/main/java/com/jinloes/practice/Workload.java")).isRegularFile();
+        assertThat(workspace.root().resolve("src/main/java/com/jinloes/practice/ComplexityProbe.java")).isRegularFile();
         assertThat(workspace.root().resolve("src/test/java/com/jinloes/practice/ExamplesTest.java")).isRegularFile();
         assertThat(workspace.root().resolve("src/test/java/com/jinloes/practice/CorrectnessTest.java")).isRegularFile();
-        String buildScript = Files.readString(workspace.root().resolve("build.gradle"));
-        assertThat(buildScript)
-                .as("the packaged script resource is fully substituted before a learner ever runs Gradle")
-                .doesNotContainPattern("@[A-Z_]+@");
-        assertThat(buildScript)
-                .contains("options.release = 17", "reports.junitXml.outputLocation",
-                        "org.junit:junit-bom:5.11.4", "org.assertj:assertj-core:3.26.3");
-        assertMirrorBeforeCentral(buildScript);
-        assertThat(workspace.command(Path.of(System.getProperty("java.home")), 5, 256))
-                .contains("--rerun-tasks", "--no-build-cache", "--no-configuration-cache",
-                        "--gradle-user-home", workspace.gradleHome().toString());
-        assertThat(workspace.gradleHome())
-                .as("the Gradle home lives beside, not inside, the per-attempt workspace root")
-                .isEqualTo(system.resolve("algorithm-practice/gradle-home"))
-                .isNotEqualTo(workspace.root().resolve("gradle-home"));
+        assertThat(workspace.root().resolve("libs")).isDirectory();
+        assertThat(workspace.root().resolve("libs/verification-runner.jar")).isRegularFile();
+        for (String name : ExampleLibraries.names()) {
+            assertThat(workspace.root().resolve("libs").resolve(name)).isRegularFile();
+        }
+        for (String name : ExampleLibraries.verificationNames()) {
+            assertThat(workspace.root().resolve("libs").resolve(name)).isRegularFile();
+        }
 
-        Files.createDirectories(workspace.gradleHome());
-        Files.writeString(workspace.gradleHome().resolve("caches-.marker"), "downloaded distribution");
+        List<String> command = workspace.command(javaHome, 5, 256);
+        assertThat(command).contains(
+                "-Xmx128m",
+                "com.jinloes.practice_plugin.runner.VerificationMain",
+                javaHome.toString(),
+                "5",
+                "256");
+        assertThat(command).doesNotContain("org.gradle.wrapper.GradleWrapperMain");
 
         workspace.markFinished(fingerprint);
         workspace.cleanupAfterRun();
         assertThat(workspace.root()).doesNotExist();
-        assertThat(workspace.gradleHome().resolve("caches-.marker"))
-                .as("a later check must reuse this run's downloaded Gradle distribution and dependency caches")
-                .hasContent("downloaded distribution");
-
-        VerificationWorkspace later = VerificationWorkspace.createAt(
-                system, attempt, ExerciseCatalog.find("pair-sum"), fingerprint);
-        assertThat(later.gradleHome())
-                .as("every verification workspace under the same base shares one Gradle home")
-                .isEqualTo(workspace.gradleHome());
-        later.markFinished(fingerprint);
-        later.cleanupAfterRun();
-    }
-
-    @Test
-    void repositoryOrderCheckRejectsReversedOrMissingEntries() {
-        assertThatThrownBy(() -> assertMirrorBeforeCentral("""
-                repositories {
-                    mavenCentral()
-                    %s
-                }
-                """.formatted(MIRROR_REPOSITORY)))
-                .isInstanceOf(AssertionError.class);
-        assertThatThrownBy(() -> assertMirrorBeforeCentral("""
-                repositories {
-                    mavenCentral()
-                }
-                """))
-                .isInstanceOf(AssertionError.class);
-        assertThatThrownBy(() -> assertMirrorBeforeCentral("""
-                repositories {
-                    %s
-                }
-                """.formatted(MIRROR_REPOSITORY)))
-                .isInstanceOf(AssertionError.class);
     }
 
     @Test
@@ -187,14 +152,6 @@ class VerificationWorkspaceTest {
         workspace.cleanupAfterRun();
     }
 
-
-    @Test
-    void packagedBuildScriptLoaderUsesTheDefaultResourcePath() throws Exception {
-        assertThat(VerificationWorkspace.buildScript())
-                .contains("plugins", "mavenCentral()")
-                .doesNotContainPattern("@[A-Z_]+@");
-    }
-
     @Test
     void defaultCleanupAbandonedRemovesFinishedWorkspacesUnderTheIdeSystemPath() throws Exception {
         Path verification = Path.of(PathManager.getSystemPath(), "algorithm-practice", "verification");
@@ -227,7 +184,6 @@ class VerificationWorkspaceTest {
         assertThat(blankFingerprint).isDirectory();
     }
 
-
     @Test
     void recoveryTreatsNonPositiveAndAbsentProcessHandlesAsInactive() throws Exception {
         Path system = temporary.resolve("system");
@@ -244,29 +200,16 @@ class VerificationWorkspaceTest {
     }
 
     @Test
-    void missingPackagedResourcesAndUnsubstitutedBuildPlaceholdersFailCreation() throws Exception {
+    void missingPackagedVerificationResourcesAndLibrariesFailCreation() throws Exception {
         ManagedPracticeWorkspace store = new ManagedPracticeWorkspace(temporary.resolve("config"));
         var attempt = store.create(ExerciseCatalog.find("pair-sum"));
         String fingerprint = store.fingerprint(attempt);
 
         assertThatThrownBy(() -> VerificationWorkspace.createAt(
-                temporary.resolve("missing-bootstrap"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
-                path -> path.equals("/bootstrap/gradlew.bat") ? null : resource(path)))
+                temporary.resolve("missing-verification-libs"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
+                path -> path.equals("/verification-libraries/verification-runner.jar") ? null : resource(path)))
                 .isInstanceOf(Exception.class)
-                .hasMessageContaining("Gradle bootstrap resource");
-
-        assertThatThrownBy(() -> VerificationWorkspace.createAt(
-                temporary.resolve("missing-build-script"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
-                path -> path.equals("/gradle/verification-build.gradle") ? null : resource(path)))
-                .isInstanceOf(Exception.class)
-                .hasMessageContaining("verification script resource");
-
-        assertThatThrownBy(() -> VerificationWorkspace.createAt(
-                temporary.resolve("placeholder"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
-                path -> path.equals("/gradle/verification-build.gradle")
-                        ? bytes("plugins { id '@UNREPLACED@' }\n") : resource(path)))
-                .isInstanceOf(Exception.class)
-                .hasMessageContaining("unreplaced placeholders");
+                .hasMessageContaining("verification library");
 
         assertThatThrownBy(() -> VerificationWorkspace.createAt(
                 temporary.resolve("missing-exercise-resource"), attempt, ExerciseCatalog.find("pair-sum"), fingerprint,
@@ -304,14 +247,6 @@ class VerificationWorkspaceTest {
         }
     }
 
-    private static void assertMirrorBeforeCentral(String buildScript) {
-        int mirrorIndex = buildScript.indexOf(MIRROR_REPOSITORY);
-        int centralIndex = buildScript.indexOf("mavenCentral()");
-
-        assertThat(mirrorIndex).as("exact Google Maven Central mirror entry").isGreaterThanOrEqualTo(0);
-        assertThat(centralIndex).as("mavenCentral() fallback after the Google mirror").isGreaterThan(mirrorIndex);
-    }
-
     private static void writeVerificationMarker(Path directory, String marker) throws Exception {
         Files.createDirectories(directory);
         Files.writeString(directory.resolve(".algorithm-practice-verification"), marker);
@@ -327,9 +262,5 @@ class VerificationWorkspaceTest {
             candidate--;
         }
         return candidate;
-    }
-
-    private static InputStream bytes(String text) {
-        return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
     }
 }

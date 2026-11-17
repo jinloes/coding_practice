@@ -1,6 +1,7 @@
 package com.jinloes.practice_plugin.workspace;
 
 import com.intellij.openapi.application.PathManager;
+import com.jinloes.practice_plugin.catalog.ExampleLibraries;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.platform.Os;
 import com.jinloes.practice_plugin.platform.OwnedDirectory;
@@ -14,21 +15,16 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 public final class VerificationWorkspace {
     private static final String MARKER = ".algorithm-practice-verification";
     private static final String SCHEMA = "1";
-    private static final String BUILD_SCRIPT = "/gradle/verification-build.gradle";
-    private static final Pattern PLACEHOLDER = Pattern.compile("@[A-Z_]+@");
-    private static final List<String> BOOTSTRAP = List.of(
-            "gradlew", "gradlew.bat", "gradle/wrapper/gradle-wrapper.jar",
-            "gradle/wrapper/gradle-wrapper.properties");
+    private static final String RUNNER_MAIN = "com.jinloes.practice_plugin.runner.VerificationMain";
 
-    private final Path base;
     private final Path root;
     private final OwnedDirectory owned;
     private final Path resultDirectory;
+    private final List<Path> libraries;
 
     @FunctionalInterface
     interface ResourceOpener {
@@ -63,21 +59,20 @@ public final class VerificationWorkspace {
         OwnedDirectory owned = owned(normalizedBase);
         Path root = owned.resolve(UUID.randomUUID().toString());
         owned.create(root, markerText("created", -1, fingerprint));
-        VerificationWorkspace workspace = new VerificationWorkspace(normalizedBase, root);
         try {
-            workspace.writeProject(attempt, exercise, opener);
-            return workspace;
+            List<Path> libraries = writeProject(root, attempt, exercise, opener);
+            return new VerificationWorkspace(normalizedBase, root, libraries);
         } catch (IOException | RuntimeException failure) {
-            workspace.deleteOwnedTree();
+            deleteOwnedTree(owned, root);
             throw failure;
         }
     }
 
-    private VerificationWorkspace(Path base, Path root) {
-        this.base = base;
+    private VerificationWorkspace(Path base, Path root, List<Path> libraries) {
         this.root = root;
         this.owned = owned(base);
         this.resultDirectory = root.resolve(".practice-results");
+        this.libraries = libraries;
     }
 
     public Path root() {
@@ -88,34 +83,16 @@ public final class VerificationWorkspace {
         return resultDirectory;
     }
 
-    /**
-     * A Gradle user home shared by every verification workspace under this base, so the downloaded
-     * Gradle distribution and dependency caches survive from one check to the next. It sits beside,
-     * not inside, the per-attempt {@link #root()}: {@link #cleanupAfterRun()} and
-     * {@link #cleanupAbandoned()} only ever delete children of the {@code verification} directory,
-     * so this directory is never a cleanup target.
-     */
-    public Path gradleHome() {
-        return base.resolve("algorithm-practice/gradle-home").normalize();
-    }
-
     public List<String> command(Path javaHome, int testSeconds, int heapMb) {
         String java = javaHome.resolve("bin").resolve(Os.IS_WINDOWS ? "java.exe" : "java").toString();
         return List.of(
                 java,
-                "-classpath", root.resolve("gradle/wrapper/gradle-wrapper.jar").toString(),
-                "org.gradle.wrapper.GradleWrapperMain",
-                "test",
-                "probe",
-                "--no-daemon",
-                "--console=plain",
-                "--rerun-tasks",
-                "--no-build-cache",
-                "--no-configuration-cache",
-                "--gradle-user-home", gradleHome().toString(),
-                "-Dorg.gradle.java.home=" + javaHome,
-                "-PpracticeTestSeconds=" + testSeconds,
-                "-PpracticeHeapMb=" + heapMb);
+                "-Xmx128m",
+                "-classpath", ExampleLibraries.classpath(libraries),
+                RUNNER_MAIN,
+                javaHome.toString(),
+                Integer.toString(testSeconds),
+                Integer.toString(heapMb));
     }
 
     public void markProcess(long pid, String fingerprint) throws IOException {
@@ -131,7 +108,7 @@ public final class VerificationWorkspace {
         if (!"finished".equals(marker.state())) {
             throw new IOException("Verification workspace is still active or its process state is uncertain.");
         }
-        deleteOwnedTree();
+        deleteOwnedTree(owned, root);
     }
 
     public static void cleanupAbandoned() {
@@ -147,7 +124,8 @@ public final class VerificationWorkspace {
         });
     }
 
-    private void writeProject(
+    private static List<Path> writeProject(
+            Path root,
             ManagedPracticeWorkspace.Attempt attempt,
             ExerciseCatalog.Exercise exercise,
             ResourceOpener opener)
@@ -165,22 +143,7 @@ public final class VerificationWorkspace {
                 readResource(opener, "/exercises/" + exercise.id() + "/ExamplesTest.java"), StandardCharsets.UTF_8);
         Files.writeString(tests.resolve("CorrectnessTest.java"),
                 readResource(opener, "/exercises/" + exercise.id() + "/CorrectnessTest.java"), StandardCharsets.UTF_8);
-        Files.writeString(root.resolve("settings.gradle"), "rootProject.name = 'algorithm-practice-verification'\n",
-                StandardCharsets.UTF_8);
-        Files.writeString(root.resolve("build.gradle"), buildScript(opener), StandardCharsets.UTF_8);
-        for (String name : BOOTSTRAP) {
-            Path destination = root.resolve(name);
-            Files.createDirectories(destination.getParent());
-            try (InputStream input = opener.open("/bootstrap/" + name)) {
-                if (input == null) {
-                    throw new IOException("Plugin is missing Gradle bootstrap resource: " + name);
-                }
-                Files.copy(input, destination);
-            }
-        }
-        if (!root.resolve("gradlew").toFile().setExecutable(true) && !Os.IS_WINDOWS) {
-            throw new IOException("Could not make Gradle wrapper executable.");
-        }
+        return ExampleLibraries.extractVerificationTo(root.resolve("libs"), opener::open);
     }
 
     private void writeMarker(String state, long pid, String fingerprint) throws IOException {
@@ -198,8 +161,8 @@ public final class VerificationWorkspace {
                 """.formatted(SCHEMA, state, pid, fingerprint);
     }
 
-    private void deleteOwnedTree() throws IOException {
-        marker(root);
+    private static void deleteOwnedTree(OwnedDirectory owned, Path root) throws IOException {
+        parse(owned.readMarker(root));
         owned.deleteTree(root);
     }
 
@@ -238,23 +201,6 @@ public final class VerificationWorkspace {
     }
 
     private record Marker(String state, long pid) {
-    }
-
-    static String buildScript() throws IOException {
-        return buildScript(VerificationWorkspace.class::getResourceAsStream);
-    }
-
-    private static String buildScript(ResourceOpener opener) throws IOException {
-        try (InputStream input = opener.open(BUILD_SCRIPT)) {
-            if (input == null) {
-                throw new IOException("Plugin is missing Gradle verification script resource: " + BUILD_SCRIPT);
-            }
-            String script = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-            if (PLACEHOLDER.matcher(script).find()) {
-                throw new IOException("Verification build script was packaged with unreplaced placeholders.");
-            }
-            return script;
-        }
     }
 
     private static String readResource(ResourceOpener opener, String path) throws IOException {

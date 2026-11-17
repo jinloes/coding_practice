@@ -61,8 +61,9 @@ final class ReactPageView implements PageView {
             @Override
             public void onLoadEnd(CefBrowser cef, CefFrame frame, int httpStatusCode) {
                 if (frame.isMain()) {
-                    cef.executeJavaScript("window.practiceSend = function(message) {"
-                            + query.inject("message") + "};", cef.getURL(), 0);
+                    cef.executeJavaScript("var send = function(message) {" + query.inject("message") + "};"
+                            + "if (window.practiceAttachSend) { window.practiceAttachSend(send); }"
+                            + "else { window.practiceSend = send; }", cef.getURL(), 0);
                     ApplicationManager.getApplication().invokeLater(() -> {
                         loaded = true;
                         push();

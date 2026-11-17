@@ -1,0 +1,71 @@
+name: Practice Plugin
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'practice-plugin/**'
+      - '.github/workflows/practice-plugin.yml'
+  pull_request:
+    paths:
+      - 'practice-plugin/**'
+      - '.github/workflows/practice-plugin.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: practice-plugin-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+          cache-dependency-path: |
+            practice-plugin/build.gradle
+            practice-plugin/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Cache npm packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-practice-plugin-npm-${{ hashFiles('practice-plugin/web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-practice-plugin-npm-
+
+      - name: Select catalog exercises to execute
+        id: catalog
+        run: |
+          BASE_IDS="pair-sum,binary-search,merge-sorted-lists"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            DIFF_RANGE="${{ github.event.pull_request.base.sha }}...${{ github.sha }}"
+          else
+            DIFF_RANGE="HEAD~1...HEAD"
+          fi
+          CHANGED=$(git diff --name-only "$DIFF_RANGE" 2>/dev/null \
+            | sed -n -E 's#^practice-plugin/src/(main/resources/exercises|test/resources/(reference|known-wrong))/([^/]+)/.*#\3#p' \
+            | sort -u | paste -sd, - || true)
+          if [ -n "$CHANGED" ]; then
+            ONLY=$(printf "%s,%s" "$BASE_IDS" "$CHANGED" | tr ',' '\n' | sort -u | paste -sd, -)
+          else
+            ONLY="$BASE_IDS"
+          fi
+          echo "only=$ONLY" >> "$GITHUB_OUTPUT"
+
+      - name: Run plugin checks, frontend tests, and coverage gate
+        working-directory: practice-plugin
+        run: bash ./gradlew check -PcatalogOnly="${{ steps.catalog.outputs.only }}" --no-daemon --console=plain

@@ -61,4 +61,29 @@ class ResultsViewTest {
         assertThat(ResultsView.runBanner("")).isEqualTo(generic);
         assertThat(ResultsView.runBanner(null)).isEqualTo(generic);
     }
+
+    @Test
+    void markStaleIsIdempotentAndResetsWhenANewResultArrives() {
+        ResultsView view = new ResultsView();
+        var entry = new com.jinloes.practice_plugin.state.ManagedPracticeProgress.Entry();
+        entry.status = "PASSED";
+        entry.checkedFingerprint = "abc";
+        entry.details = "All 10 supplied cases passed.";
+
+        view.showEntry(entry);
+        assertThat(view.hasDisplayedResult()).isTrue();
+        assertThat(view.bannerText()).isEqualTo("Passed");
+
+        view.markStale("edited");
+        view.markStale("edited again");
+
+        assertThat(view.bannerText()).isEqualTo("Passed (stale)");
+        assertThat(view.outputText()).isEqualTo("All 10 supplied cases passed.\nSTALE: edited");
+
+        view.clear();
+        assertThat(view.hasDisplayedResult()).isFalse();
+        view.markStale("orphan");
+        assertThat(view.bannerText()).isEqualTo("Stale");
+        assertThat(view.outputText()).isEqualTo("STALE: orphan");
+    }
 }

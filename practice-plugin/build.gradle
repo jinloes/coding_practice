@@ -23,27 +23,39 @@ java {
 
 configurations {
     exampleLibraries
+    verificationLibraries.extendsFrom(exampleLibraries)
+}
+
+sourceSets {
+    verificationRunner {
+        compileClasspath = configurations.verificationLibraries
+    }
 }
 
 ext {
-    // Single declaration shared by this build and the generated verification script resource.
     junitBomVersion = '5.11.4'
     assertjVersion = '3.26.3'
     verificationRelease = '17'
 }
 
+def idePath = providers.gradleProperty('idePath').filter { !it.isBlank() }
+
 dependencies {
     exampleLibraries "org.assertj:assertj-core:$assertjVersion"
+    verificationLibraries platform("org.junit:junit-bom:$junitBomVersion")
+    verificationLibraries 'org.junit.jupiter:junit-jupiter'
+    verificationLibraries 'org.junit.platform:junit-platform-launcher'
+    verificationLibraries 'org.apiguardian:apiguardian-api:1.1.2'
     intellijPlatform {
-        if (providers.gradleProperty('idePath').isPresent()) {
-            local(providers.gradleProperty('idePath').get())
+        if (idePath.isPresent()) {
+            local(idePath.get())
         } else {
             intellijIdea('2026.2.3')
         }
-        bundledPlugins('com.intellij.java', 'com.intellij.gradle', 'org.jetbrains.plugins.gradle', 'JUnit',
-                'com.intellij.modules.jcef')
+        bundledPlugins('com.intellij.java', 'com.intellij.modules.jcef')
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform.INSTANCE)
     }
+    testImplementation sourceSets.verificationRunner.output
     testImplementation platform("org.junit:junit-bom:$junitBomVersion")
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.platform:junit-platform-launcher'
@@ -67,6 +79,17 @@ intellijPlatform {
             }
         }
     }
+}
+
+// Redirects winp's extracted native helpers out of Gradle 9's immutable IntelliJ SDK transform cache on Windows.
+def winpDir = layout.buildDirectory.dir('winp')
+tasks.matching { it instanceof JavaForkOptions }.configureEach {
+    def targetDir = winpDir
+    jvmArgumentProviders.add({
+        def dir = targetDir.get().asFile
+        dir.mkdirs()
+        ["-Dwinp.folder.preferred=${dir.absolutePath}".toString()]
+    } as CommandLineArgumentProvider)
 }
 
 test {
@@ -119,14 +142,14 @@ def coverageVerification = tasks.named('jacocoTestCoverageVerification') {
             }
             limit {
                 counter = 'BRANCH'
-                minimum = 0.92
+                minimum = 0.93
             }
         }
     }
 }
 
 tasks.named('check') {
-    dependsOn coverageVerification
+    dependsOn coverageVerification, 'webTest'
 }
 
 tasks.named('wrapper') {
@@ -146,12 +169,55 @@ def exampleLibrariesIndex = tasks.register('exampleLibrariesIndex') {
     }
 }
 
+tasks.named('compileVerificationRunnerJava', JavaCompile) {
+    options.release = Integer.parseInt(verificationRelease)
+    options.encoding = 'UTF-8'
+    options.compilerArgs.add('-Xlint:-classfile')
+}
+
+def verificationRunnerJar = tasks.register('verificationRunnerJar', Jar) {
+    archiveFileName = 'verification-runner.jar'
+    destinationDirectory = layout.buildDirectory.dir('verification-runner')
+    from(sourceSets.verificationRunner.output)
+}
+
+def verificationOnlyJars = providers.zip(
+        configurations.verificationLibraries.elements,
+        configurations.exampleLibraries.elements
+) { allJars, exampleJars ->
+    def exampleNames = exampleJars.collect { it.asFile.name } as Set
+    allJars.collect { it.asFile }.findAll { !(it.name in exampleNames) }
+}
+
+def verificationLibrariesIndex = tasks.register('verificationLibrariesIndex') {
+    def runnerJar = verificationRunnerJar.flatMap { it.archiveFile }
+    def index = layout.buildDirectory.file('verification-libraries/index.txt')
+    inputs.files(verificationOnlyJars)
+    inputs.file(runnerJar)
+    outputs.file(index)
+    doLast {
+        def file = index.get().asFile
+        file.parentFile.mkdirs()
+        def names = (verificationOnlyJars.get().collect { it.name } + [runnerJar.get().asFile.name]).sort()
+        file.text = names.join('\n') + '\n'
+    }
+}
+
 // The React pages in web/ build with a Gradle-managed Node, so contributors need no local Node install.
 node {
     download = true
     version = '24.22.0'
     npmInstallCommand = 'ci'
     nodeProjectDir = file('web')
+}
+
+def webTest = tasks.register('webTest', com.github.gradle.node.npm.task.NpmTask) {
+    description = 'Runs the Vitest unit suite for the React pages.'
+    dependsOn tasks.named('npmInstall')
+    npmCommand = ['run', 'test']
+    inputs.dir('web/src')
+    inputs.files('web/package.json', 'web/package-lock.json', 'web/tsconfig.json', 'web/vitest.config.ts')
+    outputs.upToDateWhen { true }
 }
 
 def webUi = tasks.register('webUi', com.github.gradle.node.npm.task.NpmTask) {
@@ -166,19 +232,16 @@ def webUi = tasks.register('webUi', com.github.gradle.node.npm.task.NpmTask) {
 
 tasks.named('processResources') {
     from(webUi) { into 'web' }
+    from(configurations.exampleLibraries) { into 'example-libraries' }
+    from(exampleLibrariesIndex) { into 'example-libraries' }
+    from(verificationOnlyJars) { into 'verification-libraries' }
+    from(verificationRunnerJar) { into 'verification-libraries' }
+    from(verificationLibrariesIndex) { into 'verification-libraries' }
+}
+
+// LegacyWorkspaceFixture reproduces the historical Gradle workspace layout in tests only.
+tasks.named('processTestResources') {
     from('gradlew') { into 'bootstrap' }
     from('gradlew.bat') { into 'bootstrap' }
     from('gradle/wrapper') { into 'bootstrap/gradle/wrapper' }
-    from(configurations.exampleLibraries) { into 'example-libraries' }
-    from(exampleLibrariesIndex) { into 'example-libraries' }
-    inputs.property('junitBomVersion', junitBomVersion)
-    inputs.property('assertjVersion', assertjVersion)
-    inputs.property('verificationRelease', verificationRelease)
-    filesMatching('gradle/verification-build.gradle') {
-        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: [
-                JUNIT_BOM: junitBomVersion,
-                ASSERTJ  : assertjVersion,
-                RELEASE  : verificationRelease
-        ])
-    }
 }

@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,6 +60,8 @@ public final class GuideCatalog {
     private static final Map<String, Guide> BY_ID = GUIDES.stream()
             .collect(Collectors.toUnmodifiableMap(Guide::id, guide -> guide));
 
+    private static final Map<String, List<Guide>> BY_EXERCISE = indexByExercise(GUIDES);
+
     private GuideCatalog() {
     }
 
@@ -90,9 +94,18 @@ public final class GuideCatalog {
 
     /** The guides that include {@code exerciseId}, in guide order. */
     public static List<Guide> containing(String exerciseId) {
-        return GUIDES.stream()
-                .filter(guide -> guide.exercises().stream().anyMatch(exercise -> exercise.id().equals(exerciseId)))
-                .toList();
+        return BY_EXERCISE.getOrDefault(exerciseId, List.of());
+    }
+
+    static Map<String, List<Guide>> indexByExercise(List<Guide> guides) {
+        Map<String, List<Guide>> byExercise = new LinkedHashMap<>();
+        for (Guide guide : guides) {
+            for (Exercise exercise : guide.exercises()) {
+                byExercise.computeIfAbsent(exercise.id(), ignored -> new ArrayList<>()).add(guide);
+            }
+        }
+        byExercise.replaceAll((ignored, members) -> List.copyOf(members));
+        return Collections.unmodifiableMap(byExercise);
     }
 
     /**

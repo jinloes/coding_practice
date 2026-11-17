@@ -20,17 +20,19 @@ practice-plugin/
     state/
     ui/
     workspace/
+  src/verificationRunner/java/com/jinloes/practice_plugin/runner/
+    VerificationMain.java
+    JUnitSuiteRunner.java
   src/main/resources/
     exercises/<id>/
     guides/<id>.json
     tracks/<id>.json
-    gradle/verification-build.gradle
     harness/ComplexityProbe.java
     META-INF/plugin.xml
   src/test/java/com/jinloes/practice_plugin/
   src/test/resources/reference/<id>/Solution.java
   src/test/resources/known-wrong/<id>/Solution.java
-  web/                      React + Mantine pages (Vite, TypeScript)
+  web/                      React + Mantine pages (Vite, Vitest, TypeScript)
     src/types.ts            JSON contract mirrored by ui/PageJson.java
 ```
 
@@ -39,11 +41,12 @@ practice-plugin/
 | Package | Responsibility | Important classes |
 |---|---|---|
 | `app` | Cross-package application use cases | `LegacyImportService` |
-| `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
+| `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example/verification libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
 | `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
+| `runner` (`verificationRunner`) | Java 17 child-JVM coordinator and JUnit Platform XML runner packaged into `verification-runner.jar` | `VerificationMain`, `JUnitSuiteRunner` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `ExerciseCellRenderer`, `PageView` (`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `ExerciseCellRenderer`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
 | `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
@@ -75,16 +78,19 @@ complexity probe is timing-sensitive; run the final full suite on an otherwise
 idle machine.
 
 Set `idePath` in `practice-plugin/gradle.properties` or user-level Gradle
-properties to use a local IDE. Never commit a real machine path.
+properties to use a local IDE. Never commit a real machine path. On Windows,
+forked IDE and test JVMs set `winp.folder.preferred` to `build/winp` so `winp`
+never extracts native helpers into Gradle's immutable platform transform cache.
 
 ### Web pages
 
 `processResources` builds `web/` with a Gradle-downloaded Node (`npm ci`, then
-`npm run build`), so no local Node is needed for the plugin build. To iterate on
-the pages in a browser with sample data:
+`npm run build`), and `check` runs `webTest` (`npm test` / `vitest run`), so no
+local Node is needed for the plugin build. To iterate on the pages in a browser
+with sample data (`#problem`, `#guide`, `#chooser`):
 
 ```bash
-cd web && npm ci && npm run dev
+cd web && npm ci && npm test && npm run dev
 ```
 
 - Change `web/src/types.ts` and `ui/PageJson.java` together, and update
@@ -122,7 +128,7 @@ cd web && npm ci && npm run dev
 - Keep test classes and methods package-private.
 - Exercise test templates (`ExamplesTest.java`, `CorrectnessTest.java`) use
   only plain `@Test`: counts are derived from those annotations and the
-  verification build supplies the timeout. Plugin tests may use any JUnit
+  verification runner supplies the timeout. Plugin tests may use any JUnit
   Jupiter feature.
 - Prefer behavior-level tests through public or package-visible seams.
 - Add regression tests for lifecycle, cleanup, persistence, path safety, report
@@ -140,8 +146,8 @@ also run after test failures with `--continue`.
 - **Gated:** every package except `ui`, measured on the instrumented classes
   (`instrumentCode`). The test IDE loads plugin classes with `PathClassLoader`,
   which is why the test task sets `includeNoLocationClasses`.
-- **Minimums:** 98% line and 92% branch, a ratchet just below the 2026-10
-  baseline of 98.2% line and 92.8% branch (Windows, Developer Mode on so the
+- **Minimums:** 98% line and 93% branch, a ratchet just below the measured
+  baseline of 98.3% line and 93.1% branch (Windows, Developer Mode on so the
   symlink tests run). Raise the minimums as coverage improves; never lower
   them. Without symlink support, the symlink-safety tests fail and coverage
   drops below the gate.
@@ -293,7 +299,8 @@ together:
 - `PracticeModuleWorkspace` for module, SDK, harness, compilation, and native
   run integration, with `GeneratedDirectories` for marked harness and output
   directories;
-- `VerificationWorkspace` and `verification-build.gradle` for generated checks;
+- `VerificationWorkspace`, `VerificationMain`, and `JUnitSuiteRunner` for
+  offline full checks;
 - `ManagedPracticeProgress` for persisted result semantics;
 - `PracticePanel` for controls, status, and stale-result presentation;
 - integration tests for cancellation, timeout, cleanup, and report freshness:

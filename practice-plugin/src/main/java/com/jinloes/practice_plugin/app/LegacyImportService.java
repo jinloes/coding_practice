@@ -91,9 +91,14 @@ public final class LegacyImportService {
                 }
             }
         }
-        progress.getState().testSeconds = legacyProgress.getState().testSeconds;
-        progress.getState().suiteSeconds = legacyProgress.getState().suiteSeconds;
-        progress.getState().heapMb = legacyProgress.getState().heapMb;
+        var legacyState = legacyProgress.getState();
+        if (progress.hasDefaultLimits() && ManagedPracticeProgress.validLimits(
+                legacyState.testSeconds, legacyState.suiteSeconds, legacyState.heapMb)) {
+            var state = progress.getState();
+            state.testSeconds = legacyState.testSeconds;
+            state.suiteSeconds = legacyState.suiteSeconds;
+            state.heapMb = legacyState.heapMb;
+        }
         String summary = "Imported " + imported + " legacy attempt(s); skipped " + skipped
                 + " already imported or invalid entry/entries. Originals were unchanged.";
         return new LegacyImportResult(imported, skipped, summary);

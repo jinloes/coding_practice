@@ -48,7 +48,9 @@ Run from `system-design-plugin/`:
 
 Set `idePath` in a local, uncommitted Gradle properties file to build against a
 local IDE installation instead of downloading one. `runLocalIde` and
-`generateIdeRunConfig` live in `gradle/local-sandbox.gradle`.
+`generateIdeRunConfig` live in `gradle/local-sandbox.gradle`. Forked IDE and
+test JVMs set `winp.folder.preferred` to `build/winp` so `winp` never extracts
+native helpers into Gradle's immutable platform transform cache on Windows.
 
 ## Coverage
 

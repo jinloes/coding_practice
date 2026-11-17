@@ -25,7 +25,7 @@ final class HtmlPageView implements PageView {
         return switch (page) {
             case PracticePage.Problem problem -> problem.exercise() == null
                     ? "<p>No exercises match these filters.</p>"
-                    : PracticeViews.problemText(problem.exercise());
+                    : PracticeViews.problemText(problem.exercise(), problem.passed());
             case PracticePage.Study study -> StudyGuideView.html(study.guide(), study.selected(), study.passed());
         };
     }

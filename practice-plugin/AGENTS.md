@@ -6,19 +6,25 @@ rules overlap.
 
 ## Keep Documentation Synchronized
 
-`ARCHITECTURE.md` and `CODE-MAP.md` are part of the implementation contract, not
-optional background reading.
+`ARCHITECTURE.md`, `CODE-MAP.md`, and `README.md` are part of the
+implementation contract, not optional background reading.
 
-- Read both before changing plugin behavior, package responsibilities, runtime
-  flows, persistence, generated files, exercise structure, dependencies, build
-  configuration, or test strategy.
+- Read `ARCHITECTURE.md` and `CODE-MAP.md` before changing plugin behavior,
+  package responsibilities, runtime flows, persistence, generated files,
+  exercise structure, dependencies, build configuration, or test strategy, and
+  check `README.md` whenever user-facing workflows or extension summaries are
+  affected.
 - Update `ARCHITECTURE.md` in the same change when boundaries, ownership, data
   flow, execution flow, storage, lifecycle, or security assumptions change.
 - Update `CODE-MAP.md` in the same change when packages, important classes,
   extension procedures, build commands, code conventions, or validation
   requirements change.
-- Update both when a change affects both system design and implementation
-  guidance. Do not leave known future-documentation work for a later change.
+- Update `README.md` in the same change when user workflows, UI controls,
+  execution or storage behavior, plugin dependencies, build/install commands,
+  catalog counts, or contributor extension summaries change.
+- Update every affected document when a change spans design, implementation
+  guidance, and user-facing documentation. Do not leave known
+  future-documentation work for a later change.
 - Keep documentation durable: describe responsibilities and invariants rather
   than copying implementation details that can be discovered directly from one
   method.
@@ -112,7 +118,7 @@ least one of them; `KnownWrongSolutions` loads it from the test resources.
   case. Do not use `@ParameterizedTest`, `@TestFactory`, or `@Timeout` there:
   expected test counts come from counting `@Test` annotations, and a
   parameterized or dynamic test runs more tests than it declares, so the check
-  reports an incomplete run. The verification build already applies the
+  reports an incomplete run. The verification runner already applies the
   learner's per-test timeout. Plugin tests under `src/test/` are not affected.
 - Test counts must match the manifest-derived `exampleCount()` and
   `fullCount()`.
@@ -171,6 +177,7 @@ are hand-curated problem lists such as Blind 75 or a company list.
 - Configure a local IDE with `idePath` in a local Gradle properties file; never
   commit a real installation path.
 - Do not check dependency jars into source control or hard-code generated jar
-  names. Change the `exampleLibraries` dependency in `build.gradle`.
+  names. Change the `exampleLibraries` or `verificationLibraries` dependency in
+  `build.gradle`.
 - Preserve storage schemas, marker formats, and generated path contracts unless
   the change includes an explicit migration and corresponding documentation.

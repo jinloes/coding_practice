@@ -26,15 +26,15 @@ class FullCheckDecisionTest {
     @Test
     void watchdogDecisionDistinguishesSuiteTimeoutSetupTimeoutAndStillRunning() {
         assertThat(FullCheck.watchdogStop(true, 999, 1)).isNull();
-        assertThat(FullCheck.watchdogStop(false, TimeUnit.MINUTES.toNanos(5), 1)).isNull();
+        assertThat(FullCheck.watchdogStop(false, TimeUnit.SECONDS.toNanos(60), 1)).isNull();
         assertThat(FullCheck.watchdogStop(new FullCheck.TimerState(true, 999), 1)).isNull();
 
         assertThat(FullCheck.watchdogStop(true, 1_001, 1))
                 .isEqualTo(new FullCheck.WatchdogStop(TIMED_OUT,
                         "Tests exceeded 1 seconds. The owned process tree was stopped."));
-        assertThat(FullCheck.watchdogStop(false, TimeUnit.MINUTES.toNanos(5) + 1, 1))
+        assertThat(FullCheck.watchdogStop(false, TimeUnit.SECONDS.toNanos(60) + 1, 1))
                 .isEqualTo(new FullCheck.WatchdogStop(TIMED_OUT,
-                        "Setup/compilation exceeded five minutes. Check SDK, network, and Run output."));
+                        "Compilation/setup exceeded 60 seconds. Check SDK and Run output."));
     }
 
     @Test

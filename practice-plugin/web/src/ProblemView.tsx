@@ -36,7 +36,7 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
       <Stack gap="xs">
         <SectionLabel>Visible examples</SectionLabel>
         {problem.examples.map((example, index) => (
-          <Paper key={index} withBorder p="sm">
+          <Paper key={`${problem.id}-example-${index}`} withBorder p="sm">
             <Stack gap={6}>
               <Text size="sm" fw={600}>
                 Example {index + 1}

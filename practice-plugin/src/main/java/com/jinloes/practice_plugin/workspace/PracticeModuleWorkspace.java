@@ -387,6 +387,4 @@ public final class PracticeModuleWorkspace implements Disposable {
                 .redirectOutput(diagnostics.toFile())
                 .start();
     }
-
-    private record Marker(String kind, String attemptId, long pid) {}
 }

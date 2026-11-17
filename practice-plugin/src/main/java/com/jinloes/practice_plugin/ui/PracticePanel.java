@@ -94,8 +94,8 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         legacyImport = new LegacyImportService(workspace);
         runner = project.getService(PracticeRunner.class);
         tasks = new BackgroundTasks(project, () -> !disposed, this::error);
-        problem = PageView.create(this, this::onPageEvent);
-        guide = PageView.create(this, this::onPageEvent);
+        problem = PageView.lazy(this, this::onPageEvent, true);
+        guide = PageView.lazy(this, this::onPageEvent, false);
         setBorder(JBUI.Borders.empty(8));
 
         titleActions.add(PracticeActions.action("Limits", "Edit run and check limits",
@@ -170,12 +170,13 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
                 tabs.setSelectedIndex(GUIDE_TAB);
             }
         });
+        tabs.addChangeListener(event -> syncActivePageTab());
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
                 var file = FileDocumentManager.getInstance().getFile(event.getDocument());
                 if (AttemptFiles.isSolution(file, selectedAttemptOrNull())) {
-                    status.setText("Edited since displayed result; check again.");
+                    onAttemptEdited();
                 }
             }
         }, this);
@@ -334,6 +335,11 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     }
 
     @Override
+    public void debugExamples() {
+        launch(false, () -> runner.debugExamples(selectedAttempt().id()));
+    }
+
+    @Override
     public void check() {
         launch(true, () -> runner.check(selectedAttempt().id()));
     }
@@ -409,6 +415,33 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
 
     HintButton hintButton() {
         return hintButton;
+    }
+
+    ResultsView resultsView() {
+        return results;
+    }
+
+    String statusText() {
+        return status.getText();
+    }
+
+    void onAttemptEdited() {
+        var attempt = selectedAttemptOrNull();
+        Exercise exercise = exercises.getSelectedValue();
+        if (attempt == null || exercise == null) {
+            return;
+        }
+        var entry = progress.entry(attempt.id(), exercise.id());
+        if (!entry.checkedFingerprint.isEmpty() || results.hasDisplayedResult()) {
+            status.setText("Edited since displayed result; check again.");
+            results.markStale("solution was edited; run or check again.");
+        }
+    }
+
+    private void syncActivePageTab() {
+        int selected = tabs.getSelectedIndex();
+        problem.setActive(selected == PROBLEM_TAB);
+        guide.setActive(selected == GUIDE_TAB);
     }
 
     private boolean isLegacyWorkspace() {

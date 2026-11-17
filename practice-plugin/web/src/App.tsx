@@ -39,7 +39,7 @@ export function App() {
 function PageView({ page }: { page: Page }) {
   switch (page.kind) {
     case 'problem':
-      return <ProblemView problem={page.problem} />;
+      return <ProblemView key={page.problem?.id ?? 'empty'} problem={page.problem} />;
     case 'guide':
       return <GuideView guide={page.guide} />;
     case 'chooser':

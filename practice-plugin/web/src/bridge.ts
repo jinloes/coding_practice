@@ -6,11 +6,14 @@ declare global {
     practiceRender?: (state: PageState) => void;
     /** Injected by the plugin after load; forwards a JSON event to Java. */
     practiceSend?: (message: string) => void;
+    /** Attaches the Java event sink and flushes any events queued before load finished. */
+    practiceAttachSend?: (sender: (message: string) => void) => void;
   }
 }
 
 let current: PageState | null = null;
 const listeners = new Set<() => void>();
+const pendingEvents: string[] = [];
 
 export function subscribe(listener: () => void): () => void {
   listeners.add(listener);
@@ -26,8 +29,29 @@ export function render(state: PageState): void {
   listeners.forEach((listener) => listener());
 }
 
+export function attachSend(sender: (message: string) => void): void {
+  window.practiceSend = sender;
+  while (pendingEvents.length > 0) {
+    sender(pendingEvents.shift()!);
+  }
+}
+
 export function send(event: PageEvent): void {
-  window.practiceSend?.(JSON.stringify(event));
+  const payload = JSON.stringify(event);
+  if (window.practiceSend) {
+    window.practiceSend(payload);
+  } else {
+    pendingEvents.push(payload);
+  }
+}
+
+export function resetBridgeForTest(): void {
+  current = null;
+  pendingEvents.length = 0;
+  delete window.practiceSend;
+  listeners.forEach((listener) => listener());
 }
 
 window.practiceRender = render;
+window.practiceAttachSend = attachSend;
+

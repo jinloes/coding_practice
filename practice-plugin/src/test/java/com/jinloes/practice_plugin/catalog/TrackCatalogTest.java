@@ -76,6 +76,8 @@ class TrackCatalogTest {
     void tracksAreSeparateFromTopicGuides() {
         assertThat(TrackCatalog.all()).extracting(Guide::id)
                 .doesNotContainAnyElementsOf(GuideCatalog.all().stream().map(Guide::id).toList());
+        assertThat(TrackCatalog.isTrack("google")).isTrue();
+        assertThat(TrackCatalog.isTrack("graphs")).isFalse();
         assertThatThrownBy(() -> GuideCatalog.find("google")).isInstanceOf(IllegalArgumentException.class);
     }
 

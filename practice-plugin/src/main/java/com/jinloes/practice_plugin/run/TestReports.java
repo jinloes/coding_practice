@@ -88,7 +88,8 @@ public final class TestReports {
         }
         if (exitCode != 0) {
             return new CheckResult(RUNNER_ERROR, tests, 0,
-                    "Tests produced results, but Gradle exited with code " + exitCode + ". See the Run console.");
+                    "Tests produced results, but the verification runner exited with code "
+                            + exitCode + ". See the Run console.");
         }
         return new CheckResult(PASSED, tests, 0,
                 "All " + tests + " supplied cases passed. This does not prove optimal complexity.");

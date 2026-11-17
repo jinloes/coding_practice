@@ -35,7 +35,7 @@ import static com.jinloes.practice_plugin.run.CheckResult.Status.TIMED_OUT;
  * the process ends.
  */
 final class FullCheck {
-    private static final long SETUP_LIMIT_NANOS = TimeUnit.MINUTES.toNanos(5);
+    private static final long SETUP_LIMIT_NANOS = TimeUnit.SECONDS.toNanos(60);
 
     /** Receives the final result of a check whose process started. */
     @FunctionalInterface
@@ -76,8 +76,7 @@ final class FullCheck {
             var command = new GeneralCommandLine(workspace.command(
                     home, progress.getState().testSeconds, progress.getState().heapMb))
                     .withWorkingDirectory(workspace.root())
-                    .withEnvironment("JAVA_HOME", home.toString())
-                    .withEnvironment("GRADLE_USER_HOME", workspace.gradleHome().toString());
+                    .withEnvironment("JAVA_HOME", home.toString());
             VerificationWorkspace currentWorkspace = workspace;
             var handler = new BoundedProcessHandler(command, () -> {
                 control.requestCancel();
@@ -99,7 +98,7 @@ final class FullCheck {
             scheduleWatchdog(handler, control, currentWorkspace.resultDirectory(), setupStarted,
                     progress.getState().suiteSeconds);
             message.accept("Managed attempt: " + attemptId + "\nRunning the isolated full correctness suite.\n"
-                    + "Setup limit: 5 minutes; test execution limit: "
+                    + "Compilation limit: 60 seconds; test execution limit: "
                     + progress.getState().suiteSeconds + " seconds.");
             return handler;
         } catch (IOException | ExecutionException | IllegalArgumentException exception) {
@@ -161,7 +160,7 @@ final class FullCheck {
         }
         if (!testsStarted && elapsed > SETUP_LIMIT_NANOS) {
             return new WatchdogStop(TIMED_OUT,
-                    "Setup/compilation exceeded five minutes. Check SDK, network, and Run output.");
+                    "Compilation/setup exceeded 60 seconds. Check SDK and Run output.");
         }
         return null;
     }

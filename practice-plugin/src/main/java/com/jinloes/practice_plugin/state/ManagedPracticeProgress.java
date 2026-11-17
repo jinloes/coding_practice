@@ -19,13 +19,17 @@ import java.util.stream.Collectors;
 @State(name = "AlgorithmPracticeManaged", storages = @Storage(
         value = "algorithm-practice-managed.xml", roamingType = RoamingType.DISABLED))
 public final class ManagedPracticeProgress implements PersistentStateComponent<ManagedPracticeProgress.Data> {
+    public static final int DEFAULT_TEST_SECONDS = 5;
+    public static final int DEFAULT_SUITE_SECONDS = 60;
+    public static final int DEFAULT_HEAP_MB = 256;
+
     public static final class Data {
         public Map<String, Entry> attempts = new LinkedHashMap<>();
         public Map<String, String> selectedAttempts = new LinkedHashMap<>();
         public Map<String, String> legacyMappings = new LinkedHashMap<>();
-        public int testSeconds = 5;
-        public int suiteSeconds = 60;
-        public int heapMb = 256;
+        public int testSeconds = DEFAULT_TEST_SECONDS;
+        public int suiteSeconds = DEFAULT_SUITE_SECONDS;
+        public int heapMb = DEFAULT_HEAP_MB;
     }
 
     public static final class Entry {
@@ -111,10 +115,20 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
         data.legacyMappings.putIfAbsent(legacyKey(legacyRoot, legacyAttemptId), managedAttemptId);
     }
 
+    public static boolean validLimits(int testSeconds, int suiteSeconds, int heapMb) {
+        return testSeconds >= 1 && testSeconds <= 300
+                && suiteSeconds >= testSeconds && suiteSeconds <= 1800
+                && heapMb >= 64 && heapMb <= 2048;
+    }
+
+    public boolean hasDefaultLimits() {
+        return data.testSeconds == DEFAULT_TEST_SECONDS
+                && data.suiteSeconds == DEFAULT_SUITE_SECONDS
+                && data.heapMb == DEFAULT_HEAP_MB;
+    }
+
     public void validateLimits() {
-        if (data.testSeconds < 1 || data.testSeconds > 300
-                || data.suiteSeconds < data.testSeconds || data.suiteSeconds > 1800
-                || data.heapMb < 64 || data.heapMb > 2048) {
+        if (!validLimits(data.testSeconds, data.suiteSeconds, data.heapMb)) {
             throw new IllegalArgumentException(
                     "Use 1-300 seconds per test, at least that long and at most 1800 seconds per suite, and 64-2048 MiB.");
         }

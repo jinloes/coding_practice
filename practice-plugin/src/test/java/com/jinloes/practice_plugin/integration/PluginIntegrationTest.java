@@ -167,6 +167,9 @@ class PluginIntegrationTest {
         ManagedPracticeWorkspace managed = new ManagedPracticeWorkspace();
         LegacyImportService legacyImport = new LegacyImportService(managed);
         ManagedPracticeProgress progress = ManagedPracticeProgress.get();
+        progress.getState().testSeconds = ManagedPracticeProgress.DEFAULT_TEST_SECONDS;
+        progress.getState().suiteSeconds = ManagedPracticeProgress.DEFAULT_SUITE_SECONDS;
+        progress.getState().heapMb = ManagedPracticeProgress.DEFAULT_HEAP_MB;
         int managedBefore = managed.attempts("pair-sum").size();
 
         var first = legacyImport.importLegacy(legacyRoot, legacyProgress, progress);

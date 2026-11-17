@@ -29,7 +29,7 @@ const problem: PageState = {
       inputSyntax: '<nums> | <target>',
       intendedTime: 'O(n)',
       intendedSpace: 'O(n)',
-      guides: [{ id: 'hashing', title: 'Hashing' }],
+      guides: [{ id: 'hash-maps', title: 'Hash Maps and Sets' }],
       tracks: [{ id: 'blind-75', title: 'Blind 75' }],
     },
   },
@@ -40,8 +40,8 @@ const guide: PageState = {
   page: {
     kind: 'guide',
     guide: {
-      id: 'hashing',
-      title: 'Hashing',
+      id: 'hash-maps',
+      title: 'Hash Maps and Sets',
       kind: 'guide',
       summaryHtml: 'Trade memory for constant-time lookups.',
       lessonHtml: '<p>How it works</p><ul><li>Store what you have seen.</li></ul>',
@@ -54,6 +54,34 @@ const guide: PageState = {
   },
 };
 
+const chooser: PageState = {
+  theme: problem.theme,
+  page: {
+    kind: 'chooser',
+    selected: {
+      title: 'Pair Sum',
+      guides: [{ id: 'hash-maps', title: 'Hash Maps and Sets' }],
+      tracks: [{ id: 'blind-75', title: 'Blind 75' }],
+    },
+  },
+};
+
+let listening = false;
+
 export function renderSample(): void {
-  render(window.location.hash === '#guide' ? guide : problem);
+  if (!listening) {
+    window.addEventListener('hashchange', renderSample);
+    listening = true;
+  }
+  switch (window.location.hash) {
+    case '#guide':
+      render(guide);
+      break;
+    case '#chooser':
+      render(chooser);
+      break;
+    default:
+      render(problem);
+      break;
+  }
 }

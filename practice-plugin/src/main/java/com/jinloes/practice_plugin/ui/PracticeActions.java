@@ -54,15 +54,17 @@ final class PracticeActions {
         return toolbar;
     }
 
-    /** The execution toolbar: run examples, run or debug with input, check, and stop. */
+    /** The execution toolbar: run or debug examples, run or debug with input, check, and stop. */
     static ActionToolbar runToolbar(RunControls controls, JComponent target) {
         return toolbar("AlgorithmPracticeRun", List.of(
                 withText(action("Run Examples", "Run the visible examples",
                         AllIcons.Actions.Execute, controls::canRun, controls::runExamples)),
+                action("Debug Examples", "Debug the visible examples",
+                        AllIcons.Actions.StartDebugger, controls::canRun, controls::debugExamples),
                 action("Run With Input...", "Run the solution on custom input",
                         AllIcons.Actions.RunAll, controls::canRun, () -> controls.runWithInput(false)),
                 action("Debug With Input...", "Debug the solution on custom input",
-                        AllIcons.Actions.StartDebugger, controls::canRun, () -> controls.runWithInput(true)),
+                        AllIcons.Debugger.SmartStepInto, controls::canRun, () -> controls.runWithInput(true)),
                 withText(action("Check Solution", "Run the full hidden test suite and complexity probe",
                         AllIcons.Actions.Checked, controls::canRun, controls::check)),
                 action("Stop", "Stop the active run", AllIcons.Actions.Suspend,
@@ -76,6 +78,8 @@ final class PracticeActions {
         boolean isRunning();
 
         void runExamples();
+
+        void debugExamples();
 
         void runWithInput(boolean debug);
 

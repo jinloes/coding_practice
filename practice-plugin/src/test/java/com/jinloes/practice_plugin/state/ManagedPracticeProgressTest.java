@@ -119,6 +119,23 @@ class ManagedPracticeProgressTest {
     }
 
     @Test
+    void detectsDefaultLimitsAcrossAllThreeFields() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        assertThat(progress.hasDefaultLimits()).isTrue();
+
+        progress.getState().testSeconds = 6;
+        assertThat(progress.hasDefaultLimits()).isFalse();
+
+        progress.getState().testSeconds = ManagedPracticeProgress.DEFAULT_TEST_SECONDS;
+        progress.getState().suiteSeconds = 61;
+        assertThat(progress.hasDefaultLimits()).isFalse();
+
+        progress.getState().suiteSeconds = ManagedPracticeProgress.DEFAULT_SUITE_SECONDS;
+        progress.getState().heapMb = 512;
+        assertThat(progress.hasDefaultLimits()).isFalse();
+    }
+
+    @Test
     void rejectsEveryLimitOutsideItsDocumentedRange() {
         assertInvalid(0, 5, 256);
         assertInvalid(301, 301, 256);

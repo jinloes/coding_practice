@@ -130,6 +130,10 @@ class CatalogErrorPathsTest {
     @Test
     void exampleLibrariesValidateIndexAndBundledJars() throws IOException {
         assertThat(ExampleLibraries.names()).isNotEmpty();
+        assertThat(ExampleLibraries.names(path -> stream("one.jar\n"))).containsExactly("one.jar");
+        assertThat(ExampleLibraries.verificationNames()).contains("verification-runner.jar");
+        assertThat(ExampleLibraries.extractVerificationTo(temporary.resolve("verification-libs")))
+                .hasSize(ExampleLibraries.names().size() + ExampleLibraries.verificationNames().size());
         assertThat(ExampleLibraries.names(" assertj-core.jar \n\nhelper-1.0.jar\n"))
                 .containsExactly("assertj-core.jar", "helper-1.0.jar");
         assertThatThrownBy(() -> ExampleLibraries.names(" \n"))

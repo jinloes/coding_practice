@@ -58,6 +58,16 @@ intellijPlatform {
 }
 
 def webBuildDir = layout.buildDirectory.dir('web')
+// Redirects winp's extracted native helpers out of Gradle 9's immutable IntelliJ SDK transform cache on Windows.
+def winpDir = layout.buildDirectory.dir('winp')
+tasks.matching { it instanceof JavaForkOptions }.configureEach {
+    def targetDir = winpDir
+    jvmArgumentProviders.add({
+        def dir = targetDir.get().asFile
+        dir.mkdirs()
+        ["-Dwinp.folder.preferred=${dir.absolutePath}".toString()]
+    } as CommandLineArgumentProvider)
+}
 
 tasks.named('test', Test) {
     useJUnitPlatform()

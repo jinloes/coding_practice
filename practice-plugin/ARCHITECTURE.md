@@ -10,7 +10,8 @@ or security assumptions.
 The plugin provides original Java algorithm exercises inside IntelliJ IDEA. A
 learner selects an exercise, works in a durable `Solution.java`, runs visible
 examples or custom input through native IDE run/debug support, and checks the
-solution in an isolated generated Gradle project.
+solution in an isolated verification workspace with bundled JUnit and AssertJ
+libraries.
 
 The plugin is intentionally:
 
@@ -45,7 +46,7 @@ ExerciseCatalog <--- bundled manifests/templates          |      |
   |                                                      |      v
   +-- ExampleRunner + AssertJ libraries ------------------+  native IDE run/debug
   |
-  +-- tests + workload + verification build -------------+
+  +-- tests + workload + verification libraries ----------+
                                                          |
                                                          +-- full check
                                                                 |
@@ -53,7 +54,7 @@ ExerciseCatalog <--- bundled manifests/templates          |      |
                                                         VerificationWorkspace
                                                                 |
                                                                 v
-                                                        child Gradle + test JVM
+                                                VerificationMain + test/probe JVMs
 
 ManagedPracticeProgress <---- results, selection, limits, hints
 LegacyImportService <--------- legacy reader + managed storage + progress
@@ -71,20 +72,23 @@ resources.
 `GuideCatalog` is the ordered registry of topic study guides. Each bundled,
 read-only `guides/<id>.json` holds a lesson and a list of exercise IDs; the
 catalog resolves them through `ExerciseCatalog`, rejects unknown or duplicate
-IDs, and orders each guide's exercises Easy, Medium, then Hard using the
-exercises' own difficulty. Guides add no persisted state.
+IDs, orders each guide's exercises Easy, Medium, then Hard using the exercises'
+own difficulty, and precomputes an exercise-to-guides reverse index. Guides add
+no persisted state.
 
 `TrackCatalog` is the ordered registry of practice tracks: hand-curated
 problem lists such as Blind 75 or a company list. Each bundled
 `tracks/<id>.json` uses the guide manifest schema and validation, holding notes
-instead of a lesson. Track exercises are original problems in the shared
+instead of a lesson, and precomputes track-ID membership and exercise-to-tracks
+reverse lookups. Track exercises are original problems in the shared
 catalog, so a track never ships its own content. Tracks are not official or
 verified question lists; company tracks are approximate pattern practice and
 are not derived from third-party company-tag data. Tracks add no persisted
 state.
 
-`ExampleLibraries` reads the generated library index and extracts bundled
-AssertJ jars for example compilation and execution.
+`ExampleLibraries` reads the generated library indexes and extracts bundled
+AssertJ jars for example compilation/execution and bundled JUnit Platform +
+verification runner jars for offline full checks.
 
 Exercise content is data plus Java templates under
 `src/main/resources/exercises/<id>/`. Author-only reference implementations
@@ -120,17 +124,21 @@ title actions), and `CustomInputPrompt` are the native Swing pieces.
 #### Problem and Study Guide pages
 
 The Problem and Study Guide tabs are `PageView`s that show an immutable
-`PracticePage` (`Problem` or `Study`, plus the passed IDs). There are two
-implementations:
+`PracticePage` (`Problem` or `Study`, plus the passed IDs). `PracticePanel`
+wraps each tab in `PageView.lazy`, so the Study Guide browser is not created
+until that tab is opened and hidden tabs do not serialize or push updates until
+re-selected. There are two concrete implementations:
 
 - `ReactPageView` hosts the React/Mantine app from `web/` in a JCEF browser.
   The panel pushes state by calling `window.practiceRender(json)`, where
-  `PageJson` serializes the page and the current IDE `Theme`. The page sends
-  clicks back through a `JBCefJSQuery` as JSON that `PageEvent` parses, and the
-  panel handles them on the EDT. A page can only ask to select an exercise,
-  guide, or track; it cannot run code or touch files.
+  `PageJson` serializes the page and the current IDE `Theme`. The page queues
+  clicks in `bridge.ts` until `window.practiceAttachSend` connects the
+  `JBCefJSQuery`, forwarding JSON that `PageEvent` parses so the panel handles
+  events on the EDT. A page can only ask to select an exercise, guide, or track;
+  it cannot run code or touch files.
 - `HtmlPageView` is the fallback: a non-interactive Swing `JEditorPane` that
-  reuses `PracticeViews.problemText` and `StudyGuideView.html`.
+  reuses `PracticeViews.problemText` (including metadata, target complexity,
+  input syntax, and memberships) and `StudyGuideView.html`.
 
 JCEF is the optional bundled plugin `com.intellij.modules.jcef`. `plugin.xml`
 declares it as an optional dependency whose `practice-jcef.xml` registers the
@@ -159,10 +167,10 @@ example harnesses, and tracks temporary run configurations. It delegates
 marker-based ownership of harness and module-output directories to
 `GeneratedDirectories`, which it guards with its own monitor.
 
-`VerificationWorkspace` creates a marked, per-run Gradle project below the IDE
-system path. It copies the saved solution, tests, workload, complexity probe,
-filtered verification build script, and Gradle bootstrap resources. It also
-owns process markers and conservative cleanup.
+`VerificationWorkspace` creates a marked, per-run verification directory below
+the IDE system path. It copies the saved solution, tests, workload, complexity
+probe, and bundled verification libraries (`ExampleLibraries`), and owns process
+markers and conservative cleanup without requiring Gradle or network access.
 
 `PracticeWorkspace` is a read-only compatibility reader for the legacy
 project-based storage format. New attempts never use it.
@@ -249,12 +257,14 @@ These runs are exploratory and never update correctness progress.
 
 1. `PracticeRunner` saves documents, validates limits, reads the managed
    attempt, and computes a fingerprint.
-2. `VerificationWorkspace` builds a unique marked Gradle project from the saved
-   solution and bundled verification resources.
-3. A child Gradle process runs with a shared plugin-owned Gradle home and starts
-   child test/probe JVMs with Java 17 compatibility.
-4. Visible and correctness tests run first. If they pass, the advisory
-   complexity probe measures doubling workloads.
+2. `VerificationWorkspace` builds a unique marked workspace from the saved
+   solution and bundled verification libraries.
+3. A child `VerificationMain` coordinator JVM compiles sources with
+   `javac --release 17`, runs `JUnitSuiteRunner` in a heap-bounded child JVM,
+   and—when every test passes—runs the advisory `ComplexityProbe` in a separate
+   child JVM.
+4. Visible and correctness tests run offline against the bundled JUnit Platform
+   and AssertJ jars, writing per-suite XML reports.
 5. The runner reads fresh report files, compares the checked fingerprint with
    current content, records the result, marks the workspace finished, and
    removes it.
@@ -273,26 +283,25 @@ groups growth rates that wall-clock measurements cannot reliably distinguish.
 | Legacy progress | Project workspace state | Read for migration |
 | Example harnesses | IDE system path | Temporary, marked |
 | Module outputs | IDE system path | Temporary, marked |
-| Verification projects | IDE system path | Per check, marked |
-| Verification Gradle home | IDE system path | Shared cache, durable |
+| Verification workspaces | IDE system path | Per check, marked |
 
-Cleanup never targets learner attempts, the shared Gradle home, foreign files,
-redirecting paths, or unmarked directories.
+Cleanup never targets learner attempts, foreign files, redirecting paths, or
+unmarked directories.
 
 ## Build-Time Resource Assembly
 
 The standalone Gradle build:
 
-- compiles plugin code with a JDK 25 toolchain;
-- packages the Gradle wrapper as verification bootstrap resources;
-- resolves `exampleLibraries`, packages their jars, and generates `index.txt`;
-- replaces dependency and Java release tokens in
-  `gradle/verification-build.gradle`;
+- compiles plugin code with a JDK 25 toolchain and `verificationRunner` with
+  `--release 17`;
+- resolves `exampleLibraries` and `verificationLibraries`, packages their jars
+  (plus `verification-runner.jar`) without duplicating shared jars, and
+  generates `index.txt` manifests;
 - packages exercise, study guide, practice track, harness, and plugin
   descriptor resources;
-- downloads a pinned Node (node-gradle), runs `npm ci` and the `webUi` task in
-  `web/`, and packages the single self-contained `web/index.html` it produces.
-  The page loads no network resources.
+- downloads a pinned Node (node-gradle), runs `npm ci`, `webTest` (`vitest run`),
+  and `webUi` in `web/`, and packages the single self-contained `web/index.html`
+  it produces. The page loads no network resources.
 
 Runtime code must not assume dependency jar filenames. It consumes the generated
 library index.

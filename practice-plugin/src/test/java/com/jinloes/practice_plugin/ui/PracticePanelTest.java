@@ -170,4 +170,95 @@ class PracticePanelTest {
                 .as("the panel and the runner must resolve the same workspace, not one each")
                 .isSameAs(ManagedPracticeWorkspace.get());
     }
+
+    @Test
+    void runToolbarExposesDebugExamplesAlongsideRunAndCheckActions() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            java.util.concurrent.atomic.AtomicBoolean debuggedExamples =
+                    new java.util.concurrent.atomic.AtomicBoolean();
+            PracticeActions.RunControls controls = new PracticeActions.RunControls() {
+                @Override
+                public boolean canRun() {
+                    return true;
+                }
+
+                @Override
+                public boolean isRunning() {
+                    return false;
+                }
+
+                @Override
+                public void runExamples() {
+                }
+
+                @Override
+                public void debugExamples() {
+                    debuggedExamples.set(true);
+                }
+
+                @Override
+                public void runWithInput(boolean debug) {
+                }
+
+                @Override
+                public void check() {
+                }
+
+                @Override
+                public void stop() {
+                }
+            };
+            var group = (com.intellij.openapi.actionSystem.DefaultActionGroup)
+                    PracticeActions.runToolbar(controls, new javax.swing.JPanel()).getActionGroup();
+            var actions = java.util.Arrays.asList(group.getChildActionsOrStubs());
+
+            assertThat(actions).extracting(action -> action.getTemplatePresentation().getText())
+                    .containsExactly(
+                            "Run Examples",
+                            "Debug Examples",
+                            "Run With Input...",
+                            "Debug With Input...",
+                            "Check Solution",
+                            "Stop");
+            var debugAction = actions.stream()
+                    .filter(action -> "Debug Examples".equals(action.getTemplatePresentation().getText()))
+                    .findFirst().orElseThrow();
+            debugAction.actionPerformed(com.intellij.openapi.actionSystem.AnActionEvent.createEvent(
+                    debugAction, com.intellij.openapi.actionSystem.DataContext.EMPTY_CONTEXT, null, "test",
+                    com.intellij.openapi.actionSystem.ActionUiKind.NONE, null));
+            assertThat(debuggedExamples).isTrue();
+        });
+    }
+
+    @Test
+    void editingAnUncheckedAttemptDoesNotClaimAStaleResultUntilAResultExists() throws Exception {
+        var attempt = ManagedPracticeWorkspace.get().create(ExerciseCatalog.find("pair-sum"));
+        com.jinloes.practice_plugin.state.ManagedPracticeProgress.get()
+                .getState().selectedAttempts.put("pair-sum", attempt.id());
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticePanel panel = new PracticePanel(fixture.getProject());
+            try {
+                @SuppressWarnings("unchecked")
+                javax.swing.JComboBox<ManagedPracticeWorkspace.Attempt> combo =
+                        UIUtil.findComponentOfType(panel, javax.swing.JComboBox.class);
+                assertThat(combo).isNotNull();
+                combo.addItem(attempt);
+                combo.setSelectedItem(attempt);
+
+                panel.onAttemptEdited();
+                assertThat(panel.statusText()).doesNotContain("Edited since displayed result");
+                assertThat(panel.resultsView().bannerText()).doesNotContain("stale");
+
+                panel.resultsView().showRunFinished(
+                        "Example session finished (exit 0). Use Check Solution to update correctness progress.");
+                panel.onAttemptEdited();
+                panel.onAttemptEdited();
+
+                assertThat(panel.statusText()).isEqualTo("Edited since displayed result; check again.");
+                assertThat(panel.resultsView().bannerText()).isEqualTo("Examples passed (stale)");
+            } finally {
+                Disposer.dispose(panel);
+            }
+        });
+    }
 }

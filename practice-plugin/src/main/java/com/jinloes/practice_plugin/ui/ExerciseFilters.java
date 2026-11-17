@@ -109,9 +109,11 @@ final class ExerciseFilters {
     List<Exercise> visible(Set<String> passed) {
         Guide shown = shownGuide();
         Guide selectedTrack = selectedTrack();
+        Set<String> trackIds = selectedTrack == null ? null
+                : selectedTrack.exercises().stream().map(Exercise::id).collect(java.util.stream.Collectors.toSet());
         List<Exercise> candidates = shown == null ? ExerciseCatalog.all() : shown.exercises();
         return candidates.stream()
-                .filter(exercise -> selectedTrack == null || selectedTrack.exercises().contains(exercise))
+                .filter(exercise -> trackIds == null || trackIds.contains(exercise.id()))
                 .filter(exercise -> matches(exercise, passed.contains(exercise.id())))
                 .toList();
     }

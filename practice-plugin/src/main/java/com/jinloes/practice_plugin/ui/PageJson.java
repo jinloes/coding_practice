@@ -101,7 +101,7 @@ final class PageJson {
         JsonObject body = new JsonObject();
         body.addProperty("id", guide.id());
         body.addProperty("title", guide.title());
-        body.addProperty("kind", TrackCatalog.all().contains(guide) ? "track" : "guide");
+        body.addProperty("kind", TrackCatalog.isTrack(guide.id()) ? "track" : "guide");
         body.addProperty("summaryHtml", MarkdownHtml.inline(guide.summary()));
         body.addProperty("lessonHtml", MarkdownHtml.toHtml(guide.lesson()));
         JsonArray levels = new JsonArray();
