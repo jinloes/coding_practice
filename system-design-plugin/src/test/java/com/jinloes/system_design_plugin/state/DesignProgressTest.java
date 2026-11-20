@@ -162,4 +162,40 @@ class DesignProgressTest {
         assertThat(progress.getState().attempts).containsOnlyKeys(ATTEMPT);
         assertThat(progress.getState().attempts.get(ATTEMPT).problemId).isEmpty();
     }
+
+    @Test
+    void renamesRemovesAttemptsAndPersistsTargetLevel() {
+        DesignProgress progress = new DesignProgress();
+        assertThat(progress.targetLevel()).isEqualTo("Senior");
+        progress.setTargetLevel("Staff+");
+        assertThat(progress.targetLevel()).isEqualTo("Staff+");
+        progress.setTargetLevel("Unknown");
+        assertThat(progress.targetLevel()).isEqualTo("Senior");
+
+        assertThat(progress.attemptLabel("missing")).isEmpty();
+        assertThat(progress.renameAttempt(ATTEMPT, "url-shortener", "  First\npass\t" + "x".repeat(90)))
+                .hasSize(DesignProgress.MAX_LABEL_CHARS)
+                .startsWith("First pass ");
+        assertThat(progress.attemptLabel(ATTEMPT)).startsWith("First pass ");
+        assertThat(progress.renameAttempt(ATTEMPT, "url-shortener", null)).isEmpty();
+
+        progress.select("url-shortener", ATTEMPT);
+        progress.select("rate-limiter", "rate-limiter-keep");
+        progress.recordReview(ATTEMPT, "url-shortener", "Hire");
+        assertThat(progress.reviewedProblemIds()).containsExactly("url-shortener");
+
+        progress.removeAttempt(ATTEMPT);
+        assertThat(progress.selectedAttempt("url-shortener")).isNull();
+        assertThat(progress.selectedAttempt("rate-limiter")).isEqualTo("rate-limiter-keep");
+        assertThat(progress.reviewedProblemIds()).isEmpty();
+
+        progress.recordReview("url-1", "url-shortener", null);
+        progress.recordReview("url-2", "url-shortener", "Lean hire");
+        progress.recordReview("url-3", "url-shortener", "Strong hire");
+        progress.recordReview("url-4", "url-shortener", "No hire");
+        progress.recordReview("url-5", "url-shortener", null);
+        assertThat(progress.bestVerdicts()).containsEntry("url-shortener", "Strong hire");
+
+        assertThatThrownBy(() -> progress.loadState(null)).isInstanceOf(NullPointerException.class);
+    }
 }

@@ -1,0 +1,14 @@
+{
+  "id": "core-foundations",
+  "title": "Core Infrastructure Foundations",
+  "summary": "Storage engines, caching, ID generation, rate limiting, scheduling, and metrics.",
+  "problemIds": [
+    "url-shortener",
+    "unique-id-generator",
+    "rate-limiter",
+    "distributed-cache",
+    "metrics-monitoring",
+    "key-value-store",
+    "distributed-job-scheduler"
+  ]
+}

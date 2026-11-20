@@ -1,0 +1,21 @@
+{
+  "id": "unique-id-generator",
+  "title": "Distributed Unique ID Generator",
+  "difficulty": "Easy",
+  "summary": "Generate globally unique, roughly time-sorted 64-bit IDs across regions at low latency.",
+  "statement": "Design a shared ID generation service or library that produces unique identifiers for database rows, messages, and events across many services and data centers.\n\nFunctional requirements:\n- Every generated ID must be globally unique across all regions and machines.\n- IDs must fit in a signed 64-bit integer so they index compactly in relational and key-value stores.\n- IDs should sort roughly by creation time so recent records cluster together on disk.\n- Generation must not require a cross-region network call on each request.\n\nScale to assume:\n- 2 million IDs generated per second across 5 geographic regions.\n- Sub-millisecond latency at the 99.9th percentile.\n- The scheme must last at least 50 years without wrapping around.",
+  "hints": [
+    "Compare random 128-bit UUIDs, central database auto-increment counters, and bit-partitioned 64-bit IDs against the size, ordering, and availability requirements.",
+    "Divide 63 usable bits into fields for elapsed time, generator identity, and a per-millisecond counter. How many bits does each field need to hit the scale and 50-year lifespan?",
+    "Physical clocks drift and NTP adjustments can move a server's clock backward. What happens to uniqueness if time jumps back by 5 ms, or by 10 seconds?"
+  ],
+  "expectations": [
+    "Clarifies strict monotonicity versus rough millisecond-level time ordering, 63-bit signed versus 64-bit unsigned representation, and whether IDs may be predictable.",
+    "Compares UUIDs, central ticket databases, pre-allocated counter ranges, and Snowflake-style bit-packed 64-bit IDs, explaining why 64-bit time-ordered IDs keep B-tree inserts sequential.",
+    "Designs a concrete bit layout (for example 1 sign bit, 41 timestamp bits for ~69 years at 1 ms resolution, 10 worker/region bits, and 12 sequence bits for 4,096 IDs/ms per worker).",
+    "Assigns unique worker IDs safely at startup through static configuration or renewable leases in a coordination store.",
+    "Handles sequence exhaustion within a millisecond by spinning or waiting until the next millisecond tick.",
+    "Addresses NTP clock skew and backward jumps explicitly: pausing briefly on tiny rollbacks, rejecting or rotating worker epochs on larger jumps, and monitoring clock drift.",
+    "Notes security and API concerns: never exposing internal sequential IDs directly as guessable authorization tokens when enumeration matters."
+  ]
+}

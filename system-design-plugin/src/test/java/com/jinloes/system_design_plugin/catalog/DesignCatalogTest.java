@@ -47,10 +47,19 @@ class DesignCatalogTest {
     }
 
     @Test
-    void exposesTheFixedRubricAndNotesTemplate() {
+    void exposesTheFixedRubricLevelsAndNotesTemplate() {
         assertThat(DesignCatalog.DIMENSIONS).hasSize(7).doesNotHaveDuplicates();
         assertThat(DesignCatalog.VERDICTS).hasSize(5).doesNotHaveDuplicates();
-        assertThat(DesignCatalog.notesTemplate()).startsWith("# Design notes").contains("## Capacity estimates");
+        assertThat(DesignCatalog.LEVELS).containsExactly("Mid-Level", "Senior", "Staff+");
+        assertThat(DesignCatalog.normalizeLevel("Staff+")).isEqualTo("Staff+");
+        assertThat(DesignCatalog.normalizeLevel(null)).isEqualTo("Senior");
+        assertThat(DesignCatalog.normalizeLevel("Principal")).isEqualTo("Senior");
+        assertThat(DesignCatalog.notesTemplate())
+                .startsWith("# Design notes")
+                .contains("## 1. Requirements and scope")
+                .contains("## 2. Core entities")
+                .contains("## 3. API and system interface")
+                .contains("## 5. Deep dives");
     }
 
     @Test
@@ -69,7 +78,10 @@ class DesignCatalogTest {
         assertInvalid(manifest("demo", "Easy", 4, 5));
         assertInvalid(manifest("demo", "Easy", 3, 4));
         assertInvalid(manifest("demo", "Easy", 3, 5).replace("\"title\": \"T\"", "\"title\": \" \""));
+        assertInvalid(manifest("demo", "Easy", 3, 5).replace("\"title\": \"T\"", "\"title\": 123"));
+        assertInvalid(manifest("demo", "Easy", 3, 5).replace("\"title\": \"T\"", "\"title\": null"));
         assertInvalid(manifest("demo", "Easy", 3, 5).replace("\"hints\": [", "\"hints\": [1, "));
+        assertInvalid(manifest("demo", "Easy", 3, 5).replace("\"hints\": [", "\"hints\": [null, "));
         assertInvalid(manifest("demo", "Easy", 3, 5).replace("\"hints\": [", "\"hints\": [\" \", "));
         assertInvalid(manifest("demo", "Easy", 3, 5).replace("\"expectations\": [", "\"other\": ["));
         assertInvalid("not json");
@@ -77,9 +89,18 @@ class DesignCatalogTest {
     }
 
     @Test
-    void missingOrUnreadableResourcesNameThePath() {
+    void missingInvalidOrUnreadableResourcesNameThePath() {
         assertThatThrownBy(() -> DesignCatalog.load(path -> null))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("/problems/index.txt");
+        assertThatThrownBy(() -> DesignCatalog.load(path -> "/problems/index.txt".equals(path)
+                ? new ByteArrayInputStream("url-shortener\n".getBytes(StandardCharsets.UTF_8)) : null))
                 .isInstanceOf(IllegalStateException.class).hasMessageContaining("url-shortener");
+        assertThatThrownBy(() -> DesignCatalog.readIndex("/empty",
+                path -> new ByteArrayInputStream("# comment only\n  \n".getBytes(StandardCharsets.UTF_8))))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("/empty");
+        assertThatThrownBy(() -> DesignCatalog.readIndex("/dup",
+                path -> new ByteArrayInputStream("a\na\n".getBytes(StandardCharsets.UTF_8))))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("/dup");
         assertThatThrownBy(() -> DesignCatalog.read("/problems/rate-limiter.json", path -> new InputStream() {
             @Override
             public int read() throws IOException {

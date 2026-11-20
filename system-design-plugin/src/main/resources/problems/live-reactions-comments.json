@@ -1,0 +1,21 @@
+{
+  "id": "live-reactions-comments",
+  "title": "Live Broadcast Comments and Reactions",
+  "difficulty": "Hard",
+  "summary": "Fan out live comments and burst reactions to millions of concurrent viewers of a single stream.",
+  "statement": "Design the real-time interactive overlay for a live video platform where viewers post comments and tap emoji reactions while watching a live broadcast.\n\nFunctional requirements:\n- Viewers watching a live broadcast see new comments and floating emoji reactions within about a second.\n- Viewers joining mid-broadcast receive the most recent comments and can scroll earlier chat history.\n- Creators and moderators can mute abusive users or delete comments in real time.\n- When a celebrity stream receives thousands of comments and tens of thousands of reactions per second, clients must remain smooth rather than freezing.\n\nScale to assume:\n- 50 million concurrent viewers across all active broadcasts.\n- A single marquee broadcast can draw 5 million concurrent viewers.\n- Peak interaction rate on one broadcast: 20,000 comments per second and 200,000 reactions per second.",
+  "hints": [
+    "Sending 200,000 individual reaction events per second to each of 5 million viewers means `10^12` messages per second—impossible and unreadable on screen. How should comments and reactions be shaped differently?",
+    "A single server can hold perhaps 50,000 to 100,000 open connections, so one marquee broadcast spans dozens or hundreds of edge servers. Draw the fan-out tree from one incoming comment to all of them.",
+    "How do you keep one viral 5-million-viewer broadcast from starving thousands of smaller 100-viewer streams?"
+  ],
+  "expectations": [
+    "Clarifies acceptable latency (~1s), ordering (causal/approximate rather than strict total order), persistence needs (comments saved, individual reaction taps ephemeral), and client display rate limits.",
+    "Calculates why naive per-event fan-out (`5M * 220K/s`) fails both network bandwidth and client UI rendering.",
+    "Handles comments and reactions with distinct pipelines: persists comments and samples/rate-limits display on mega-streams, while aggregating reactions in memory into short windows (for example per-second counts per emoji) before broadcasting.",
+    "Builds a hierarchical pub/sub fan-out tree (root broadcast topic -> regional relays -> WebSocket/SSE edge connection gateways) so each edge gateway receives a stream's payload once and fans it out locally in memory.",
+    "Serves join catch-up and backward scrolling from a time-ordered comment store (`(broadcast_id, comment_id)`) cached at the CDN/edge so millions of simultaneous joins do not hit storage.",
+    "Propagates moderation deletes and user mutes over the same broadcast channel as control events while enforcing mute lists at the write API.",
+    "Isolates viral broadcasts onto dedicated shards/topics and sheds load gracefully (dropping reaction granularity or sampling comments) under extreme spikes."
+  ]
+}

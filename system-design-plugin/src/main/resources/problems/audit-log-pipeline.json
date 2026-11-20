@@ -1,0 +1,21 @@
+{
+  "id": "audit-log-pipeline",
+  "title": "Immutable Compliance Audit Trail",
+  "difficulty": "Medium",
+  "summary": "Record tamper-evident security and admin events across tenants for search and long-term audits.",
+  "statement": "Design a centralized compliance audit log service for a multi-tenant enterprise SaaS platform that records every administrative change, permission update, sign-in, and sensitive record export.\n\nFunctional requirements:\n- Product services emit structured audit events (`tenant_id`, `actor`, `action`, `resource`, `timestamp`, `before/after` metadata) that must never be silently lost once an action commits.\n- Stored audit entries are append-only and provably tamper-evident so neither tenants nor rogue operators can alter or delete past records undetected.\n- Tenant administrators search and filter their own organization's recent 90 days of events interactively by actor, action, resource, IP, and time range.\n- Support asynchronous bulk exports over 7-year retention windows for regulatory audits.\n\nScale to assume:\n- 200,000 enterprise tenants.\n- 250,000 audit events per second across the platform.\n- 7 years of immutable retention totaling multiple petabytes.",
+  "hints": [
+    "If an admin grants themselves superuser permissions and the database transaction succeeds, how do you guarantee the audit event is never lost even if the audit service is briefly unreachable?",
+    "Write-once storage stops casual edits, but how can an external auditor mathematically verify that no event in a tenant's log was modified, reordered, or deleted?",
+    "Searching 7 years of petabyte-scale JSON in a hot search cluster is prohibitively expensive. Split the storage architecture by query pattern and age."
+  ],
+  "expectations": [
+    "Clarifies durability guarantees on state-changing actions, tenant isolation boundaries, search freshness, and regulatory retention/legal-hold rules.",
+    "Captures critical mutations reliably via a transactional outbox (committed in the same local DB transaction as the business change) relayed into a durable partitioned log.",
+    "Builds cryptographic tamper-evidence per tenant using an append-only hash chain (`entry_hash = H(prev_hash || canonical_event)`) with periodic Merkle roots anchored/signed in WORM object storage.",
+    "Enforces strict tenant isolation (`tenant_id` partition prefix and mandatory query scoping) plus dedicated RBAC and audit-of-audit logging whenever admins view or export logs.",
+    "Separates hot interactive search (90 days in a time-partitioned search or columnar store such as ClickHouse/OpenSearch) from cold 7-year archival (compressed Parquet in immutable object storage with object lock).",
+    "Executes multi-year compliance exports asynchronously against cold Parquet partitions sorted by `(tenant_id, date)` and delivers results via pre-signed download links.",
+    "Addresses schema evolution, sensitive field redaction or per-tenant encryption keys (crypto-shredding tradeoffs vs legal hold), and deduplication via deterministic event IDs."
+  ]
+}

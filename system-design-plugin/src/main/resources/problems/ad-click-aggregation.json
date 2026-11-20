@@ -1,0 +1,21 @@
+{
+  "id": "ad-click-aggregation",
+  "title": "Real-Time Ad Event Aggregation",
+  "difficulty": "Hard",
+  "summary": "Count ad impressions and clicks accurately at millions of events per second and pace budgets.",
+  "statement": "Design the event aggregation and budget-pacing backend for an online advertising platform where advertisers pay per click or per thousand impressions.\n\nFunctional requirements:\n- Ingest ad impression and click events from client devices worldwide.\n- Deduplicate retried events and filter invalid or automated click spam.\n- Provide advertisers a live dashboard showing impressions, clicks, click-through rate, and spend per campaign at 1-minute granularity within two minutes.\n- Enforce each campaign's daily budget cap so active ad servers stop serving a depleted campaign promptly, and produce exact billing totals.\n\nScale to assume:\n- 10 million ad impressions per second and 200,000 ad clicks per second at peak.\n- 2 million active ad campaigns.\n- Overcharging or double-counting clicks directly impacts customer billing.",
+  "hints": [
+    "Mobile networks retry requests, and a click can arrive minutes after the impression was logged. What state do you need to verify a click is genuine and counted at most once?",
+    "Streaming pipelines prioritize low latency while billing demands financial accuracy even when events arrive late or workers crash. How do you reconcile fast live numbers with exact invoices?",
+    "If 500 ad servers check a single database row on 10 million impressions per second to see whether a campaign still has budget, the database melts. How should budget be distributed?"
+  ],
+  "expectations": [
+    "Clarifies attribution windows (how long after an impression a click remains valid), fraud/spam filtering scope, dashboard latency, and financial reconciliation tolerances.",
+    "Sizes raw impression/click ingestion bandwidth (gigabytes per second) and aggregated time-series storage across 2M campaigns.",
+    "Assigns a signed `impression_id` when serving an ad, then joins clicks against a windowed impression store and deduplicates by `impression_id` / `click_id` so retries and forged clicks are dropped.",
+    "Partitions the event stream by `ad_id` or `campaign_id` (with salting for mega-campaigns) and aggregates tumbling 1-minute windows in a stateful stream processor with watermarked late-event handling.",
+    "Pairs the low-latency streaming pipeline for live dashboards and pacing with an immutable raw-log batch/reconciliation pass that computes authoritative billing ledgers.",
+    "Implements distributed budget pacing by leasing small quota slices from a budget coordinator to ad-serving nodes instead of synchronizing globally on every impression.",
+    "Stores rolled-up metrics in a real-time OLAP store (`1m`, `1h`, `1d` tables) for fast slice-and-dice advertiser queries."
+  ]
+}

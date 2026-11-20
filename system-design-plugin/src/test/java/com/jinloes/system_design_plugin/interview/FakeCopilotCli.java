@@ -55,6 +55,7 @@ final class FakeCopilotCli {
         System.out.flush();
         System.err.print(script.getProperty("stderr", ""));
         System.err.flush();
+        Thread.sleep(Long.parseLong(script.getProperty("sleepAfterStdoutMillis", "0")));
         System.exit(Integer.parseInt(script.getProperty("exit", "0")));
     }
 }

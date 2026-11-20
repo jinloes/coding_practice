@@ -35,6 +35,7 @@ jobs:
           cache: gradle
           cache-dependency-path: |
             system-design-plugin/build.gradle
+            system-design-plugin/gradle.properties
             system-design-plugin/gradle/wrapper/gradle-wrapper.properties
 
       - name: Cache npm packages

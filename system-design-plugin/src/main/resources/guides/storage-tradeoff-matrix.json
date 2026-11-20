@@ -1,0 +1,12 @@
+{
+  "id": "storage-tradeoff-matrix",
+  "title": "Database & Storage Selection Matrix",
+  "summary": "Match access patterns, consistency rules, and scale to the right storage engine.",
+  "body": "Interviewers probe why you chose a database—name the access pattern, index structure, and consistency requirement rather than dropping product names blindly.\n\n## Transactional & operational stores\n- Relational (`B-Tree`, e.g. PostgreSQL): pick first when you need ACID transactions, row locks (`FOR UPDATE`), secondary indexes, or strong consistency (`orders`, `seat holds`, `file metadata`, `permissions`). Scales reads via replicas and writes via sharding on a tenant or entity key.\n- Wide-Column / Distributed KV (`LSM-Tree`, e.g. Cassandra, DynamoDB): pick for massive write throughput and predictable single-digit millisecond lookups by `(partition_key, sort_key)` with no cross-partition joins (`chat messages`, `activity feeds`, `audit streams`).\n- In-Memory KV (`Redis`, `Memcached`): pick for sub-millisecond look-aside caches, atomic rate-limit counters, ephemeral presence TTLs, and sorted-set leaderboards. Never treat unpersisted RAM as your sole source of truth for durable records.\n\n## Specialized query & blob stores\n- Inverted Search Index (`OpenSearch` / `Elasticsearch`): pick for tokenized full-text search, prefix/fuzzy matching, multi-attribute faceting, and geo-filtering—always fed asynchronously via CDC or queues from a primary DB.\n- Time-Series DB: pick for append-heavy `(metric, labels, timestamp, value)` streams using delta/XOR compression and automatic downsampling rollups.\n- Real-Time Columnar OLAP (`ClickHouse`, `Pinot`, `Druid`): pick for fast `GROUP BY` slice-and-dice aggregations over billions of immutable event rows (`ad clicks`, `audit analytics`).\n- Object Storage (`S3` / `GCS`): pick for immutable blobs (`videos`, `file chunks`, `Parquet archives`, `DB snapshots`) paired with pre-signed URLs and a CDN.",
+  "relatedProblemIds": [
+    "key-value-store",
+    "ticket-booking",
+    "ad-click-aggregation",
+    "multi-tenant-crm-search"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "metrics-monitoring",
+  "title": "Infrastructure Metrics and Alerting",
+  "difficulty": "Medium",
+  "summary": "Ingest millions of time-series data points per second, render dashboards, and fire alerts.",
+  "statement": "Design an internal observability platform that collects numeric infrastructure and application metrics, serves real-time operational dashboards, and triggers alerts when thresholds are breached.\n\nFunctional requirements:\n- Collect labeled numeric metrics (such as `http_requests_total{service=\"checkout\",region=\"us-east\",status=\"500\"}`) every 10 seconds from hosts and containers.\n- Query recent and historical time ranges with aggregations (`sum`, `avg`, `rate`, percentiles) grouped by labels.\n- Evaluate alerting rules continuously and notify on-call channels within one minute of a breach, without spamming duplicate pages.\n\nScale to assume:\n- 500,000 monitored hosts and containers emitting 20 million data points per second.\n- 50,000 dashboard queries per second, heavily skewed toward the most recent hour.\n- Retain raw 10-second data for 14 days and downsampled rollups for 13 months.",
+  "hints": [
+    "Time-series workloads append massive volumes of recent points and almost never update old ones. Why does a general-purpose row database struggle here, and how do time-series engines compress sequential `(timestamp, value)` pairs?",
+    "What happens if a developer puts `user_id` or `request_id` into a metric label?",
+    "Dashboards over 13 months cannot scan a year of 10-second samples, and alert rules must keep firing even if dashboard queries spike. How do you separate those paths?"
+  ],
+  "expectations": [
+    "Clarifies push versus pull collection, retention tiers, query latency goals, and behavior under collector or network partitions.",
+    "Estimates raw ingestion bandwidth and storage before and after Gorilla-style time-series compression (delta-of-delta timestamps and XOR floats, roughly 1.3-2 bytes per sample).",
+    "Buffers incoming samples through local agents and a partitioned ingestion tier, sharding active series consistently by metric name and label hash.",
+    "Writes recent data into an in-memory head block + WAL and flushes immutable time-windowed blocks plus an inverted label index to object storage.",
+    "Guards against high-cardinality label explosions with per-tenant/service active-series quotas, cardinality diagnostics, and ingestion rate limits.",
+    "Precomputes downsampled rollups (`1m`, `5m`, `1h` min/max/sum/count/sketches) for long-range dashboard queries and caches recent query results.",
+    "Runs alert rule evaluation on an isolated read pool against recent data, routing firing alerts to a deduplicating/grouping alert manager with repeat intervals and silences."
+  ]
+}

@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 public record InterviewFeedback(boolean parsed, String verdict, String summary, List<Dimension> dimensions,
                                 List<String> followUpQuestions, List<String> missedExpectations, String raw) {
     public static final int MAX_RAW_BYTES = 64 * 1024;
+    public static final String ROUND_INITIAL = "initial";
+    public static final String ROUND_FOLLOW_UP = "follow-up";
     private static final Pattern FENCED = Pattern.compile("```(?:json)?\\s*(\\{.*?})\\s*```", Pattern.DOTALL);
     private static final Gson GSON = new Gson();
 
@@ -36,12 +38,20 @@ public record InterviewFeedback(boolean parsed, String verdict, String summary, 
     }
 
     /** Feedback as saved to {@code feedback/<epochMillis>.json}. */
-    public record Stored(InterviewFeedback feedback, String fingerprint, String model, String createdAt) {
+    public record Stored(InterviewFeedback feedback, String fingerprint, String model, String createdAt,
+                         String level, String round, String followUpAnswers) {
+        public Stored(InterviewFeedback feedback, String fingerprint, String model, String createdAt) {
+            this(feedback, fingerprint, model, createdAt, "", ROUND_INITIAL, "");
+        }
+
         public Stored {
             Objects.requireNonNull(feedback, "feedback");
             fingerprint = Objects.requireNonNullElse(fingerprint, "");
             model = Objects.requireNonNullElse(model, "");
             createdAt = Objects.requireNonNullElse(createdAt, "");
+            level = level == null || level.isBlank() ? "" : DesignCatalog.normalizeLevel(level);
+            round = ROUND_FOLLOW_UP.equals(round) ? ROUND_FOLLOW_UP : ROUND_INITIAL;
+            followUpAnswers = boundRaw(followUpAnswers);
         }
 
         public String toJson() {
@@ -49,6 +59,11 @@ public record InterviewFeedback(boolean parsed, String verdict, String summary, 
             json.addProperty("fingerprint", fingerprint);
             json.addProperty("model", model);
             json.addProperty("createdAt", createdAt);
+            json.addProperty("level", level);
+            json.addProperty("round", round);
+            if (!followUpAnswers.isEmpty()) {
+                json.addProperty("followUpAnswers", followUpAnswers);
+            }
             json.addProperty("parsed", feedback.parsed());
             if (feedback.parsed()) {
                 json.add("feedback", feedback.toJsonObject());
@@ -65,13 +80,16 @@ public record InterviewFeedback(boolean parsed, String verdict, String summary, 
                 String fingerprint = requiredString(json, "fingerprint");
                 String model = requiredString(json, "model");
                 String createdAt = requiredString(json, "createdAt");
+                String level = optionalString(json, "level");
+                String round = optionalString(json, "round");
+                String followUpAnswers = optionalString(json, "followUpAnswers");
                 InterviewFeedback feedback;
                 if (json.get("parsed") instanceof JsonPrimitive parsed && parsed.isBoolean() && parsed.getAsBoolean()) {
                     feedback = validate(json.getAsJsonObject("feedback"));
                 } else {
                     feedback = unparsed(requiredString(json, "raw"));
                 }
-                return new Stored(feedback, fingerprint, model, createdAt);
+                return new Stored(feedback, fingerprint, model, createdAt, level, round, followUpAnswers);
             } catch (JsonParseException | IllegalStateException | ClassCastException | NullPointerException exception) {
                 throw new IllegalArgumentException("Stored feedback is corrupt.", exception);
             }
@@ -187,6 +205,17 @@ public record InterviewFeedback(boolean parsed, String verdict, String summary, 
         return primitive.getAsString();
     }
 
+    private static String optionalString(JsonObject json, String member) {
+        JsonElement element = json.get(member);
+        if (element == null || element.isJsonNull()) {
+            return "";
+        }
+        if (!(element instanceof JsonPrimitive primitive) || !primitive.isString()) {
+            throw new IllegalStateException("Expected string: " + member);
+        }
+        return primitive.getAsString();
+    }
+
     private static List<String> strings(JsonObject json, String member) {
         if (!(json.get(member) instanceof JsonArray array)) {
             throw new IllegalStateException("Missing array: " + member);
@@ -208,7 +237,7 @@ public record InterviewFeedback(boolean parsed, String verdict, String summary, 
             return value;
         }
         int end = MAX_RAW_BYTES;
-        while (end > 0 && (bytes[end] & 0xC0) == 0x80) {
+        while ((bytes[end] & 0xC0) == 0x80) {
             end--;
         }
         return new String(bytes, 0, end, StandardCharsets.UTF_8);

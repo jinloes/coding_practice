@@ -223,4 +223,17 @@ class ToolWindowViewTest {
         assertThat(view.stale()).isFalse();
         assertThat(view.error()).isEmpty();
     }
+
+    @Test
+    void formatsCustomAttemptLabelsAndPreservesTargetLevel() {
+        FakeStore store = new FakeStore(entry("a", "2026-01-15T14:30:00Z"), entry("b", "2026-02-01T00:00:00Z"));
+
+        View view = ToolWindowView.build(PROBLEM.id(), false, "", REVIEWED, "Staff+", NO_SELECTION,
+                id -> "a".equals(id) ? "  Sharded KV  " : null, NO_HINTS, store, ZoneOffset.UTC);
+
+        assertThat(view.targetLevel()).isEqualTo("Staff+");
+        assertThat(view.attempts()).containsExactly(
+                new AttemptInfo("a", "Sharded KV (" + label("2026-01-15T14:30:00Z") + ")", "Sharded KV"),
+                new AttemptInfo("b", "Attempt 2 (" + label("2026-02-01T00:00:00Z") + ")", ""));
+    }
 }

@@ -29,17 +29,11 @@ This module experiments with regex engines beyond the JDK implementation and inc
 
 A four-week study plan for key management, cryptography, secrets management, and PKI, with JDK-only reference implementations (AES-GCM, HKDF, envelope encryption, an in-memory KMS, Ed25519/X25519, Shamir secret sharing) and tests. Start at [cryptography/README.md](cryptography/README.md).
 
-### System Design Assets
-
-- `system_design`
-
-This directory contains design diagrams and explorations. It is documentation-oriented and is not currently part of the Gradle multi-module build.
-
 ### System Design Interview Practice
 
 - `system-design-plugin`
 
-A standalone JetBrains plugin that presents original system design problems, lets you answer with an Excalidraw diagram and notes, and grades your answer like an interviewer through your own GitHub Copilot CLI. See [system-design-plugin/README.md](system-design-plugin/README.md).
+All system design interview problems live in the standalone JetBrains plugin under `system-design-plugin`. It presents original problems, lets you answer with an Excalidraw diagram and notes, and grades your answer like an interviewer through your own GitHub Copilot CLI. See [system-design-plugin/README.md](system-design-plugin/README.md).
 
 ## Tech Stack
 

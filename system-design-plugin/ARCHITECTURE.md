@@ -4,11 +4,13 @@
 
 The plugin has four parts:
 
-- a bundled, read-only problem catalog;
+- a bundled, read-only catalog of problems, domain tracks, and concept guides;
 - a durable attempt workspace in the IDE configuration directory;
 - two React pages served to JCEF from the plugin jar: the tool window and the
-  Excalidraw diagram editor;
-- an interviewer that grades an attempt through the user's Copilot CLI.
+  Excalidraw diagram editor (with preloaded offline system-design stencils);
+- a level-calibrated interviewer (`Mid-Level`, `Senior`, `Staff+`) that grades
+  initial designs and interactive follow-up probe rounds through the user's
+  Copilot CLI.
 
 It depends only on `com.intellij.modules.platform` and
 `com.intellij.modules.jcef`, and shares no code with `practice-plugin`. Small
@@ -18,29 +20,37 @@ helpers (`OwnedDirectory`, `MarkdownHtml`) were copied deliberately.
 
 | Package | Responsibility | IDE dependencies |
 |---|---|---|
-| `catalog` | Loads and validates `problems/<id>.json` and the notes template | None |
+| `catalog` | Loads and validates `problems/`, `tracks/`, `guides/`, and the delivery-framework notes template | None |
 | `platform` | Symlink-safe owned-directory creation, writes, and deletion | None |
-| `workspace` | Attempt creation, lookup, ownership checks, fingerprints, feedback files | `PathManager` for the default root only |
-| `state` | `DesignProgress` persistent state: selections, hints, verdicts, settings | Application service |
-| `interview` | Diagram summary, prompt, feedback schema, Copilot CLI process, model list | Process handler, `EnvironmentUtil`; Copilot Java SDK |
+| `workspace` | Attempt creation, symlink-safe deletion, lookup, ownership checks, fingerprints, feedback files | `PathManager` for the default root only |
+| `state` | `DesignProgress` persistent state: selections, custom attempt labels, hints, target level, verdicts, settings | Application service |
+| `interview` | Diagram summary, level-calibrated and follow-up prompt, feedback schema, Copilot CLI process, model list | Process handler, `EnvironmentUtil`; Copilot Java SDK |
 | `web` | Page contract: asset URL mapping, page events, state JSON, and tool-window view assembly (`ToolWindowView`) | None |
 | `ui` | Tool window, JCEF pages, diagram `FileEditor`, settings dialog | Full IDE |
 
-Everything outside `ui` is unit tested with the coverage gate. `ui` needs a live
-IDE and JCEF and is verified manually with `runIde`.
+Everything outside `ui` is unit tested with the Java coverage gate, and `web/`
+is tested with Vitest (`webTest`). `ui` needs a live IDE and JCEF and is
+verified manually with `runLocalIde` or `runIde`.
 
-## Problems and attempts
+## Problems, tracks, guides, and attempts
 
-A problem has an id, title, difficulty, summary, statement, exactly three hints,
-and at least five interviewer-only expectations. Expectations are sent to the
-interviewer only; `PageState` never serializes them, and feedback paraphrases
-missed expectations as topic-level gaps rather than quoting them verbatim.
+Problems are ordered by `problems/index.txt`. Each problem has an id, title,
+difficulty, summary, statement, exactly three hints, and at least five
+interviewer-only expectations, and belongs to one or more domain tracks in
+`tracks/`. Concept guides in `guides/` teach interview delivery, estimation
+shortcuts, and core distributed-systems patterns inside the tool window.
+Expectations are sent to the interviewer only; `PageState` never serializes
+them, and feedback paraphrases missed expectations as topic-level gaps rather
+than quoting them verbatim.
 
 An attempt is `<config>/system-design-practice/attempts/<problem>/<attempt>/` with
-`design.excalidraw`, `notes.md`, and `feedback/`. Attempt IDs are random. Every
-read and write checks that the attempt directory is owned (no symlinks, real path
-inside the attempts root). `ownerOfDiagram` is the only way a file is recognized as
-an attempt diagram, so the Excalidraw editor never opens other `.excalidraw` files.
+`design.excalidraw`, `notes.md`, and `feedback/`. Attempt IDs are random; users
+may rename attempts (stored in `DesignProgress`) or delete owned attempts
+(closing open tabs and verifying no entry in the attempt tree is a symlink
+before removal). Every read, write, and delete checks that the attempt directory
+is owned (no symlinks, real path inside the attempts root). `ownerOfDiagram` is
+the only way a file is recognized as an attempt diagram, so the Excalidraw
+editor never opens other `.excalidraw` files.
 
 The fingerprint is a SHA-256 over the workspace revision, the problem id, and the
 notes and diagram bytes. Stored feedback records the fingerprint it graded;
@@ -56,8 +66,10 @@ Both pages are built by Vite from `web/` into `build/web/` and packaged under
 extensions that exist in the jar and cancels every other request, including CDN
 and off-origin URLs. Main-frame navigation away from the origin and all popups are
 cancelled; an explicit click on an http(s) link opens the system browser instead.
-Excalidraw's fonts are bundled, and `EXCALIDRAW_ASSET_PATH` points at the origin.
-Excalidraw's help, social, and library links are hidden.
+Excalidraw's fonts and 10 system-design architecture stencils are bundled
+locally, and `EXCALIDRAW_ASSET_PATH` points at the origin. Excalidraw's help,
+social, and remote library-browsing links are hidden while the local stencil
+drawer remains available.
 
 The tool window page is stateless. Java computes a `PageState.View` off the EDT,
 serializes it with `PageState.toJson`, and calls `window.designRender(state)`. The
@@ -86,22 +98,25 @@ before feedback.
    build a text `DiagramSummary` (labeled shapes with duplicate disambiguation,
    standalone text, directional and undirected connections, frames as sections;
    at most 500 elements).
-3. `InterviewPrompt` embeds the statement, rubric, expectations, notes, and
-   summary. Learner content is fenced with markers that are stripped from the
-   content and bounded to 40,000 characters per section.
+3. `InterviewPrompt` embeds the statement, target candidate level (`Mid-Level`,
+   `Senior`, or `Staff+`), rubric, expectations, notes, diagram summary, and—on
+   an interactive follow-up round—the latest review's follow-up questions and
+   candidate follow-up answers. Learner content is fenced with markers that are
+   stripped from the content and bounded to 40,000 characters per section.
 4. `CopilotInterviewer` runs the CLI and parses the JSON reply. Invalid output is
    kept as a raw fallback (at most 64 KiB) rather than discarded.
-5. The feedback, fingerprint, model, and time are saved under `feedback/` (up to
-   20 reviews per attempt are surfaced newest-first in the tool window), and the
-   attempt's verdict is recorded in `DesignProgress`.
+5. The feedback, fingerprint, model, target level, round (`initial` or
+   `follow-up`), optional follow-up answers, and time are saved under
+   `feedback/` (up to 20 reviews per attempt are surfaced newest-first in the
+   tool window), and the attempt's verdict is recorded in `DesignProgress`.
 
 ## Privacy and security boundary
 
 Feedback is the plugin's only flow of learner content off the machine. It happens only on an
-explicit **Get feedback** click and sends only the problem, rubric, expectations,
-notes, and diagram summary, through the user's own installed and authenticated
-Copilot CLI. The plugin stores no credentials. Listing models (see below) also
-contacts GitHub through the CLI but carries no learner content.
+explicit **Get feedback** or **Submit follow-up answers** click and sends only the problem,
+target level, rubric, expectations, notes, diagram summary, and optional follow-up Q&A, through
+the user's own installed and authenticated Copilot CLI. The plugin stores no credentials. Listing
+models (see below) also contacts GitHub through the CLI but carries no learner content.
 
 The CLI must never act on the machine. It runs with every tool disabled: the
 argument list is fixed (`-s`, `--no-custom-instructions`, `--disable-builtin-mcps`,
@@ -131,5 +146,5 @@ thread, cancels it when a newer load starts or the dialog closes, and applies
 only the latest result, keeping whatever model text is already typed.
 
 The pages load no network resources, never see expectations, and render all
-model text as plain text. Statement and hint Markdown is escaped by `MarkdownHtml`
+model text as plain text. Statement, hint, and guide Markdown is escaped by `MarkdownHtml`
 before the page inserts it as HTML.

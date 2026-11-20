@@ -1,3 +1,6 @@
+import com.github.gradle.node.npm.task.NpmInstallTask
+import com.github.gradle.node.npm.task.NpmTask
+
 plugins {
     id 'java'
     id 'jacoco'
@@ -19,6 +22,10 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
 
 def idePath = providers.gradleProperty('idePath').filter { !it.isBlank() }
@@ -44,6 +51,8 @@ dependencies {
 }
 
 intellijPlatform {
+    // The plugin registers no IDE Settings configurables, so building searchable options would boot a headless IDE for an empty index.
+    buildSearchableOptions = false
     pluginConfiguration {
         ideaVersion {
             sinceBuild = '262.10968.63'
@@ -57,32 +66,94 @@ intellijPlatform {
     }
 }
 
-def webBuildDir = layout.buildDirectory.dir('web')
 // Redirects winp's extracted native helpers out of Gradle 9's immutable IntelliJ SDK transform cache on Windows.
-def winpDir = layout.buildDirectory.dir('winp')
-tasks.matching { it instanceof JavaForkOptions }.configureEach {
-    def targetDir = winpDir
-    jvmArgumentProviders.add({
-        def dir = targetDir.get().asFile
+class WinpArgumentProvider implements CommandLineArgumentProvider {
+    @Internal
+    final Provider<Directory> winpDir
+
+    WinpArgumentProvider(Provider<Directory> winpDir) {
+        this.winpDir = winpDir
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        def dir = winpDir.get().asFile
         dir.mkdirs()
-        ["-Dwinp.folder.preferred=${dir.absolutePath}".toString()]
-    } as CommandLineArgumentProvider)
+        return ["-Dwinp.folder.preferred=${dir.absolutePath}".toString()]
+    }
+}
+
+// Passes test paths via CommandLineArgumentProvider with relative/classpath input normalization so :test stays
+// configuration-cacheable and relocatable in the Gradle build cache.
+class DesignTestArgumentProvider implements CommandLineArgumentProvider {
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    final Directory problemsDir
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    final Directory tracksDir
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    final Directory guidesDir
+
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    final RegularFile webSample
+
+    @Classpath
+    final FileCollection fakeCliClasspath
+
+    @Internal
+    final Provider<Directory> webBuildDir
+
+    DesignTestArgumentProvider(
+            Directory problemsDir,
+            Directory tracksDir,
+            Directory guidesDir,
+            RegularFile webSample,
+            FileCollection fakeCliClasspath,
+            Provider<Directory> webBuildDir) {
+        this.problemsDir = problemsDir
+        this.tracksDir = tracksDir
+        this.guidesDir = guidesDir
+        this.webSample = webSample
+        this.fakeCliClasspath = fakeCliClasspath
+        this.webBuildDir = webBuildDir
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        return [
+                // Lets the catalog tests compare manifest files with the index lists.
+                "-Ddesign.problems.dir=${problemsDir.asFile.absolutePath}".toString(),
+                "-Ddesign.tracks.dir=${tracksDir.asFile.absolutePath}".toString(),
+                "-Ddesign.guides.dir=${guidesDir.asFile.absolutePath}".toString(),
+                "-Ddesign.web.sample=${webSample.asFile.absolutePath}".toString(),
+                // Excludes the IDE distribution so -Ddesign.test.classpath stays well below the Windows command-line limit.
+                "-Ddesign.test.classpath=${fakeCliClasspath.asPath}".toString(),
+                "-Ddesign.web.build.dir=${webBuildDir.get().asFile.absolutePath}".toString(),
+        ]
+    }
+}
+
+def webBuildDir = layout.buildDirectory.dir('web')
+def winpArgumentProvider = new WinpArgumentProvider(layout.buildDirectory.dir('winp'))
+tasks.withType(JavaExec).configureEach {
+    jvmArgumentProviders.add(winpArgumentProvider)
 }
 
 tasks.named('test', Test) {
     useJUnitPlatform()
-    def problemsDir = layout.projectDirectory.dir('src/main/resources/problems').asFile.absolutePath
-    def webSample = layout.projectDirectory.file('web/src/sample.ts').asFile
-    def fakeCliClasspath = sourceSets.test.output.classesDirs + configurations.runtimeClasspath
-    inputs.file(webSample).withPathSensitivity(PathSensitivity.NONE)
-    // Lets the catalog test compare the manifest files with the catalog's problem list.
-    systemProperty 'design.problems.dir', problemsDir
-    systemProperty 'design.web.sample', webSample.absolutePath
-    doFirst {
-        // Excludes the IDE distribution so -Ddesign.test.classpath stays well below the Windows command-line limit.
-        systemProperty 'design.test.classpath', fakeCliClasspath.asPath
-        systemProperty 'design.web.build.dir', webBuildDir.get().asFile.absolutePath
-    }
+    jvmArgumentProviders.add(winpArgumentProvider)
+    jvmArgumentProviders.add(new DesignTestArgumentProvider(
+            layout.projectDirectory.dir('src/main/resources/problems'),
+            layout.projectDirectory.dir('src/main/resources/tracks'),
+            layout.projectDirectory.dir('src/main/resources/guides'),
+            layout.projectDirectory.file('web/src/sample.ts'),
+            sourceSets.test.output.classesDirs + configurations.runtimeClasspath,
+            webBuildDir))
     // The test IDE loads plugin classes through PathClassLoader, which JaCoCo only sees with this option.
     jacoco {
         includeNoLocationClasses = true
@@ -105,37 +176,60 @@ def coverageClasses = files(tasks.named('instrumentCode')).asFileTree.matching {
     exclude coverageExclusions
 }
 
-tasks.named('jacocoTestReport') {
+tasks.withType(JacocoReportBase).configureEach {
     classDirectories.setFrom(coverageClasses)
+}
+
+tasks.named('jacocoTestReport', JacocoReport) {
     reports {
         xml.required = true
         html.required = true
     }
 }
 
-def coverageVerification = tasks.named('jacocoTestCoverageVerification') {
+def coverageVerification = tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification) {
     executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
-    classDirectories.setFrom(coverageClasses)
     mustRunAfter 'test'
     violationRules {
         rule {
             limit {
                 counter = 'LINE'
-                minimum = 0.98
+                minimum = 1.00
             }
             limit {
                 counter = 'BRANCH'
-                minimum = 0.92
+                minimum = 1.00
             }
         }
     }
 }
 
-tasks.named('check') {
-    dependsOn coverageVerification
+def webTest = tasks.register('webTest', NpmTask) {
+    description = 'Runs the Vitest unit suite for the tool window and editor state tracker.'
+    dependsOn tasks.named('npmInstall')
+    npmCommand = ['run', 'test']
+    inputs.dir(layout.projectDirectory.dir('web/src'))
+            .withPropertyName('webSrc')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(layout.projectDirectory.files(
+            'web/package.json', 'web/package-lock.json', 'web/tsconfig.json', 'web/vitest.config.ts'))
+            .withPropertyName('webTestConfig')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    def stampFile = layout.buildDirectory.file('test-results/webTest/passed.txt')
+    outputs.file(stampFile).withPropertyName('stampFile')
+    outputs.cacheIf { true }
+    doLast {
+        def target = stampFile.get().asFile
+        target.parentFile.mkdirs()
+        target.setText('ok\n', 'UTF-8')
+    }
 }
 
-tasks.named('wrapper') {
+tasks.named('check') {
+    dependsOn coverageVerification, webTest
+}
+
+tasks.named('wrapper', Wrapper) {
     gradleVersion = '9.3.1'
     distributionType = Wrapper.DistributionType.BIN
 }
@@ -145,21 +239,35 @@ node {
     download = true
     version = '24.22.0'
     npmInstallCommand = 'ci'
-    nodeProjectDir = file('web')
+    fastNpmInstall = true
+    enableTaskRules = false
+    nodeProjectDir = layout.projectDirectory.dir('web')
 }
 
-def webUi = tasks.register('webUi', com.github.gradle.node.npm.task.NpmTask) {
+tasks.named('npmInstall', NpmInstallTask) {
+    args.addAll('--no-audit', '--no-fund', '--prefer-offline')
+}
+
+def webUi = tasks.register('webUi', NpmTask) {
     description = 'Builds the tool window and Excalidraw editor pages into build/web.'
     dependsOn tasks.named('npmInstall')
     npmCommand = ['run', 'build']
-    inputs.dir('web/src')
-    inputs.dir('web/scripts')
-    inputs.files('web/index.html', 'web/editor.html', 'web/vite.config.ts', 'web/tsconfig.json',
-            'web/package.json', 'web/package-lock.json')
-    outputs.dir(webBuildDir)
+    inputs.dir(layout.projectDirectory.dir('web/src'))
+            .withPropertyName('webSrc')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir(layout.projectDirectory.dir('web/scripts'))
+            .withPropertyName('webScripts')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(layout.projectDirectory.files(
+            'web/index.html', 'web/editor.html', 'web/vite.config.ts', 'web/tsconfig.json',
+            'web/package.json', 'web/package-lock.json'))
+            .withPropertyName('webConfig')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    outputs.dir(webBuildDir).withPropertyName('webBuildDir')
+    outputs.cacheIf { true }
 }
 
-tasks.named('processResources') {
+tasks.named('processResources', ProcessResources) {
     from(webUi) { into 'web' }
 }
 

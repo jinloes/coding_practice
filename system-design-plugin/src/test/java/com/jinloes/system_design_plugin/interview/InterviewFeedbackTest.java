@@ -68,6 +68,7 @@ class InterviewFeedbackTest {
         String[] invalid = {
                 "{\"verdict\":\"Maybe\"}",
                 with(json -> json.addProperty("verdict", "Maybe")),
+                with(json -> json.addProperty("verdict", 123)),
                 with(json -> json.remove("summary")),
                 with(json -> json.addProperty("dimensions", "none")),
                 with(json -> json.getAsJsonArray("dimensions").remove(0)),
@@ -79,9 +80,11 @@ class InterviewFeedbackTest {
                 with(json -> json.getAsJsonArray("dimensions").get(0).getAsJsonObject().addProperty("score", 0)),
                 with(json -> json.getAsJsonArray("dimensions").get(0).getAsJsonObject().addProperty("score", 2.5)),
                 with(json -> json.getAsJsonArray("dimensions").get(0).getAsJsonObject().addProperty("score", "3")),
+                with(json -> json.getAsJsonArray("dimensions").get(0).getAsJsonObject().remove("score")),
                 with(json -> json.getAsJsonArray("dimensions").get(0).getAsJsonObject().remove("gaps")),
                 with(json -> json.add("followUpQuestions", strings())),
                 with(json -> json.getAsJsonArray("missedExpectations").add(3)),
+                with(json -> json.getAsJsonArray("missedExpectations").add(new JsonObject())),
                 with(json -> json.remove("missedExpectations")),
                 "[1, 2]", "no json at all", "{broken", ""};
         for (String output : invalid) {
@@ -121,6 +124,26 @@ class InterviewFeedbackTest {
         assertThat(raw.fingerprint()).isEmpty();
         assertThat(InterviewFeedback.Stored.fromJson(raw.toJson())).isEqualTo(raw);
         assertThat(raw.toJson()).doesNotContain("\"feedback\"");
+
+        InterviewFeedback.Stored probed = new InterviewFeedback.Stored(
+                parsed, "fp2", "model-y", "2026-02-01T00:00:00Z",
+                "Staff+", InterviewFeedback.ROUND_FOLLOW_UP, "Sharded by tenant_id.");
+        InterviewFeedback.Stored restoredProbed = InterviewFeedback.Stored.fromJson(probed.toJson());
+        assertThat(restoredProbed).isEqualTo(probed);
+        assertThat(restoredProbed.level()).isEqualTo("Staff+");
+        assertThat(restoredProbed.round()).isEqualTo(InterviewFeedback.ROUND_FOLLOW_UP);
+        assertThat(restoredProbed.followUpAnswers()).isEqualTo("Sharded by tenant_id.");
+
+        InterviewFeedback.Stored blankLevel = new InterviewFeedback.Stored(
+                parsed, "fp", "m", "t", "   ", "other", "");
+        assertThat(blankLevel.level()).isEmpty();
+        assertThat(new InterviewFeedback.Stored(parsed, "fp", "m", "t", null, null, null).level()).isEmpty();
+
+        InterviewFeedback.Stored legacy = InterviewFeedback.Stored.fromJson(
+                "{\"fingerprint\":\"fp\",\"model\":\"m\",\"createdAt\":\"t\",\"level\":null,\"raw\":\"hi\"}");
+        assertThat(legacy.level()).isEmpty();
+        assertThat(legacy.round()).isEqualTo(InterviewFeedback.ROUND_INITIAL);
+        assertThat(legacy.followUpAnswers()).isEmpty();
     }
 
     @Test
@@ -129,6 +152,8 @@ class InterviewFeedbackTest {
         String[] corrupt = {"", "[]", "{", "{\"model\":\"m\",\"createdAt\":\"t\",\"parsed\":false,\"raw\":\"x\"}",
                 "{\"fingerprint\":\"fp\",\"model\":\"m\",\"createdAt\":\"t\",\"parsed\":true}",
                 "{\"fingerprint\":\"fp\",\"model\":\"m\",\"createdAt\":\"t\",\"parsed\":false}",
+                "{\"fingerprint\":\"fp\",\"model\":\"m\",\"createdAt\":\"t\",\"level\":5,\"parsed\":false,\"raw\":\"x\"}",
+                "{\"fingerprint\":\"fp\",\"model\":\"m\",\"createdAt\":\"t\",\"level\":{},\"parsed\":false,\"raw\":\"x\"}",
                 good.replace("\"Hire\"", "\"Maybe\"")};
         for (String text : corrupt) {
             assertThatThrownBy(() -> InterviewFeedback.Stored.fromJson(text)).as(text)

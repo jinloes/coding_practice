@@ -18,22 +18,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * The bundled system design problems and the fixed interviewer rubric. Each problem manifest lives at
- * {@code /problems/<id>.json}; its {@code expectations} are interviewer-only and never shown to the learner.
+ * The bundled system design problems and the fixed interviewer rubric. Problem order comes from
+ * {@code /problems/index.txt}, and each problem manifest lives at {@code /problems/<id>.json}; its
+ * {@code expectations} are interviewer-only and never shown to the learner.
  */
 public final class DesignCatalog {
-    /** Which problems exist, in the order the UI lists them. */
-    private static final List<String> IDS = List.of(
-            "url-shortener",
-            "rate-limiter",
-            "news-feed",
-            "chat-messaging",
-            "notification-service",
-            "web-crawler",
-            "distributed-cache",
-            "video-streaming");
-
     public static final List<String> DIFFICULTIES = List.of("Easy", "Medium", "Hard");
+
+    /** Candidate target levels used to calibrate expectations and rubric strictness. */
+    public static final List<String> LEVELS = List.of("Mid-Level", "Senior", "Staff+");
+    public static final String DEFAULT_LEVEL = "Senior";
 
     /** The rubric dimensions, in the order feedback reports them. */
     public static final List<String> DIMENSIONS = List.of(
@@ -89,23 +83,39 @@ public final class DesignCatalog {
         return BY_ID.containsKey(id);
     }
 
+    /** Returns {@code level} when supported, otherwise {@link #DEFAULT_LEVEL}. */
+    public static String normalizeLevel(String level) {
+        return level != null && LEVELS.contains(level) ? level : DEFAULT_LEVEL;
+    }
+
     /** The starting content of a new attempt's {@code notes.md}. */
     public static String notesTemplate() {
         return read("/notes-template.md", DesignCatalog.class::getResourceAsStream);
     }
 
     static List<Problem> load(Function<String, InputStream> opener) {
-        return IDS.stream().map(id -> parse(id, read("/problems/" + id + ".json", opener))).toList();
+        return readIndex("/problems/index.txt", opener).stream()
+                .map(id -> parse(id, read("/problems/" + id + ".json", opener)))
+                .toList();
+    }
+
+    static List<String> readIndex(String path, Function<String, InputStream> opener) {
+        List<String> ids = read(path, opener).lines()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+                .toList();
+        if (ids.isEmpty()) {
+            throw new IllegalStateException("Catalog index is empty: " + path);
+        }
+        if (ids.stream().distinct().count() != ids.size()) {
+            throw new IllegalStateException("Catalog index contains duplicate IDs: " + path);
+        }
+        return ids;
     }
 
     /** Parses and validates one problem manifest; every failure names the problem. */
     static Problem parse(String id, String json) {
-        JsonObject manifest;
-        try {
-            manifest = JsonParser.parseString(json).getAsJsonObject();
-        } catch (JsonParseException | IllegalStateException exception) {
-            throw new IllegalStateException("Malformed problem manifest for " + id, exception);
-        }
+        JsonObject manifest = parseObject("problem", id, json);
         if (!id.equals(text(manifest, id, "id"))) {
             throw new IllegalStateException("Problem manifest ID does not match its file name: " + id);
         }
@@ -126,23 +136,31 @@ public final class DesignCatalog {
                 text(manifest, id, "statement"), hints, expectations);
     }
 
-    private static String text(JsonObject manifest, String id, String member) {
+    static JsonObject parseObject(String kind, String id, String json) {
+        try {
+            return JsonParser.parseString(json).getAsJsonObject();
+        } catch (JsonParseException | IllegalStateException exception) {
+            throw new IllegalStateException("Malformed " + kind + " manifest for " + id, exception);
+        }
+    }
+
+    static String text(JsonObject manifest, String id, String member) {
         if (!(manifest.get(member) instanceof JsonPrimitive primitive) || !primitive.isString()
                 || primitive.getAsString().isBlank()) {
-            throw new IllegalStateException("Problem manifest " + id + " needs a non-blank '" + member + "'");
+            throw new IllegalStateException("Manifest " + id + " needs a non-blank '" + member + "'");
         }
         return primitive.getAsString();
     }
 
-    private static List<String> texts(JsonObject manifest, String id, String member) {
+    static List<String> texts(JsonObject manifest, String id, String member) {
         if (!(manifest.get(member) instanceof JsonArray array)) {
-            throw new IllegalStateException("Problem manifest " + id + " needs a '" + member + "' array");
+            throw new IllegalStateException("Manifest " + id + " needs a '" + member + "' array");
         }
         List<String> values = new ArrayList<>();
         for (JsonElement element : array) {
             if (!(element instanceof JsonPrimitive primitive) || !primitive.isString()
                     || primitive.getAsString().isBlank()) {
-                throw new IllegalStateException("Problem " + id + " '" + member + "' must be non-blank strings");
+                throw new IllegalStateException("Manifest " + id + " '" + member + "' must be non-blank strings");
             }
             values.add(primitive.getAsString());
         }

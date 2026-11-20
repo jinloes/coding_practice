@@ -1,0 +1,21 @@
+{
+  "id": "online-code-judge",
+  "title": "Sandboxed Code Execution Service",
+  "difficulty": "Medium",
+  "summary": "Compile and run untrusted code submissions safely against test suites during live contests.",
+  "statement": "Design the execution backend for a coding assessment and competition platform where users submit source code in languages like Java, Python, C++, and Rust and receive verdicts (`Accepted`, `Wrong Answer`, `Time Limit Exceeded`, `Memory Limit Exceeded`, `Runtime Error`).\n\nFunctional requirements:\n- Users run code interactively against sample inputs and submit solutions evaluated against 50 to 200 hidden test cases.\n- Enforce strict per-problem CPU time and memory limits.\n- Submitted code is completely untrusted and must never access the network, host data, other users' submissions, or hidden test answers.\n- Return test verdicts within a few seconds during normal load and degrade gracefully during scheduled weekly contests.\n\nScale to assume:\n- 2 million daily submissions on average.\n- Scheduled contests spike to 60,000 submissions per minute at contest start and close.\n- Each submission runs for up to 5 seconds of CPU time and 512 MB of memory.",
+  "hints": [
+    "Compute how many worker CPU cores you need during a 60,000-submissions-per-minute contest spike, and why the HTTP API cannot hold a synchronous request open while running 100 test cases.",
+    "Running untrusted C++ or Python inside a plain Docker container with default settings is unsafe and spawning a fresh VM per test case is slow. How do you get strong isolation AND fast startup?",
+    "What stops user code from fork-bombing the worker, printing 10 GB to stdout, or reading the expected-output files off disk?"
+  ],
+  "expectations": [
+    "Clarifies supported languages, interactive sample runs versus full contest submissions, determinism of timing, and contest fairness.",
+    "Sizes worker CPU cores from peak submissions per second multiplied by average CPU seconds per submission, motivating autoscaled warm worker pools.",
+    "Accepts submissions asynchronously (`202 Accepted`), persists source code, enqueues into priority/language queues (interactive runs prioritized over batch contest runs), and pushes status via SSE/WebSockets or polling.",
+    "Isolates untrusted code inside microVMs or hardened containers using Linux namespaces, cgroups (CPU, memory, PID caps against fork bombs), `seccomp` syscall allowlists, read-only filesystems, and zero network interfaces.",
+    "Compiles once per submission and runs the test suite inside a single sandboxed harness process (comparing outputs outside the untrusted process so user code never sees expected answers).",
+    "Maintains pre-warmed language runtime sandboxes rotated/recycled cleanly after execution, and caches immutable test-case bundles on local worker SSDs.",
+    "Caps stdout/stderr/tmpfs byte sizes, enforces both CPU-time and wall-clock timeouts, and bounds retries so deterministic crashers cannot poison workers."
+  ]
+}

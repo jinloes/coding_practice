@@ -3,24 +3,21 @@
 Write your answer here as you would talk it through in an interview. The interviewer reads these
 notes together with a text summary of your diagram.
 
-## Requirements and scope
+## 1. Requirements and scope (~5 min)
 
 - Functional:
 - Non-functional:
 - Out of scope:
 
-## Capacity estimates
+## 2. Core entities (~2 min)
 
-- Traffic:
-- Storage:
-- Bandwidth:
+## 3. API and system interface (~5 min)
 
-## API and data model
-
-## High-level architecture
+## 4. High-level architecture (~12 min)
 
 Describe the components in your diagram and how a request flows through them.
 
-## Deep dives and scalability
+## 5. Deep dives, scaling, and tradeoffs (~15 min)
 
-## Reliability and tradeoffs
+Include capacity estimates where numbers drive a design choice (sharding, caching, bandwidth).
+

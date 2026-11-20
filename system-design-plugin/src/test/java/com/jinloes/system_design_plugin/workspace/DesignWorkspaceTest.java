@@ -184,11 +184,12 @@ class DesignWorkspaceTest {
         clock.set(5_000);
         workspace.saveFeedback(attempt, "corrupt");
         Files.writeString(attempt.feedbackDirectory().resolve("notes.txt"), "valid-ignored");
-        Files.writeString(attempt.feedbackDirectory().resolve("99999999999999999999.json"), "valid-overflow");
+        Files.writeString(attempt.feedbackDirectory().resolve("9999999999999999999.json"), "valid-overflow-19");
+        Files.writeString(attempt.feedbackDirectory().resolve("99999999999999999999.json"), "valid-overflow-20");
         Files.createDirectories(attempt.feedbackDirectory().resolve("9000.json"));
         assertThat(workspace.latestFeedback(attempt, DesignWorkspaceTest::parseValid)).contains("valid-2");
         assertThat(workspace.feedbackHistory(attempt, DesignWorkspaceTest::parseValid))
-                .containsExactly("valid-2", "valid-1");
+                .containsExactly("valid-2", "valid-1", "valid-overflow-19");
         assertThat(workspace.latestFeedback(attempt, text -> null)).isEmpty();
 
         Attempt capped = workspace.create(SECOND);
@@ -251,6 +252,37 @@ class DesignWorkspaceTest {
         Attempt existing = workspace.create(SECOND);
         assertThatThrownBy(() -> Files.move(Files.createTempFile(existing.directory(), "t", ".tmp"),
                 existing.notes())).isInstanceOf(FileAlreadyExistsException.class);
+    }
+
+    @Test
+    void deletesOwnedAttemptsAndRefusesSymlinkedChildren() throws IOException {
+        DesignWorkspace workspace = workspace();
+        Attempt attempt = workspace.create(FIRST);
+        workspace.saveFeedback(attempt, "valid-1");
+        assertThat(workspace.fingerprint(attempt.id())).isEqualTo(workspace.fingerprint(attempt));
+        assertThat(workspace.feedbackHistory(attempt.id(), DesignWorkspaceTest::parseValid)).containsExactly("valid-1");
+
+        workspace.delete(attempt.id());
+        assertThat(attempt.directory()).doesNotExist();
+        assertThat(workspace.attempts(FIRST.id())).isEmpty();
+        assertThatThrownBy(() -> workspace.delete(attempt.id())).isInstanceOf(IOException.class);
+
+        Attempt withSymlink = workspace.create(FIRST);
+        Path outside = temporary.resolve("outside-keep.txt");
+        Files.writeString(outside, "keep");
+        Files.createSymbolicLink(withSymlink.directory().resolve("link.txt"), outside);
+        assertThatThrownBy(() -> workspace.delete(withSymlink.id()))
+                .isInstanceOf(IOException.class).hasMessageContaining("redirecting");
+        assertThat(withSymlink.notes()).exists();
+        assertThat(outside).exists();
+
+        Path altRoot = Files.createDirectories(temporary.resolve("alt"));
+        assertThat(new DesignWorkspace().attemptsDirectory()).isNotNull();
+        assertThat(new DesignWorkspace(altRoot).attemptsDirectory())
+                .startsWithRaw(altRoot.toAbsolutePath().normalize());
+        assertThatThrownBy(() -> DesignWorkspace.digest("NO-SUCH-DIGEST"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("NO-SUCH-DIGEST");
     }
 
     private static String parseValid(String text) {

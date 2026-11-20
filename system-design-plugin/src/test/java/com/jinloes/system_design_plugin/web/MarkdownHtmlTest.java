@@ -79,4 +79,21 @@ class MarkdownHtmlTest {
         assertThat(MarkdownHtml.inline("Header \"Authorization\" != 'none'"))
                 .isEqualTo("Header &quot;Authorization&quot; != &#39;none&#39;");
     }
+
+    @Test
+    void rendersSectionSubheadingsWithParagraphsAndBullets() {
+        String markdown = """
+                ## 1. Core `API` <v1>
+                Keep endpoints stateless.
+                - `POST /links`
+                ##   """;
+        assertThat(MarkdownHtml.toHtml(markdown))
+                .isEqualTo("<h4>1. Core <code>API</code> &lt;v1&gt;</h4>"
+                        + "<p>Keep endpoints stateless.</p>"
+                        + "<ul><li><code>POST /links</code> ##</li></ul>");
+        assertThat(MarkdownHtml.firstParagraphHtml("Opening prompt.\n\nDetails:\n- One"))
+                .isEqualTo("<p>Opening prompt.</p>");
+        assertThat(MarkdownHtml.firstParagraphHtml("Single paragraph only."))
+                .isEqualTo("<p>Single paragraph only.</p>");
+    }
 }

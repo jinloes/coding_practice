@@ -19,8 +19,10 @@ or the build, and update them in the same change.
   argument list; update it only to make the review more restrictive.
 - The CLI runs in a fresh, empty owned directory and receives the prompt on
   standard input. Never pass learner content as a command-line argument.
-- Send only the problem, rubric, expectations, notes, and diagram summary. Do
-  not add files, paths, project contents, or environment data to the prompt.
+- Send only the problem, target level, rubric, expectations, notes, diagram
+  summary, and (on an explicit follow-up submission) the prior review's
+  follow-up questions and candidate follow-up answers. Do not add files, paths,
+  project contents, or environment data to the prompt.
 - Feedback runs only on an explicit user click. Never trigger it automatically.
 - Never store credentials. Authentication belongs to the user's CLI.
 - Use the Copilot Java SDK only for `CopilotInterviewer.listModels`, always with
@@ -40,19 +42,21 @@ or the build, and update them in the same change.
 ## Build, Test, and Coverage
 
 Run from `system-design-plugin/` with its own wrapper: `./gradlew test`, then
-`./gradlew check` before finishing. Coverage is gated at 98% line and 92% branch
-outside `ui`; never lower it or add exclusions to pass. Use JUnit 5 with AssertJ,
-keep test classes package-private, and do not add JUnit 4 or Hamcrest.
+`./gradlew check` before finishing. Coverage is gated at 100% line and 100%
+branch outside `ui`; never lower it or add exclusions to pass. Use JUnit 5 with
+AssertJ, keep test classes package-private, and do not add JUnit 4 or Hamcrest.
 
 ## Problem Content Rules
 
 Each problem is `src/main/resources/problems/<id>.json`, with its id listed in
-`DesignCatalog`. See "Adding a problem" in `CODE-MAP.md`.
+`src/main/resources/problems/index.txt` and included in at least one track under
+`src/main/resources/tracks/<id>.json`. See "Adding a problem" in `CODE-MAP.md`.
 
 - Write original problems. Never copy or paraphrase statements, diagrams, or
   solutions from books, courses, interview sites, or company question lists.
 - Statements give functional requirements and concrete scale, and use only the
-  `MarkdownHtml` subset (paragraphs, `- ` bullets, inline code).
+  `MarkdownHtml` subset (`## ` subheadings, paragraphs, `- ` bullets, inline
+  code).
 - Exactly three hints, ordered from a nudge to a near-answer. Hints must not
   reveal the expectations verbatim.
 - At least five expectations, each a specific, checkable point. Expectations are

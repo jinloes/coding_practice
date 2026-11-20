@@ -14,7 +14,6 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.util.EnvironmentUtil;
 import com.jinloes.system_design_plugin.platform.OwnedDirectory;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +58,7 @@ public final class CopilotInterviewer {
     private final List<String> commandPrefix;
     private final BooleanSupplier isWindows;
     private final String executableName;
+    private final long pollMillis;
 
     public record Settings(String cliPath, String model, int timeoutSeconds) {
     }
@@ -72,14 +72,20 @@ public final class CopilotInterviewer {
 
     public CopilotInterviewer() {
         this(Path.of(PathManager.getSystemPath()).resolve("system-design-practice").resolve("interviewer"),
-                List.of(), () -> SystemInfo.isWindows, "copilot");
+                List.of(), () -> SystemInfo.isWindows, "copilot", POLL_MILLIS);
     }
 
     CopilotInterviewer(Path base, List<String> commandPrefix, BooleanSupplier isWindows, String executableName) {
+        this(base, commandPrefix, isWindows, executableName, POLL_MILLIS);
+    }
+
+    CopilotInterviewer(Path base, List<String> commandPrefix, BooleanSupplier isWindows, String executableName,
+                       long pollMillis) {
         this.runs = OwnedDirectory.under(base, MARKER);
         this.commandPrefix = List.copyOf(commandPrefix);
         this.isWindows = isWindows;
         this.executableName = executableName;
+        this.pollMillis = pollMillis;
     }
 
     public static boolean isRunning() {
@@ -191,11 +197,7 @@ public final class CopilotInterviewer {
             return CopilotModels.from(await(client.listModels(), canceled, deadline, timeout));
         } catch (Abort abort) {
             forceStopped = true;
-            try {
-                client.forceStop().get(FORCE_STOP_SECONDS, TimeUnit.SECONDS);
-            } catch (Exception ignored) {
-                // The SDK kills the process on its own once an in-flight connect gives up.
-            }
+            stopQuietly(() -> client.forceStop().get(FORCE_STOP_SECONDS, TimeUnit.SECONDS));
             if (abort.interrupted) {
                 Thread.currentThread().interrupt();
             }
@@ -204,6 +206,19 @@ public final class CopilotInterviewer {
             if (!forceStopped) {
                 client.close();
             }
+        }
+    }
+
+    @FunctionalInterface
+    interface ThrowingStop {
+        void run() throws Exception;
+    }
+
+    static void stopQuietly(ThrowingStop stop) {
+        try {
+            stop.run();
+        } catch (Exception ignored) {
+            // The SDK kills the process on its own once an in-flight connect gives up.
         }
     }
 
@@ -266,7 +281,7 @@ public final class CopilotInterviewer {
         return directory;
     }
 
-    private void deleteRunDirectory(Path directory) {
+    void deleteRunDirectory(Path directory) {
         try {
             runs.deleteTree(directory);
         } catch (IOException ignored) {
@@ -309,17 +324,17 @@ public final class CopilotInterviewer {
         handler.startNotify();
         byte[] promptBytes = prompt.getBytes(StandardCharsets.UTF_8);
         Thread.ofVirtual().name("system-design-interviewer-stdin").start(() -> {
-            try (OutputStream input = handler.getProcessInput()) {
-                if (input != null) {
-                    input.write(promptBytes);
-                }
+            OutputStream input = handler.getProcessInput();
+            try {
+                input.write(promptBytes);
+                input.close();
             } catch (IOException exception) {
                 // The process may exit or be killed before reading stdin; its exit code or stopReason explains why.
             }
         });
 
         String stopReason = null;
-        while (!handler.waitFor(POLL_MILLIS)) {
+        while (!handler.waitFor(pollMillis)) {
             if (canceled.getAsBoolean()) {
                 stopReason = "Feedback request cancelled.";
             } else if (output.overflowed()) {
@@ -341,7 +356,7 @@ public final class CopilotInterviewer {
             throw new InterviewException("The interviewer produced more than " + (MAX_OUTPUT_BYTES / 1024)
                     + " KiB of output, so the review was stopped. Try again.");
         }
-        if (exitCode == null || exitCode != 0) {
+        if (!Integer.valueOf(0).equals(exitCode)) {
             String errors = output.errors().strip();
             if (errors.length() > MAX_ERROR_CHARS) {
                 errors = errors.substring(0, MAX_ERROR_CHARS) + "...";
@@ -360,7 +375,7 @@ public final class CopilotInterviewer {
         private boolean overflowed;
 
         @Override
-        public synchronized void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+        public synchronized void onTextAvailable(ProcessEvent event, Key outputType) {
             if (ProcessOutputTypes.SYSTEM.equals(outputType) || overflowed) {
                 return;
             }

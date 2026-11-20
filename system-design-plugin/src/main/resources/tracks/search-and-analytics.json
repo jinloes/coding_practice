@@ -1,0 +1,14 @@
+{
+  "id": "search-and-analytics",
+  "title": "Search, Geospatial & Stream Analytics",
+  "summary": "Inverted and spatial indexes, typeahead tries, stream windows, and flash-crowd inventory.",
+  "problemIds": [
+    "web-crawler",
+    "search-autocomplete",
+    "proximity-search",
+    "delivery-service",
+    "ticket-booking",
+    "top-k-trending",
+    "ad-click-aggregation"
+  ]
+}

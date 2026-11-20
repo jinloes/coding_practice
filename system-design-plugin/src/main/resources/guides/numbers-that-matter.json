@@ -1,0 +1,12 @@
+{
+  "id": "numbers-that-matter",
+  "title": "Capacity Shortcuts & Modern Hardware",
+  "summary": "Do fast mental math only when numbers decide between one node and a distributed cluster.",
+  "body": "Perform back-of-the-envelope calculations when a number changes an architectural choice—such as whether an index fits in RAM or whether fan-out exceeds network egress—rather than reciting rote arithmetic upfront.\n\n## Daily volume to QPS shortcuts\nUse `100,000 seconds/day` (actual `86,400`) so division is instant:\n- `100,000 events/day` ≈ `1 req/s`.\n- `10 million events/day` ≈ `100 req/s`.\n- `100 million events/day` ≈ `1,000 to 1,200 req/s` (multiply by `2x` to `10x` for peak).\n- `1 billion events/day` ≈ `12,000 req/s` average.\n\n## Modern single-server baselines\nCloud instances are far larger than 2015 textbook numbers:\n- Memory: `128 GB` to `512 GB` RAM on a commodity node (`250M` geospatial points at `64 bytes` each is `16 GB`—fits in one node's RAM and replicates easily).\n- Storage: local NVMe SSDs sustain `3+ GB/s` sequential throughput and hundreds of thousands of random IOPS.\n- Relational DB primary: `5,000 to 15,000` simple transactional writes/s and `30,000+` indexed point reads/s.\n- In-memory key-value shard: `80,000 to 150,000` single-threaded ops/s with sub-millisecond latency.\n- Stateful gateway node: `50,000 to 100,000` concurrent idle WebSocket/SSE connections.\n\n## Decisions driven by math\n- Dataset under `50 GB` with heavy reads: replicate in memory instead of sharding prematurely.\n- Writes above `20,000/s` or storage above a few terabytes with high growth: partition horizontally by a high-cardinality key.\n- Media egress (`1M` concurrent HD streams at `5 Mbps` = `5 Tbps`): serve bytes from a CDN and pre-signed object storage, never through app servers.",
+  "relatedProblemIds": [
+    "unique-id-generator",
+    "proximity-search",
+    "top-k-trending",
+    "metrics-monitoring"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "market-data-feed",
+  "title": "End-of-Day Market Data Feed",
+  "difficulty": "Easy",
+  "summary": "Publish daily open, high, low, close, and volume summaries to client applications.",
+  "statement": "Design a client-facing service that distributes end-of-day price summaries for traded instruments to registered partner applications.\n\nFunctional requirements:\n- Upstream settlement systems deliver finalized daily bars (`open`, `high`, `low`, `close`, `volume`) shortly after each exchange closes.\n- Registered client applications fetch the latest trading day's bars or backfill a date range for selected symbols.\n- Each client authenticates with its own credentials and is subject to per-client access controls and quotas.\n- Operators need visibility into feed freshness, client usage, and error rates, and must be able to evolve the payload format safely.\n\nScale to assume:\n- 50,000 instruments across global exchanges.\n- 2,000 registered client applications.\n- Most clients poll or pull the full daily snapshot within the same five-minute window right after market close.",
+  "hints": [
+    "Almost every client asks for the same finalized daily data at the exact same moment after market close. How can you serve that synchronized read spike without hitting the database for every request?",
+    "Compare letting clients page through a REST endpoint, download prebuilt daily snapshot files, or receive a webhook notification when a market's bars are ready.",
+    "Think through authentication, API versioning, and how you handle late upstream corrections to a symbol's closing price."
+  ],
+  "expectations": [
+    "Clarifies exchange schedules, late price restatements, historical backfill depth, and whether clients want single-symbol lookups or bulk daily snapshots.",
+    "Estimates daily payload size (a few megabytes for 50,000 symbols) and notes that traffic is small in total volume but sharply concentrated right after market close.",
+    "Defines authenticated APIs with cursor pagination or date-range filters, plus bulk snapshot downloads or change-ready notifications to avoid wasteful polling.",
+    "Precomputes immutable daily snapshots in object storage and caches responses in a CDN or in-memory cache so the post-close thundering herd rarely reaches the database.",
+    "Secures client access with per-application credentials or tokens, scopes, TLS, and per-client rate limits.",
+    "Models symbol bars keyed by `(symbol, trading_date)` with a revision or sequence number so late upstream corrections can be republished idempotently.",
+    "Covers operational readiness: schema versioning, staged rollouts, and monitoring for feed publication lag, error rates, and quota exhaustion."
+  ]
+}

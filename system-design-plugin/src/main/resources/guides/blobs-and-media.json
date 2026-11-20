@@ -1,0 +1,12 @@
+{
+  "id": "blobs-and-media",
+  "title": "Large Files, Object Storage & CDNs",
+  "summary": "Keep multi-gigabyte uploads and global media egress off your stateless API servers.",
+  "body": "Never stream large binary payloads through application servers or store blobs inside relational tables. Split control-plane metadata from data-plane byte transfers.\n\n## Control plane vs data plane\n- Client calls your API with file metadata (`name`, `size`, `sha256`, `content_type`).\n- API authenticates, records a `PENDING` metadata row, and returns short-lived pre-signed object storage URLs.\n- Client uploads or downloads bytes directly against object storage or a CDN, while object-store event notifications mark the upload `READY`.\n\n## Chunking, resumability, and deduplication\n- Split large files (`100 MB` to `50 GB`) into fixed or content-defined chunks (`4-8 MB`).\n- Track each chunk's `sha256` and upload state so dropped mobile connections resume only unfinished chunks and small file edits upload only changed blocks.\n\n## Global delivery and video pipelines\n- Transcoding DAG: split uploaded video into short segments encoded in parallel across multiple resolutions and bitrates.\n- Adaptive bitrate (`HLS` / `DASH`): serve a manifest plus immutable `2-6s` media segments so players switch quality smoothly as bandwidth fluctuates.\n- Edge caching and origin shielding: cache popular immutable segments and daily snapshots at CDN POPs with an origin shield tier so cache misses coalesce before hitting object storage.",
+  "relatedProblemIds": [
+    "cloud-file-storage",
+    "video-streaming",
+    "market-data-feed",
+    "online-code-judge"
+  ]
+}

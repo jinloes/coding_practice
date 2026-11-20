@@ -6,9 +6,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Converts the restricted Markdown subset used in problem statements and hints into escaped HTML
- * fragments for the bundled JCEF tool-window page: paragraphs ({@code <p>}), {@code -} bullet lists
- * ({@code <ul><li>}), and {@code `inline code`} ({@code <code>}).
+ * Converts the restricted Markdown subset used in problem statements, hints, and concept guides
+ * into escaped HTML fragments for the bundled JCEF tool-window page: {@code ##} subheadings
+ * ({@code <h4>}), paragraphs ({@code <p>}), {@code -} bullet lists ({@code <ul><li>}), and
+ * {@code `inline code`} ({@code <code>}).
  *
  * <p>Statements are hard-wrapped in their manifests. A single newline inside a paragraph or bullet
  * is a soft break and is joined with a space, so the rendered text wraps to the panel width instead
@@ -37,6 +38,23 @@ public final class MarkdownHtml {
         return html.toString();
     }
 
+    /**
+     * Renders only the opening block of {@code markdown} (before the first blank line), used for realistic
+     * ambiguous-prompt practice where candidates gather scope before revealing detailed requirements.
+     */
+    public static String firstParagraphHtml(String markdown) {
+        List<String> firstBlock = new ArrayList<>();
+        for (String line : markdown.strip().lines().toList()) {
+            if (line.isBlank()) {
+                break;
+            }
+            firstBlock.add(line);
+        }
+        StringBuilder html = new StringBuilder();
+        appendBlock(firstBlock, html);
+        return html.toString();
+    }
+
     /** Escapes {@code text} and renders its inline code spans, without any block markup. */
     public static String inline(String text) {
         String escaped = escape(text);
@@ -50,8 +68,8 @@ public final class MarkdownHtml {
     }
 
     /**
-     * A block is an optional leading paragraph followed by an optional bullet list, because
-     * statements write a section label directly above its bullets with no blank line between them.
+     * A block may contain {@code ##} subheadings, paragraphs, and {@code -} bullet lists, because
+     * statements and guides often write a heading or label directly above bullets with no blank line.
      */
     private static void appendBlock(List<String> lines, StringBuilder html) {
         if (lines.isEmpty()) {
@@ -61,7 +79,10 @@ public final class MarkdownHtml {
         List<StringBuilder> items = new ArrayList<>();
         for (String line : lines) {
             String trimmed = line.strip();
-            if (trimmed.startsWith("- ")) {
+            if (trimmed.startsWith("## ")) {
+                flush(paragraph, items, html);
+                html.append("<h4>").append(inline(trimmed.substring(3).strip())).append("</h4>");
+            } else if (trimmed.startsWith("- ")) {
                 items.add(new StringBuilder(trimmed.substring(2).strip()));
             } else if (items.isEmpty()) {
                 paragraph.add(trimmed);
@@ -69,8 +90,13 @@ public final class MarkdownHtml {
                 items.get(items.size() - 1).append(' ').append(trimmed);
             }
         }
+        flush(paragraph, items, html);
+    }
+
+    private static void flush(List<String> paragraph, List<StringBuilder> items, StringBuilder html) {
         if (!paragraph.isEmpty()) {
             html.append("<p>").append(inline(String.join(" ", paragraph))).append("</p>");
+            paragraph.clear();
         }
         if (!items.isEmpty()) {
             html.append("<ul>");
@@ -78,6 +104,7 @@ public final class MarkdownHtml {
                 html.append("<li>").append(inline(item.toString())).append("</li>");
             }
             html.append("</ul>");
+            items.clear();
         }
     }
 

@@ -1,6 +1,5 @@
 package com.jinloes.system_design_plugin.workspace;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.components.Service;
 import com.jinloes.system_design_plugin.catalog.DesignCatalog;
@@ -69,10 +68,6 @@ public final class DesignWorkspace {
         }
     }
 
-    public static DesignWorkspace get() {
-        return ApplicationManager.getApplication().getService(DesignWorkspace.class);
-    }
-
     public DesignWorkspace() {
         this(Path.of(PathManager.getConfigPath()));
     }
@@ -135,10 +130,7 @@ public final class DesignWorkspace {
         try (var paths = Files.list(directory)) {
             for (Path path : paths.sorted(Comparator.comparing(Path::toString)).toList()) {
                 try {
-                    Attempt attempt = read(path.getFileName().toString());
-                    if (attempt.problemId().equals(problemId)) {
-                        attempts.add(attempt);
-                    }
+                    attempts.add(read(path.getFileName().toString()));
                 } catch (IOException | IllegalArgumentException ignored) {
                     // Never adopt content the plugin cannot prove it owns.
                 }
@@ -170,10 +162,10 @@ public final class DesignWorkspace {
             return Optional.empty();
         }
         Path normalized = file.toAbsolutePath().normalize();
-        Path directory = normalized.getParent();
-        if (!DIAGRAM.equals(String.valueOf(normalized.getFileName())) || directory == null) {
+        if (!DIAGRAM.equals(String.valueOf(normalized.getFileName()))) {
             return Optional.empty();
         }
+        Path directory = normalized.getParent();
         try {
             Attempt attempt = read(String.valueOf(directory.getFileName()));
             return attempt.diagram().equals(normalized) ? Optional.of(attempt) : Optional.empty();
@@ -184,16 +176,28 @@ public final class DesignWorkspace {
 
     /** SHA-256 over the revision, problem ID, notes bytes, and diagram bytes. */
     public String fingerprint(Attempt attempt) throws IOException {
-        Attempt stored = read(attempt.id());
+        return fingerprintOwned(read(attempt.id()));
+    }
+
+    /** SHA-256 over the revision, problem ID, notes bytes, and diagram bytes for {@code attemptId}. */
+    public String fingerprint(String attemptId) throws IOException {
+        return fingerprintOwned(read(attemptId));
+    }
+
+    private String fingerprintOwned(Attempt stored) throws IOException {
+        MessageDigest digest = digest("SHA-256");
+        update(digest, ("revision=" + REVISION).getBytes(StandardCharsets.UTF_8));
+        update(digest, ("problem=" + stored.problemId()).getBytes(StandardCharsets.UTF_8));
+        update(digest, Files.readAllBytes(stored.notes()));
+        update(digest, Files.readAllBytes(stored.diagram()));
+        return HexFormat.of().formatHex(digest.digest());
+    }
+
+    static MessageDigest digest(String algorithm) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            update(digest, ("revision=" + REVISION).getBytes(StandardCharsets.UTF_8));
-            update(digest, ("problem=" + stored.problemId()).getBytes(StandardCharsets.UTF_8));
-            update(digest, Files.readAllBytes(stored.notes()));
-            update(digest, Files.readAllBytes(stored.diagram()));
-            return HexFormat.of().formatHex(digest.digest());
+            return MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("SHA-256 is required by the Java runtime", impossible);
+            throw new IllegalStateException(algorithm + " is required by the Java runtime", impossible);
         }
     }
 
@@ -207,6 +211,26 @@ public final class DesignWorkspace {
 
     public String readDiagram(Attempt attempt) throws IOException {
         return Files.readString(read(attempt.id()).diagram(), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Deletes an owned attempt directory and its files after re-checking ownership and verifying that
+     * no entry inside the attempt tree is a symbolic link.
+     */
+    public void delete(String attemptId) throws IOException {
+        Attempt stored = read(attemptId);
+        List<Path> entries;
+        try (var paths = Files.walk(stored.directory())) {
+            entries = paths.sorted(Comparator.reverseOrder()).toList();
+        }
+        for (Path entry : entries) {
+            if (Files.isSymbolicLink(entry)) {
+                throw new IOException("Refusing to delete an attempt containing a redirecting entry.");
+            }
+        }
+        for (Path entry : entries) {
+            Files.delete(entry);
+        }
     }
 
     /** Writes {@code feedback/<epochMillis>.json}, choosing a later timestamp if that name is taken. */
@@ -230,7 +254,7 @@ public final class DesignWorkspace {
 
     /** The newest feedback file the parser accepts; files it rejects (corrupt or foreign) are skipped. */
     public <T> Optional<T> latestFeedback(Attempt attempt, Function<String, T> parser) throws IOException {
-        return readFeedback(attempt, parser, 1).stream().findFirst();
+        return readFeedbackOwned(read(attempt.id()), parser, 1).stream().findFirst();
     }
 
     /**
@@ -238,11 +262,18 @@ public final class DesignWorkspace {
      * foreign files are skipped.
      */
     public <T> List<T> feedbackHistory(Attempt attempt, Function<String, T> parser) throws IOException {
-        return readFeedback(attempt, parser, MAX_FEEDBACK_HISTORY);
+        return readFeedbackOwned(read(attempt.id()), parser, MAX_FEEDBACK_HISTORY);
     }
 
-    private <T> List<T> readFeedback(Attempt attempt, Function<String, T> parser, int limit) throws IOException {
-        Attempt stored = read(attempt.id());
+    /**
+     * Up to {@link #MAX_FEEDBACK_HISTORY} valid feedback files for {@code attemptId}, newest first; corrupt or
+     * foreign files are skipped.
+     */
+    public <T> List<T> feedbackHistory(String attemptId, Function<String, T> parser) throws IOException {
+        return readFeedbackOwned(read(attemptId), parser, MAX_FEEDBACK_HISTORY);
+    }
+
+    private <T> List<T> readFeedbackOwned(Attempt stored, Function<String, T> parser, int limit) throws IOException {
         Path directory = stored.feedbackDirectory();
         if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) {
             return List.of();

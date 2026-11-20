@@ -1,5 +1,6 @@
 package com.jinloes.system_design_plugin.ui;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorPolicy;
 import com.intellij.openapi.fileEditor.FileEditorProvider;
@@ -22,7 +23,8 @@ public final class DiagramEditorProvider implements FileEditorProvider, DumbAwar
         }
         try {
             Path path = file.toNioPath();
-            return DesignWorkspace.get().ownerOfDiagram(path).isPresent() && JBCefApp.isSupported();
+            return ApplicationManager.getApplication().getService(DesignWorkspace.class)
+                    .ownerOfDiagram(path).isPresent() && JBCefApp.isSupported();
         } catch (UnsupportedOperationException | InvalidPathException notLocal) {
             return false;
         }

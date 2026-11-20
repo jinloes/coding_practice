@@ -1,0 +1,21 @@
+{
+  "id": "search-autocomplete",
+  "title": "Search Typeahead Suggestions",
+  "difficulty": "Medium",
+  "summary": "Return ranked query completions with every keystroke while adapting to trending searches.",
+  "statement": "Design the autocomplete service for a global search box that suggests the top query completions as a user types each character.\n\nFunctional requirements:\n- Given a typed prefix, return up to 10 ranked query completions ordered by popularity and recency.\n- Update suggestions continuously enough that breaking news or trending topics appear within 15 to 30 minutes.\n- Filter out offensive, sensitive, or policy-violating phrases immediately when flagged.\n\nScale to assume:\n- 500 million daily active searchers.\n- Peak prefix traffic of 1.5 million requests per second.\n- End-to-end server latency under 30 ms at the 99th percentile.",
+  "hints": [
+    "Walking an entire subtree of millions of completions on every keystroke is too slow. What can you precompute and store directly at each prefix?",
+    "Updating a shared trie on every single user search creates massive write contention. Separate the read path from the pipeline that builds and refreshes the index.",
+    "How do you reduce request volume from fast typists on the client, and how do you remove a newly banned phrase in seconds without waiting for a full index rebuild?"
+  ],
+  "expectations": [
+    "Clarifies language/locale scoping, personalization versus global suggestions, maximum prefix length, and freshness targets.",
+    "Estimates keystroke QPS from daily searchers and average query length, noting how client debouncing and browser prefix caching cut server load.",
+    "Serves reads from an in-memory prefix structure (compressed trie with top-K completions cached on each node, or a flat prefix-to-top-K key-value table) sharded by prefix range and replicated per region.",
+    "Never mutates the serving trie on live search traffic; instead samples search logs into an aggregation pipeline that applies time-decay weighting and publishes periodic snapshots.",
+    "Applies a fast, dynamically pushed blocklist filter in the serving tier so flagged phrases disappear within seconds between index snapshots.",
+    "Addresses hot short prefixes (`a`, `th`, `we`) via CDN/edge caching and local gateway caches.",
+    "Discusses prefix normalization (case folding, whitespace, diacritics) and basic typo tolerance or locale partitioning."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "realtime-and-social",
+  "title": "Real-Time & High-Fanout Systems",
+  "summary": "Persistent connections, live fan-out relays, social graphs, collaborative state, and media.",
+  "problemIds": [
+    "notification-service",
+    "social-graph-search",
+    "news-feed",
+    "chat-messaging",
+    "video-streaming",
+    "live-reactions-comments",
+    "collaborative-document-editor"
+  ]
+}

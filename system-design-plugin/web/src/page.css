@@ -57,10 +57,10 @@ html.editor-page #root {
   font: 13px system-ui, sans-serif;
 }
 
-/* External help, social, and library links have no place in an offline IDE editor. */
+/* External help, social, and remote library links have no place in an offline IDE editor; local bundled stencils stay available. */
 .excalidraw .help-icon,
-.excalidraw .default-sidebar-trigger,
-.excalidraw .sidebar-trigger,
+.excalidraw .library-menu-browse-button,
+.excalidraw .library-menu-control-buttons--at-bottom,
 .excalidraw .welcome-screen-menu {
   display: none !important;
 }

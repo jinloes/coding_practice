@@ -1,0 +1,21 @@
+{
+  "id": "cloud-file-storage",
+  "title": "Cloud File Storage and Sync",
+  "difficulty": "Medium",
+  "summary": "Store large files in the cloud, share them, and keep folders synchronized across devices.",
+  "statement": "Design a cloud file storage service that lets users upload, download, share, and automatically synchronize files across laptops, phones, and browsers.\n\nFunctional requirements:\n- Upload and download files up to 50 GB, resuming cleanly after interrupted transfers.\n- Automatically synchronize local folder edits across all of a user's signed-in devices.\n- Keep recent file versions so users can recover from accidental edits or conflicting changes.\n- Share files or folders with other users with view or edit permissions.\n\nScale to assume:\n- 50 million daily active users with an average of three connected devices each.\n- 2 billion file edits or uploads per day.\n- Frequently edited files often change in only a small portion of their bytes.",
+  "hints": [
+    "Uploading a 50 GB file as one request fails on flaky networks and wastes bandwidth when only a few kilobytes change. How should the client split a file?",
+    "Separate the bytes of a file from information about the file (name, folder, permissions, version, block list). Which side needs strong consistency?",
+    "How do other online devices learn quickly that a shared or synced folder just changed without polling every second?"
+  ],
+  "expectations": [
+    "Clarifies maximum file size, sync latency targets, sharing permissions, offline editing behavior, and version retention.",
+    "Estimates metadata QPS, block storage growth, and bandwidth savings from block-level delta uploads and deduplication.",
+    "Splits files into content-addressed chunks (for example 4-8 MB blocks keyed by SHA-256) uploaded and downloaded directly via pre-signed object storage URLs.",
+    "Uploads only missing or modified chunk hashes so interrupted transfers resume per chunk and small edits avoid re-uploading whole files.",
+    "Stores file hierarchy, permissions, and ordered chunk lists in a strongly consistent relational or transactional metadata store with optimistic concurrency versions.",
+    "Handles concurrent edits by detecting version conflicts on commit and preserving both copies as conflicted versions or branches rather than silently overwriting.",
+    "Pushes workspace change notifications to online clients via long-polling or persistent connections, with cursor-based delta sync on reconnect."
+  ]
+}

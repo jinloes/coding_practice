@@ -1,0 +1,21 @@
+{
+  "id": "multi-tenant-crm-search",
+  "title": "Multi-Tenant Enterprise Record Store and Search",
+  "difficulty": "Hard",
+  "summary": "Store and search billions of customizable business records with strict tenant isolation.",
+  "statement": "Design the core record storage and full-text search platform for a multi-tenant B2B application (such as a CRM or service desk) where every customer organization customizes its own data schema.\n\nFunctional requirements:\n- Each tenant creates custom object types and adds custom typed fields (`string`, `number`, `date`, `lookup`) at runtime without database migrations or downtime.\n- Users create, update, filter, sort, and run full-text searches across their tenant's records, seeing new edits in search within a few seconds.\n- Enforce strict tenant isolation plus role- and record-level sharing rules so users only see records they are permitted to view.\n- Keep latency predictable for small tenants even when a massive enterprise tenant runs heavy imports or broad searches.\n\nScale to assume:\n- 150,000 tenant organizations storing 50 billion records in total.\n- Strong tenant skew: most tenants have under 100,000 records, while the largest 100 tenants hold 50 million to 200 million records each.\n- 400,000 record reads and searches per second and 50,000 writes per second.",
+  "hints": [
+    "Running `ALTER TABLE` for 150,000 tenants or giving every tenant its own physical database cluster both fail at this scale. How do you model tenant-defined schemas inside shared storage?",
+    "If you index every tenant's custom field name (`custom_deal_score_99`, `region_code_v2`) as a distinct field in one shared search index, the index mapping explodes into millions of fields. How do you index custom fields safely?",
+    "Think through the 'whale tenant' problem: how do you place tenants across database pods and search shards, and how are row-level sharing rules enforced during search?"
+  ],
+  "expectations": [
+    "Clarifies transactional consistency for CRUD versus near-real-time consistency for full-text search, custom field limits per object, and sharing/ACL complexity.",
+    "Models customizable schemas without DDL migrations using a metadata dictionary (`tenants`, `objects`, `fields`) cached in memory, paired with shared data tables partitioned by `tenant_id` (typed flex columns or JSONB) and explicit pivot/index tables for selective filters and sorts.",
+    "Addresses tenant skew with cell/pod architecture: packing small tenants onto shared multi-tenant shards while isolating giant 'whale' tenants onto dedicated database shards and search indices.",
+    "Prevents search mapping explosion by mapping custom fields into bounded typed slot fields (`str_1..str_N`, `num_1..num_N`, or `(field_id, token)` nested postings) resolved through cached tenant metadata.",
+    "Syncs committed DB writes to the search index asynchronously via Change Data Capture / transactional outbox with version numbers so out-of-order updates never overwrite newer state.",
+    "Enforces tenant isolation on every storage, cache, and search query via mandatory `tenant_id` routing/routing-keys, and evaluates record-level visibility via indexed owner/group/role tokens or post-filtering with authorization caches.",
+    "Protects noisy-neighbor boundaries with per-tenant rate limits, bulk-API queues, and query timeout/cost budgets."
+  ]
+}

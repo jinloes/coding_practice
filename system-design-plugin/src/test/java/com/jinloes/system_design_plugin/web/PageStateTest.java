@@ -65,6 +65,10 @@ class PageStateTest {
 
         assertThat(state.getAsJsonObject("theme").get("background").getAsString()).isEqualTo("#000000");
         assertThat(state.getAsJsonObject("theme").get("dark").getAsBoolean()).isTrue();
+        assertThat(state.get("targetLevel").getAsString()).isEqualTo("Senior");
+        assertThat(state.getAsJsonArray("levels")).hasSize(DesignCatalog.LEVELS.size());
+        assertThat(state.getAsJsonArray("tracks")).isNotEmpty();
+        assertThat(state.getAsJsonArray("guides")).isNotEmpty();
         JsonArray problems = state.getAsJsonArray("problems");
         assertThat(problems).hasSameSizeAs(DesignCatalog.all());
         for (int i = 0; i < problems.size(); i++) {
@@ -72,6 +76,7 @@ class PageStateTest {
             Problem problem = DesignCatalog.all().get(i);
             assertThat(item.get("id").getAsString()).isEqualTo(problem.id());
             assertThat(item.get("title").getAsString()).isEqualTo(problem.title());
+            assertThat(item.getAsJsonArray("tracks")).isNotEmpty();
             assertThat(item.get("reviewed").getAsBoolean()).isEqualTo(problem.equals(PROBLEM));
             assertThat(item.get("selected").getAsBoolean()).isFalse();
         }

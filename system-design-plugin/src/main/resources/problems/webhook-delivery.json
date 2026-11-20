@@ -1,0 +1,21 @@
+{
+  "id": "webhook-delivery",
+  "title": "Outbound Webhook Delivery Service",
+  "difficulty": "Easy",
+  "summary": "Deliver signed event callbacks to customer HTTPS endpoints with retries and delivery logs.",
+  "statement": "Design an outbound webhook subsystem for a business platform that notifies customer-owned HTTPS servers whenever events such as `invoice.paid` or `deal.updated` occur.\n\nFunctional requirements:\n- Customers register HTTPS callback URLs, subscribe to event types, and rotate signing secrets without dropping deliveries.\n- Deliver each matching event as a signed HTTP `POST` request.\n- Retry transient failures automatically, and pause endpoints that fail continuously.\n- Let customers inspect recent delivery attempts (status code, latency, response snippet) and manually replay failed events.\n\nScale to assume:\n- 100,000 registered customer endpoints.\n- 300,000 outbound events per second at business-hour peaks.\n- Customer endpoints vary wildly: some respond in 20 ms, while others hang for 30 seconds or go offline for hours.",
+  "hints": [
+    "Internal product services must never wait on a customer's slow or broken HTTP server. How do you decouple event emission from outbound HTTP delivery?",
+    "What happens to your worker pool if one customer's server takes 15 seconds to time out on 50,000 queued events?",
+    "Think through both security directions: how the customer verifies a request really came from you, and how you stop a malicious customer URL from probing your internal network."
+  ],
+  "expectations": [
+    "Clarifies ordering guarantees (best-effort versus strict per-endpoint order), at-least-once delivery semantics, timeout bounds, and delivery log retention.",
+    "Decouples internal event producers via a transactional outbox and partitioned message queue so customer outages never affect core services.",
+    "Signs payloads with an HMAC header over a timestamp plus raw body (supporting dual active secrets during rotation) and includes a unique `event_id` for customer-side idempotency.",
+    "Retries `5xx` and network timeouts with exponential backoff and jitter, moves exhausted deliveries to a dead-letter state, and trips a per-endpoint circuit breaker after sustained failures.",
+    "Isolates noisy or slow endpoints with per-endpoint concurrency caps, separate fast and retry queues, and strict connect/read timeouts.",
+    "Hardens egress HTTP workers against SSRF by running in an isolated egress network, resolving DNS safely, and blocking private, loopback, and cloud-metadata IP ranges.",
+    "Stores delivery attempt metadata in a time-partitioned store keyed by `(tenant_id, endpoint_id, timestamp)` to power the inspection UI and manual replay."
+  ]
+}

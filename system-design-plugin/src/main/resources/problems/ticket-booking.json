@@ -1,0 +1,21 @@
+{
+  "id": "ticket-booking",
+  "title": "Event Ticket Booking",
+  "difficulty": "Hard",
+  "summary": "Let millions of fans search events, pick seats, and book tickets without double-selling.",
+  "statement": "Design an online ticketing platform where users browse concerts and sports events, view available seats on a venue map, and purchase tickets.\n\nFunctional requirements:\n- Browse and search upcoming events by city, date range, venue, or performer.\n- View an event's interactive seat map with current prices and availability.\n- Select specific seats, hold them briefly while completing payment, and receive confirmed tickets.\n- Never sell the same seat to two buyers, even when tickets for a major event go on sale simultaneously.\n\nScale to assume:\n- 50,000 active events, with typical venues holding 5,000 to 80,000 seats.\n- 50 million daily active users browsing events.\n- Popular on-sale drops attract up to 5 million concurrent fans competing for 50,000 seats within seconds.",
+  "hints": [
+    "Event browsing and seat booking have completely different read/write ratios and consistency needs. Separate those paths first.",
+    "How do you prevent two buyers from paying for seat `A-12` at the same time while also making sure seats are not locked forever if someone closes their browser?",
+    "When 5 million fans click refresh on the same concert at 10:00:00, even read caches and lock tables can melt down. How do you control admission to that event?"
+  ],
+  "expectations": [
+    "Clarifies assigned seating versus general admission, hold duration during checkout, maximum tickets per user, and third-party payment latency.",
+    "Separates the read-heavy event catalog/search path (search index plus CDN and caches) from the strongly consistent per-event seat inventory path.",
+    "Implements a two-phase booking flow: atomically transition seats from `AVAILABLE` to `HELD` with an expiry timestamp, then mark `BOOKED` on payment webhook/callback.",
+    "Prevents double-booking with transactional row locking, optimistic `version` checks, or serialized per-event processing, paired with idempotency keys for payment retries.",
+    "Reclaims expired holds reliably (TTL or background sweeper plus lazy expiry checks on read/reserve) without racing late payment confirmations.",
+    "Protects hot on-sale events with a virtual waiting room / admission queue per event, pushing seat-map updates over SSE or WebSockets instead of client polling storms.",
+    "Addresses bot mitigation, per-account purchase limits, and partitioning seat state by `event_id` so one flash sale cannot degrade unrelated events."
+  ]
+}

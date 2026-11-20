@@ -17,9 +17,16 @@ class PageEventTest {
     void parsesEveryToolWindowEvent() {
         Map<String, Type> withId = Map.of("selectProblem", Type.SELECT_PROBLEM, "newAttempt", Type.NEW_ATTEMPT,
                 "selectAttempt", Type.SELECT_ATTEMPT, "openAttempt", Type.OPEN_ATTEMPT,
+                "deleteAttempt", Type.DELETE_ATTEMPT,
                 "revealHint", Type.REVEAL_HINT, "requestFeedback", Type.REQUEST_FEEDBACK);
         withId.forEach((wire, type) -> assertThat(PageEvent.parse("{\"type\":\"" + wire + "\",\"id\":\"url-1\"}"))
                 .isEqualTo(new PageEvent(type, "url-1")));
+        assertThat(PageEvent.parse("{\"type\":\"renameAttempt\",\"id\":\"url-1\",\"label\":\"  Cache\npass  \"}"))
+                .isEqualTo(new PageEvent(Type.RENAME_ATTEMPT, "url-1", "Cache pass"));
+        assertThat(PageEvent.parse("{\"type\":\"submitFollowUp\",\"id\":\"url-1\",\"answers\":\"  Sharded  \"}"))
+                .isEqualTo(new PageEvent(Type.SUBMIT_FOLLOW_UP, "url-1", "Sharded"));
+        assertThat(PageEvent.parse("{\"type\":\"selectLevel\",\"level\":\"Staff+\"}"))
+                .isEqualTo(new PageEvent(Type.SELECT_LEVEL, "", "Staff+"));
         assertThat(PageEvent.parse("{\"type\":\"cancelFeedback\"}")).isEqualTo(new PageEvent(Type.CANCEL_FEEDBACK, ""));
         assertThat(PageEvent.parse("{\"type\":\"openSettings\",\"id\":7}"))
                 .isEqualTo(new PageEvent(Type.OPEN_SETTINGS, ""));
@@ -31,7 +38,12 @@ class PageEventTest {
                 "{\"type\":\"deleteEverything\",\"id\":\"a\"}", "{\"type\":\"save\",\"scene\":\"{}\"}",
                 "{\"type\":\"selectProblem\"}", "{\"type\":\"selectProblem\",\"id\":5}",
                 "{\"type\":\"selectProblem\",\"id\":\"../x\"}", "{\"type\":\"selectProblem\",\"id\":\"\"}",
-                "{\"type\":\"selectProblem\",\"id\":\"A\"}", "{\"type\":\"newAttempt\",\"id\":\"" + "a".repeat(201) + "\"}"}) {
+                "{\"type\":\"selectProblem\",\"id\":\"A\"}", "{\"type\":\"newAttempt\",\"id\":\"" + "a".repeat(201) + "\"}",
+                "{\"type\":\"selectLevel\",\"level\":\"Principal\"}",
+                "{\"type\":\"renameAttempt\",\"id\":\"url-1\",\"label\":\"" + "a".repeat(201) + "\"}",
+                "{\"type\":\"submitFollowUp\",\"id\":\"url-1\",\"answers\":\"   \"}",
+                "{\"type\":\"submitFollowUp\",\"id\":\"url-1\",\"answers\":\"" + "a".repeat(40_001) + "\"}",
+                "{\"type\":\"submitFollowUp\",\"id\":\"url-1\",\"answers\":\"" + "a".repeat(45_000) + "\"}"}) {
             assertThatThrownBy(() -> PageEvent.parse(json)).as(String.valueOf(json))
                     .isInstanceOf(IllegalArgumentException.class);
         }

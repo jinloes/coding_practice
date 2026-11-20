@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Badge, Code, Group, List, Paper, Select, Stack, Table, Text } from '@mantine/core';
+import { Alert, Badge, Button, Code, Group, List, Paper, Select, Stack, Table, Text, Textarea } from '@mantine/core';
+import { send } from './bridge';
 import { SectionLabel } from './ProblemView';
 import type { Feedback } from './types';
 
@@ -27,21 +28,43 @@ function formatTimestamp(createdAt: string): string {
   }).format(new Date(parsed));
 }
 
-/** Interviewer feedback. All text is model output and is rendered as plain text, never as HTML. */
-export function FeedbackView({ reviews }: { reviews: Feedback[] }) {
+/** Interviewer feedback. All text is model output or plain learner text and is never inserted as HTML. */
+export function FeedbackView({
+  attemptId,
+  running,
+  reviews,
+}: {
+  attemptId: string;
+  running: boolean;
+  reviews: Feedback[];
+}) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [followUpDraft, setFollowUpDraft] = useState('');
   if (reviews.length === 0) {
     return null;
   }
   const index = selectedIndex < reviews.length ? selectedIndex : 0;
   const feedback = reviews[index];
   const formattedDate = formatTimestamp(feedback.createdAt);
+  const canProbe = index === 0 && attemptId !== '' && feedback.parsed && feedback.followUpQuestions.length > 0;
 
   return (
     <Paper withBorder p="sm">
       <Stack gap="sm">
-        <Group gap="xs" justify="space-between">
-          <SectionLabel>Interviewer feedback</SectionLabel>
+        <Group gap="xs" justify="space-between" wrap="wrap">
+          <Group gap={6}>
+            <SectionLabel>Interviewer feedback</SectionLabel>
+            {feedback.level !== '' && (
+              <Badge size="xs" variant="outline">
+                {feedback.level}
+              </Badge>
+            )}
+            {feedback.round === 'follow-up' && (
+              <Badge size="xs" variant="light" color="violet">
+                Follow-up probe
+              </Badge>
+            )}
+          </Group>
           <Text size="xs" c="dimmed">
             {[feedback.model, formattedDate].filter((part) => part !== '').join(' · ')}
           </Text>
@@ -53,7 +76,9 @@ export function FeedbackView({ reviews }: { reviews: Feedback[] }) {
             allowDeselect={false}
             data={reviews.map((item, i) => ({
               value: String(i),
-              label: `Review ${reviews.length - i}${i === 0 ? ' (latest)' : ''}${item.verdict ? ` — ${item.verdict}` : ''}`,
+              label: `Review ${reviews.length - i}${i === 0 ? ' (latest)' : ''}${
+                item.round === 'follow-up' ? ' · Follow-up' : ''
+              }${item.verdict ? ` — ${item.verdict}` : ''}`,
             }))}
             value={String(index)}
             onChange={(value) => value !== null && setSelectedIndex(Number(value))}
@@ -69,7 +94,44 @@ export function FeedbackView({ reviews }: { reviews: Feedback[] }) {
             Viewing an earlier review of this attempt.
           </Text>
         )}
+        {feedback.followUpAnswers !== '' && (
+          <Stack gap={4}>
+            <SectionLabel>Candidate follow-up answers</SectionLabel>
+            <Paper withBorder p="xs">
+              <Text size="xs" style={{ whiteSpace: 'pre-wrap' }}>
+                {feedback.followUpAnswers}
+              </Text>
+            </Paper>
+          </Stack>
+        )}
         {feedback.parsed ? <Structured feedback={feedback} /> : <Raw raw={feedback.raw} />}
+        {canProbe && (
+          <Stack gap="xs">
+            <SectionLabel>Interactive follow-up round</SectionLabel>
+            <Text size="xs" c="dimmed">
+              Defend your tradeoffs or answer the follow-up questions above (optionally update your diagram or notes first), then submit for a probed debrief.
+            </Text>
+            <Textarea
+              aria-label="Follow-up answers"
+              size="xs"
+              rows={3}
+              placeholder="Write your answers to the interviewer's follow-up questions…"
+              value={followUpDraft}
+              disabled={running}
+              onChange={(event) => setFollowUpDraft(event.currentTarget.value)}
+            />
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                disabled={running || followUpDraft.trim() === ''}
+                onClick={() => send({ type: 'submitFollowUp', id: attemptId, answers: followUpDraft })}
+              >
+                Submit follow-up answers
+              </Button>
+            </Group>
+          </Stack>
+        )}
       </Stack>
     </Paper>
   );

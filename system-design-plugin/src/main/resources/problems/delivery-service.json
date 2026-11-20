@@ -1,0 +1,21 @@
+{
+  "id": "delivery-service",
+  "title": "Rapid Local Delivery Service",
+  "difficulty": "Medium",
+  "summary": "Show nearby in-stock items for one-hour delivery and fulfill orders without overselling.",
+  "statement": "Design the catalog search and order placement backend for a local retail service that delivers everyday items within one hour from micro-fulfillment centers.\n\nFunctional requirements:\n- Shoppers enter a delivery address and search or browse only items that can reach them within one hour and are currently in stock.\n- Placing an order reserves inventory at a specific fulfillment center and confirms the order immediately.\n- Inventory counts update continuously as orders are placed, canceled, and restocked.\n- Shoppers can view their order status from confirmation through handoff.\n\nScale to assume:\n- 5,000 micro-fulfillment centers across hundreds of metro areas, stocking 100,000 distinct items.\n- 300,000 browse and search queries per second at evening peaks.\n- 15 million orders per day, with zero tolerance for selling out-of-stock items.",
+  "hints": [
+    "Searching across all 5,000 fulfillment centers on every query is wasteful. How do you narrow a shopper's address down to the handful of centers that can reach them in an hour?",
+    "Browsing happens far more often than checkout, and tolerance for slightly stale stock differs between the two. Where can you relax consistency and where must it stay strict?",
+    "Walk through what happens to reserved stock if payment fails or a shopper abandons checkout partway through."
+  ],
+  "expectations": [
+    "Clarifies how one-hour reachability is determined (delivery zones or travel-time polygons), multi-center cart rules, and payment flow.",
+    "Contrasts the high read QPS of location-scoped search with the lower write QPS of checkout, and sizes the active `(center, item)` inventory dataset.",
+    "Maps a destination address to candidate fulfillment centers using geospatial indexing (such as geohashes, H3 cells, or precomputed delivery zones) and caches zone lookups.",
+    "Serves low-latency keyword search from a search index scoped or filtered by nearby fulfillment center IDs and cached availability.",
+    "Enforces strong consistency at checkout in a transactional inventory store (atomic conditional decrement or row lock per `(center_id, item_id)`) so stock is never oversold.",
+    "Uses short-lived inventory holds with idempotency keys and automatic expiry when payment fails or times out, then publishes stock changes asynchronously to search and caches.",
+    "Partitioning by region or fulfillment center isolates regional outages and keeps hot local spikes from degrading other cities."
+  ]
+}

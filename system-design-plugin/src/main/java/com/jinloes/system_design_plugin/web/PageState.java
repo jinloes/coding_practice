@@ -6,18 +6,24 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.jinloes.system_design_plugin.catalog.DesignCatalog;
 import com.jinloes.system_design_plugin.catalog.DesignCatalog.Problem;
+import com.jinloes.system_design_plugin.catalog.GuideCatalog;
+import com.jinloes.system_design_plugin.catalog.GuideCatalog.Guide;
+import com.jinloes.system_design_plugin.catalog.TrackCatalog;
+import com.jinloes.system_design_plugin.catalog.TrackCatalog.Track;
 import com.jinloes.system_design_plugin.interview.InterviewFeedback;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Serializes the tool window's state for {@code window.designRender}. The contract is mirrored in
  * {@code web/src/types.ts}; change both together.
  *
- * <p>Statement and hint text is converted with {@link MarkdownHtml}, which escapes it, so the page may insert
- * those fields as HTML. Every other string is plain text. A problem's interviewer-only
+ * <p>Statement, hint, and guide text is converted with {@link MarkdownHtml}, which escapes it, so the page may
+ * insert those fields as HTML. Every other string is plain text. A problem's interviewer-only
  * {@link Problem#expectations() expectations} are never serialized; feedback may paraphrase them.
  */
 public final class PageState {
@@ -31,7 +37,16 @@ public final class PageState {
                         String accent, String fontFamily, int fontSize) {
     }
 
-    public record AttemptInfo(String id, String label) {
+    public record AttemptInfo(String id, String label, String customLabel) {
+        public AttemptInfo(String id, String label) {
+            this(id, label, "");
+        }
+
+        public AttemptInfo {
+            id = Objects.requireNonNull(id, "id");
+            label = Objects.requireNonNull(label, "label");
+            customLabel = Objects.requireNonNullElse(customLabel, "");
+        }
     }
 
     /** One saved review of an attempt and whether the attempt has changed since that review. */
@@ -42,14 +57,32 @@ public final class PageState {
     }
 
     /** Everything the tool window shows. {@code selected} may be {@code null}; {@code reviews} is newest first. */
-    public record View(Set<String> reviewed, Problem selected, List<AttemptInfo> attempts, String selectedAttempt,
-                       int hintsRevealed, boolean running, List<Review> reviews, String error) {
+    public record View(Map<String, String> verdicts, Problem selected, List<AttemptInfo> attempts,
+                       String selectedAttempt, int hintsRevealed, String targetLevel, boolean running,
+                       List<Review> reviews, String error) {
+        public View(Set<String> reviewed, Problem selected, List<AttemptInfo> attempts, String selectedAttempt,
+                    int hintsRevealed, boolean running, List<Review> reviews, String error) {
+            this(reviewed, selected, attempts, selectedAttempt, hintsRevealed,
+                    DesignCatalog.DEFAULT_LEVEL, running, reviews, error);
+        }
+
+        public View(Set<String> reviewed, Problem selected, List<AttemptInfo> attempts, String selectedAttempt,
+                    int hintsRevealed, String targetLevel, boolean running, List<Review> reviews, String error) {
+            this(reviewed.stream().collect(Collectors.toUnmodifiableMap(id -> id, ignored -> "")),
+                    selected, attempts, selectedAttempt, hintsRevealed, targetLevel, running, reviews, error);
+        }
+
         public View {
-            reviewed = Set.copyOf(reviewed);
+            verdicts = Map.copyOf(verdicts);
             attempts = List.copyOf(attempts);
             selectedAttempt = Objects.requireNonNullElse(selectedAttempt, "");
+            targetLevel = DesignCatalog.normalizeLevel(targetLevel);
             reviews = List.copyOf(reviews);
             error = Objects.requireNonNullElse(error, "");
+        }
+
+        public Set<String> reviewed() {
+            return verdicts.keySet();
         }
 
         public InterviewFeedback.Stored feedback() {
@@ -64,6 +97,10 @@ public final class PageState {
     public static String toJson(View view, Theme theme) {
         JsonObject state = new JsonObject();
         state.add("theme", GSON.toJsonTree(theme));
+        state.add("levels", GSON.toJsonTree(DesignCatalog.LEVELS));
+        state.addProperty("targetLevel", view.targetLevel());
+        state.add("tracks", tracks());
+        state.add("guides", guides());
         JsonArray problems = new JsonArray();
         for (Problem problem : DesignCatalog.all()) {
             JsonObject item = new JsonObject();
@@ -71,7 +108,9 @@ public final class PageState {
             item.addProperty("title", problem.title());
             item.addProperty("difficulty", problem.difficulty());
             item.addProperty("summary", problem.summary());
-            item.addProperty("reviewed", view.reviewed().contains(problem.id()));
+            item.add("tracks", GSON.toJsonTree(TrackCatalog.containing(problem.id())));
+            item.addProperty("reviewed", view.verdicts().containsKey(problem.id()));
+            item.addProperty("verdict", view.verdicts().getOrDefault(problem.id(), ""));
             item.addProperty("selected", view.selected() != null && view.selected().id().equals(problem.id()));
             problems.add(item);
         }
@@ -89,12 +128,40 @@ public final class PageState {
         return GSON.toJson(state);
     }
 
+    private static JsonArray tracks() {
+        JsonArray array = new JsonArray();
+        for (Track track : TrackCatalog.all()) {
+            JsonObject item = new JsonObject();
+            item.addProperty("id", track.id());
+            item.addProperty("title", track.title());
+            item.addProperty("summary", track.summary());
+            item.add("problemIds", GSON.toJsonTree(track.problemIds()));
+            array.add(item);
+        }
+        return array;
+    }
+
+    private static JsonArray guides() {
+        JsonArray array = new JsonArray();
+        for (Guide guide : GuideCatalog.all()) {
+            JsonObject item = new JsonObject();
+            item.addProperty("id", guide.id());
+            item.addProperty("title", guide.title());
+            item.addProperty("summary", guide.summary());
+            item.addProperty("bodyHtml", MarkdownHtml.toHtml(guide.body()));
+            item.add("relatedProblemIds", GSON.toJsonTree(guide.relatedProblemIds()));
+            array.add(item);
+        }
+        return array;
+    }
+
     private static JsonObject selected(View view) {
         Problem problem = view.selected();
         JsonObject selected = new JsonObject();
         selected.addProperty("id", problem.id());
         selected.addProperty("title", problem.title());
         selected.addProperty("difficulty", problem.difficulty());
+        selected.addProperty("promptHtml", MarkdownHtml.firstParagraphHtml(problem.statement()));
         selected.addProperty("statementHtml", MarkdownHtml.toHtml(problem.statement()));
         int revealed = Math.max(0, Math.min(view.hintsRevealed(), problem.hints().size()));
         JsonArray hints = new JsonArray();
@@ -106,6 +173,7 @@ public final class PageState {
             JsonObject item = new JsonObject();
             item.addProperty("id", attempt.id());
             item.addProperty("label", attempt.label());
+            item.addProperty("customLabel", attempt.customLabel());
             attempts.add(item);
         }
         selected.add("attempts", attempts);
@@ -135,6 +203,9 @@ public final class PageState {
         json.addProperty("raw", feedback.raw());
         json.addProperty("model", stored.model());
         json.addProperty("createdAt", stored.createdAt());
+        json.addProperty("level", stored.level());
+        json.addProperty("round", stored.round());
+        json.addProperty("followUpAnswers", stored.followUpAnswers());
         json.addProperty("stale", item.stale());
         return json;
     }

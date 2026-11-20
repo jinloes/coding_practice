@@ -1,0 +1,21 @@
+{
+  "id": "collaborative-document-editor",
+  "title": "Collaborative Document Editor",
+  "difficulty": "Hard",
+  "summary": "Let multiple teammates edit rich-text documents concurrently with live cursors and history.",
+  "statement": "Design the backend for a cloud document editor where teams write, format, and comment on shared documents simultaneously from browsers and mobile apps.\n\nFunctional requirements:\n- Multiple collaborators can type and format text in the same document at the same time, and every participant's view must converge to the identical document state.\n- Show live collaborator presence, cursor positions, and text selections.\n- Allow brief offline editing on mobile or flaky Wi-Fi and merge changes cleanly on reconnect.\n- Save documents automatically without a manual save button, and let users view and restore earlier versions.\n\nScale to assume:\n- 50 million daily active users and 5 million concurrently open documents.\n- Up to 100 simultaneous editors in a hot shared document.\n- Typing edits should appear on collaborators' screens within 100 to 200 ms.",
+  "hints": [
+    "Uploading the entire document on every keystroke loses concurrent edits. Compare the two main families of algorithms that merge concurrent character-level edits so every client converges.",
+    "Should all active editors of `doc_42` connect to random stateless servers or be routed to a single stateful session owner for that document? What happens when that server restarts?",
+    "A document edited over two years may accumulate millions of tiny keystroke operations. How do you make opening that document fast while still supporting version history?"
+  ],
+  "expectations": [
+    "Clarifies document size limits, max concurrent editors per document, rich-text formatting vs plain text, and offline conflict expectations.",
+    "Compares Operational Transformation (centralized server sequencing per document, simpler client memory) and CRDTs (commutative IDs, seamless offline/peer merging, tombstone metadata overhead) and justifies a concrete choice.",
+    "Routes active collaborators of a `document_id` over WebSockets through a session directory / consistent-hashed gateway to an authoritative in-memory document room host.",
+    "Separates durable document operations (persisted to an append-only operation log before/upon broadcast) from high-frequency ephemeral cursor and presence updates (kept in memory and dropped on backpressure).",
+    "Compacts operation logs periodically into immutable full-state snapshots in object storage plus a recent tail of operations in a database so opening a document never replays its entire lifetime.",
+    "Handles room-host failover cleanly by reloading the latest snapshot plus subsequent op-log entries and having clients resend unacknowledged local operations idempotently.",
+    "Enforces document ACLs (`owner`, `editor`, `commenter`, `viewer`) on connection establishment and permission revocation, and groups rapid edits into named or time-windowed history checkpoints."
+  ]
+}

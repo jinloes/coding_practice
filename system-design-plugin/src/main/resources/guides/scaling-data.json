@@ -1,0 +1,12 @@
+{
+  "id": "scaling-data",
+  "title": "Scaling Reads, Writes & Sharding",
+  "summary": "Pick storage engines, partition keys, caches, and hot-key defenses that hold up under skew.",
+  "body": "Most scaling bottlenecks reduce to either read amplification, write contention on a single node, or skewed hot keys.\n\n## Scaling reads\n- Indexing and read replicas: start with composite indexes matching `(equality_predicates, sort_column)` and asynchronous read replicas when slight staleness is acceptable.\n- Cache-aside (look-aside): application checks an in-memory cache, loads from DB on miss, and populates with a jittered TTL.\n- Stampede protection: use single-flight request coalescing or short leases so `10,000` concurrent misses on an expired key trigger one DB read, not `10,000`.\n- Hot-key mitigation: replicate hot read keys across `K` suffixed cache slots (`key#1..key#K`) or add a tiny `1-5s` in-process L1 cache on app servers.\n\n## Scaling writes and storage engines\n- B-tree relational stores excel at strong ACID transactions, secondary indexes, and low-latency point reads.\n- LSM-tree stores (`WAL + memtable + immutable SSTables + background compaction`) turn random writes into sequential disk I/O for massive write ingestion (logs, chat history, time series, key-value stores).\n- Partitioning: shard by a key that co-locates each query's working set (`conversation_id`, `tenant_id`, `event_id`) using consistent hashing with virtual nodes.\n\n## Handling write skew and multi-tenancy\n- Hot counters and streams: pre-aggregate in memory over micro-batches on ingestors or salt keys (`item_id#0..15`) and sum across shards on read.\n- Multi-tenant whale isolation: pack small tenants onto shared `tenant_id`-prefixed shards while isolating giant enterprise tenants onto dedicated pods and search indices.",
+  "relatedProblemIds": [
+    "distributed-cache",
+    "key-value-store",
+    "social-graph-search",
+    "multi-tenant-crm-search"
+  ]
+}

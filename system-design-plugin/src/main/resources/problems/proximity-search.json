@@ -1,0 +1,21 @@
+{
+  "id": "proximity-search",
+  "title": "Nearby Places Search",
+  "difficulty": "Medium",
+  "summary": "Find restaurants, shops, and landmarks within a radius or map viewport at global scale.",
+  "statement": "Design a location search backend that powers 'near me' discovery for a maps and local-business app.\n\nFunctional requirements:\n- Given a user's latitude, longitude, search radius (for example `500 m` to `20 km`), and optional category filter, return matching places ranked by distance and rating.\n- Business owners add new places and update opening hours, addresses, or closures.\n- Support viewing full details for any selected place.\n\nScale to assume:\n- 250 million registered places worldwide, unevenly distributed between dense city centers and rural areas.\n- 500,000 nearby search queries per second.\n- Only a few thousand business profile updates per second; edits may take a few minutes to appear in search.",
+  "hints": [
+    "Why does `WHERE lat BETWEEN ... AND lng BETWEEN ...` on two standard database columns perform poorly at 500,000 QPS, and how do spatial indexes map 2D coordinates into partitionable cells?",
+    "A user standing right next to a cell boundary can be closer to a cafe in the neighboring cell than to anything in their own cell. How does your query handle edges and varying urban density?",
+    "Compare the size of the whole world's `(place_id, lat, lng, category)` index against RAM on a single server."
+  ],
+  "expectations": [
+    "Clarifies read-to-write asymmetry, eventual consistency tolerance for business edits, category filtering, and radius versus bounding-box queries.",
+    "Sizes the compact spatial dataset (250M places fit in tens of gigabytes of RAM), showing why the spatial index can be replicated in memory across search replicas.",
+    "Compares geohashes, S2/H3 hierarchical cells, and dynamic quadtrees, addressing dense urban hotspots versus sparse oceans/rural regions.",
+    "Queries the target cell plus surrounding neighbor cells (or expands quadtree nodes) to avoid missing closer places across cell boundaries, then filters exact Haversine distance and ranks.",
+    "Separates the lightweight spatial index from the richer place-details store, caching popular place records and cells by region.",
+    "Applies business creates and edits to a durable source-of-truth database and streams incremental updates or periodic rebuilds to the spatial replicas.",
+    "Deploys regional replicas close to users and handles open-now filtering using local time zones and structured operating hours."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "key-value-store",
+  "title": "Distributed Key-Value Store",
+  "difficulty": "Hard",
+  "summary": "Build a durable, partitioned key-value storage engine with tunable consistency.",
+  "statement": "Design a distributed, disk-backed key-value storage system that persists data reliably across machine failures and scales horizontally as capacity grows.\n\nFunctional requirements:\n- Support `put(key, value)`, `get(key)`, and `delete(key)` for keys up to 1 KB and values up to 1 MB.\n- Persist writes durably on disk so committed data survives process restarts and single-node hardware failures.\n- Allow callers or table configs to trade latency against consistency for reads and writes.\n- Add or decommission storage nodes without downtime.\n\nScale to assume:\n- 200 TB of logical data before replication.\n- 1 million writes per second and 2 million reads per second across the cluster.\n- Single-digit millisecond median latency within a region.",
+  "hints": [
+    "Look at what happens inside a single storage node first: how do you make random writes fast on disk while still keeping reads efficient?",
+    "Once keys are partitioned and replicated across `N` nodes, how do write (`W`) and read (`R`) quorum sizes control whether a reader is guaranteed to see the latest write?",
+    "Nodes crash, disks fill up, and networks partition temporarily. How do replicas catch up after brief blips versus long outages, and how are conflicting writes reconciled?"
+  ],
+  "expectations": [
+    "Clarifies value size limits, point lookups versus range scans, single-region versus multi-region deployment, and tunable consistency needs.",
+    "Sizes cluster node count from 200 TB logical data multiplied by replication factor, compaction headroom, and per-node IOPS/throughput.",
+    "Partitions keys with consistent hashing and virtual nodes, replicating each key to `N` distinct failure domains via coordinator nodes.",
+    "Explains quorum reads and writes (`W + R > N` for overlap, smaller `W` or `R` for lower latency) and tracks membership via gossip or a consensus metadata service.",
+    "Designs the per-node storage engine around an append-only write-ahead log, an in-memory memtable, immutable sorted SSTables, background compaction, Bloom filters, and tombstones for deletes.",
+    "Resolves concurrent versions using vector clocks or last-write-wins timestamps (noting clock-skew risks) along with read repair.",
+    "Maintains availability and replica convergence through sloppy quorums with hinted handoff for transient failures and Merkle-tree anti-entropy sync for longer outages."
+  ]
+}

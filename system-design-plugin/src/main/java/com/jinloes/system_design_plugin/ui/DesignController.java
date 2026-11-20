@@ -11,6 +11,7 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -64,7 +65,7 @@ final class DesignController implements Disposable {
     DesignController(Project project) {
         this.project = project;
         page = new BrowserPage(this, WebAssets.INDEX, this::onMessage, this::push);
-        DesignWorkspace workspace = DesignWorkspace.get();
+        DesignWorkspace workspace = workspace();
         ApplicationManager.getApplication().getMessageBus().connect(this)
                 .subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
                     @Override
@@ -95,9 +96,17 @@ final class DesignController implements Disposable {
         ApplicationManager.getApplication().invokeLater(() -> handle(event), project.getDisposed());
     }
 
+    private static DesignWorkspace workspace() {
+        return ApplicationManager.getApplication().getService(DesignWorkspace.class);
+    }
+
+    private static DesignProgress progress() {
+        return ApplicationManager.getApplication().getService(DesignProgress.class);
+    }
+
     private void handle(PageEvent event) {
         error = "";
-        DesignProgress progress = DesignProgress.get();
+        DesignProgress progress = progress();
         try {
             switch (event.type()) {
                 case SELECT_PROBLEM -> {
@@ -107,22 +116,29 @@ final class DesignController implements Disposable {
                 }
                 case NEW_ATTEMPT -> {
                     Problem problem = DesignCatalog.find(event.id());
-                    Attempt attempt = DesignWorkspace.get().create(problem);
+                    Attempt attempt = workspace().create(problem);
                     progress.entry(attempt.id(), problem.id());
                     progress.select(problem.id(), attempt.id());
                     selectedProblem = problem.id();
                     open(attempt);
                 }
                 case SELECT_ATTEMPT -> {
-                    Attempt attempt = DesignWorkspace.get().read(event.id());
+                    Attempt attempt = workspace().read(event.id());
                     progress.select(attempt.problemId(), attempt.id());
                 }
-                case OPEN_ATTEMPT -> open(DesignWorkspace.get().read(event.id()));
+                case OPEN_ATTEMPT -> open(workspace().read(event.id()));
+                case RENAME_ATTEMPT -> {
+                    Attempt attempt = workspace().read(event.id());
+                    progress.renameAttempt(attempt.id(), attempt.problemId(), event.text());
+                }
+                case DELETE_ATTEMPT -> deleteAttempt(event.id(), progress);
                 case REVEAL_HINT -> {
-                    Attempt attempt = DesignWorkspace.get().read(event.id());
+                    Attempt attempt = workspace().read(event.id());
                     progress.revealHint(attempt.id(), attempt.problemId());
                 }
-                case REQUEST_FEEDBACK -> requestFeedback(DesignWorkspace.get().read(event.id()));
+                case REQUEST_FEEDBACK -> requestFeedback(workspace().read(event.id()), "");
+                case SUBMIT_FOLLOW_UP -> requestFeedback(workspace().read(event.id()), event.text());
+                case SELECT_LEVEL -> progress.setTargetLevel(event.text());
                 case CANCEL_FEEDBACK -> cancel();
                 case OPEN_SETTINGS -> InterviewerSettingsDialog.edit(project, progress);
             }
@@ -158,7 +174,26 @@ final class DesignController implements Disposable {
         });
     }
 
-    private void requestFeedback(Attempt attempt) {
+    private void deleteAttempt(String attemptId, DesignProgress progress) throws IOException {
+        if (running || CopilotInterviewer.isRunning()) {
+            error = "Finish or cancel the running review before deleting an attempt.";
+            return;
+        }
+        DesignWorkspace workspace = workspace();
+        Attempt attempt = workspace.read(attemptId);
+        for (Path path : List.of(attempt.notes(), attempt.diagram())) {
+            VirtualFile file = LocalFileSystem.getInstance().findFileByNioFile(path);
+            if (file != null) {
+                for (Project openProject : ProjectManager.getInstance().getOpenProjects()) {
+                    FileEditorManager.getInstance(openProject).closeFile(file);
+                }
+            }
+        }
+        workspace.delete(attempt.id());
+        progress.removeAttempt(attempt.id());
+    }
+
+    private void requestFeedback(Attempt attempt, String followUpAnswers) {
         if (running || CopilotInterviewer.isRunning()) {
             error = "A feedback request is already running.";
             return;
@@ -170,9 +205,12 @@ final class DesignController implements Disposable {
         AtomicBoolean cancel = new AtomicBoolean();
         canceled = cancel;
         running = true;
-        CopilotInterviewer.Settings run = DesignProgress.get().settings();
+        DesignProgress progress = progress();
+        CopilotInterviewer.Settings run = progress.settings();
+        String targetLevel = progress.targetLevel();
         Problem problem = DesignCatalog.find(attempt.problemId());
-        ProgressManager.getInstance().run(new Task.Backgroundable(project, "Getting interviewer feedback", true) {
+        String taskTitle = followUpAnswers.isBlank() ? "Getting interviewer feedback" : "Reviewing follow-up answers";
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, taskTitle, true) {
             private String failure = "";
             private String verdict;
 
@@ -204,15 +242,23 @@ final class DesignController implements Disposable {
                     }
                 }
                 try {
-                    DesignWorkspace workspace = DesignWorkspace.get();
+                    DesignWorkspace workspace = workspace();
                     String fingerprint = workspace.fingerprint(attempt);
                     String notes = workspace.readNotes(attempt);
                     String summary = DiagramSummary.summarize(workspace.readDiagram(attempt));
+                    List<String> priorFollowUps = followUpAnswers.isBlank()
+                            ? List.of()
+                            : workspace.latestFeedback(attempt, InterviewFeedback.Stored::fromJson)
+                                    .map(stored -> stored.feedback().followUpQuestions())
+                                    .orElse(List.of());
                     InterviewFeedback feedback = new CopilotInterviewer().run(
-                            InterviewPrompt.build(problem, notes, summary), run,
-                            () -> cancel.get() || progressIndicator.isCanceled());
+                            InterviewPrompt.build(problem, targetLevel, notes, summary, priorFollowUps, followUpAnswers),
+                            run, () -> cancel.get() || progressIndicator.isCanceled());
+                    String round = followUpAnswers.isBlank()
+                            ? InterviewFeedback.ROUND_INITIAL
+                            : InterviewFeedback.ROUND_FOLLOW_UP;
                     workspace.saveFeedback(attempt, new InterviewFeedback.Stored(feedback, fingerprint,
-                            run.model(), java.time.Instant.now().toString()).toJson());
+                            run.model(), java.time.Instant.now().toString(), targetLevel, round, followUpAnswers).toJson());
                     verdict = feedback.parsed() ? feedback.verdict() : "";
                 } catch (CopilotInterviewer.InterviewException | IOException | RuntimeException exception) {
                     if (!(exception instanceof CopilotInterviewer.InterviewException)) {
@@ -228,7 +274,7 @@ final class DesignController implements Disposable {
                 running = false;
                 indicator = null;
                 if (verdict != null) {
-                    DesignProgress.get().recordReview(attempt.id(), attempt.problemId(), verdict);
+                    progress().recordReview(attempt.id(), attempt.problemId(), verdict);
                     announce("Interviewer feedback is ready for " + problem.title() + ".", NotificationType.INFORMATION);
                 } else if (!failure.isEmpty()) {
                     error = failure;
@@ -269,8 +315,8 @@ final class DesignController implements Disposable {
     }
 
     private PageState.View view(String problemId, boolean isRunning, String currentError) {
-        DesignProgress progress = DesignProgress.get();
-        DesignWorkspace workspace = DesignWorkspace.get();
+        DesignProgress progress = progress();
+        DesignWorkspace workspace = workspace();
         ToolWindowView.AttemptStore store = new ToolWindowView.AttemptStore() {
             @Override
             public List<ToolWindowView.AttemptEntry> attempts(String problem) throws IOException {
@@ -282,7 +328,7 @@ final class DesignController implements Disposable {
             @Override
             public List<InterviewFeedback.Stored> feedbackHistory(String attemptId) throws IOException {
                 try {
-                    return workspace.feedbackHistory(workspace.read(attemptId), InterviewFeedback.Stored::fromJson);
+                    return workspace.feedbackHistory(attemptId, InterviewFeedback.Stored::fromJson);
                 } catch (IOException exception) {
                     LOG.debug("Could not read feedback", exception);
                     throw exception;
@@ -292,15 +338,16 @@ final class DesignController implements Disposable {
             @Override
             public String fingerprint(String attemptId) throws IOException {
                 try {
-                    return workspace.fingerprint(workspace.read(attemptId));
+                    return workspace.fingerprint(attemptId);
                 } catch (IOException exception) {
                     LOG.debug("Could not fingerprint attempt", exception);
                     throw exception;
                 }
             }
         };
-        return ToolWindowView.build(problemId, isRunning, currentError, progress.reviewedProblemIds(),
-                progress::selectedAttempt, progress::hintsRevealed, store, ZoneId.systemDefault());
+        return ToolWindowView.build(problemId, isRunning, currentError, progress.bestVerdicts(),
+                progress.targetLevel(), progress::selectedAttempt, progress::attemptLabel,
+                progress::hintsRevealed, store, ZoneId.systemDefault());
     }
 
     private static FileTime created(Attempt attempt) {

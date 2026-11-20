@@ -1,0 +1,21 @@
+{
+  "id": "social-graph-search",
+  "title": "Social Graph Connection Search",
+  "difficulty": "Medium",
+  "summary": "Store a massive social graph and find the shortest connection path between two people.",
+  "statement": "Design a service that stores mutual connections between users of a professional or social network and shows the shortest chain of introductions between any two people.\n\nFunctional requirements:\n- Users add and remove mutual connections.\n- View a user's direct connections and mutual connections with another profile.\n- Compute the shortest connection path between two users up to 4 degrees of separation (for example `Alice -> Priya -> Marco -> Lin`), or report that none exists within that bound.\n\nScale to assume:\n- 600 million users with an average of 300 connections each (some profiles have 50,000).\n- Connection-path and degree queries reach 200,000 requests per second.\n- Path lookups should return within 200 ms at the 99th percentile.",
+  "hints": [
+    "Estimate how many nodes a one-way breadth-first search visits at depth 4 when each person has 300 connections, then compare searching from both endpoints at once.",
+    "The adjacency lists will not fit on one machine. How do you partition them, and how do you avoid making thousands of sequential network hops per query?",
+    "High-degree accounts expand the frontier explosively and rarely represent real personal introductions. How should your search treat them?"
+  ],
+  "expectations": [
+    "Clarifies directed versus mutual edges, maximum hop count (such as 3 or 4 degrees), and whether any shortest path or all shortest paths are needed.",
+    "Shows mathematically why naive BFS (`300^4` visits) blows up and chooses bidirectional BFS (`2 * 300^2`) expanding whichever frontier is currently smaller.",
+    "Stores sorted adjacency lists partitioned by `user_id` across a sharded graph or key-value store, keeping hot adjacency lists in memory.",
+    "Batches neighbor lookups by destination shard in parallel at each BFS level rather than issuing per-user RPCs.",
+    "Computes 1st- and 2nd-degree checks cheaply via sorted-list intersection and caches each viewer's 1-hop neighborhood.",
+    "Handles super-nodes (high-degree accounts) by expanding the smaller frontier first, capping expansion fan-out, or deprioritizing unilateral broadcast accounts.",
+    "Maintains bidirectional edge symmetry under adds and deletes using idempotent edge writes and asynchronous repair."
+  ]
+}

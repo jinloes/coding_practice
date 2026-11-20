@@ -1,0 +1,21 @@
+{
+  "id": "distributed-job-scheduler",
+  "title": "Distributed Task Scheduler",
+  "difficulty": "Hard",
+  "summary": "Schedule delayed and recurring jobs across tenants and execute due tasks reliably at scale.",
+  "statement": "Design a multi-tenant job scheduling platform that internal teams and enterprise customers use to run one-off delayed tasks (for example 'send trial reminder in 72 hours') and recurring cron schedules (for example `0 * * * *`).\n\nFunctional requirements:\n- Create, cancel, pause, and inspect one-time delayed jobs and recurring cron schedules.\n- Dispatch due jobs within a few seconds of their scheduled execution time.\n- Retry failed executions with configurable backoff policies, and ensure a hung worker does not leave a job stuck forever.\n- Prevent a single tenant that schedules millions of jobs at `00:00` from delaying everyone else's schedules.\n\nScale to assume:\n- 10 billion scheduled future jobs stored at any time.\n- 1 million job executions per second at top-of-the-hour peaks.\n- Workers run arbitrary tasks lasting from 50 ms to 30 minutes.",
+  "hints": [
+    "Running `SELECT * FROM jobs WHERE run_at <= NOW() AND status = 'PENDING'` across 10 billion rows at top-of-the-hour spikes will lock and overload a single database. How do you partition by time and shard?",
+    "Walk through what happens if a worker claims a 20-minute job and crashes at minute 5, versus if a worker is merely experiencing a slow GC pause.",
+    "Why do human-chosen cron schedules (`0 0 * * *`, `0 * * * *`) create huge traffic cliffs, and how do you isolate tenants during those cliffs?"
+  ],
+  "expectations": [
+    "Clarifies execution guarantees (at-least-once delivery with idempotency tokens, why true exactly-once across external side effects is impossible), scheduling jitter tolerance, and maximum job runtime.",
+    "Separates cold durable storage of far-future jobs (partitioned by time bucket and shard ID) from a hot near-term dispatch tier (minute buckets, sorted sets, or hierarchical timing wheels) fed by background loaders.",
+    "Prevents duplicate claiming across schedulers via shard leases or atomic claim transitions with a fencing/lease token and visibility timeout.",
+    "Requires long-running workers to renew leases via periodic heartbeats; expired leases make jobs eligible for retry up to `max_attempts` before moving to a dead-letter state.",
+    "Computes and persists the next occurrence of recurring cron jobs deterministically (handling overlap policies such as skip, queue, or allow concurrent) without drift.",
+    "Protects tenant fairness during top-of-the-hour cron spikes using per-tenant concurrency/rate quotas, weighted fair queuing across tenant queues, and optional jitter windows.",
+    "Exposes job run history, cancellation checks, and lag/backlog metrics per shard and priority tier."
+  ]
+}

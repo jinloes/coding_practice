@@ -25,18 +25,27 @@ the web pages.
 
 ## Workflow
 
-1. Open the **System Design** tool window and pick a problem.
-2. Click **New attempt**. The plugin creates an attempt and opens its
-   `design.excalidraw` diagram in an Excalidraw tab and its `notes.md` in the
-   Markdown editor. Attempts persist across restarts and projects; choose an
-   earlier one from the attempt list.
-3. Reveal up to three hints, one at a time, for each attempt.
-4. Click **Get feedback**. Open diagrams are saved first; the interviewer then
-   returns a verdict (`Strong hire` to `No hire`), a 1–4 score with strengths and
-   gaps for each rubric dimension, follow-up questions, and expectations you
-   missed. Problems with feedback show a **Reviewed** mark.
-5. Keep editing. When the notes or the diagram change after a review, the
-   feedback is marked **stale** until you request it again. Earlier reviews on
+1. Open the **System Design** tool window, browse the **Guides** tab for 8
+   concise delivery, storage-matrix, API/security, and architecture guides, or
+   filter **Problems** by keyword, domain track, difficulty, and status
+   (including `Needs retry`), use **Surprise me** for a random cold prompt, and
+   set your **Target level** (`Mid-Level`, `Senior`, or `Staff+`).
+2. Switch to **Ambiguous prompt** mode if you want to practice gathering
+   requirements and scale assumptions before revealing the full specification.
+   Click **New attempt** (and optionally start the **45-minute paced timer**).
+   The plugin creates an attempt and opens its `design.excalidraw` diagram
+   (preloaded with offline system-design stencils in the Library drawer) and its
+   delivery-framework `notes.md`. Attempts persist across restarts and projects
+   and can be renamed or deleted.
+3. Reveal up to three hints, one at a time, and run through the **Pre-review
+   self-check** before grading.
+4. Click **Get feedback**. Open diagrams are saved first; the interviewer grades
+   against your selected target level and returns a verdict (`Strong hire` to
+   `No hire`), a 1–4 score with strengths and gaps for each rubric dimension,
+   follow-up questions, and missed expectations.
+5. Answer the interviewer's probing questions directly in the **Interactive
+   follow-up round** box (optionally updating your diagram or notes first) and
+   click **Submit follow-up answers** for a probed debrief. Earlier reviews on
    the same attempt remain available from the review history selector.
 
 The rubric dimensions are: Requirements and scope, Capacity estimates, API and

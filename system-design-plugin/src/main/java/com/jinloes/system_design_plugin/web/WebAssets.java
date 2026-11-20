@@ -56,7 +56,7 @@ public final class WebAssets {
             return Optional.empty();
         }
         String path = uri.getRawPath();
-        if (!"https".equals(uri.getScheme()) || !HOST.equals(uri.getRawAuthority()) || path == null
+        if (!"https".equals(uri.getScheme()) || !HOST.equals(uri.getRawAuthority())
                 || !SAFE_PATH.matcher(path).matches()) {
             return Optional.empty();
         }

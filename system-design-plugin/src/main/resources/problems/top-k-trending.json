@@ -1,0 +1,21 @@
+{
+  "id": "top-k-trending",
+  "title": "Top-K Trending Leaderboard",
+  "difficulty": "Hard",
+  "summary": "Compute the most viewed or searched items across sliding time windows at massive event rates.",
+  "statement": "Design a service that ingests a continuous stream of user activity events (such as video views, song plays, or search queries) and serves the top `K` most frequent items over multiple time windows.\n\nFunctional requirements:\n- Ingest activity events containing an `item_id` and timestamp.\n- Return the top `K` items (up to `K = 1,000`) for the last 5 minutes, last 1 hour, and last 24 hours, optionally scoped by region or category.\n- Refresh short-window rankings within a minute and longer windows within a few minutes.\n\nScale to assume:\n- 2 million activity events per second at peak.\n- 1 billion distinct item IDs seen per day, following a steep power-law distribution.\n- 100,000 read requests per second for trending lists.",
+  "hints": [
+    "Keeping an exact in-memory counter for a billion distinct IDs in every window is expensive, yet you only care about the heaviest hitters. What data structures trade a tiny bounded error for fixed memory?",
+    "Or if you need exact counts, how can you partition the event stream by `item_id` and roll minute-level buckets into 1-hour and 24-hour windows?",
+    "What happens when a single viral item generates 5% of all events and hashes to one partition?"
+  ],
+  "expectations": [
+    "Clarifies whether approximate rankings are acceptable versus exact counts, deduplication/bot filtering rules, supported `K` and window sizes, and regional slicing.",
+    "Estimates ingestion throughput (millions of events/sec), memory cost of exact maps for 1B keys versus fixed-size sketches, and notes that reads are trivially cached.",
+    "Buffers incoming events in a partitioned log (such as Kafka) and aggregates locally on ingestion hosts over short micro-batches before emitting.",
+    "Contrasts a fast approximate pipeline (Count-Min Sketch or Space-Saving / HeavyKeeper paired with a bounded min-heap of size `K`) with an exact partitioned stream processor.",
+    "Builds multi-window leaderboards from 1-minute tumbling buckets merged across partitions and rolled up into 5-minute, 1-hour, and 24-hour views.",
+    "Mitigates hot keys from viral items via local pre-aggregation on producers/ingestors or salted sub-keys merged at rollup time.",
+    "Serves read queries from a precomputed cache refreshed periodically, and handles late-arriving events, worker checkpointing, and replay without double-counting."
+  ]
+}

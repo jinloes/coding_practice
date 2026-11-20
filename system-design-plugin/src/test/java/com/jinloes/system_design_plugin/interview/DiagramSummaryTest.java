@@ -184,5 +184,24 @@ class DiagramSummaryTest {
                 .isEqualTo(DiagramSummary.EMPTY);
         assertThat(DiagramSummary.summarize(scene("{\"id\":\"blank\",\"type\":\"text\",\"text\":\"   \"}")))
                 .isEqualTo(DiagramSummary.EMPTY);
+
+        String edgeCases = DiagramSummary.summarize(scene(
+                "{\"type\":\"frame\",\"name\":\"Idless frame\"}",
+                "{\"type\":\"rectangle\"}",
+                "{\"id\":123,\"type\":\"ellipse\"}",
+                "{\"id\":\"r1\",\"type\":\"rectangle\",\"x\":\"bad\",\"y\":null,\"isDeleted\":\"no\"}",
+                "{\"id\":\"r2\",\"type\":\"rectangle\",\"x\":5,\"y\":5,\"isDeleted\":null}",
+                "{\"id\":\"r3\",\"type\":\"rectangle\",\"x\":\"bad\",\"y\":5}",
+                "{\"id\":\"r4\",\"type\":\"rectangle\",\"x\":1,\"y\":null}",
+                label("blankLabel", "r1", "   "),
+                label("firstLabel", "r1", "Part1"),
+                label("secondLabel", "r1", "Part2"),
+                "{\"id\":\"img1\",\"type\":\"image\"}",
+                label("imgLabel", "img1", "Icon"),
+                "{\"id\":\"arr1\",\"type\":\"arrow\",\"startBinding\":{\"elementId\":\"r2\"},"
+                        + "\"endBinding\":{\"elementId\":\"img1\"},\"startArrowhead\":1,\"endArrowhead\":\" \"}"));
+        assertThat(edgeCases)
+                .contains("rectangle \"Part1 Part2\"")
+                .contains("rectangle (unlabeled #3) -- \"Icon\"");
     }
 }

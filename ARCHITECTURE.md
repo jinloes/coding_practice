@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository is a multi-module Gradle project for Java platform, regex engine, and cryptography practice, plus the standalone `practice-plugin` build that holds every algorithm and data structure exercise.
+This repository is a multi-module Gradle project for Java platform, regex engine, and cryptography practice, plus two standalone IDE plugin builds: `practice-plugin` (algorithm and data structure exercises) and `system-design-plugin` (system design interview problems).
 
 ## Build System
 

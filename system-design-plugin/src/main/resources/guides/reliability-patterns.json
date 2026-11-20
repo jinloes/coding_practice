@@ -1,0 +1,12 @@
+{
+  "id": "reliability-patterns",
+  "title": "Consistency, Queues & Idempotency",
+  "summary": "Prevent double-charging, lost events, stuck workers, and oversold inventory under failures.",
+  "body": "Distributed systems fail partially: networks drop acknowledgements, workers crash mid-job, and downstream APIs stall. Use explicit coordination primitives wherever correctness matters.\n\n## At-least-once queues + idempotency\nTrue end-to-end 'exactly-once' across external side effects does not exist; build effectively-once behavior from two halves:\n- Producer durability: write domain changes and outbound events atomically in one local DB transaction (`Transactional Outbox`), then relay to the queue.\n- Consumer idempotency: require a deterministic `idempotency_key` or `event_id` recorded with a unique constraint so retries become safe no-ops.\n\n## Contention, holds, and leases\n- Preventing double-sell (tickets, local inventory): use row-level locking (`SELECT ... FOR UPDATE`), atomic conditional updates (`UPDATE ... WHERE status = 'AVAILABLE'`), or optimistic `version` checks.\n- Temporary holds: transition inventory to `HELD` with an explicit `expires_at` timestamp during payment, reclaiming expired holds lazily or via background sweepers.\n- Worker leases and fencing: assign long-running tasks a visibility timeout renewed by heartbeats plus a monotonic fencing token so a zombie worker delayed by GC cannot overwrite newer results.\n\n## Failure isolation\n- Separate critical queues (password resets, interactive code runs) from bulk queues (campaigns, contest batches).\n- Retry transient errors with exponential backoff + jitter, cap attempts into a Dead-Letter Queue (`DLQ`), and trip per-destination circuit breakers on broken webhooks or providers.",
+  "relatedProblemIds": [
+    "notification-service",
+    "webhook-delivery",
+    "distributed-job-scheduler",
+    "audit-log-pipeline"
+  ]
+}

@@ -129,7 +129,8 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
 
     private void load() {
         try {
-            if (DesignWorkspace.get().ownerOfDiagram(file.toNioPath()).isEmpty()) {
+            if (ApplicationManager.getApplication().getService(DesignWorkspace.class)
+                    .ownerOfDiagram(file.toNioPath()).isEmpty()) {
                 throw new IOException("This file is not a System Design Practice attempt.");
             }
             file.refresh(false, false);
@@ -156,7 +157,8 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
         }
         String error = "";
         try {
-            if (DesignWorkspace.get().ownerOfDiagram(file.toNioPath()).isEmpty()) {
+            if (ApplicationManager.getApplication().getService(DesignWorkspace.class)
+                    .ownerOfDiagram(file.toNioPath()).isEmpty()) {
                 throw new IOException("The diagram is no longer inside the practice workspace.");
             }
             WriteAction.run(() -> file.setBinaryContent(pending.scene().getBytes(StandardCharsets.UTF_8), -1, -1, this));

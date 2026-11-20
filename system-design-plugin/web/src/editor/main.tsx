@@ -13,6 +13,7 @@ import {
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import type { EditorMessage } from '../types';
 import { SaveTracker } from './saveTracker';
+import { systemDesignStencils } from './stencils';
 
 declare global {
   interface Window {
@@ -109,7 +110,10 @@ function Editor() {
     } else {
       window.addEventListener('designbridge', announce, { once: true });
     }
-    return () => window.removeEventListener('designbridge', announce);
+    return () => {
+      window.clearTimeout(timer.current);
+      window.removeEventListener('designbridge', announce);
+    };
   }, [save]);
 
   const onApi = useCallback((excalidraw: ExcalidrawImperativeAPI) => {
@@ -142,7 +146,7 @@ function Editor() {
       <div className="canvas">
         <Excalidraw
           key={loaded.key}
-          initialData={{ ...loaded.data, scrollToContent: true }}
+          initialData={{ ...loaded.data, libraryItems: systemDesignStencils(), scrollToContent: true }}
           excalidrawAPI={onApi}
           onChange={onChange}
           theme={dark ? 'dark' : 'light'}

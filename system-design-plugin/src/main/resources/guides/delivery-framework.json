@@ -1,0 +1,12 @@
+{
+  "id": "delivery-framework",
+  "title": "The 45-Minute Interview Roadmap",
+  "summary": "Pace a system design interview cleanly from scoping to deep dives without running out of time.",
+  "body": "Strong candidates treat a 45-minute design interview as a linear progression that delivers a working end-to-end system first, then spends remaining time proving technical depth on the hardest bottlenecks.\n\n## 1. Requirements and scope (~5 min)\nPin down the top 3 to 4 user-facing capabilities and quantify the system qualities that actually shape the architecture.\n- Functional: state concrete actions (`upload 50 GB file`, `book assigned seat`, `query top K over 1 hour`) and explicitly call out non-goals.\n- Non-functional: quantify latency targets, read-to-write skew, traffic spikes, and where consistency beats availability (for example checkout vs search).\n\n## 2. Core entities (~2 min)\nList the 3 to 5 nouns your APIs exchange and your storage layer persists before drawing boxes.\n- Keep it light (`User`, `Event`, `SeatHold`, `Order`), saving full column types and partition keys for the deep dive.\n\n## 3. API and system interface (~5 min)\nWrite one endpoint or RPC per functional requirement so your diagram has concrete entry points.\n- Include auth context, pagination cursors (`cursor` rather than SQL `OFFSET`), and idempotency keys on mutating writes.\n\n## 4. High-level architecture (~12 min)\nTrace each API from client to storage until every functional requirement works at moderate scale.\n- Group components logically using Excalidraw frames and label arrows with protocols or actions.\n\n## 5. Deep dives and tradeoffs (~15 min)\nProactively pick the 2 or 3 hardest bottlenecks—do not wait passively if you are targeting Senior or Staff+.\n- Mid-Level: deliver a clean, complete working design and handle guided follow-up questions.\n- Senior: move briskly through basics to spend half the session on scaling bottlenecks, failure modes, and tradeoffs.\n- Staff+: frame constraints decisively, avoid over-engineering when a single server suffices, and address blast-radius isolation, multi-region behavior, and operational cost.",
+  "relatedProblemIds": [
+    "url-shortener",
+    "rate-limiter",
+    "ticket-booking",
+    "news-feed"
+  ]
+}
