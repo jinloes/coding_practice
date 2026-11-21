@@ -1,0 +1,30 @@
+{
+  "id": "sliding-window-rate-limiter",
+  "title": "Sliding Window Rate Limiter",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Design an in-memory per-client request limiter that enforces a maximum number of accepted requests within a rolling window of seconds.\n\nContract\n- `new Solution(maxRequests, windowSeconds)` configures the limiter. Both arguments must be at least `1`; otherwise throw `IllegalArgumentException`.\n- `allow(clientId, timestampSeconds)` evaluates one incoming request for `clientId` (`clientId` non-null and non-blank, `timestampSeconds >= 0`, otherwise throw `IllegalArgumentException`). For any single client, calls arrive in nondecreasing `timestampSeconds` order.\n- Count only previously **accepted** requests for `clientId` whose timestamps fall inside `(timestampSeconds - windowSeconds, timestampSeconds]` (timestamps at or before `timestampSeconds - windowSeconds` have expired).\n- If that count is strictly less than `maxRequests`, record this request as accepted and return `true`; otherwise reject it without recording it and return `false`.\n\nExamples\n- With `maxRequests = 2, windowSeconds = 10`, calls `(api, 1), (api, 5), (api, 10), (api, 11)` return `[true, true, false, true]`.\n- With `maxRequests = 1, windowSeconds = 5`, calls `(alice, 0), (bob, 0), (alice, 4), (alice, 5)` return `[true, true, false, true]`.\n- With `maxRequests = 3, windowSeconds = 4`, calls `(svc, 2), (svc, 2), (svc, 2), (svc, 2), (svc, 6)` return `[true, true, true, false, true]`.\n",
+  "examples": [
+    {
+      "input": "limit 2 10; allow api 1; allow api 5; allow api 10; allow api 11",
+      "output": "[true, true, false, true]"
+    },
+    {
+      "input": "limit 1 5; allow alice 0; allow bob 0; allow alice 4; allow alice 5",
+      "output": "[true, true, false, true]"
+    },
+    {
+      "input": "limit 3 4; allow svc 2; allow svc 2; allow svc 2; allow svc 2; allow svc 6",
+      "output": "[true, true, true, false, true]"
+    }
+  ],
+  "hints": [
+    "Track each client's accepted timestamps in its own queue so clients never interfere with one another.",
+    "Because timestamps for a client are nondecreasing, expired timestamps (`<= timestampSeconds - windowSeconds`) always sit at the front of that client's queue.",
+    "Evict expired timestamps from the front, check whether `deque.size() < maxRequests`, and push `timestampSeconds` only when the request is accepted. Intended complexity across `n` calls: O(n) total time (`O(1)` amortized per call) and O(n) space."
+  ],
+  "inputSyntax": "Input: limit <maxRequests> <windowSeconds> followed by semicolon-separated allow <clientId> <timestamp>, for example: limit 2 10; allow api 1; allow api 5; allow api 10; allow api 11",
+  "sampleInput": "limit 2 10; allow api 1; allow api 5; allow api 10; allow api 11",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

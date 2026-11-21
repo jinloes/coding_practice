@@ -1,26 +1,46 @@
 package com.jinloes.practice_plugin.ui;
 
+import com.intellij.execution.ExecutionException;
+import com.intellij.openapi.actionSystem.ActionUiKind;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.testFramework.EdtTestUtil;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
+import com.intellij.ui.SearchTextField;
 import com.intellij.ui.components.JBList;
 import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
+import com.jinloes.practice_plugin.run.CheckResult;
 import com.jinloes.practice_plugin.run.PracticeRunner;
+import com.jinloes.practice_plugin.run.RunEvent;
+import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
+import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,7 +62,10 @@ class PracticePanelTest {
     @AfterEach
     void tearDown() throws Exception {
         if (fixture != null) {
-            EdtTestUtil.runInEdtAndWait(() -> fixture.tearDown());
+            EdtTestUtil.runInEdtAndWait(() -> {
+                PracticeModuleWorkspace.get(fixture.getProject()).dispose();
+                fixture.tearDown();
+            });
         }
     }
 
@@ -174,43 +197,18 @@ class PracticePanelTest {
     @Test
     void runToolbarExposesDebugExamplesAlongsideRunAndCheckActions() {
         EdtTestUtil.runInEdtAndWait(() -> {
-            java.util.concurrent.atomic.AtomicBoolean debuggedExamples =
-                    new java.util.concurrent.atomic.AtomicBoolean();
+            AtomicBoolean debuggedExamples = new AtomicBoolean();
             PracticeActions.RunControls controls = new PracticeActions.RunControls() {
-                @Override
-                public boolean canRun() {
-                    return true;
-                }
-
-                @Override
-                public boolean isRunning() {
-                    return false;
-                }
-
-                @Override
-                public void runExamples() {
-                }
-
-                @Override
-                public void debugExamples() {
-                    debuggedExamples.set(true);
-                }
-
-                @Override
-                public void runWithInput(boolean debug) {
-                }
-
-                @Override
-                public void check() {
-                }
-
-                @Override
-                public void stop() {
-                }
+                @Override public boolean canRun() { return true; }
+                @Override public boolean isRunning() { return false; }
+                @Override public void runExamples() {}
+                @Override public void debugExamples() { debuggedExamples.set(true); }
+                @Override public void runWithInput(boolean debug) {}
+                @Override public void check() {}
+                @Override public void stop() {}
             };
-            var group = (com.intellij.openapi.actionSystem.DefaultActionGroup)
-                    PracticeActions.runToolbar(controls, new javax.swing.JPanel()).getActionGroup();
-            var actions = java.util.Arrays.asList(group.getChildActionsOrStubs());
+            var group = (DefaultActionGroup) PracticeActions.runToolbar(controls, new JPanel()).getActionGroup();
+            var actions = Arrays.asList(group.getChildActionsOrStubs());
 
             assertThat(actions).extracting(action -> action.getTemplatePresentation().getText())
                     .containsExactly(
@@ -223,9 +221,8 @@ class PracticePanelTest {
             var debugAction = actions.stream()
                     .filter(action -> "Debug Examples".equals(action.getTemplatePresentation().getText()))
                     .findFirst().orElseThrow();
-            debugAction.actionPerformed(com.intellij.openapi.actionSystem.AnActionEvent.createEvent(
-                    debugAction, com.intellij.openapi.actionSystem.DataContext.EMPTY_CONTEXT, null, "test",
-                    com.intellij.openapi.actionSystem.ActionUiKind.NONE, null));
+            debugAction.actionPerformed(AnActionEvent.createEvent(
+                    debugAction, DataContext.EMPTY_CONTEXT, null, "test", ActionUiKind.NONE, null));
             assertThat(debuggedExamples).isTrue();
         });
     }
@@ -233,15 +230,16 @@ class PracticePanelTest {
     @Test
     void editingAnUncheckedAttemptDoesNotClaimAStaleResultUntilAResultExists() throws Exception {
         var attempt = ManagedPracticeWorkspace.get().create(ExerciseCatalog.find("pair-sum"));
-        com.jinloes.practice_plugin.state.ManagedPracticeProgress.get()
-                .getState().selectedAttempts.put("pair-sum", attempt.id());
+        ManagedPracticeProgress.get().getState().selectedAttempts.put("pair-sum", attempt.id());
         EdtTestUtil.runInEdtAndWait(() -> {
             PracticePanel panel = new PracticePanel(fixture.getProject());
             try {
                 @SuppressWarnings("unchecked")
-                javax.swing.JComboBox<ManagedPracticeWorkspace.Attempt> combo =
-                        UIUtil.findComponentOfType(panel, javax.swing.JComboBox.class);
-                assertThat(combo).isNotNull();
+                JComboBox<ManagedPracticeWorkspace.Attempt> combo =
+                        UIUtil.findComponentsOfType(panel, JComboBox.class).stream()
+                                .filter(box -> "Saved attempts".equals(box.getAccessibleContext().getAccessibleName()))
+                                .findFirst()
+                                .orElseThrow();
                 combo.addItem(attempt);
                 combo.setSelectedItem(attempt);
 
@@ -256,6 +254,160 @@ class PracticePanelTest {
 
                 assertThat(panel.statusText()).isEqualTo("Edited since displayed result; check again.");
                 assertThat(panel.resultsView().bannerText()).isEqualTo("Examples passed (stale)");
+            } finally {
+                Disposer.dispose(panel);
+            }
+        });
+    }
+
+    @Test
+    void difficultyFilterOrdersLevelsFromEasyToHard() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticePanel panel = new PracticePanel(fixture.getProject());
+            try {
+                JComboBox<?> difficulty = UIUtil.findComponentsOfType(panel, JComboBox.class)
+                        .stream()
+                        .filter(box -> "Difficulty filter".equals(box.getAccessibleContext().getAccessibleName()))
+                        .findFirst()
+                        .orElseThrow();
+                List<Object> items = IntStream.range(0, difficulty.getItemCount())
+                        .mapToObj(index -> (Object) difficulty.getItemAt(index))
+                        .toList();
+
+                assertThat(items).containsExactly("All difficulties", "Easy", "Medium", "Hard");
+            } finally {
+                Disposer.dispose(panel);
+            }
+        });
+    }
+
+    @Test
+    void asyncExecutionStartFailureShowsActionFailedInsteadOfPreviousPassedBanner() throws Exception {
+        var workspace = ManagedPracticeWorkspace.get();
+        var attempt = workspace.create(ExerciseCatalog.find("pair-sum"));
+        var progress = ManagedPracticeProgress.get();
+        progress.getState().selectedAttempts.put("pair-sum", attempt.id());
+        progress.record(attempt.id(), "pair-sum", workspace.fingerprint(attempt),
+                new CheckResult(CheckResult.Status.PASSED, 5, 0, "All passed"));
+
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticePanel panel = new PracticePanel(fixture.getProject());
+            try {
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+                assertThat(panel.resultsView().bannerText()).isEqualTo("Passed");
+
+                PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        runner.runExamples("missing-attempt");
+                    } catch (ExecutionException ignored) {
+                    }
+                }).join();
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+
+                assertThat(panel.resultsView().bannerText()).isEqualTo("Action failed");
+                assertThat(panel.resultsView().outputText()).contains("Cannot start practice execution:");
+            } finally {
+                fixture.getProject().getService(PracticeRunner.class).stop();
+                Disposer.dispose(panel);
+            }
+        });
+    }
+
+    @Test
+    void checkCompletionUpdatesSelectedAttemptOrLeavesSwitchedExerciseResultsUntouched() throws Exception {
+        var pairAttempt = ManagedPracticeWorkspace.get().create(ExerciseCatalog.find("pair-sum"));
+        var progress = ManagedPracticeProgress.get();
+        progress.getState().selectedAttempts.put("pair-sum", pairAttempt.id());
+        progress.record(pairAttempt.id(), "pair-sum", "fp-pass",
+                new CheckResult(CheckResult.Status.PASSED, 5, 0, "All passed"));
+
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticePanel panel = new PracticePanel(fixture.getProject());
+            try {
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+                panel.resultsView().clear();
+                var method = PracticePanel.class.getDeclaredMethod("onRunEvent", RunEvent.class);
+                method.setAccessible(true);
+
+                method.invoke(panel, new RunEvent.CheckFinished(pairAttempt.id(), "pair-sum", "Full check: PASSED"));
+                assertThat(panel.resultsView().bannerText()).isEqualTo("Passed");
+                assertThat(panel.resultsView().outputText()).isEqualTo("Full check: PASSED");
+
+                @SuppressWarnings("unchecked")
+                JBList<Exercise> list = (JBList<Exercise>) panel.preferredFocusedComponent();
+                list.setSelectedValue(ExerciseCatalog.find("binary-search"), true);
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+                panel.resultsView().showMessage("Viewing binary search", "Current tab");
+
+                method.invoke(panel, new RunEvent.Started(pairAttempt.id(), "Running pair-sum check"));
+                assertThat(panel.resultsView().bannerText()).isEqualTo("Viewing binary search");
+
+                method.invoke(panel, new RunEvent.CheckFinished(pairAttempt.id(), "pair-sum", "Full check: PASSED"));
+                assertThat(panel.resultsView().bannerText()).isEqualTo("Viewing binary search");
+                assertThat(panel.resultsView().outputText()).isEqualTo("Current tab");
+                assertThat(panel.statusText()).contains("Check finished for " + pairAttempt.id() + ": Passed");
+            } catch (ReflectiveOperationException error) {
+                throw new AssertionError(error);
+            } finally {
+                Disposer.dispose(panel);
+            }
+        });
+    }
+
+    @Test
+    void enterAndDoubleClickResumeExistingAttemptWhileIgnoringBlankSpace() throws Exception {
+        Exercise exercise = ExerciseCatalog.find("valid-anagram");
+        var existing = ManagedPracticeWorkspace.get().create(exercise);
+        int countBefore = ManagedPracticeWorkspace.get().attempts(exercise.id()).size();
+        ManagedPracticeProgress.get().getState().selectedAttempts.put(exercise.id(), existing.id());
+
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticePanel panel = new PracticePanel(fixture.getProject());
+            try {
+                assertThat(UIUtil.findComponentsOfType(panel, JComboBox.class))
+                        .isNotEmpty()
+                        .allMatch(ComboBox.class::isInstance);
+
+                @SuppressWarnings("unchecked")
+                JBList<Exercise> list = (JBList<Exercise>) panel.preferredFocusedComponent();
+                list.setSize(280, 400);
+                list.setSelectedValue(exercise, true);
+                @SuppressWarnings("unchecked")
+                JComboBox<ManagedPracticeWorkspace.Attempt> attemptsBox =
+                        UIUtil.findComponentsOfType(panel, JComboBox.class).stream()
+                                .filter(box -> "Saved attempts".equals(box.getAccessibleContext().getAccessibleName()))
+                                .findFirst()
+                                .orElseThrow();
+                attemptsBox.removeAllItems();
+
+                var enterAction = list.getActionMap().get("practiceStartOrResume");
+                assertThat(enterAction).isNotNull();
+                enterAction.actionPerformed(new ActionEvent(list, 0, "enter"));
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+                assertThat(attemptsOf(exercise)).hasSize(countBefore);
+                assertThat(attemptsBox.getSelectedItem()).isEqualTo(existing);
+
+                attemptsBox.removeAllItems();
+                int selectedIndex = list.getSelectedIndex();
+                Rectangle bounds = list.getCellBounds(selectedIndex, selectedIndex);
+                assertThat(bounds).isNotNull();
+                HtmlPageViewTest.dispatchDoubleClick(list, bounds.x + 8, bounds.y + bounds.height / 2, 1_000L);
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+                assertThat(attemptsOf(exercise)).hasSize(countBefore);
+                assertThat(attemptsBox.getSelectedItem()).isEqualTo(existing);
+
+                Exercise freshExercise = ExerciseCatalog.all().stream()
+                        .filter(candidate -> attemptsOf(candidate).isEmpty())
+                        .findFirst()
+                        .orElseThrow();
+                UIUtil.findComponentsOfType(panel, SearchTextField.class).stream().findFirst().orElseThrow()
+                        .setText(freshExercise.title());
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+                Rectangle singleRow = list.getCellBounds(0, 0);
+                HtmlPageViewTest.dispatchDoubleClick(list, singleRow.x + 8, singleRow.y + singleRow.height + 60, 5_000L);
+                PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+                assertThat(attemptsOf(freshExercise)).isEmpty();
             } finally {
                 Disposer.dispose(panel);
             }

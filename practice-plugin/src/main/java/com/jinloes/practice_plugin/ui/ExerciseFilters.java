@@ -1,5 +1,6 @@
 package com.jinloes.practice_plugin.ui;
 
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.SearchTextField;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
@@ -9,7 +10,6 @@ import com.jinloes.practice_plugin.catalog.GuideCatalog.Guide;
 import com.jinloes.practice_plugin.catalog.TrackCatalog;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import java.awt.GridLayout;
 import java.util.List;
@@ -24,12 +24,12 @@ final class ExerciseFilters {
     private static final String ALL_GUIDES = "All guides";
     private static final String ALL_TRACKS = "All tracks";
 
-    private final JComboBox<Object> guide = new JComboBox<>();
-    private final JComboBox<Object> track = new JComboBox<>();
-    private final JComboBox<String> topic = new JComboBox<>();
-    private final JComboBox<String> difficulty = new JComboBox<>();
-    private final JComboBox<String> progress =
-            new JComboBox<>(new String[]{"All progress", "Passed before", "Not passed"});
+    private final ComboBox<Object> guide = new ComboBox<>();
+    private final ComboBox<Object> track = new ComboBox<>();
+    private final ComboBox<String> topic = new ComboBox<>();
+    private final ComboBox<String> difficulty = new ComboBox<>();
+    private final ComboBox<String> progress =
+            new ComboBox<>(new String[]{"All progress", "Passed before", "Not passed"});
     private final SearchTextField search = new SearchTextField(false);
 
     ExerciseFilters() {
@@ -45,7 +45,7 @@ final class ExerciseFilters {
         topic.addItem("All topics");
         ExerciseCatalog.all().stream().map(Exercise::topic).distinct().sorted().forEach(topic::addItem);
         difficulty.addItem("All difficulties");
-        ExerciseCatalog.all().stream().map(Exercise::difficulty).distinct().sorted().forEach(difficulty::addItem);
+        GuideCatalog.DIFFICULTIES.forEach(difficulty::addItem);
         guide.getAccessibleContext().setAccessibleName("Guide filter");
         track.getAccessibleContext().setAccessibleName("Track filter");
         topic.getAccessibleContext().setAccessibleName("Topic filter");

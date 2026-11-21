@@ -21,6 +21,7 @@
     "integer-palindrome",
     "rectangle-intersection",
     "pascal-triangle-rows",
-    "string-integer-conversion"
+    "string-integer-conversion",
+    "credit-window-rate-limiter"
   ]
 }

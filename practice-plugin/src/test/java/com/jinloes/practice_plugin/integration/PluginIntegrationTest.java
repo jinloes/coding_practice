@@ -112,8 +112,13 @@ class PluginIntegrationTest {
             try {
                 new PracticeToolWindowFactory().createToolWindowContent(fixture.getProject(), window);
                 assertThat(window.getContentManager().getContentCount()).isEqualTo(1);
-                assertThat(window.getContentManager().getContent(0).getComponent())
-                        .isInstanceOf(javax.swing.JPanel.class);
+                var content = window.getContentManager().getContent(0);
+                assertThat(content.getComponent()).isInstanceOf(javax.swing.JPanel.class);
+                assertThat(content.getPreferredFocusableComponent())
+                        .isInstanceOf(com.intellij.ui.components.JBList.class);
+                assertThat(PracticeToolWindowFactory.class.getResource("/icons/practiceToolWindow.svg")).isNotNull();
+                assertThat(PracticeToolWindowFactory.class.getResource("/icons/practiceToolWindow_dark.svg"))
+                        .isNotNull();
             } finally {
                 manager.unregisterToolWindow("Practice integration");
             }

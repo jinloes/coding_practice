@@ -70,6 +70,8 @@ class PracticeModuleWorkspaceTest {
 
         assertThat(firstModule).isNotSameAs(secondModule);
         assertThat(reopenedFirstModule).isSameAs(firstModule);
+        assertThat(com.intellij.openapi.module.ModuleType.get(firstModule))
+                .isEqualTo(com.intellij.openapi.module.JavaModuleType.getModuleType());
         assertThat(ModuleManager.getInstance(fixture.getProject()).getModules())
                 .contains(firstModule, secondModule);
         assertThat(ModuleRootManager.getInstance(firstModule).getSdk()).isNotNull();

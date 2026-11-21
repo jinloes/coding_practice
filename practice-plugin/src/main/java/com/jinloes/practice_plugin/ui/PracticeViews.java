@@ -1,25 +1,45 @@
 package com.jinloes.practice_plugin.ui;
 
 import com.intellij.ui.ColorUtil;
+import com.intellij.ui.DoubleClickListener;
+import com.intellij.ui.OnePixelSplitter;
+import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBList;
+import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
+import com.intellij.util.ui.JBFont;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.GuideCatalog;
 import com.jinloes.practice_plugin.catalog.GuideCatalog.Guide;
 import com.jinloes.practice_plugin.catalog.TrackCatalog;
+import org.jetbrains.annotations.NotNull;
 
+import javax.swing.AbstractAction;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Stateless Swing building blocks for {@link PracticePanel}. */
@@ -87,24 +107,41 @@ final class PracticeViews {
      * a platform-specific pane so the rendering does not depend on an IDE version's HTML API.
      */
     static JEditorPane htmlPane() {
-        HTMLEditorKit kit = new HTMLEditorKit();
+        JEditorPane pane = new JEditorPane();
+        pane.setEditable(false);
+        pane.setOpaque(true);
+        pane.setBorder(JBUI.Borders.empty());
+        applyHtmlTheme(pane);
+        return pane;
+    }
+
+    static void applyHtmlTheme(JEditorPane pane) {
         Font font = UIUtil.getLabelFont();
         String body = ColorUtil.toHex(UIUtil.getLabelForeground());
-        StyleSheet css = kit.getStyleSheet();
+        HTMLEditorKit kit = new HTMLEditorKit() {
+            private final StyleSheet styles = createStyles(super.getStyleSheet(), font, body);
+
+            @Override
+            public StyleSheet getStyleSheet() {
+                return styles;
+            }
+        };
+        pane.setEditorKit(kit);
+        pane.setBackground(UIUtil.getPanelBackground());
+    }
+
+    private static StyleSheet createStyles(StyleSheet defaults, Font font, String bodyHex) {
+        StyleSheet css = new StyleSheet();
+        if (defaults != null) {
+            css.addStyleSheet(defaults);
+        }
         css.addRule("body { font-family: \"" + font.getFamily() + "\"; font-size: " + font.getSize()
-                + "pt; color: #" + body + "; margin: 8px; }");
+                + "pt; color: #" + bodyHex + "; margin: 8px; }");
         css.addRule("p { margin: 0 0 10px 0; }");
         css.addRule("ul { margin: 0 0 10px 0; }");
         css.addRule("li { margin: 0 0 6px 0; }");
         css.addRule("code { font-family: monospace; }");
-
-        JEditorPane pane = new JEditorPane();
-        pane.setEditorKit(kit);
-        pane.setEditable(false);
-        pane.setOpaque(true);
-        pane.setBackground(UIUtil.getPanelBackground());
-        pane.setBorder(JBUI.Borders.empty());
-        return pane;
+        return css;
     }
 
     static JBTextArea textArea() {
@@ -114,5 +151,75 @@ final class PracticeViews {
         area.setWrapStyleWord(true);
         area.setBorder(JBUI.Borders.empty(8));
         return area;
+    }
+
+    static void installListActivation(JList<?> list, Runnable onActivate) {
+        new DoubleClickListener() {
+            @Override
+            protected boolean onDoubleClick(@NotNull MouseEvent event) {
+                int index = list.locationToIndex(event.getPoint());
+                java.awt.Rectangle bounds = index < 0 ? null : list.getCellBounds(index, index);
+                if (bounds == null || !bounds.contains(event.getPoint())) {
+                    return false;
+                }
+                onActivate.run();
+                return true;
+            }
+        }.installOn(list);
+        list.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "practiceStartOrResume");
+        list.getActionMap().put("practiceStartOrResume", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                onActivate.run();
+            }
+        });
+    }
+
+    static JPanel hintTab(JBTextArea hints, HintButton hintButton) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JBScrollPane(hints), BorderLayout.CENTER);
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        actions.add(hintButton.component());
+        panel.add(actions, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    static JPanel column(Component... rows) {
+        JPanel panel = new JPanel(new GridLayout(0, 1, 4, 4));
+        for (Component row : rows) {
+            panel.add(row);
+        }
+        return panel;
+    }
+
+    static JPanel header(ExerciseFilters filters, JBLabel count) {
+        JPanel panel = column();
+        filters.addTo(panel);
+        count.setFont(JBFont.small());
+        count.setForeground(UIUtil.getContextHelpForeground());
+        panel.add(count);
+        return panel;
+    }
+
+    static JBList<Exercise> exerciseList(
+            DefaultListModel<Exercise> model,
+            Supplier<Set<String>> passed,
+            Runnable onActivate
+    ) {
+        JBList<Exercise> list = new JBList<>(model);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setCellRenderer(new ExerciseCellRenderer(passed));
+        list.getEmptyText().setText("No exercises match these filters");
+        list.getAccessibleContext().setAccessibleName("Exercises");
+        installListActivation(list, onActivate);
+        return list;
+    }
+
+    static OnePixelSplitter splitter(JComponent first, JComponent second) {
+        OnePixelSplitter split = new OnePixelSplitter(true, 0.35f);
+        split.setFirstComponent(new JBScrollPane(first));
+        split.setSecondComponent(second);
+        return split;
     }
 }

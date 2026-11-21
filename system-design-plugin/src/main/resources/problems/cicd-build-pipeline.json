@@ -1,0 +1,21 @@
+{
+  "id": "cicd-build-pipeline",
+  "title": "CI/CD Pipeline Runner and Live Build Logs",
+  "difficulty": "Medium",
+  "summary": "Orchestrate multi-stage repository build DAGs on isolated runners with caching and live log tailing.",
+  "statement": "Design a cloud CI/CD pipeline service that runs automated build, test, and deployment workflows whenever developers push commits or open pull requests.\n\nFunctional requirements:\n- Parse a repository's pipeline definition at the pushed commit SHA and execute steps as a directed acyclic graph (`DAG`) with parallel fan-out, fan-in joins, and manual approval gates.\n- Run each step inside a clean, isolated compute environment with cached dependencies and scoped secrets that are masked from output.\n- Stream live console logs to developers watching a running step in the browser, and retain completed logs for later inspection.\n- Enforce deployment concurrency locks per environment (such as `staging` or `production`) so concurrent pipelines never deploy out of order.\n\nScale to assume:\n- 4 million repositories triggering 12 million pipeline runs and 60 million step executions per day, peaking at 2,500 step starts per second.\n- 80,000 concurrently executing containers or microVMs emitting up to 2 GB/s of combined log lines.\n- Median step startup latency under 5 seconds; live log viewers expect output within 1 second.",
+  "hints": [
+    "Plain shared containers risk kernel escapes across untrusted repositories, while cold-booting fresh VMs takes tens of seconds. How do you get strong isolation and `< 5s` step startup?",
+    "Walk through how log chunks travel from a running build agent to both a live browser viewer and durable long-term storage—what happens when a developer opens the page halfway through a 10-minute build?",
+    "If commit `A` starts deploying to `production` and a newer commit `B` finishes tests before `A` completes, how should your scheduler coordinate environment locks without deadlocks?"
+  ],
+  "expectations": [
+    "Clarifies runner isolation model (microVMs vs dedicated VMs), step timeout and retry semantics, secret scoping rules for untrusted fork pull requests, and log retention.",
+    "Models a pipeline run and its step `DAG` in a transactional state machine, unlocking downstream steps as upstream dependencies succeed and supporting lease heartbeats so crashed runners are detected and retried or failed cleanly.",
+    "Dispatches steps via partitioned queues by runner class (`OS`, `CPU/RAM`, `GPU`) onto pre-warmed ephemeral microVMs (`Firecracker`/isolated VMs) that are destroyed after a single step.",
+    "Accelerates builds with tenant-scoped, content-addressed dependency and container-layer caches stored in regional object storage (keyed by lockfile hash with branch fallback) via short-lived pre-signed URLs.",
+    "Streams numbered log chunks from the runner (after scrubbing registered secret values) to a log ingestion tier that fans live frames over `SSE`/WebSockets while buffering multi-megabyte segments to object storage, letting late joiners stitch archived chunks with the live stream.",
+    "Coordinates per-environment deployment locks `(repo_id, environment)` using serialized queues or leased mutexes with configurable supersede behavior that cancels queued older commits in favor of newer ones.",
+    "Prevents noisy-neighbor starvation through per-workspace concurrency quotas, fair-share scheduling across tenants, and egress network controls on build runners."
+  ]
+}

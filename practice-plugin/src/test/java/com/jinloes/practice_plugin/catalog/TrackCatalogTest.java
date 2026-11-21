@@ -15,9 +15,9 @@ class TrackCatalogTest {
     @Test
     void listsTheTracksWithTheirExercisesEasiestFirst() {
         assertThat(TrackCatalog.all()).extracting(Guide::id)
-                .containsExactly("blind-75", "neetcode-150", "google", "apple");
+                .containsExactly("blind-75", "neetcode-150", "google", "apple", "atlassian");
         assertThat(TrackCatalog.all()).extracting(Guide::title)
-                .containsExactly("Blind 75", "NeetCode 150", "Google", "Apple");
+                .containsExactly("Blind 75", "NeetCode 150", "Google", "Apple", "Atlassian");
         for (Guide track : TrackCatalog.all()) {
             assertThat(track.exercises()).extracting(exercise -> GuideCatalog.DIFFICULTIES.indexOf(exercise.difficulty()))
                     .as("%s lists Easy, then Medium, then Hard", track.id())
@@ -59,6 +59,21 @@ class TrackCatalogTest {
         }
         assertThat(TrackCatalog.find("google").summary()).contains("Approximate");
         assertThat(TrackCatalog.find("apple").summary()).contains("Approximate");
+        assertThat(TrackCatalog.find("atlassian").summary()).contains("Approximate");
+    }
+
+    @Test
+    void atlassianCoversEveryDifficultyWithDistinctExercises() {
+        Guide atlassian = TrackCatalog.find("atlassian");
+        assertThat(atlassian.exercises()).doesNotHaveDuplicates();
+        for (String difficulty : GuideCatalog.DIFFICULTIES) {
+            assertThat(atlassian.exercisesAt(difficulty)).as("Atlassian %s exercises", difficulty).isNotEmpty();
+        }
+        assertThat(atlassian.exercises()).extracting(Exercise::id)
+                .contains("agent-satisfaction-ranking", "sliding-window-rate-limiter",
+                        "collection-storage-report", "wildcard-route-matcher",
+                        "grid-snake-game", "credit-window-rate-limiter",
+                        "rank-teams-by-votes", "popularity-tracker");
     }
 
     @Test
@@ -88,7 +103,7 @@ class TrackCatalogTest {
         assertThat(TrackCatalog.containing("queens-placement")).extracting(Guide::id)
                 .containsExactly("neetcode-150");
         assertThat(TrackCatalog.containing("least-recently-used-cache")).extracting(Guide::id)
-                .containsExactly("neetcode-150", "google", "apple");
+                .containsExactly("neetcode-150", "google", "apple", "atlassian");
         assertThat(TrackCatalog.containing("roman-to-integer")).isEmpty();
         assertThatThrownBy(() -> TrackCatalog.find("missing"))
                 .isInstanceOf(IllegalArgumentException.class)

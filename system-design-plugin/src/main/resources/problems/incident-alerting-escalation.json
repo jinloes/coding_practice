@@ -1,0 +1,21 @@
+{
+  "id": "incident-alerting-escalation",
+  "title": "On-Call Incident Alerting and Escalation",
+  "difficulty": "Medium",
+  "summary": "Deduplicate alert storms, resolve on-call rotations, and run durable multi-step paging escalations.",
+  "statement": "Design an incident alerting and on-call paging platform that ingests monitoring signals and wakes the right responder reliably during outages.\n\nFunctional requirements:\n- Accept alert events from monitoring tools, deduplicate repeated signals into a single open incident, and map services to escalation policies.\n- Compute who is currently on call from time-zone-aware rotation schedules and temporary shift overrides.\n- Execute timed escalation steps (`push` and `SMS` at `0 min`, `voice call` at `5 min`, secondary responder at `10 min`) until someone acknowledges or resolves the incident.\n- Keep paging responders even when major cloud infrastructure or one telecom carrier is degraded.\n\nScale to assume:\n- 60,000 organizations and 1.5 million configured schedules and escalation policies.\n- Steady-state ingest is 20,000 alert events per second, spiking to 500,000 events per second during a widespread cloud outage when thousands of monitors fire simultaneously.\n- Unacknowledged incidents must fire each escalation step within 5 seconds of its scheduled deadline, with zero missed pages.",
+  "hints": [
+    "When a shared database fails and 2,000 hosts fire the same alert every 10 seconds, how do you absorb 500,000 events per second without creating 500,000 incidents or paging the responder repeatedly?",
+    "Suppose the 5-minute escalation timer fires at the exact millisecond the primary responder taps `Acknowledge` on their phone. How do you guarantee you never double-page or lose a step if a worker crashes?",
+    "An alerting platform is most needed when the cloud is on fire—what architectural choices keep your ingest and paging path alive during a regional cloud or SMS carrier outage?"
+  ],
+  "expectations": [
+    "Clarifies delivery and paging guarantees (at-least-once paging is safer than silent drops), deduplication semantics, schedule time-zone/DST handling, and multi-region survivability targets.",
+    "Absorbs alert storms at the edge via partitioned ingestion keyed by `(tenant_id, integration_id, dedup_key)`, coalescing duplicate signals onto an existing open incident and incrementing occurrence counters instead of re-triggering escalations.",
+    "Models incident lifecycle (`OPEN`, `ACKNOWLEDGED`, `SNOOZED`, `RESOLVED`) with conditional atomic state transitions (`UPDATE ... WHERE state = 'OPEN'` or optimistic `version`) so concurrent acknowledgments and timer firings are race-free.",
+    "Drives multi-step escalations with a durable, partitioned timer store (`due_at` buckets with worker leases and idempotency keys per `(incident_id, step_index)`) that verifies the incident is still `OPEN` immediately before dispatching.",
+    "Evaluates layered on-call schedules (base recurring rotations, DST-safe `IANA` time zones, and higher-priority temporary overrides) dynamically at each escalation step rather than freezing recipients at incident creation.",
+    "Routes push, SMS, and voice calls through multiple independent telecom providers with delivery-receipt webhooks and automatic carrier failover when delivery stalls or returns errors.",
+    "Isolates the alerting data plane from non-critical dashboard/analytics services and deploys active-active or hot-standby across at least two cloud regions with synthetic end-to-end heartbeat monitors."
+  ]
+}

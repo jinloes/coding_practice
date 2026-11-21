@@ -23,6 +23,7 @@
     "sort-nearly-sorted-list",
     "weighted-server-task-assignment",
     "k-closest-sorted-values",
-    "reorganize-adjacent-characters"
+    "reorganize-adjacent-characters",
+    "collection-storage-report"
   ]
 }

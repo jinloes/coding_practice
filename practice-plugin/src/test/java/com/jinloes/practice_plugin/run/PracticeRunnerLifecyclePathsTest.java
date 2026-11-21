@@ -145,6 +145,51 @@ class PracticeRunnerLifecyclePathsTest {
         }
     }
 
+    @Test
+    void publishesStructuredRunEventsAndRemovesEventListeners() throws Exception {
+        PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
+        java.util.List<RunEvent> events = new java.util.concurrent.CopyOnWriteArrayList<>();
+        CountDownLatch received = new CountDownLatch(3);
+        java.util.function.Consumer<RunEvent> listener = event -> {
+            events.add(event);
+            received.countDown();
+        };
+
+        int before = runner.listenerCount();
+        runner.addEventListener(listener);
+        assertThat(runner.listenerCount()).isEqualTo(before + 1);
+
+        var attempt = com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace.get()
+                .create(com.jinloes.practice_plugin.catalog.ExerciseCatalog.find("pair-sum"));
+        runner.handleExampleProcessStarted(new RunSession.ExampleSession(
+                attempt, "", false, "fp", null, null, new RunSession.RunControl()), new InMemoryProcessHandler());
+        runner.handleExampleProcessNotStarted(new RunSession.ExampleSession(
+                attempt, "", false, "fp", null, null, new RunSession.RunControl()));
+        runner.runExamples("missing-attempt");
+
+        assertThat(received.await(30, TimeUnit.SECONDS)).isTrue();
+        assertThat(events).anySatisfy(event -> assertThat(event)
+                .isEqualTo(new RunEvent.Started(attempt.id(), "Running visible examples.")));
+        assertThat(events).anySatisfy(event -> assertThat(event).isInstanceOf(RunEvent.ExampleFinished.class));
+        assertThat(events).anySatisfy(event -> assertThat(event).isInstanceOf(RunEvent.FailedToStart.class));
+
+        runner.removeEventListener(listener);
+        assertThat(runner.listenerCount()).isEqualTo(before);
+
+        RunEvent.Started nullStarted = new RunEvent.Started(null, null);
+        RunEvent.ExampleFinished nullExample = new RunEvent.ExampleFinished(null, null);
+        RunEvent.CheckFinished checkEvent = new RunEvent.CheckFinished("id-1", "pair-sum", "ok");
+        RunEvent.FailedToStart nullFailed = new RunEvent.FailedToStart(null);
+        assertThat(nullStarted.attemptId()).isEmpty();
+        assertThat(nullStarted.text()).isEmpty();
+        assertThat(nullExample.attemptId()).isEmpty();
+        assertThat(nullExample.text()).isEmpty();
+        assertThat(checkEvent.attemptId()).isEqualTo("id-1");
+        assertThat(checkEvent.exerciseId()).isEqualTo("pair-sum");
+        assertThat(checkEvent.text()).isEqualTo("ok");
+        assertThat(nullFailed.text()).isEmpty();
+    }
+
     private static final class InMemoryProcessHandler extends ProcessHandler {
         private boolean destroyed;
 

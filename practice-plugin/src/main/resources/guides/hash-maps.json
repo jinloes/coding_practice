@@ -30,6 +30,10 @@
     "palindrome-permutation-check",
     "word-count-report",
     "in-memory-file-system",
-    "popularity-tracker"
+    "popularity-tracker",
+    "agent-satisfaction-ranking",
+    "sliding-window-rate-limiter",
+    "collection-storage-report",
+    "credit-window-rate-limiter"
   ]
 }

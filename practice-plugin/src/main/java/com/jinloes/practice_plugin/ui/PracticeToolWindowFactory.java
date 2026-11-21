@@ -12,6 +12,7 @@ public final class PracticeToolWindowFactory implements ToolWindowFactory, DumbA
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         PracticePanel panel = new PracticePanel(project);
         var content = ContentFactory.getInstance().createContent(panel, "", false);
+        content.setPreferredFocusableComponent(panel.preferredFocusedComponent());
         content.setDisposer(panel);
         toolWindow.getContentManager().addContent(content);
         toolWindow.setTitleActions(panel.titleActions());

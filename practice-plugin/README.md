@@ -54,7 +54,8 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
 ## Practice workflow
 
 1. Open **View > Tool Windows > Practice**.
-2. Choose a problem and **Start / Resume**. The plugin creates
+2. Choose a problem and **Start / Resume** (or double-click it or press
+   **Enter** in the exercise list). The plugin creates
    `algorithm-practice/attempts/<exercise-id>/<attempt-id>/src/main/java/`
    `com/jinloes/practice/Solution.java` below the IDE configuration directory,
    opens it, and remembers it from every host project. **New Attempt** creates a
@@ -85,7 +86,7 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    the saved solution scales and reports the result alongside the exercise's
    intended complexity.
 
-The catalog includes 270 exercises (66 Easy, 172 Medium, 32 Hard). Browse them
+The catalog includes 276 exercises (67 Easy, 176 Medium, 33 Hard). Browse them
 in the Practice tool window by topic, difficulty, guide, or track;
 `src/main/resources/exercises/index.txt` lists every exercise ID in display order.
 Each has an explicit contract and three optional hints. The last hint discusses
@@ -124,6 +125,10 @@ through a curated set of problems. Bundled tracks:
 - **Apple**: Easy, Medium, and Hard problems whose patterns are commonly
   reported in Apple coding interviews, including string parsing, grid and
   image transforms, and small data-structure designs.
+- **Atlassian**: Easy, Medium, and Hard problems whose patterns are commonly
+  reported in Atlassian coding and code-design interviews, including rate
+  limiting, collection storage aggregation, wildcard path routing, ranked
+  voting, and stateful grid simulation.
 
 Tracks are hand curated from the plugin's own original exercises; they are not
 official, verified, or leaked question lists. The **Study Guide** tab shows the

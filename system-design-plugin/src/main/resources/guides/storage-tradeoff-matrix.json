@@ -7,6 +7,7 @@
     "key-value-store",
     "ticket-booking",
     "ad-click-aggregation",
-    "multi-tenant-crm-search"
+    "multi-tenant-crm-search",
+    "issue-tracker-board"
   ]
 }

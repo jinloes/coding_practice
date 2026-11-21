@@ -1,0 +1,30 @@
+{
+  "id": "collection-storage-report",
+  "title": "Collection Storage Report",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Track stored files, their byte sizes, and the named collections they belong to so callers can query overall storage and the largest collections.\n\nContract\n- Construct an empty store with `new Solution()`.\n- `putFile(fileName, sizeBytes, collections)` stores or updates `fileName` (`fileName` non-null and non-blank, `sizeBytes >= 0`, `collections` non-null with non-null/non-blank names; otherwise throw `IllegalArgumentException`).\n- A file may belong to zero, one, or many collections. Duplicate collection names in the same `putFile` call count once. Re-putting an existing `fileName` replaces both its byte size and its collection memberships.\n- `totalBytes()` returns the sum of `sizeBytes` across all distinct stored files, including files in zero collections and without double-counting files shared across multiple collections.\n- `topCollections(limit)` (`limit >= 0`, otherwise throw `IllegalArgumentException`) returns up to `limit` collections that currently contain at least one file, ordered by descending total byte size of their member files and then alphabetically (`String.compareTo`) on ties.\n\nExamples\n- Putting `(report.pdf, 200, [finance, audit])`, `(chart.png, 150, [finance])`, and `(raw.csv, 100, [])` yields `totalBytes() == 450` and `topCollections(2) == [finance, audit]`.\n- Putting `(a.log, 300, [ops, ops])` and `(b.log, 300, [eng])` yields `totalBytes() == 600` and `topCollections(2) == [eng, ops]`.\n- Putting `(build.zip, 500, [legacy])` and then `(build.zip, 120, [release])` yields `totalBytes() == 120` and `topCollections(2) == [release]`.\n",
+  "examples": [
+    {
+      "input": "put report.pdf 200 finance,audit; put chart.png 150 finance; put raw.csv 100 -; top 2",
+      "output": "totalBytes=450, top=[finance, audit]"
+    },
+    {
+      "input": "put a.log 300 ops,ops; put b.log 300 eng; top 2",
+      "output": "totalBytes=600, top=[eng, ops]"
+    },
+    {
+      "input": "put build.zip 500 legacy; put build.zip 120 release; top 2",
+      "output": "totalBytes=120, top=[release]"
+    }
+  ],
+  "hints": [
+    "Keep a map of stored file records separately from per-collection totals so shared or untagged files never distort `totalBytes()`.",
+    "When `putFile` updates an existing file, subtract its old size and file count from its previous collections (removing collections whose file count drops to zero) before applying the new deduplicated collections.",
+    "Maintain a bounded min-heap of size `limit` ordered from worst to best (`smaller bytes` or `lexicographically larger name` at the heap root) to extract the top `k` collections without sorting every collection. Intended complexity for `f` files, `c` collections, and limit `k`: O(c log k) query time (`O(n log n)` across `n` mixed operations) and O(n) space."
+  ],
+  "inputSyntax": "Input: semicolon-separated put <file> <bytes> <c1,c2 or -> and top <limit>, for example: put report.pdf 200 finance,audit; put chart.png 150 finance; put raw.csv 100 -; top 2",
+  "sampleInput": "put report.pdf 200 finance,audit; put chart.png 150 finance; put raw.csv 100 -; top 2",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

@@ -6,6 +6,7 @@
   "relatedProblemIds": [
     "notification-service",
     "webhook-delivery",
+    "incident-alerting-escalation",
     "distributed-job-scheduler",
     "audit-log-pipeline"
   ]

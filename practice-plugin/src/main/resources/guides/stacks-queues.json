@@ -18,6 +18,8 @@
     "sort-stack-with-stack",
     "sunset-view-buildings",
     "nested-repeat-decoding",
-    "infix-expression-value"
+    "infix-expression-value",
+    "sliding-window-rate-limiter",
+    "grid-snake-game"
   ]
 }

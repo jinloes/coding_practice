@@ -3,6 +3,7 @@ url-shortener
 market-data-feed
 unique-id-generator
 webhook-delivery
+feature-flag-service
 rate-limiter
 notification-service
 web-crawler
@@ -15,6 +16,9 @@ proximity-search
 metrics-monitoring
 online-code-judge
 audit-log-pipeline
+cross-product-tagging
+incident-alerting-escalation
+cicd-build-pipeline
 news-feed
 chat-messaging
 video-streaming
@@ -26,3 +30,5 @@ live-reactions-comments
 distributed-job-scheduler
 collaborative-document-editor
 multi-tenant-crm-search
+issue-tracker-board
+hierarchical-permissions

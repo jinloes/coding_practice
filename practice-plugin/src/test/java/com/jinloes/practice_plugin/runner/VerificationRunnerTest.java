@@ -109,6 +109,129 @@ class VerificationRunnerTest {
     }
 
     @Test
+    void suiteRunnerEscapesIllegalXmlControlCharactersInFailureMessagesAndStackTraces() throws Exception {
+        Path src = tempDir.resolve("control-src/sample");
+        Path classes = tempDir.resolve("control-classes");
+        Files.createDirectories(src);
+        Files.createDirectories(classes);
+        Files.writeString(src.resolve("ControlCharSuite.java"), """
+                package sample;
+                import org.junit.jupiter.api.Test;
+                import static org.assertj.core.api.Assertions.assertThat;
+                public class ControlCharSuite {
+                    @Test void failsWithNullCharacters() {
+                        assertThat(new String(new char[3])).isEqualTo("abc");
+                    }
+                    @Test void throwsControlAndNonCharacterText() {
+                        throw new IllegalStateException("bad:\\u0001:\\ufffe:\\ud800:ok:\\uD83D\\uDE00");
+                    }
+                }
+                """, StandardCharsets.UTF_8);
+        String java = Path.of(System.getProperty("java.home"), "bin",
+                System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
+        Process compile = new ProcessBuilder(
+                java,
+                "--module", "jdk.compiler/com.sun.tools.javac.Main",
+                "--release", "17",
+                "-encoding", "UTF-8",
+                "-Xlint:-classfile",
+                "-classpath", System.getProperty("practice.test.classpath", System.getProperty("java.class.path")),
+                "-d", classes.toString(),
+                src.resolve("ControlCharSuite.java").toString())
+                .redirectErrorStream(true)
+                .start();
+        String compilerOutput = new String(compile.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(compile.waitFor()).as(compilerOutput).isZero();
+
+        Path results = tempDir.resolve("control-reports");
+        ClassLoader previous = Thread.currentThread().getContextClassLoader();
+        int exit;
+        try (var loader = new java.net.URLClassLoader(new java.net.URL[]{classes.toUri().toURL()},
+                VerificationRunnerTest.class.getClassLoader())) {
+            Thread.currentThread().setContextClassLoader(loader);
+            exit = JUnitSuiteRunner.executeSuites(results, List.of("sample.ControlCharSuite"));
+        } finally {
+            Thread.currentThread().setContextClassLoader(previous);
+        }
+
+        assertThat(exit).isEqualTo(1);
+        Path report = results.resolve("TEST-sample.ControlCharSuite.xml");
+        assertThat(report).isRegularFile();
+        String xml = Files.readString(report, StandardCharsets.UTF_8);
+        assertThat(xml)
+                .contains("\\u0000\\u0000\\u0000")
+                .contains("\\u0001")
+                .contains("\\ufffe")
+                .contains("\\ud800");
+        assertThat(javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder().parse(report.toFile()).getDocumentElement().getAttribute("name"))
+                .isEqualTo("sample.ControlCharSuite");
+        assertThat(JUnitSuiteRunner.sanitizeXml10(null)).isEmpty();
+        assertThat(JUnitSuiteRunner.sanitizeXml10("line\t1\r\nline 2 \uD83D\uDE00"))
+                .isEqualTo("line\t1\r\nline 2 \uD83D\uDE00");
+        assertThat(JUnitSuiteRunner.sanitizeXml10("\udc00\uffff")).isEqualTo("\\udc00\\uffff");
+
+        Files.move(report, results.resolve("TEST-com.jinloes.practice.ExamplesTest.xml"));
+        String pairedXml = xml.replace("name=\"sample.ControlCharSuite\"",
+                "name=\"com.jinloes.practice.ExamplesTest\"");
+        Files.writeString(results.resolve("TEST-com.jinloes.practice.ExamplesTest.xml"), pairedXml,
+                StandardCharsets.UTF_8);
+        Files.writeString(results.resolve("TEST-com.jinloes.practice.CorrectnessTest.xml"),
+                "<testsuite name=\"com.jinloes.practice.CorrectnessTest\"><testcase name=\"passes\"/></testsuite>",
+                StandardCharsets.UTF_8);
+        CheckResult parsed = TestReports.read(results, 3, 1);
+        assertThat(parsed.status()).isEqualTo(CheckResult.Status.RUNTIME_ERROR);
+        assertThat(parsed.details()).contains("\\u0000\\u0000\\u0000", "\uD83D\uDE00");
+
+        Files.writeString(src.resolve("AssertionNullSuite.java"), """
+                package sample;
+                import org.junit.jupiter.api.Test;
+                import static org.assertj.core.api.Assertions.assertThat;
+                public class AssertionNullSuite {
+                    @Test void failsWithNullCharacters() {
+                        assertThat(new String(new char[3])).isEqualTo("abc");
+                    }
+                }
+                """, StandardCharsets.UTF_8);
+        Process compileAssertion = new ProcessBuilder(
+                java,
+                "--module", "jdk.compiler/com.sun.tools.javac.Main",
+                "--release", "17",
+                "-encoding", "UTF-8",
+                "-Xlint:-classfile",
+                "-classpath", System.getProperty("practice.test.classpath", System.getProperty("java.class.path")),
+                "-d", classes.toString(),
+                src.resolve("AssertionNullSuite.java").toString())
+                .redirectErrorStream(true)
+                .start();
+        String assertionCompilerOutput = new String(compileAssertion.getInputStream().readAllBytes(),
+                StandardCharsets.UTF_8);
+        assertThat(compileAssertion.waitFor()).as(assertionCompilerOutput).isZero();
+
+        Path assertionResults = tempDir.resolve("assertion-control-reports");
+        try (var loader = new java.net.URLClassLoader(new java.net.URL[]{classes.toUri().toURL()},
+                VerificationRunnerTest.class.getClassLoader())) {
+            Thread.currentThread().setContextClassLoader(loader);
+            assertThat(JUnitSuiteRunner.executeSuites(assertionResults, List.of("sample.AssertionNullSuite")))
+                    .isEqualTo(1);
+        } finally {
+            Thread.currentThread().setContextClassLoader(previous);
+        }
+        Path assertionXmlPath = assertionResults.resolve("TEST-sample.AssertionNullSuite.xml");
+        String assertionXml = Files.readString(assertionXmlPath, StandardCharsets.UTF_8)
+                .replace("name=\"sample.AssertionNullSuite\"", "name=\"com.jinloes.practice.ExamplesTest\"");
+        Files.delete(assertionXmlPath);
+        Files.writeString(assertionResults.resolve("TEST-com.jinloes.practice.ExamplesTest.xml"), assertionXml,
+                StandardCharsets.UTF_8);
+        Files.writeString(assertionResults.resolve("TEST-com.jinloes.practice.CorrectnessTest.xml"),
+                "<testsuite name=\"com.jinloes.practice.CorrectnessTest\"><testcase name=\"passes\"/></testsuite>",
+                StandardCharsets.UTF_8);
+        CheckResult assertionResult = TestReports.read(assertionResults, 2, 1);
+        assertThat(assertionResult.status()).isEqualTo(CheckResult.Status.ASSERTION_FAILED);
+        assertThat(assertionResult.details()).contains("\\u0000\\u0000\\u0000");
+    }
+
+    @Test
     void verificationMainRunsEndToEndOfflineOnAReferenceWorkspace() throws Exception {
         var exercise = ExerciseCatalog.find("pair-sum");
         Path solution = tempDir.resolve("attempt/src/main/java/com/jinloes/practice/Solution.java");

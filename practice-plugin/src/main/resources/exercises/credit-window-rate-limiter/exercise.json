@@ -1,0 +1,30 @@
+{
+  "id": "credit-window-rate-limiter",
+  "title": "Credit Window Rate Limiter",
+  "topic": "Data Structures",
+  "difficulty": "Hard",
+  "statement": "Design a per-client fixed-window rate limiter where unused base quota from completed windows carries over as burst credits up to a cap.\n\nContract\n- `new Solution(baseLimit, windowSeconds, maxCredits)` configures the limiter (`baseLimit >= 1`, `windowSeconds >= 1`, `maxCredits >= 0`; otherwise throw `IllegalArgumentException`).\n- `allow(clientId, timestampSeconds)` evaluates one request (`clientId` non-null and non-blank, `timestampSeconds >= 0`; otherwise throw `IllegalArgumentException`). For any single client, calls arrive in nondecreasing `timestampSeconds` order.\n- Time is partitioned into fixed windows indexed by `windowIndex = timestampSeconds / windowSeconds`, covering `[windowIndex * windowSeconds, (windowIndex + 1) * windowSeconds)`.\n- A client's first-ever request initializes that window with `baseLimit` base slots and `0` banked credits (windows prior to a client's first request do not bank credits).\n- When an existing client advances from `lastWindow` to a later `windowIndex`, add `unusedBase` from `lastWindow` plus `baseLimit` for each of the `windowIndex - lastWindow - 1` completely idle windows in between to that client's credit bank, capped at `maxCredits`, and reset the new window's base slots to `baseLimit`.\n- Each accepted request consumes one base slot if available, otherwise one banked credit, and returns `true`. When both are zero, leave the client's state unchanged and return `false`.\n\nExamples\n- With `(baseLimit = 2, windowSeconds = 10, maxCredits = 3)`, calls `(api, 1), (api, 12), (api, 13), (api, 14), (api, 15)` return `[true, true, true, true, false]`.\n- With `(baseLimit = 2, windowSeconds = 5, maxCredits = 3)`, calls `(svc, 0), (svc, 20), (svc, 20), (svc, 21), (svc, 22), (svc, 23), (svc, 24)` return `[true, true, true, true, true, true, false]`.\n- With `(baseLimit = 1, windowSeconds = 10, maxCredits = 2)`, calls `(web, 2), (web, 22), (web, 23), (web, 32), (web, 33)` return `[true, true, true, true, false]`.\n",
+  "examples": [
+    {
+      "input": "config 2 10 3; allow api 1; allow api 12; allow api 13; allow api 14; allow api 15",
+      "output": "[true, true, true, true, false]"
+    },
+    {
+      "input": "config 2 5 3; allow svc 0; allow svc 20; allow svc 20; allow svc 21; allow svc 22; allow svc 23; allow svc 24",
+      "output": "[true, true, true, true, true, true, false]"
+    },
+    {
+      "input": "config 1 10 2; allow web 2; allow web 22; allow web 23; allow web 32; allow web 33",
+      "output": "[true, true, true, true, false]"
+    }
+  ],
+  "hints": [
+    "Keep `(windowIndex, remainingBase, credits)` per client rather than simulating every second or storing individual request timestamps.",
+    "Do not loop over idle windows between `lastWindow` and `windowIndex`: a client may be quiet for billions of windows, and looping would time out.",
+    "Compute idle windows `idle = windowIndex - lastWindow - 1`; if `idle` alone is enough to reach `maxCredits` (`idle >= (maxCredits - credits + baseLimit - 1) / baseLimit` when `maxCredits > credits`), clamp `credits` directly to `maxCredits` without risking 64-bit multiplication overflow. Intended complexity across `n` calls: O(n) total time (`O(1)` per call regardless of timestamp gaps) and O(n) space."
+  ],
+  "inputSyntax": "Input: config <baseLimit> <windowSeconds> <maxCredits> followed by semicolon-separated allow <clientId> <timestamp>, for example: config 2 10 3; allow api 1; allow api 12; allow api 13; allow api 14; allow api 15",
+  "sampleInput": "config 2 10 3; allow api 1; allow api 12; allow api 13; allow api 14; allow api 15",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

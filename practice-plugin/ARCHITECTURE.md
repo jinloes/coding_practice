@@ -118,7 +118,7 @@ selected guide or, when no guide is selected, the selected track, `LimitsDialog`
 execution limits, and `PracticeViews` provides stateless Swing building blocks;
 none of them hold panel state. Pass marks come from
 `ManagedPracticeProgress.passedExerciseIds()`, derived from stored history.
-`ExerciseCellRenderer`, `ResultsView`, `HintButton`, `PracticeActions` (the run toolbar and
+`ExerciseCellRenderer`, `AttemptBar`, `ResultsView`, `HintButton`, `PracticeActions` (the run toolbar and
 title actions), and `CustomInputPrompt` are the native Swing pieces.
 
 #### Problem and Study Guide pages
@@ -179,7 +179,7 @@ project-based storage format. New attempts never use it.
 
 `PracticeRunner` is a project service and the single coordinator for execution.
 It allows one active practice run per project, saves documents before launch,
-publishes status to UI listeners, owns cancellation and watchdog behavior, and
+publishes structured `RunEvent`s (and text updates) to UI listeners, owns cancellation and watchdog behavior, and
 records full-check results.
 
 `FullCheck` launches one full check on behalf of the runner: it builds the

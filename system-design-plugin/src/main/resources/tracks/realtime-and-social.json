@@ -5,10 +5,12 @@
   "problemIds": [
     "notification-service",
     "social-graph-search",
+    "cicd-build-pipeline",
     "news-feed",
     "chat-messaging",
     "video-streaming",
     "live-reactions-comments",
-    "collaborative-document-editor"
+    "collaborative-document-editor",
+    "issue-tracker-board"
   ]
 }

@@ -6,9 +6,9 @@ import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.module.JavaModuleType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.JavaSdkVersion;
@@ -89,7 +89,7 @@ public final class PracticeModuleWorkspace implements Disposable {
             generated.createMarked(output, "output", attempt.id());
             ApplicationManager.getApplication().runWriteAction(() -> {
                 Module module = ModuleManager.getInstance(project).newNonPersistentModule(
-                        moduleName(attempt.id()), StdModuleTypes.JAVA.getId());
+                        moduleName(attempt.id()), JavaModuleType.getModuleType().getId());
                 var model = ModuleRootManager.getInstance(module).getModifiableModel();
                 var contentRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(attempt.directory());
                 var sourceRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(
@@ -245,12 +245,7 @@ public final class PracticeModuleWorkspace implements Disposable {
      */
     public synchronized boolean cleanupGeneratedArtifacts() {
         ApplicationManager.getApplication().runWriteAction(() -> {
-            RunManager manager = RunManager.getInstance(project);
-            temporaryConfigurations.forEach(manager::removeConfiguration);
-            temporaryConfigurations.clear();
-            modules.values().stream().filter(module -> !module.isDisposed())
-                    .forEach(module -> ModuleManager.getInstance(project).disposeModule(module));
-            modules.clear();
+            disposeTrackedConfigurationsAndModules();
             VerificationWorkspace.cleanupAbandoned();
             generated.cleanupAbandoned(GeneratedDirectories.HARNESSES, true);
             generated.cleanupAbandoned(GeneratedDirectories.MODULE_OUTPUT, true);
@@ -262,12 +257,7 @@ public final class PracticeModuleWorkspace implements Disposable {
     @Override
     public synchronized void dispose() {
         ApplicationManager.getApplication().runWriteAction(() -> {
-            RunManager manager = RunManager.getInstance(project);
-            temporaryConfigurations.forEach(manager::removeConfiguration);
-            temporaryConfigurations.clear();
-            modules.values().stream().filter(module -> !module.isDisposed())
-                    .forEach(module -> ModuleManager.getInstance(project).disposeModule(module));
-            modules.clear();
+            disposeTrackedConfigurationsAndModules();
             generated.deleteAllOwned();
             if (ownedFallbackSdk != null && ProjectJdkTable.getInstance().findJdk(ownedFallbackSdk.getName()) != null) {
                 ProjectJdkTable.getInstance().removeJdk(ownedFallbackSdk);
@@ -275,6 +265,15 @@ public final class PracticeModuleWorkspace implements Disposable {
             sdk = null;
             ownedFallbackSdk = null;
         });
+    }
+
+    private void disposeTrackedConfigurationsAndModules() {
+        RunManager manager = RunManager.getInstance(project);
+        temporaryConfigurations.forEach(manager::removeConfiguration);
+        temporaryConfigurations.clear();
+        modules.values().stream().filter(module -> !module.isDisposed())
+                .forEach(module -> ModuleManager.getInstance(project).disposeModule(module));
+        modules.clear();
     }
 
     private Sdk selectSdk() throws ExecutionException {
@@ -343,7 +342,7 @@ public final class PracticeModuleWorkspace implements Disposable {
     }
 
     private static void removeAbandonedFallbackSdks() {
-        Runnable removal = () -> removeAbandonedFallbackSdksUnderWriteAction();
+        Runnable removal = PracticeModuleWorkspace::removeAbandonedFallbackSdksUnderWriteAction;
         if (ApplicationManager.getApplication().isWriteAccessAllowed()) {
             removal.run();
         } else {

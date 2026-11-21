@@ -12,6 +12,7 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,7 +45,7 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
             throw new RuntimeConfigurationError("Select an attempt in the Practice tool window.");
         }
         try {
-            new com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace().read(attemptId);
+            ManagedPracticeWorkspace.get().read(attemptId);
         } catch (java.io.IOException e) {
             throw new RuntimeConfigurationError(e.getMessage());
         }
@@ -54,7 +55,8 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
     public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment)
             throws ExecutionException {
         if (!com.intellij.execution.executors.DefaultRunExecutor.EXECUTOR_ID.equals(executor.getId())) {
-            throw new ExecutionException("Use Debug With Input... in the Practice tool window for native Java debugging.");
+            throw new ExecutionException(
+                    "Use Debug Examples or Debug With Input... in the Practice tool window for native Java debugging.");
         }
         return new CommandLineState(environment) {
             @Override

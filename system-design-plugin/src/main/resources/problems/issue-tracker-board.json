@@ -1,0 +1,21 @@
+{
+  "id": "issue-tracker-board",
+  "title": "Issue Tracker and Agile Board",
+  "difficulty": "Hard",
+  "summary": "Track project work items with custom workflows, fast backlog reordering, filtered search, and live boards.",
+  "statement": "Design a multi-tenant issue tracking and agile board platform used by software and operations teams to plan sprints, manage backlogs, and track work.\n\nFunctional requirements:\n- Users create and update issues with custom fields, comments, and attachments, and move issues across project-specific workflow states (`Open -> In Progress -> In Review -> Done`) governed by transition rules.\n- Teammates drag and drop cards to reorder backlogs containing tens of thousands of issues and see card moves and status updates on shared sprint boards in near real time.\n- Support rich structured queries filtering and sorting issues across projects by status, assignee, sprint, priority, labels, and text.\n- Maintain an immutable per-issue activity history of every field and status transition.\n\nScale to assume:\n- 300,000 tenant organizations, 5 billion total issues, and 2 million concurrent active users during business hours.\n- 250,000 board and filter reads per second and 35,000 issue mutations (edits, transitions, and drag-and-drop reorders) per second.\n- Large monorepo projects can hold 100,000+ backlog issues and 500 engineers viewing the same active board.",
+  "hints": [
+    "If a backlog stores integer positions `1..100,000`, dragging card `90,000` to position `2` rewrites `89,998` rows. What representation lets a drag-and-drop reorder update a single row, and what happens when repeated drops at the same spot run out of space?",
+    "Transactional databases excel at ACID workflow transitions, whereas inverted search indexes excel at arbitrary multi-field filter queries. If a user drags a card on a board and refreshes 100 ms later, how do you avoid showing stale state from an eventually consistent search index?",
+    "Enterprise tenants invent hundreds of custom fields per project—how do you store and index tenant-defined fields without running `ALTER TABLE` across a 5-billion-row database?"
+  ],
+  "expectations": [
+    "Clarifies consistency guarantees (strong ACID transitions and read-your-own-writes on boards versus sub-second eventual consistency for cross-project search), custom-field limits, and board fan-out scale.",
+    "Partitions the transactional source of truth by `tenant_id` (with dedicated shards/cells for giant enterprise tenants), enforcing workflow state-machine validators, optimistic concurrency (`version`/`ETag`), and append-only changelog + outbox writes in one transaction.",
+    "Orders cards with lexicographic fractional indexing (`LexoRank`-style variable-length strings midpoint-computed between neighbors) so single-card drags are `O(1)` writes, paired with background rank rebalancing across alternating rank buckets when string length grows.",
+    "Models tenant-defined custom fields without schema migrations using typed `JSONB`/sparse attribute columns in the primary store and bounded typed slot mappings (`string_slot_1..N`, `num_slot_1..N`) in the search index to prevent mapping explosion.",
+    "Feeds a tenant-routed search index asynchronously via `CDC`/outbox consumers for multi-attribute filter queries, while serving active sprint boards directly from the primary/read-your-writes cache or merging client-known mutation versions so dragged cards never snap backward.",
+    "Pushes compact, sequence-numbered board delta events (`issue.transitioned`, `issue.ranked`) over WebSockets/`SSE` scoped to `board_id` so 500 teammates see live moves without polling full board payloads.",
+    "Protects hot project boards from stampedes with cached board projections, cursor pagination on large backlogs, and per-tenant rate and query-cost limits."
+  ]
+}

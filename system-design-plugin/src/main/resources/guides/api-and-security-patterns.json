@@ -7,6 +7,7 @@
     "rate-limiter",
     "webhook-delivery",
     "online-code-judge",
-    "audit-log-pipeline"
+    "audit-log-pipeline",
+    "hierarchical-permissions"
   ]
 }

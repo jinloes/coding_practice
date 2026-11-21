@@ -1,0 +1,21 @@
+{
+  "id": "hierarchical-permissions",
+  "title": "Hierarchical Workspace Permissions Engine",
+  "difficulty": "Hard",
+  "summary": "Authorize reads and edits across deep folder and page trees, nested groups, and explicit overrides at low latency.",
+  "statement": "Design a centralized fine-grained authorization service for a suite of enterprise collaboration apps containing workspaces, spaces, deeply nested page trees, projects, and user groups.\n\nFunctional requirements:\n- Evaluate `check(principal, permission, resource)` across role assignments, nested user groups, and parent-to-child hierarchy inheritance.\n- Support narrowing page or folder restrictions in a hierarchy (for example, a space is readable by `engineering`, while a confidential subtree inside it restricts viewing to `sec-incident-leads`).\n- Provide bulk filtering or accessible-resource lookup so product listings and search results return only authorized items.\n- Ensure permission revocations, group removals, and subtree moves take effect promptly without serving stale cached allow decisions.\n\nScale to assume:\n- 200,000 enterprise tenants, 12 billion resources nested up to 25 levels deep, and 40 billion relationship and role tuples.\n- 800,000 `check` calls per second at peak with a `< 10 ms` p99 latency budget, against 10,000 relationship/ACL mutations per second.\n- Moving a top-level folder can reparent 20,000 descendant pages in a single user action, and large groups hold up to 100,000 members.",
+  "hints": [
+    "Materializing flattened `(user, resource)` rows makes reads trivial, but what happens when a 100,000-person group is granted access to a space or a 20,000-page folder is moved? Conversely, what happens to latency if every check walks 25 parent pointers cold from disk?",
+    "Unlike pure additive `OR` graphs, an explicit page restriction intersects (`AND`s) inherited space access with the page's allowed viewers. How must your evaluation walk and data model represent both inheritance and restriction?",
+    "Suppose Alice removes Bob from a document's viewers and immediately posts a new comment; if Bob's request hits a replica or cache lagging by 2 seconds, Bob sees content written after his revocation. How can a lightweight token prevent this stale-ACL bug without killing cache hit rates?"
+  ],
+  "expectations": [
+    "Clarifies the authorization semantics—combining role/relationship tuples, nested group membership (with cycle prevention), and hierarchical inheritance with explicit intersection/restriction nodes—alongside latency and revocation freshness SLAs.",
+    "Avoids full `user x resource` materialization by storing normalized relationship tuples and parent pointers in a strongly consistent, `tenant_id`-partitioned store and evaluating checks via bounded graph/ancestor traversal rather than `O(subtree)` rewrites on folder moves.",
+    "Models narrow-down page restrictions explicitly (computing effective access along the ancestor chain or maintaining a lightweight nearest-restricted-ancestor pointer) so reparenting a folder updates one parent edge rather than rewriting 20,000 child ACLs.",
+    "Solves the stale-revocation (`New Enemy`) problem using monotonic consistency/revision tokens (`zookie`/`ZedToken` style) stored on resources when mutated or restricted: callers pass `at_least_as_fresh(token)` so caches serve fast hits on unchanged items while bypassing stale snapshots after ACL edits.",
+    "Dispatches sub-checks across stateless evaluation nodes via consistent hashing on `(tenant_id, object_or_group)` with single-flight request coalescing so hot spaces and large `100,000`-member groups stay warm in in-memory caches.",
+    "Supports permission-aware listings and search via a hybrid strategy: pushing coarse space/container memberships and restriction-group IDs into search queries as pre-filters while running exact batched `check` calls to post-filter narrow overrides.",
+    "Enforces strict tenant isolation, graph depth/fan-out limits, and immutable audit logging on all policy and group mutations."
+  ]
+}

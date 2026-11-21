@@ -5,9 +5,15 @@
   "problemIds": [
     "market-data-feed",
     "webhook-delivery",
+    "feature-flag-service",
     "cloud-file-storage",
     "online-code-judge",
     "audit-log-pipeline",
-    "multi-tenant-crm-search"
+    "cross-product-tagging",
+    "incident-alerting-escalation",
+    "cicd-build-pipeline",
+    "multi-tenant-crm-search",
+    "issue-tracker-board",
+    "hierarchical-permissions"
   ]
 }

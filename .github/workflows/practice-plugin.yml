@@ -47,12 +47,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-practice-plugin-npm-
 
+      - name: Cache Gradle-managed Node.js
+        uses: actions/cache@v4
+        with:
+          path: practice-plugin/.gradle/nodejs
+          key: ${{ runner.os }}-practice-plugin-node-${{ hashFiles('practice-plugin/build.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-practice-plugin-node-
+
       - name: Select catalog exercises to execute
         id: catalog
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
           BASE_IDS="pair-sum,binary-search,merge-sorted-lists"
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            DIFF_RANGE="${{ github.event.pull_request.base.sha }}...${{ github.sha }}"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            DIFF_RANGE="$BASE_SHA...$HEAD_SHA"
+          elif [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] \
+            && git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null; then
+            DIFF_RANGE="$BEFORE_SHA...$HEAD_SHA"
           else
             DIFF_RANGE="HEAD~1...HEAD"
           fi
@@ -66,6 +82,10 @@ jobs:
           fi
           echo "only=$ONLY" >> "$GITHUB_OUTPUT"
 
-      - name: Run plugin checks, frontend tests, and coverage gate
+      - name: Run plugin checks, frontend tests, coverage gate, and distribution build
         working-directory: practice-plugin
-        run: bash ./gradlew check -PcatalogOnly="${{ steps.catalog.outputs.only }}" --no-daemon --console=plain
+        env:
+          CATALOG_ONLY: ${{ steps.catalog.outputs.only }}
+        run: |
+          bash ./gradlew check buildPlugin -PcatalogOnly="$CATALOG_ONLY" --no-daemon --console=plain
+          test -f build/distributions/practice-plugin-1.0-SNAPSHOT.zip

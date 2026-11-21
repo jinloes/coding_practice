@@ -15,6 +15,7 @@
     "longest-k-repeating-substring",
     "longest-k-distinct-substring",
     "substring-word-concatenations",
-    "smallest-keyword-cover"
+    "smallest-keyword-cover",
+    "sliding-window-rate-limiter"
   ]
 }

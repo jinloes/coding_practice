@@ -7,6 +7,7 @@ import com.intellij.execution.application.ApplicationConfigurationType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiJavaFile;
+import com.intellij.util.execution.ParametersListUtil;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 
 /** Builds the temporary native Application run configuration for a visible-example or input run. */
@@ -35,13 +36,13 @@ final class ExampleRunConfigurations {
         configuration.setMainClass(runner.getClasses()[0]);
         configuration.setModule(module);
         configuration.setWorkingDirectory(attempt.directory().toString());
-        configuration.setProgramParameters(input.isEmpty() ? null : quoteArgument(input));
+        configuration.setProgramParameters(input.isEmpty() ? null : encodeArgument(input));
         manager.setTemporaryConfiguration(settings);
         manager.setSelectedConfiguration(settings);
         return settings;
     }
 
-    private static String quoteArgument(String input) {
-        return '"' + input.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
+    static String encodeArgument(String input) {
+        return ParametersListUtil.escape(input);
     }
 }

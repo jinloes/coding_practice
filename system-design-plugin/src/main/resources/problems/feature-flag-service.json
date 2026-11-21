@@ -1,0 +1,21 @@
+{
+  "id": "feature-flag-service",
+  "title": "Feature Flag and Staged Rollout Service",
+  "difficulty": "Easy",
+  "summary": "Evaluate targeting rules and percentage rollouts locally at high QPS with fast global kill switches.",
+  "statement": "Design a feature flag and dynamic configuration platform used by backend services, web apps, and mobile clients across an organization.\n\nFunctional requirements:\n- Engineers create boolean or multivariate flags, define targeting rules by tenant, user attribute, or explicit allowlist, and ramp percentage rollouts gradually.\n- Server and client SDKs evaluate flags with negligible latency and continue working even if the feature flag service is unreachable.\n- Toggling a kill switch or updating a rollout rule propagates to active SDK instances worldwide within a few seconds.\n- Record an audit history of every rule change with one-click rollback to a previous version.\n\nScale to assume:\n- 50,000 active flags across 2,000 internal services and client apps.\n- 15 million flag evaluations per second across the fleet, compared with about 20 rule edits per minute.\n- 250,000 connected server SDK instances and millions of active browser and mobile sessions.",
+  "hints": [
+    "At 15 million evaluations per second, what happens to latency and availability if every `isEnabled` check makes a network call to a central service?",
+    "When a flag ramps from `10%` to `25%`, how do stateless app servers assign the same user to the same bucket without storing per-user assignments or flipping users who were already enabled?",
+    "Server SDKs need full rulesets, whereas mobile and browser clients are untrusted—how should rule delivery and evaluation differ between the two?"
+  ],
+  "expectations": [
+    "Clarifies consistency window for kill switches (eventual propagation within a few seconds), SDK evaluation latency target (sub-millisecond in-process), and server versus client SDK privacy requirements.",
+    "Separates the control plane (CRUD API, validation, audit history, relational store) from the read/distribution data plane so control-plane outages never block live traffic.",
+    "Evaluates rules locally in memory inside server SDKs rather than making per-request RPCs, seeding from a local disk snapshot or code-defined default on cold start.",
+    "Propagates immutable versioned ruleset snapshots via CDN-cached blobs paired with lightweight streaming invalidations (`SSE` or WebSockets) over regional relay nodes with jittered reconnects.",
+    "Computes sticky, monotonic percentage rollouts deterministically with `hash(flag_key + salt + subject_id) % 10000` so ramping a threshold never flips already-enrolled users.",
+    "Pre-evaluates flags for a specific user context on an edge endpoint for browser and mobile SDKs so sensitive tenant allowlists and unreleased targeting rules are never exposed in client bundles.",
+    "Stores immutable configuration versions with actor, diff, and optional approval metadata to support instant atomic rollback."
+  ]
+}

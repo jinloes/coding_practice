@@ -186,7 +186,8 @@ class FullCheckIntegrationTest extends PracticeExecutionTestBase {
                 .isInstanceOf(com.intellij.execution.configurations.CommandLineState.class);
         assertThatThrownBy(() -> configuration.getState(DefaultDebugExecutor.getDebugExecutorInstance(), environment))
                 .isInstanceOf(com.intellij.execution.ExecutionException.class)
-                .hasMessageContaining("Use Debug With Input");
+                .hasMessageContaining("Debug Examples")
+                .hasMessageContaining("Debug With Input...");
 
         PracticeRunConfiguration missing = EdtTestUtil.runInEdtAndGet(() ->
                 new PracticeRunConfiguration(fixture.getProject(), factory, "Missing"));

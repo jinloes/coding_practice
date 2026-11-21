@@ -268,3 +268,9 @@ grouped-dependency-order
 region-recolor
 nested-repeat-decoding
 infix-expression-value
+agent-satisfaction-ranking
+sliding-window-rate-limiter
+collection-storage-report
+wildcard-route-matcher
+grid-snake-game
+credit-window-rate-limiter

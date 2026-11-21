@@ -32,12 +32,9 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import static com.jinloes.practice_plugin.run.CheckResult.Status.CANCELLED;
 import static com.jinloes.practice_plugin.run.RunDecisions.exampleFinishedText;
 import static com.jinloes.practice_plugin.run.RunDecisions.exampleInstallPreflight;
 import static com.jinloes.practice_plugin.run.RunDecisions.exampleResultText;
@@ -62,11 +59,7 @@ public final class PracticeRunner implements Disposable {
      * dispatch must run it. Null is the real one: the IDE dispatch used in production.
      */
     private final Consumer<Runnable> continuationDispatcher;
-    /**
-     * Everything currently showing run output. A tool window that is closed and reopened creates a
-     * new panel, so registrations must be removable or each cycle leaks the previous panel.
-     */
-    private final List<Consumer<String>> listeners = new CopyOnWriteArrayList<>();
+    private final RunEvent.Listeners listeners = new RunEvent.Listeners();
 
     public PracticeRunner(Project project) {
         this(project, null);
@@ -111,7 +104,7 @@ public final class PracticeRunner implements Disposable {
             stopOwnedExampleProcess(control, handler);
             return;
         }
-        message(start.message());
+        publish(new RunEvent.Started(RunEvent.attemptId(examples.attempt()), start.message()));
     }
 
     void handleExampleProcessNotStarted(RunSession.ExampleSession examples) {
@@ -127,9 +120,16 @@ public final class PracticeRunner implements Disposable {
                 ? examples : null;
     }
 
-    /** Registers a listener. The caller must {@link #removeListener} it when it is disposed. */
+    public void addEventListener(Consumer<RunEvent> listener) {
+        listeners.addEvent(listener);
+    }
+
+    public void removeEventListener(Consumer<RunEvent> listener) {
+        listeners.remove(listener);
+    }
+
     public void addListener(Consumer<String> listener) {
-        listeners.add(listener);
+        listeners.addText(listener);
     }
 
     public void removeListener(Consumer<String> listener) {
@@ -186,8 +186,8 @@ public final class PracticeRunner implements Disposable {
         // The guard is held now, so the settings this check must clean up can be taken over safely.
         session.set(new RunSession.CheckSession(attemptId, pendingCheckSettings.getAndSet(null), control));
         try {
-            return new FullCheck(project, attempts, this::message, this::stop, this::finishCheck)
-                    .start(attemptId, control);
+            return new FullCheck(project, attempts, text -> publish(new RunEvent.Started(attemptId, text)),
+                    this::stop, this::finishCheck).start(attemptId, control);
         } catch (IOException | ExecutionException | IllegalArgumentException exception) {
             session.set(RunSession.IDLE);
             throw new ExecutionException("Cannot start managed check: " + exception.getMessage(), exception);
@@ -290,7 +290,6 @@ public final class PracticeRunner implements Disposable {
     }
 
     private void finishCheck(ManagedPracticeWorkspace.Attempt attempt, String fingerprint, CheckResult result) {
-        CheckResult completed = result;
         ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
                 WriteIntentReadAction.run(() -> {
                     RunnerAndConfigurationSettings settings =
@@ -303,8 +302,9 @@ public final class PracticeRunner implements Disposable {
                     }
                     if (!project.isDisposed()) {
                         ManagedPracticeProgress.get().record(
-                                attempt.id(), attempt.exerciseId(), fingerprint, completed);
-                        message(fullCheckMessage(attempt, completed));
+                                attempt.id(), attempt.exerciseId(), fingerprint, result);
+                        publish(new RunEvent.CheckFinished(
+                                attempt.id(), attempt.exerciseId(), fullCheckMessage(attempt, result)));
                     }
                 }));
     }
@@ -331,7 +331,7 @@ public final class PracticeRunner implements Disposable {
                         resultText = exampleResultText(resultText, fingerprint,
                                 () -> attempts.fingerprint(finishedAttempt));
                     }
-                    message(resultText);
+                    publish(new RunEvent.ExampleFinished(RunEvent.attemptId(attempt), resultText));
                 }
         ));
     }
@@ -366,7 +366,7 @@ public final class PracticeRunner implements Disposable {
             try {
                 saveAndContinueWithWriteIntent(action);
             } catch (ExecutionException exception) {
-                message("Cannot start practice execution: " + exception.getMessage());
+                publish(new RunEvent.FailedToStart("Cannot start practice execution: " + exception.getMessage()));
             }
         });
     }
@@ -382,7 +382,7 @@ public final class PracticeRunner implements Disposable {
         try {
             WriteIntentReadAction.runThrowable(action::run);
         } catch (ExecutionException exception) {
-            message("Cannot start practice execution: " + exception.getMessage());
+            publish(new RunEvent.FailedToStart("Cannot start practice execution: " + exception.getMessage()));
         }
     }
 
@@ -396,12 +396,8 @@ public final class PracticeRunner implements Disposable {
         void run() throws ExecutionException;
     }
 
-    private void message(String text) {
-        ApplicationManager.getApplication().invokeLater(() -> {
-            if (!project.isDisposed()) {
-                listeners.forEach(each -> each.accept(text));
-            }
-        });
+    private void publish(RunEvent event) {
+        listeners.publish(project, event);
     }
 
     static void stopOwnedExampleProcess(RunSession.RunControl control, ProcessHandler handler) {

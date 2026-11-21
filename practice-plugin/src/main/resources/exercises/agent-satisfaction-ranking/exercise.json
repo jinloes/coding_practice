@@ -1,0 +1,30 @@
+{
+  "id": "agent-satisfaction-ranking",
+  "title": "Agent Satisfaction Ranking",
+  "topic": "Data Structures",
+  "difficulty": "Easy",
+  "statement": "Track integer customer-satisfaction ratings for support agents and return qualified agents ranked from highest to lowest satisfaction.\n\nContract\n- Construct an empty tracker with `new Solution()`.\n- `recordScore(agentId, score)` records one integer rating for `agentId`. `agentId` must be non-null and non-blank, and `score` must be between `1` and `5` inclusive; otherwise throw `IllegalArgumentException`.\n- `qualifiedAgents(minRatings)` (`minRatings >= 1`, otherwise throw `IllegalArgumentException`) returns a new list of every agent with at least `minRatings` recorded scores.\n- Order qualified agents by highest exact average score first, then by higher total rating count, and finally alphabetically (`String.compareTo`) when both average and count tie.\n\nExamples\n- `recordScore(\"mia\", 5), recordScore(\"ben\", 4), recordScore(\"mia\", 4), recordScore(\"ben\", 5), recordScore(\"ben\", 5), qualifiedAgents(2)` => `[ben, mia]`\n- `recordScore(\"zoe\", 4), recordScore(\"zoe\", 4), recordScore(\"ava\", 4), recordScore(\"kai\", 5), qualifiedAgents(2)` => `[zoe]`\n- `recordScore(\"bob\", 5), recordScore(\"bob\", 3), recordScore(\"ada\", 4), recordScore(\"ada\", 4), recordScore(\"cam\", 4), qualifiedAgents(1)` => `[ada, bob, cam]`\n",
+  "examples": [
+    {
+      "input": "rate mia 5; rate ben 4; rate mia 4; rate ben 5; rate ben 5; query 2",
+      "output": "[ben, mia]"
+    },
+    {
+      "input": "rate zoe 4; rate zoe 4; rate ava 4; rate kai 5; query 2",
+      "output": "[zoe]"
+    },
+    {
+      "input": "rate bob 5; rate bob 3; rate ada 4; rate ada 4; rate cam 4; query 1",
+      "output": "[ada, bob, cam]"
+    }
+  ],
+  "hints": [
+    "Store only the running score sum and rating count for each agent instead of keeping every individual score.",
+    "Compare two averages `sumA / countA` and `sumB / countB` with 64-bit cross-multiplication (`sumA * countB` versus `sumB * countA`) to avoid truncation and floating-point rounding.",
+    "Filter agents meeting `minRatings` and sort them with a comparator chaining exact average, rating count, and `agentId`. Intended complexity for `n` agents: O(n log n) time for `qualifiedAgents` (`O(1)` average per `recordScore`) and O(n) space."
+  ],
+  "inputSyntax": "Input: semicolon-separated operations rate <agent> <1..5> and query <minRatings>, for example: rate mia 5; rate ben 4; rate mia 4; rate ben 5; rate ben 5; query 2",
+  "sampleInput": "rate mia 5; rate ben 4; rate mia 4; rate ben 5; rate ben 5; query 2",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

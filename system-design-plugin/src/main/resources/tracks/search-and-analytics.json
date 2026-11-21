@@ -7,8 +7,10 @@
     "search-autocomplete",
     "proximity-search",
     "delivery-service",
+    "cross-product-tagging",
     "ticket-booking",
     "top-k-trending",
-    "ad-click-aggregation"
+    "ad-click-aggregation",
+    "issue-tracker-board"
   ]
 }

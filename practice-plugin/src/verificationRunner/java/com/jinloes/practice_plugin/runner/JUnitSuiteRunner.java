@@ -28,6 +28,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
@@ -74,21 +75,21 @@ public final class JUnitSuiteRunner {
     private static void writeSuiteXml(Path results, String className, List<RecordedCase> cases) throws Exception {
         Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         Element suite = document.createElement("testsuite");
-        suite.setAttribute("name", className);
+        suite.setAttribute("name", sanitizeXml10(className));
         document.appendChild(suite);
         for (RecordedCase recorded : cases) {
             Element testcase = document.createElement("testcase");
-            testcase.setAttribute("name", recorded.name());
+            testcase.setAttribute("name", sanitizeXml10(recorded.name()));
             if (recorded.skipped()) {
                 testcase.appendChild(document.createElement("skipped"));
             } else if (recorded.failure() != null) {
                 Throwable failure = recorded.failure();
                 Element child = document.createElement(failure instanceof AssertionError ? "failure" : "error");
-                child.setAttribute("type", failure.getClass().getName());
+                child.setAttribute("type", sanitizeXml10(failure.getClass().getName()));
                 if (failure.getMessage() != null) {
-                    child.setAttribute("message", failure.getMessage());
+                    child.setAttribute("message", sanitizeXml10(failure.getMessage()));
                 }
-                child.setTextContent(stackTrace(failure));
+                child.setTextContent(sanitizeXml10(stackTrace(failure)));
                 testcase.appendChild(child);
             }
             suite.appendChild(testcase);
@@ -111,6 +112,38 @@ public final class JUnitSuiteRunner {
         StringWriter buffer = new StringWriter();
         failure.printStackTrace(new PrintWriter(buffer));
         return buffer.toString();
+    }
+
+    static String sanitizeXml10(String text) {
+        if (text == null) {
+            return "";
+        }
+        StringBuilder sanitized = new StringBuilder(text.length());
+        int index = 0;
+        while (index < text.length()) {
+            char current = text.charAt(index);
+            if (Character.isHighSurrogate(current)
+                    && index + 1 < text.length()
+                    && Character.isLowSurrogate(text.charAt(index + 1))) {
+                sanitized.appendCodePoint(Character.toCodePoint(current, text.charAt(index + 1)));
+                index += 2;
+            } else if (!Character.isSurrogate(current) && isLegalXml10Bmp(current)) {
+                sanitized.append(current);
+                index++;
+            } else {
+                sanitized.append(String.format(Locale.ROOT, "\\u%04x", (int) current));
+                index++;
+            }
+        }
+        return sanitized.toString();
+    }
+
+    private static boolean isLegalXml10Bmp(char ch) {
+        return ch == 0x9
+                || ch == 0xA
+                || ch == 0xD
+                || (ch >= 0x20 && ch <= 0xD7FF)
+                || (ch >= 0xE000 && ch <= 0xFFFD);
     }
 
     private static final class Recorder implements TestExecutionListener {

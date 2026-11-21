@@ -1,0 +1,21 @@
+{
+  "id": "cross-product-tagging",
+  "title": "Cross-Product Tagging Service",
+  "difficulty": "Medium",
+  "summary": "Tag heterogeneous items across workspace apps with fast inline reads and permission-safe search.",
+  "statement": "Design a shared tagging service for a multi-product collaboration suite where teams attach labels to tickets, wiki pages, source repositories, and service requests.\n\nFunctional requirements:\n- Users attach and remove tags on any item across products, see an item's tags inline when viewing boards or pages, and click a tag to list matching items across products.\n- Support fast prefix typeahead and popular-tag suggestions scoped to the caller's workspace.\n- Ensure tag searches never reveal the title, metadata, or existence of items the caller is not permitted to view.\n- Clean up tag associations automatically when items, projects, or entire workspaces are deleted.\n\nScale to assume:\n- 250,000 enterprise workspaces holding 8 billion tagged items and 30 billion tag bindings.\n- 400,000 inline tag lookups per second (often batched for 50 items on a board) and 25,000 cross-product tag queries per second.\n- Tag writes average 15,000 per second, with bulk re-tagging operations touching 10,000 items at once.",
+  "hints": [
+    "Think about the two opposite read paths: rendering 50 cards on a board needs `item -> tags`, whereas clicking a label needs `(workspace, tag) -> items`. How do you index and shard for both?",
+    "If the tagging service only stores `(workspace_id, product, item_id)` opaque references, how do you return a page of 25 authorized items when the caller can only view 10% of items with that tag?",
+    "What happens when a user types `Q4-Launch` while a teammate types `q4-launch`, or when a wiki space with 50,000 tagged pages is deleted?"
+  ],
+  "expectations": [
+    "Clarifies tag normalization rules (case-folding vs display label), maximum tags per item, multi-tag query semantics (`AND`/`OR`), and freshness expectations after item deletion or permission changes.",
+    "Models polymorphic item identifiers `(tenant_id, resource_type, resource_id)` decoupled from product schemas, with idempotent attach/detach APIs and a batch `getTagsForItems` endpoint.",
+    "Supports both access patterns inside a `tenant_id` shard boundary using dual indexes or projections: `(tenant_id, resource_type, resource_id) -> tags` cached in memory for board views and `(tenant_id, normalized_tag_id, updated_at, resource_ref)` for reverse lookups.",
+    "Enforces per-item read authorization on reverse tag queries without leaking unauthorized items—combining coarse container/project visibility pre-filters with batched authorization checks and over-fetching to fill cursor-paginated pages.",
+    "Powers workspace-scoped tag autocomplete and popularity rankings using a prefix index or cached top-N per tenant, maintaining approximate or async-aggregated usage counts so bulk edits do not contend on hot counter rows.",
+    "Consumes lifecycle events (`item.deleted`, `container.deleted`, `tenant.purged`) from product services over an asynchronous queue to tombstone and sweep orphaned tag bindings.",
+    "Throttles and chunks bulk tag mutations asynchronously so a 10,000-item batch operation cannot starve interactive board reads."
+  ]
+}
