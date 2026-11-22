@@ -1,0 +1,14 @@
+{
+  "id": "cqrs-and-event-sourcing",
+  "title": "CQRS, Projections & Event Sourcing",
+  "summary": "Separate strongly consistent write models from denormalized read views, and know when immutable event logs pay off.",
+  "body": "`CQRS` (Command Query Responsibility Segregation) and `Event Sourcing` solve different problems and should not be conflated. Most systems that benefit from read/write separation need `CQRS` with outbox/CDC projections, not full event sourcing.\n\n## CQRS without event sourcing\nKeep a normalized transactional store on the write path to enforce invariants, and project asynchronous read models tailored to query patterns:\n- Write model: normalized relational rows enforcing uniqueness, version checks, and authorization.\n- Read projections: Elasticsearch documents for faceted search, Redis sorted sets for leaderboards/feeds, or pre-joined board views.\n- Explicitly handle read-your-own-writes lag: return the mutated entity directly from the command response, pass a causal `min_version` token, or merge recent client mutations until the projection catches up.\n\n## When Event Sourcing is justified\nStore immutable domain events `(stream_id, version, event_type, payload)` as the primary source of truth only when auditability, temporal replay, or balanced accounting is a core requirement (financial ledgers, compliance audit trails, collaborative operation logs):\n- Enforce optimistic concurrency on append with a unique `(stream_id, expected_version)` constraint.\n- Bound aggregate load time with periodic state snapshots every `N` events so hydration reads `latest_snapshot + tail_events`.\n- Never fire external side effects (emails, card charges, webhooks) directly from replayable projection handlers.\n\n## Operational pitfalls\n- Schema evolution is permanent: immutable events require additive schemas or explicit upcasters across historical versions.\n- Regulatory deletion (`GDPR` right-to-erasure) conflicts with immutable logs: keep PII out of raw event payloads or encrypt per-subject fields with erasable keys (crypto-shredding).",
+  "relatedProblemIds": [
+    "payment-processing",
+    "audit-log-pipeline",
+    "news-feed",
+    "issue-tracker-board",
+    "multi-tenant-crm-search",
+    "collaborative-document-editor"
+  ]
+}

@@ -24,6 +24,7 @@ chat-messaging
 video-streaming
 key-value-store
 ticket-booking
+payment-processing
 top-k-trending
 ad-click-aggregation
 live-reactions-comments

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository is a multi-module Gradle project for Java platform, regex engine, and cryptography practice, plus two standalone IDE plugin builds: `practice-plugin` (algorithm and data structure exercises) and `system-design-plugin` (system design interview problems).
+This repository is a multi-module Gradle project for Java platform, regex engine, cryptography, and distributed system design practice, plus two standalone IDE plugin builds: `practice-plugin` (algorithm and data structure exercises) and `system-design-plugin` (system design interview problems).
 
 ## Build System
 
@@ -19,6 +19,7 @@ Each topic is implemented as an independent Gradle submodule.
 | Platform and language features | `concurrency`, `reflection` | Java platform and API-focused practice |
 | Regex engine work | `regex` | Java regex and PCRE2 integration via pcre4j |
 | Security study guide | `cryptography` | Key management and cryptography study docs plus JDK-only reference implementations |
+| System design study guide & labs | `system-design` | Pattern-first system design docs, worked case studies, Docker Compose CDC lab, and JDK-only reference implementations |
 
 ## Language Strategy
 

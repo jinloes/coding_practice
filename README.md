@@ -1,6 +1,6 @@
 # Coding Practice
 
-A Java repository for practicing algorithms, data structures, concurrency, regex engine work, and system design. Algorithm and data structure problems live in the IntelliJ practice plugin (`practice-plugin`); system design problems live in the System Design Practice plugin (`system-design-plugin`).
+A Java repository for practicing algorithms, data structures, concurrency, regex engine work, cryptography, and system design. Algorithm and data structure problems live in the IntelliJ practice plugin (`practice-plugin`); system design pattern guides, reference implementations, and labs live in `system-design`, paired with interactive mock interviews in the System Design Practice plugin (`system-design-plugin`).
 
 ## What Is In This Repository
 
@@ -28,6 +28,12 @@ This module experiments with regex engines beyond the JDK implementation and inc
 - `cryptography`
 
 A four-week study plan for key management, cryptography, secrets management, and PKI, with JDK-only reference implementations (AES-GCM, HKDF, envelope encryption, an in-memory KMS, Ed25519/X25519, Shamir secret sharing) and tests. Start at [cryptography/README.md](cryptography/README.md).
+
+### System Design Patterns, Reference Code & Labs
+
+- `system-design`
+
+A pattern-first system design study guide (`docs/foundations.md`, `docs/interview-playbook.md`, 13 composable pattern deep-dives, and 8 worked post-attempt case studies), JDK-only reference implementations (token-bucket and sliding-window rate limiters, consistent hash ring, circuit breaker, transactional outbox + idempotent inbox, fenced leadership leases, and orchestrated sagas), and a Docker Compose PostgreSQL/Debezium/Kafka/Elasticsearch Change Data Capture lab (`labs/change-data-capture/`). Start at [system-design/README.md](system-design/README.md).
 
 ### System Design Interview Practice
 

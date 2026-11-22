@@ -26,7 +26,7 @@ Resources: `src/main/resources/problems/index.txt`, `problems/<id>.json`,
   `FeedbackView.tsx`, `GuideView.tsx`, `InterviewTimer.tsx`,
   `ReadinessPanel.tsx`) — the tool window with readiness summary, collapsible
   per-dimension rubric readiness panel, `Surprise me` random problem picker,
-  search/track/difficulty/status (`Needs retry`) filters, 8 concept guides with
+  search/track/difficulty/status (`Needs retry`) filters, 12 concept guides with
   contextual problem links, ambiguous-prompt scoping mode, wall-clock 45-minute
   timer, level-calibrated 5-point pre-review checklist, attempt rename/delete,
   review-over-review score deltas, and interactive follow-up probe input.

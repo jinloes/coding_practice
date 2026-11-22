@@ -25,8 +25,9 @@ the web pages.
 
 ## Workflow
 
-1. Open the **System Design** tool window, browse the **Guides** tab for 8
-   concise delivery, storage-matrix, API/security, and architecture guides, check
+1. Open the **System Design** tool window, browse the **Guides** tab for 12
+   concise delivery, storage-matrix, API/security, and distributed-systems
+   pattern guides, check
    your **Rubric readiness** averages across dimensions, or filter **Problems**
    by keyword, domain track, difficulty, and status (including `Needs retry`),
    use **Surprise me** for a random cold prompt, and set your **Target level**
@@ -108,5 +109,8 @@ synced.
 - Images in diagrams are not graded, and a scene over 10 MiB is not saved.
 - Only one feedback request runs at a time.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and
-[CODE-MAP.md](CODE-MAP.md) for the code layout.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the design,
+[CODE-MAP.md](CODE-MAP.md) for the code layout, and
+[../system-design/README.md](../system-design/README.md) for the companion
+pattern study guide, worked post-attempt case studies, runnable Java reference
+implementations, and Change Data Capture lab.

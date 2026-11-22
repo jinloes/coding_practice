@@ -5,5 +5,9 @@ api-and-security-patterns
 realtime-updates
 scaling-data
 reliability-patterns
+outbox-and-cdc
+saga
+cqrs-and-event-sourcing
+leader-election
 blobs-and-media
 

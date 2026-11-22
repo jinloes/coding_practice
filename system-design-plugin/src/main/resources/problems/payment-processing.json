@@ -1,0 +1,21 @@
+{
+  "id": "payment-processing",
+  "title": "Payment Processing & Ledger",
+  "difficulty": "Hard",
+  "summary": "Authorize, capture, refund, and reconcile merchant payments without double-charging or losing money.",
+  "statement": "Design a multi-tenant payment processing platform that lets online merchants charge buyers across card networks and regional payment providers, record an auditable financial ledger, and reconcile daily settlements.\n\nFunctional requirements:\n- Expose merchant APIs to authorize, capture, void, and refund payments using integer minor currency units.\n- Guarantee that client or gateway retries never double-charge a buyer, even when external payment providers time out mid-request.\n- Maintain an immutable financial ledger for merchant balances, platform fees, and refunds.\n- Deliver signed payment-status webhooks to merchants and reconcile internal records against daily provider settlement files.\n\nScale to assume:\n- 250,000 active merchants processing 40 million payment transactions per day.\n- Peak checkout traffic of 5,000 payment mutations per second and 25,000 status reads per second.\n- External card networks and payment providers have p99 latency of 1 to 4 seconds and experience intermittent timeouts and duplicate callbacks.",
+  "hints": [
+    "Never hold a database transaction or row lock open across a 2-second external provider call. Break checkout into durable state transitions around the network boundary.",
+    "A timeout from an external payment provider means `UNKNOWN`, not `FAILED`. How should your attempt state machine, provider idempotency key, and recovery worker handle an ambiguous response?",
+    "Mutable `balance = balance - amount` columns make audits and discrepancy debugging painful. Model money movement as balanced, append-only ledger entries paired with an outbox for webhooks."
+  ],
+  "expectations": [
+    "Clarifies currency representation (integer minor units + ISO currency code, never floating point), PCI token boundary (vaulted payment-method tokens rather than raw PANs), and separate authorize vs capture flows.",
+    "Enforces `(merchant_id, idempotency_key)` uniqueness with a canonical request-payload hash so identical retries replay the stored outcome while mutated payloads under the same key are rejected.",
+    "Models explicit `PaymentIntent` and `PaymentAttempt` state machines (`CREATED`, `AUTHORIZING`, `AUTHORIZED`, `CAPTURING`, `CAPTURED`, `FAILED`, `UNKNOWN`) guarded by conditional versioned updates.",
+    "Commits intent/attempt state before calling external payment providers so no database transaction or connection stays open across slow third-party RPCs.",
+    "Treats provider timeouts and 5xx responses as `UNKNOWN`, reconciling status via provider-side idempotency keys, status queries, or webhooks before ever issuing a new charge attempt.",
+    "Records money movement in an append-only, balanced double-entry ledger (buyer clearing, merchant payable, platform fee, refund entries) and emits signed, deduplicated merchant webhooks via a transactional outbox.",
+    "Runs an asynchronous settlement reconciliation pipeline against daily PSP/bank files to surface missing, mismatched, or late-settled transactions for operational resolution."
+  ]
+}

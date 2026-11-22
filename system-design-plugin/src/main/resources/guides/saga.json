@@ -1,0 +1,12 @@
+{
+  "id": "saga",
+  "title": "Sagas & Multi-Service Workflows",
+  "summary": "Coordinate multi-step business workflows across services and external APIs without distributed 2PC locks.",
+  "body": "Two-phase commit (`2PC`) across independent microservices, queues, or third-party APIs couples availability and holds locks over slow networks. A Saga decomposes the workflow into local ACID steps paired with explicit semantic compensations.\n\n## Orchestration vs choreography\n- Choreography (events): each service reacts to domain events and emits the next. Simple for 2 to 3 loosely coupled notifications, but multi-branch rollback logic quickly scatters across services.\n- Orchestration (state machine): a durable coordinator records workflow state (`step`, `status`, `attempt`, `idempotency_key`), sends commands, and drives reverse-order compensations on failure. Prefer orchestration for money, inventory holds, and multi-stage pipelines.\n\n## Designing safe steps and compensations\n- Sagas lack `ACID` isolation: intermediate states are visible to users and concurrent requests. Expose explicit transitional states (`PENDING_PAYMENT`, `SEAT_HELD`) rather than pretending multi-step writes are instantaneous.\n- Order steps to minimize painful rollbacks: validate permissions and reserve reversible internal holds before triggering external charges or irreversible notifications.\n- Every forward command and every compensating action must be idempotent, keyed by `(workflow_id, step_name)`, because orchestrators retry on timeouts.\n\n## Handling ambiguous timeouts\n- Distinguish terminal business rejections (`INSUFFICIENT_FUNDS`, `SOLD_OUT` -> run compensations immediately) from ambiguous network timeouts (`UNKNOWN` -> query or reconcile status before compensating, so you never refund or release a resource whose forward call actually succeeded).\n- Alert and route `COMPENSATION_FAILED` workflows to an operator queue with durable step context when retries exhaust.",
+  "relatedProblemIds": [
+    "payment-processing",
+    "ticket-booking",
+    "delivery-service",
+    "cicd-build-pipeline"
+  ]
+}

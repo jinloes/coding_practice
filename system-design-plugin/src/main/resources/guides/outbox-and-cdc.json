@@ -1,0 +1,14 @@
+{
+  "id": "outbox-and-cdc",
+  "title": "Transactional Outbox & Change Data Capture",
+  "summary": "Propagate committed database changes to queues, caches, and search indexes without dual-write drift.",
+  "body": "Updating a primary database and publishing to Kafka or invalidating a search index in application code creates a dual-write race: a crash, timeout, or rollback between the two leaves downstream state permanently out of sync.\n\n## Transactional outbox + relay\nKeep the database transaction as the single atomic commit point:\n- Write the domain row mutation and an `outbox_events` row (`event_id`, `aggregate_id`, `event_type`, `payload`, `created_at`) inside the same local ACID transaction.\n- Have an asynchronous relay poll unpublished rows (or tail the database write-ahead log) and publish to the broker, marking rows published only after broker acknowledgement.\n- Because the relay can crash after broker ack and before marking the row, delivery is `at-least-once`: every downstream consumer must deduplicate by `event_id`.\n\n## Log-based Change Data Capture (CDC)\nWhen deriving read models across tables (full-text search, analytics warehouses, cache invalidation), tail the database transaction log (`WAL` or `binlog`) with a connector such as Debezium:\n- Zero application dual writes and minimal OLTP overhead compared with heavy polling queries.\n- Ordering is preserved per partition key (typically `tenant_id` or `aggregate_id`), not globally across partitions.\n- Watch out for schema coupling: streaming raw internal table columns turns private schema refactors into breaking public contract changes. Prefer streaming an explicit `outbox` table when crossing team boundaries.\n\n## Failure modes to address\n- Replication-slot disk growth: if PostgreSQL logical replication slots stall while a connector is down, `WAL` segments accumulate and can fill primary disk unless slot lag alerts and retention caps are configured.\n- Cold rebuilds and drift: design derived search/cache projections so you can snapshot-backfill from the source of truth and replay from a known log offset.",
+  "relatedProblemIds": [
+    "payment-processing",
+    "audit-log-pipeline",
+    "webhook-delivery",
+    "multi-tenant-crm-search",
+    "cross-product-tagging",
+    "notification-service"
+  ]
+}

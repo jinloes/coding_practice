@@ -12,6 +12,7 @@
     "cross-product-tagging",
     "incident-alerting-escalation",
     "cicd-build-pipeline",
+    "payment-processing",
     "multi-tenant-crm-search",
     "issue-tracker-board",
     "hierarchical-permissions"

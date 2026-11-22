@@ -1,0 +1,13 @@
+{
+  "id": "leader-election",
+  "title": "Leader Election, Leases & Fencing",
+  "summary": "Coordinate single-owner background work safely using consensus leases and monotonic fencing tokens.",
+  "body": "Whenever you introduce a single active coordinator—a partition scheduler, shard primary, or compaction driver—two failure modes dominate interviews: split-brain zombie leaders and singleton throughput bottlenecks.\n\n## Why leases alone cannot prevent split-brain\nSuppose Worker A acquires a 10-second lease, starts a write, and hits a 15-second stop-the-world GC pause or network stall:\n- At `t = 11s`, the lease expires and Worker B legitimately acquires leadership.\n- At `t = 15s`, Worker A wakes up, still believing it is leader, and sends its delayed write, corrupting Worker B's newer state.\n- Checking wall-clock time on Worker A is unsafe because clocks drift and pauses can occur after the check.\n\n## Monotonic fencing tokens\nPair every leadership lease with a strictly increasing `fencing_token` (epoch number) issued by a consensus store (`etcd`, `ZooKeeper`, Raft, or a transactional DB sequence):\n- Worker A receives `token = 34`; when Worker B takes over after expiry, it receives `token = 35`.\n- Worker A and Worker B pass their `fencing_token` on every storage mutation or downstream command.\n- The target storage records `highest_seen_token = 35` and rejects any write carrying `token < 35`, making zombie writes harmless.\n\n## Prefer partitioned ownership over one global leader\n- A single cluster-wide leader caps throughput to one machine and causes a full availability blip during failover.\n- Shard coordination across `K` virtual partitions (for example, `64` or `256` timer/job buckets), electing or assigning a lease per partition so failover affects only `1/K` of traffic.\n- Tune lease `TTL` (commonly `10-30s`) with renewal at `TTL / 3` to balance fast crash recovery against false failovers during transient network blips.",
+  "relatedProblemIds": [
+    "distributed-job-scheduler",
+    "key-value-store",
+    "distributed-cache",
+    "collaborative-document-editor",
+    "unique-id-generator"
+  ]
+}
