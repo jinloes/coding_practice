@@ -43,7 +43,7 @@ class CopilotInterviewerModelListTest {
     }
 
     private CopilotInterviewer server() {
-        return new CopilotInterviewer(base, serverPrefix, () -> SystemInfo.isWindows, MISSING_NAME);
+        return new CopilotInterviewer(base, serverPrefix, MISSING_NAME);
     }
 
     private void assertServerGone() throws IOException {

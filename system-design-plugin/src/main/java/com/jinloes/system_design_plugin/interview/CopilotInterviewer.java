@@ -11,7 +11,6 @@ import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.util.EnvironmentUtil;
 import com.jinloes.system_design_plugin.platform.OwnedDirectory;
 
@@ -56,7 +55,6 @@ public final class CopilotInterviewer {
 
     private final OwnedDirectory runs;
     private final List<String> commandPrefix;
-    private final BooleanSupplier isWindows;
     private final String executableName;
     private final long pollMillis;
 
@@ -72,18 +70,16 @@ public final class CopilotInterviewer {
 
     public CopilotInterviewer() {
         this(Path.of(PathManager.getSystemPath()).resolve("system-design-practice").resolve("interviewer"),
-                List.of(), () -> SystemInfo.isWindows, "copilot", POLL_MILLIS);
+                List.of(), "copilot", POLL_MILLIS);
     }
 
-    CopilotInterviewer(Path base, List<String> commandPrefix, BooleanSupplier isWindows, String executableName) {
-        this(base, commandPrefix, isWindows, executableName, POLL_MILLIS);
+    CopilotInterviewer(Path base, List<String> commandPrefix, String executableName) {
+        this(base, commandPrefix, executableName, POLL_MILLIS);
     }
 
-    CopilotInterviewer(Path base, List<String> commandPrefix, BooleanSupplier isWindows, String executableName,
-                       long pollMillis) {
+    CopilotInterviewer(Path base, List<String> commandPrefix, String executableName, long pollMillis) {
         this.runs = OwnedDirectory.under(base, MARKER);
         this.commandPrefix = List.copyOf(commandPrefix);
-        this.isWindows = isWindows;
         this.executableName = executableName;
         this.pollMillis = pollMillis;
     }
@@ -118,16 +114,9 @@ public final class CopilotInterviewer {
             throw new InterviewException("Copilot CLI was not found at " + path
                     + ". Fix the path in Interviewer settings or clear it to search PATH.");
         }
-        if (isWindows.getAsBoolean()) {
-            String found = PathEnvironmentVariableUtil.findExecutableInWindowsPath(executableName);
-            if (!executableName.equals(found)) {
-                return found;
-            }
-        } else {
-            File found = PathEnvironmentVariableUtil.findInPath(executableName);
-            if (found != null) {
-                return found.getPath();
-            }
+        File found = PathEnvironmentVariableUtil.findExecutableInPathOnAnyOS(executableName);
+        if (found != null) {
+            return found.getPath();
         }
         throw new InterviewException("Copilot CLI was not found on PATH. Install it with "
                 + "'npm install -g @github/copilot', sign in by running 'copilot' once in a terminal, "

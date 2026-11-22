@@ -41,7 +41,7 @@ class CopilotInterviewerTest {
     }
 
     private CopilotInterviewer interviewer() {
-        return new CopilotInterviewer(base, prefix, () -> SystemInfo.isWindows, MISSING_NAME);
+        return new CopilotInterviewer(base, prefix, MISSING_NAME);
     }
 
     private Path script(String... pairs) throws IOException {
@@ -150,7 +150,7 @@ class CopilotInterviewerTest {
     void stopsOversizedOutput() throws IOException {
         Path fastExit = script("stdout", "x".repeat(600_000), "stdoutRepeat", "1", "sleepMillis", "0");
         CopilotInterviewer longPoll = new CopilotInterviewer(
-                base, prefix, () -> SystemInfo.isWindows, MISSING_NAME, 10_000);
+                base, prefix, MISSING_NAME, 10_000);
         assertThatThrownBy(() -> longPoll.run("p", settings(fastExit, 60), () -> false))
                 .isInstanceOf(InterviewException.class)
                 .hasMessageContaining("more than 512 KiB");
@@ -178,8 +178,7 @@ class CopilotInterviewerTest {
         while (!CopilotInterviewer.isRunning() && System.nanoTime() < deadline) {
             Thread.sleep(10);
         }
-        CopilotInterviewer other = new CopilotInterviewer(temporary.resolve("other"), prefix,
-                () -> SystemInfo.isWindows, MISSING_NAME);
+        CopilotInterviewer other = new CopilotInterviewer(temporary.resolve("other"), prefix, MISSING_NAME);
         assertThatThrownBy(() -> other.run("p", settings(script, 60), () -> false))
                 .hasMessageContaining("already running");
         cancel.set(true);
@@ -192,12 +191,10 @@ class CopilotInterviewerTest {
         Path missing = temporary.resolve("nope").resolve("copilot.exe");
         assertThatThrownBy(() -> interviewer().run("p", new Settings(missing.toString(), "", 60), () -> false))
                 .hasMessageContaining("not found at " + missing).hasMessageContaining("Interviewer settings");
-        for (boolean windows : new boolean[]{true, false}) {
-            CopilotInterviewer onPath = new CopilotInterviewer(base, prefix, () -> windows, MISSING_NAME);
-            assertThatThrownBy(() -> onPath.resolveExecutable(null)).hasMessageContaining("not found on PATH")
-                    .hasMessageContaining("npm install -g @github/copilot");
-            assertThatThrownBy(() -> onPath.resolveExecutable(" ")).isInstanceOf(InterviewException.class);
-        }
+        CopilotInterviewer onPath = new CopilotInterviewer(base, prefix, MISSING_NAME);
+        assertThatThrownBy(() -> onPath.resolveExecutable(null)).hasMessageContaining("not found on PATH")
+                .hasMessageContaining("npm install -g @github/copilot");
+        assertThatThrownBy(() -> onPath.resolveExecutable(" ")).isInstanceOf(InterviewException.class);
         assertThat(CopilotInterviewer.isRunning()).isFalse();
     }
 
@@ -205,25 +202,21 @@ class CopilotInterviewerTest {
     void findsExecutablesOnPath() throws InterviewException {
         String name = SystemInfo.isWindows ? "cmd" : "sh";
         String fileName = SystemInfo.isWindows ? "cmd.exe" : "sh";
-        assertThat(Path.of(new CopilotInterviewer(base, prefix, () -> SystemInfo.isWindows, name)
+        assertThat(Path.of(new CopilotInterviewer(base, prefix, name)
                 .resolveExecutable("")).getFileName().toString()).isEqualToIgnoringCase(fileName);
-        if (SystemInfo.isWindows) {
-            assertThat(new CopilotInterviewer(base, prefix, () -> false, fileName).resolveExecutable(null))
-                    .endsWithIgnoringCase(fileName);
-        }
     }
 
     @Test
     void reportsLaunchAndDirectoryFailures() throws IOException {
         Path script = script();
         CopilotInterviewer unstartable = new CopilotInterviewer(base, List.of(temporary.resolve("missing-program")
-                .toString()), () -> SystemInfo.isWindows, MISSING_NAME);
+                .toString()), MISSING_NAME);
         assertThatThrownBy(() -> unstartable.run("p", settings(script, 60), () -> false))
                 .hasMessageStartingWith("Could not start Copilot CLI");
 
         Path fileBase = temporary.resolve("file-base");
         Files.writeString(fileBase, "not a directory");
-        CopilotInterviewer blocked = new CopilotInterviewer(fileBase, prefix, () -> SystemInfo.isWindows, MISSING_NAME);
+        CopilotInterviewer blocked = new CopilotInterviewer(fileBase, prefix, MISSING_NAME);
         assertThatThrownBy(() -> blocked.run("p", settings(script, 60), () -> false))
                 .hasMessageStartingWith("Could not prepare the interviewer directory");
 
@@ -231,7 +224,7 @@ class CopilotInterviewerTest {
         try {
             new CopilotInterviewer().resolveExecutable("");
         } catch (InterviewException ignored) {
-            // Exercises the default SystemInfo.isWindows supplier whether or not copilot is installed on PATH.
+            // Exercises the default constructor whether or not copilot is installed on PATH.
         }
     }
 

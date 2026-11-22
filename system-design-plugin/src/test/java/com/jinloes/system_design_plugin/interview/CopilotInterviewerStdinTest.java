@@ -1,6 +1,5 @@
 package com.jinloes.system_design_plugin.interview;
 
-import com.intellij.openapi.util.SystemInfo;
 import com.jinloes.system_design_plugin.interview.CopilotInterviewer.InterviewException;
 import com.jinloes.system_design_plugin.interview.CopilotInterviewer.Settings;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +37,7 @@ class CopilotInterviewerStdinTest {
     }
 
     private CopilotInterviewer interviewer() {
-        return new CopilotInterviewer(base, prefix, () -> SystemInfo.isWindows, MISSING_NAME);
+        return new CopilotInterviewer(base, prefix, MISSING_NAME);
     }
 
     private Path script(String... pairs) throws IOException {
