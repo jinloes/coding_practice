@@ -46,7 +46,7 @@ state.
 
 ## Commands
 
-Run from `system-design-plugin/`:
+Run from `system-design-plugin/` (or from the repository root as `./gradlew :system-design-plugin:<task>` via the composite build, with the shared root `.run/` sandbox configuration):
 
 ```bash
 ./gradlew test                     # Java unit tests (also builds the web pages)

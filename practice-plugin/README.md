@@ -19,14 +19,14 @@ exercise compilation uses Java 17's language level and API (`--release 17`).
 From the repository root, with `JAVA_HOME` pointing to JDK 25:
 
 ```bash
-./practice-plugin/gradlew -p practice-plugin buildPlugin
+./gradlew :practice-plugin:buildPlugin
 ```
 
 To use a locally installed IDE instead of downloading the pinned SDK:
 
 ```bash
-./practice-plugin/gradlew -p practice-plugin \
-  -PidePath="/Applications/IntelliJ IDEA CE.app" buildPlugin
+./gradlew :practice-plugin:buildPlugin \
+  -PidePath="/Applications/IntelliJ IDEA CE.app"
 ```
 
 Install `practice-plugin/build/distributions/practice-plugin-1.0-SNAPSHOT.zip`
@@ -36,20 +36,18 @@ if prompted. This is a local development distribution, not a Marketplace release
 To launch an isolated development IDE:
 
 ```bash
-./practice-plugin/gradlew -p practice-plugin \
-  -PidePath="/Applications/IntelliJ IDEA CE.app" runIde
+./gradlew :practice-plugin:runIde \
+  -PidePath="/Applications/IntelliJ IDEA CE.app"
 ```
 
-Open `practice-plugin/` as its own project to get the shared
-**Sandbox IDE (runIde)** run configuration from `practice-plugin/.run/`. Run it
-to launch the sandbox, or debug it to attach to the sandbox IDE and breakpoint
-plugin code. It takes no hardcoded IDE path: set `idePath` in
-`practice-plugin/gradle.properties` (a commented template is checked in) or in
-`~/.gradle/gradle.properties` to reuse a local installation, otherwise the
+Open either the repository root (for **Algorithm Practice Sandbox (runIde)** in
+`.run/`, alongside `system-design-plugin` and the Java modules) or
+`practice-plugin/` standalone (for **Sandbox IDE (runIde)** in
+`practice-plugin/.run/`). Run it to launch the sandbox, or debug it to attach to
+the sandbox IDE and breakpoint plugin code. Set `idePath` in root
+`gradle.properties`, `practice-plugin/gradle.properties`, or
+`~/.gradle/gradle.properties` to reuse a local installation; otherwise the
 pinned SDK is downloaded.
-
-The main repository's Gradle settings deliberately do not include this build.
-Open `practice-plugin/` as its own Gradle project when developing the plugin.
 
 ## Practice workflow
 

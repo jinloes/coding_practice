@@ -11,7 +11,9 @@ it runs in any JetBrains IDE (2026.2+) that has the embedded browser.
 ## Install and run
 
 Requires JDK 25 (the Gradle toolchain); point `JAVA_HOME` at it or put its `java`
-on `PATH`. Run from `system-design-plugin/`:
+on `PATH`. Open the repository root in IntelliJ IDEA (using the shared **System
+Design Sandbox (runLocalIde)** run configuration in `.run/`) or run from
+`system-design-plugin/` (or from root with `:system-design-plugin:<task>`):
 
 ```bash
 ./gradlew runLocalIde   # start a sandbox IDE using the newest installed IntelliJ build

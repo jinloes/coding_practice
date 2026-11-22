@@ -6,9 +6,10 @@ This repository is a multi-module Gradle project for Java platform, regex engine
 
 ## Build System
 
-- Build tool: Gradle 9.3.1
-- Multi-module layout driven by root `settings.gradle`
-- Spring dependency management plugin is used in the build
+- Build tool: Gradle 9.3.1 (`./gradlew` at repository root and in each plugin directory)
+- Multi-module layout in root `settings.gradle` for Java 17/21 modules, plus `includeBuild` composite builds for `practice-plugin` and `system-design-plugin`
+- Spring dependency management plugin applies only to root `subprojects`, keeping plugin builds isolated
+- Shared IntelliJ run configurations in `.run/` launch plugin sandboxes directly when the repository root is opened in IntelliJ IDEA (with JDK 25 as the Gradle JVM)
 
 ## Module Organization
 
@@ -47,15 +48,19 @@ Each topic is implemented as an independent Gradle submodule.
 guided practice loop inside the IDE: pick an exercise, get a scratch project with a stubbed
 `Solution.java`, run the visible examples, then check against the hidden test suite.
 
-### Nested build
+### Composite build isolation
 
-The plugin is a **separate Gradle build**, deliberately absent from the root `settings.gradle`. It
-targets the IntelliJ Platform (Java 25 toolchain, IntelliJ Platform Gradle Plugin) rather than the
-monorepo's Java 17/21 baseline, so including it would force the whole repository onto the plugin's
-toolchain. Build it from its own directory, reusing the root wrapper:
+The plugin is an **isolated Gradle build** wired into root `settings.gradle` via
+`includeBuild("practice-plugin")` rather than `include(...)`. That lets IntelliJ IDEA open the
+repository root and work on both plugins and the platform modules in one window (using a JDK 25
+Gradle daemon), while keeping the plugin's JDK 25 toolchain and IntelliJ Platform dependencies
+isolated from root `subprojects`. Build it from the repository root or standalone from its own
+directory:
 
 ```
-cd practice-plugin && ../gradlew build
+./gradlew :practice-plugin:buildPlugin
+# or standalone:
+cd practice-plugin && ./gradlew buildPlugin
 ```
 
 ### The four workspace concepts
@@ -130,11 +135,14 @@ attempt, and interviewer-style feedback from the user's own Copilot CLI running 
 disabled. It depends only on the IntelliJ Platform and JCEF, so it runs in any JetBrains IDE, and it
 shares no code with `practice-plugin`.
 
-Like `practice-plugin`, it is a separate Gradle build absent from the root `settings.gradle`. It has
-its own wrapper and builds its React pages with Gradle-managed Node:
+Like `practice-plugin`, it is an isolated Gradle build wired into root `settings.gradle` via
+`includeBuild("system-design-plugin")`, with its own wrapper and Gradle-managed Node build for its
+React pages:
 
 ```
-cd system-design-plugin && ./gradlew build
+./gradlew :system-design-plugin:buildPlugin
+# or standalone:
+cd system-design-plugin && ./gradlew buildPlugin
 ```
 
 Problems are per-problem data in `system-design-plugin/src/main/resources/problems/<id>.json`. See

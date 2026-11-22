@@ -8,17 +8,19 @@ Apply these rules when editing code, tests, or build configuration in this works
 
 ## Build And Test
 
-Use Gradle from the repository root.
+Use the Gradle wrapper from the repository root (requires JDK 25 for the Gradle daemon when syncing or building the included plugin builds):
 
 ```bash
-./gradlew build
+./gradlew testClasses
 ./gradlew :regex:test
 ./gradlew :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
+./gradlew :practice-plugin:test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=pair-sum
+./gradlew :system-design-plugin:check
 ```
 
 ## Coding And Test Conventions
 
-- Use Java 17 for the root Gradle modules except `regex`, which uses Java 21. The standalone `practice-plugin` and `system-design-plugin` builds use a Java 25 toolchain.
+- Use Java 17 for the root Gradle modules except `regex`, which uses Java 21. `practice-plugin` and `system-design-plugin` are isolated Gradle builds wired into root `settings.gradle` via `includeBuild(...)` and use a Java 25 toolchain.
 - Use JUnit 5 annotations: `@Test`, `@BeforeEach`, `@AfterEach`, `@BeforeAll`, `@AfterAll`, `@Disabled`.
 - Use AssertJ assertions (`assertThat(...)`) instead of JUnit assertions.
 - Do not introduce JUnit 4 or Hamcrest in tests.
@@ -39,9 +41,11 @@ Use Gradle from the repository root.
 The tracked repository (~3.3 MB, roughly 850k tokens) cannot fit in one agent context window. About 2.5 MB of it is per-exercise plugin content and about 0.5 MB is plugin Java and TypeScript code.
 
 - Scope work to one module. Repo-wide reviews or audits should run one module or area at a time (for example `practice-plugin/` code, then `system-design-plugin/` code, then the platform and regex modules) and merge findings afterward, rather than loading everything at once.
+- Read documentation selectively: check markdown headings first (`^#{1,3} `) and read only the relevant line ranges of `CODE-MAP.md`, `ARCHITECTURE.md`, and `README.md` instead of loading full files upfront.
 - Treat `practice-plugin/src/main/resources/exercises/<id>/` and `practice-plugin/src/test/resources/{reference,known-wrong}/<id>/` as per-exercise data. Read only the IDs a task names; never read or search the whole tree. `practice-plugin/src/main/resources/exercises/index.txt` lists every ID.
-- For plugin code work, exclude exercise content from searches, for example with the glob `!practice-plugin/src/*/resources/**`. Start from `practice-plugin/CODE-MAP.md` to find the right package instead of reading broadly.
-- Treat `system-design-plugin/src/main/resources/problems/<id>.json` as per-problem data in the same way: read only the problem IDs a task names. Start `system-design-plugin/` work from its `CODE-MAP.md` and `AGENTS.md`, and exclude `system-design-plugin/web/node_modules/` and `build/` from searches.
+- Use cwd-independent globs when excluding content/build trees—`!**/resources/**` (or `!**/{exercises,reference,known-wrong,problems}/**`), `!**/build/**`, and `!**/node_modules/**`—so exclusions match whether running from the repository root or inside a plugin directory. Apply the same `paths` filter (plus a module prefix like `practice-plugin/**` when working from root) to IDE MCP `search_text`/`search_regex`/`search_file` calls, and pass whichever project root is open in IntelliJ (repo root or standalone plugin directory) as `projectPath`.
+- Treat `system-design-plugin/src/main/resources/problems/<id>.json` as per-problem data in the same way: read only the problem IDs a task names, starting from `system-design-plugin/CODE-MAP.md` and `AGENTS.md`.
+- Delegate full `./gradlew build`, `./gradlew test`, and `./gradlew check` runs to a `task` subagent (or pass `--quiet` / `--console=plain`) so build and test logs do not flood the main context window.
 - Keep source and test files under about 20 KB so they can be read in one pass; split oversized files by responsibility.
 - Avoid tests that restate catalog content (exercise or guide membership lists). Derive expectations from the manifests or assert invariants, so content changes do not require reading and editing large test files.
 

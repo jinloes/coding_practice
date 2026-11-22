@@ -43,53 +43,57 @@ All system design interview problems live in the standalone JetBrains plugin und
 
 ## Tech Stack
 
-- Java 17 for most modules
+- Java 17 for most root modules
 - Java 21 for `regex`
-- Java 25 for the standalone `practice-plugin` and `system-design-plugin` builds
-- Gradle multi-module build
+- Java 25 toolchain for `practice-plugin` and `system-design-plugin` (and for the root Gradle daemon)
+- Gradle 9.3.1 multi-module + composite build (`includeBuild`)
 - JUnit Jupiter and AssertJ for tests
 
 ## Build And Test
 
-Run commands from the repository root:
+Open the repository root in IntelliJ IDEA (using JDK 25 as the Gradle JVM) to work across all modules and both plugins in a single window, with shared sandbox run configurations in `.run/`.
+
+Run commands from the repository root with `./gradlew`:
 
 ```bash
-gradle build
-gradle :regex:test
-gradle :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
+./gradlew check
+./gradlew :regex:test
+./gradlew :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
+./gradlew :practice-plugin:check
+./gradlew :system-design-plugin:check
 ```
 
 ## Notes About `regex`
 
 - Uses `pcre4j` with the JNA backend
-- On macOS, tests expect `libpcre2-8.dylib` from Homebrew
+- On macOS, tests expect `libpcre2-8.dylib` from Homebrew (Windows/Linux hosts without native `libpcre2-8` can exclude `-x :regex:test`)
 - The module includes a `checkPcre2` task to verify or install `pcre2` before tests run
 
 ## IntelliJ Practice Plugin
 
-[`practice-plugin/`](practice-plugin/README.md) is an independent IntelliJ IDEA
-plugin build for practicing original Java algorithm and data-structure exercises.
+[`practice-plugin/`](practice-plugin/README.md) is an isolated IntelliJ IDEA
+plugin build included in root `settings.gradle` via `includeBuild("practice-plugin")`.
 It presents problems and hints, creates durable managed Java attempts that work
 from any open project, and supports local correctness checks, native debugging,
 and saved progress. Existing plugin-created practice projects can be imported
-without changing their files. It is intentionally not included in the root
-multi-module build.
+without changing their files. Run it from root (`./gradlew :practice-plugin:runIde`
+or the shared **Algorithm Practice Sandbox (runIde)** configuration) or standalone
+from `practice-plugin/`.
 
 ## System Design Practice Plugin
 
-[`system-design-plugin/`](system-design-plugin/README.md) is an independent
-JetBrains plugin build for system design interview practice. It works in any
-JetBrains IDE with JCEF, stores durable attempts (an Excalidraw diagram plus
-`notes.md`), and requests interviewer-style feedback through the user's
-installed Copilot CLI with every tool disabled. Build it from its own directory
-with its own wrapper; it is not included in the root multi-module build.
+[`system-design-plugin/`](system-design-plugin/README.md) is an isolated
+JetBrains plugin build included in root `settings.gradle` via
+`includeBuild("system-design-plugin")`. It works in any JetBrains IDE with JCEF,
+stores durable attempts (an Excalidraw diagram plus `notes.md`), and requests
+interviewer-style feedback through the user's installed Copilot CLI with every
+tool disabled. Run it from root (`./gradlew :system-design-plugin:runLocalIde`
+or the shared **System Design Sandbox (runLocalIde)** configuration) or standalone from
+`system-design-plugin/`.
 
 ## Project Layout
 
-- Root `build.gradle` centralizes shared dependency management and test configuration
-- Root `settings.gradle` defines the active Gradle submodules
+- Root `build.gradle` centralizes shared dependency management and test configuration for root submodules
+- Root `settings.gradle` defines the root submodules and links `practice-plugin` and `system-design-plugin` via `includeBuild`
+- Root `.run/` provides shared IntelliJ Gradle sandbox run configurations for both plugins
 - Each module owns its own source and test code under `src/main/java` and `src/test/java`
-
-## Current Validation Status
-
-The repository build currently fails in the `concurrency` module because `ParallelStreamTest` uses try-with-resources with executor types that are not `AutoCloseable` under the configured Java toolchain. This README update does not change that behavior.

@@ -6,6 +6,11 @@ build
 out
 gradlew*
 **/gradle
+!/gradlew
+!/gradlew.bat
+!/gradle/
+!/gradle/wrapper/
+!/gradle/wrapper/**
 # ...except the plugin's build-fed verification script, which is a source resource,
 # not a Gradle wrapper directory.
 !practice-plugin/src/main/resources/gradle/

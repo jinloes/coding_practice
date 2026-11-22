@@ -66,9 +66,11 @@ Run from `practice-plugin/`:
 ./gradlew runIde
 ```
 
-The build is standalone and is deliberately not included by the repository
-root's Gradle settings. Plugin compilation uses JDK 25. Learner and generated
-verification compilation uses Java 17.
+The build is an isolated Gradle build included in the repository root via
+`includeBuild("practice-plugin")`, so tasks also run from the root as
+`./gradlew :practice-plugin:<task>` while keeping `practice-plugin/` usable
+standalone. Plugin compilation uses JDK 25. Learner and generated verification
+compilation uses Java 17.
 
 `ExerciseCatalogTest` compiles and runs every exercise (reference, starter,
 known-wrong, and complexity probe), which takes several minutes for the full

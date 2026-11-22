@@ -6,14 +6,15 @@ rules overlap.
 
 ## Keep Documentation Synchronized
 
-`ARCHITECTURE.md`, `CODE-MAP.md`, and `README.md` are part of the
-implementation contract, not optional background reading.
+`ARCHITECTURE.md`, `CODE-MAP.md`, and `README.md` (~47 KB combined) are part of
+the implementation contract, not optional background reading.
 
-- Read `ARCHITECTURE.md` and `CODE-MAP.md` before changing plugin behavior,
-  package responsibilities, runtime flows, persistence, generated files,
-  exercise structure, dependencies, build configuration, or test strategy, and
-  check `README.md` whenever user-facing workflows or extension summaries are
-  affected.
+- Before changing plugin behavior, package responsibilities, runtime flows,
+  persistence, generated files, exercise structure, dependencies, build
+  configuration, or test strategy, inspect headings (`^#{1,3} `) and read the
+  relevant sections (`view_range`) of `CODE-MAP.md` and `ARCHITECTURE.md`—plus
+  relevant sections of `README.md` when user-facing workflows or extension
+  summaries are affected—rather than loading all three files end-to-end.
 - Update `ARCHITECTURE.md` in the same change when boundaries, ownership, data
   flow, execution flow, storage, lifecycle, or security assumptions change.
 - Update `CODE-MAP.md` in the same change when packages, important classes,
@@ -38,6 +39,13 @@ The Problem and Study Guide tabs are React + Mantine pages in `web/`, rendered
 in JCEF with a Swing HTML fallback. Keep `web/src/types.ts` and
 `ui/PageJson.java` in sync, and see the "Web pages" section of `CODE-MAP.md`.
 
+For plugin code searches (`grep`, `glob`, and IDE MCP `search_*` `paths`),
+exclude `!**/resources/**` (or scope to `src/main/java/**`, `src/test/java/**`,
+`src/verificationRunner/**`, `web/src/**`, prefixed with `practice-plugin/` when
+working from the repo root) so ~2,200 exercise Java/JSON files do not flood
+results. Pass whichever project root is open in IntelliJ (repo root or
+`practice-plugin/`) as the IDE MCP `projectPath`.
+
 ## Build And Test
 
 Run from `practice-plugin/` with the repository wrapper:
@@ -51,8 +59,9 @@ Run from `practice-plugin/` with the repository wrapper:
 
 `-PcatalogOnly` limits the slow per-exercise catalog checks to the listed
 exercise IDs; the full catalog takes several minutes. Use the smallest relevant
-test first, then run the full plugin test suite before
-finishing a code change.
+test first, then run the full plugin test suite before finishing a code change
+(delegate full `./gradlew test` / `./gradlew check` runs to a `task` subagent or
+pass `--quiet` to keep test logs out of main context).
 
 ## Code Coverage
 
@@ -68,8 +77,10 @@ change, run the full suite with the coverage gate:
 - On Windows, enable Developer Mode so the symlink-safety tests can create
   symlinks; without it they fail and coverage drops below the gate.
 - Add tests for every new or changed line and branch in the gated packages
-  (everything except `ui`). Open `build/reports/jacoco/test/html/index.html`
-  and confirm the changed classes have no new uncovered lines or branches.
+  (everything except `ui`). Filter `build/reports/jacoco/test/jacocoTestReport.xml`
+  (or inspect only the changed class's HTML page) to confirm changed classes
+  have no new uncovered lines or branches; never read the full XML report into
+  context.
 - The minimums in `build.gradle` are a ratchet. Raise them when coverage goes
   up. Never lower them, and never add a coverage exclusion to get a change
   through. An exclusion is only for code that cannot run in unit tests (it

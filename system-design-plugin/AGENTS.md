@@ -7,8 +7,15 @@ rules overlap.
 ## Keep Documentation Synchronized
 
 `ARCHITECTURE.md` and `CODE-MAP.md` are part of the implementation contract.
-Read both before changing behavior, storage, the page contract, the interviewer,
-or the build, and update them in the same change.
+Inspect their headings (`^#{1,3} `) and read the relevant sections before
+changing behavior, storage, the page contract, the interviewer, or the build,
+and update affected sections in the same change.
+
+For code searches (`grep`, `glob`, and IDE MCP `search_*` `paths`), exclude
+`!**/resources/**`, `!**/build/**`, and `!**/node_modules/**` (and scope to
+`system-design-plugin/**` when working from the repo root). Pass whichever
+project root is open in IntelliJ (repo root or `system-design-plugin/`) as the
+IDE MCP `projectPath`.
 
 ## Interviewer Invariants
 
@@ -42,9 +49,11 @@ or the build, and update them in the same change.
 ## Build, Test, and Coverage
 
 Run from `system-design-plugin/` with its own wrapper: `./gradlew test`, then
-`./gradlew check` before finishing. Coverage is gated at 100% line and 100%
-branch outside `ui`; never lower it or add exclusions to pass. Use JUnit 5 with
-AssertJ, keep test classes package-private, and do not add JUnit 4 or Hamcrest.
+`./gradlew check` before finishing (delegate full suite runs to a `task`
+subagent or pass `--quiet` to keep build logs out of main context). Coverage is
+gated at 100% line and 100% branch outside `ui`; never lower it or add
+exclusions to pass. Use JUnit 5 with AssertJ, keep test classes package-private,
+and do not add JUnit 4 or Hamcrest.
 
 ## Problem Content Rules
 
