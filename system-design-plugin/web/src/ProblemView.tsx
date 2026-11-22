@@ -22,13 +22,39 @@ import type { PageState, SelectedProblem } from './types';
 
 const DIFFICULTY_COLORS: Record<string, string> = { Easy: 'teal', Medium: 'yellow', Hard: 'red' };
 
-const SELF_CHECK_ITEMS = [
+const SHARED_SELF_CHECK_ITEMS = [
   'Scoped top 3–4 functional & non-functional targets',
-  'Defined core entities & primary/partition keys',
-  'Wrote concrete API endpoints, auth, & pagination',
-  'Connected end-to-end request & data flow in diagram',
-  'Addressed 2+ scaling bottlenecks, failure modes, & tradeoffs',
+  'Defined core entities and primary/partition keys',
+  'Wrote concrete API endpoints, auth & pagination',
 ] as const;
+
+const MID_LEVEL_SELF_CHECK_ITEMS = [
+  ...SHARED_SELF_CHECK_ITEMS,
+  'Diagram shows end-to-end request & data flow',
+  'Addressed primary bottleneck & basic failure handling',
+] as const;
+
+const SENIOR_SELF_CHECK_ITEMS = [
+  ...SHARED_SELF_CHECK_ITEMS,
+  'Diagram shows end-to-end flow, partitioning & async boundaries',
+  'Tied capacity estimates to scaling, consistency & failure tradeoffs',
+] as const;
+
+const STAFF_SELF_CHECK_ITEMS = [
+  ...SHARED_SELF_CHECK_ITEMS,
+  'Justified architecture simplicity vs. scale & blast-radius isolation',
+  'Quantified capacity, multi-region/degradation tradeoffs & migration cost',
+] as const;
+
+export function selfCheckItemsForLevel(targetLevel: string): readonly string[] {
+  if (targetLevel === 'Mid-Level') {
+    return MID_LEVEL_SELF_CHECK_ITEMS;
+  }
+  if (targetLevel === 'Staff+') {
+    return STAFF_SELF_CHECK_ITEMS;
+  }
+  return SENIOR_SELF_CHECK_ITEMS;
+}
 
 export function difficultyColor(difficulty: string): string {
   return DIFFICULTY_COLORS[difficulty] ?? 'gray';
@@ -51,18 +77,43 @@ export function SectionLabel({ children }: { children: string }) {
   );
 }
 
-export function ProblemView({ state, problem }: { state: PageState; problem: SelectedProblem }) {
+export function ProblemView({
+  state,
+  problem,
+  onOpenGuide,
+}: {
+  state: PageState;
+  problem: SelectedProblem;
+  onOpenGuide?: (guideId: string) => void;
+}) {
   const attempt = problem.selectedAttempt;
   const currentAttempt = problem.attempts.find((item) => item.id === attempt);
+  const [trackedAttempt, setTrackedAttempt] = useState(attempt);
+  const [timerResetCount, setTimerResetCount] = useState(0);
   const [promptMode, setPromptMode] = useState<'full' | 'ambiguous'>('full');
   const [scopeRevealed, setScopeRevealed] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
-  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [renaming, setRenaming] = useState(false);
   const [draftLabel, setDraftLabel] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  if (trackedAttempt !== attempt) {
+    setTrackedAttempt(attempt);
+    if (trackedAttempt !== '') {
+      setTimerResetCount((count) => count + 1);
+      setScopeRevealed(false);
+      setCheckedItems({});
+      setRenaming(false);
+      setDraftLabel('');
+      setConfirmDelete(false);
+    }
+  }
+
+  const selfCheckItems = selfCheckItemsForLevel(state.targetLevel);
+  const relatedGuides = state.guides.filter((guide) => guide.relatedProblemIds.includes(problem.id));
   const hasHintsLeft = problem.hintsHtml.length < problem.hintCount;
-  const checkedCount = Object.values(checkedItems).filter(Boolean).length;
+  const checkedCount = selfCheckItems.filter((item) => Boolean(checkedItems[item])).length;
   const hideDetailedScope = promptMode === 'ambiguous' && !scopeRevealed;
 
   const startRename = () => {
@@ -97,14 +148,26 @@ export function ProblemView({ state, problem }: { state: PageState; problem: Sel
             ]}
           />
         </Group>
-        <Group gap={6}>
+        <Group gap={6} align="center" wrap="wrap">
           <Badge color={difficultyColor(problem.difficulty)} variant="light">
             {problem.difficulty}
           </Badge>
+          {relatedGuides.length > 0 && onOpenGuide && (
+            <Group gap={6} align="center" wrap="wrap">
+              <Text size="xs" c="dimmed">
+                Related guides:
+              </Text>
+              {relatedGuides.map((guide) => (
+                <Button key={guide.id} size="compact-xs" variant="light" onClick={() => onOpenGuide(guide.id)}>
+                  {guide.title}
+                </Button>
+              ))}
+            </Group>
+          )}
         </Group>
       </Stack>
 
-      <InterviewTimer key={attempt || problem.id} />
+      <InterviewTimer key={`${problem.id}:${timerResetCount}`} />
 
       <Html className="statement" html={hideDetailedScope ? problem.promptHtml : problem.statementHtml} />
       {hideDetailedScope && (
@@ -247,7 +310,7 @@ export function ProblemView({ state, problem }: { state: PageState; problem: Sel
 
       <Stack gap="xs">
         <Group justify="space-between" align="center">
-          <SectionLabel>{`Pre-review self-check (${checkedCount}/${SELF_CHECK_ITEMS.length})`}</SectionLabel>
+          <SectionLabel>{`Pre-review self-check (${checkedCount}/${selfCheckItems.length})`}</SectionLabel>
           <Button size="compact-xs" variant="subtle" onClick={() => setShowChecklist((open) => !open)}>
             {showChecklist ? 'Hide checklist' : 'Show checklist'}
           </Button>
@@ -255,15 +318,15 @@ export function ProblemView({ state, problem }: { state: PageState; problem: Sel
         {showChecklist && (
           <Paper withBorder p="xs">
             <Stack gap={6}>
-              {SELF_CHECK_ITEMS.map((item, idx) => (
+              {selfCheckItems.map((item) => (
                 <Checkbox
                   key={item}
                   size="xs"
                   label={item}
-                  checked={Boolean(checkedItems[idx])}
+                  checked={Boolean(checkedItems[item])}
                   onChange={(event) => {
                     const checked = event.currentTarget.checked;
-                    setCheckedItems((prev) => ({ ...prev, [idx]: checked }));
+                    setCheckedItems((prev) => ({ ...prev, [item]: checked }));
                   }}
                 />
               ))}
@@ -303,6 +366,8 @@ export function ProblemView({ state, problem }: { state: PageState; problem: Sel
           attemptId={attempt}
           running={state.running}
           reviews={state.reviews}
+          dimensionSummary={state.dimensionSummary}
+          onOpenGuide={onOpenGuide}
         />
       )}
     </Stack>

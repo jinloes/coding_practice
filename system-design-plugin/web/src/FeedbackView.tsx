@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, Badge, Button, Code, Group, List, Paper, Select, Stack, Table, Text, Textarea } from '@mantine/core';
 import { send } from './bridge';
 import { SectionLabel } from './ProblemView';
-import type { Feedback } from './types';
+import type { DimensionSummary, Feedback } from './types';
 
 const VERDICT_COLORS: Record<string, string> = {
   'Strong hire': 'teal',
@@ -10,6 +10,16 @@ const VERDICT_COLORS: Record<string, string> = {
   'Lean hire': 'lime',
   'Lean no hire': 'orange',
   'No hire': 'red',
+};
+
+const DEFAULT_DIMENSION_GUIDES: Record<string, string> = {
+  'Requirements and scope': 'delivery-framework',
+  'API and data model': 'api-and-security-patterns',
+  'High-level architecture': 'storage-tradeoff-matrix',
+  'Deep dives and scalability': 'scaling-data',
+  'Capacity estimates': 'numbers-that-matter',
+  'Reliability and tradeoffs': 'reliability-patterns',
+  Communication: 'delivery-framework',
 };
 
 function formatTimestamp(createdAt: string): string {
@@ -33,10 +43,14 @@ export function FeedbackView({
   attemptId,
   running,
   reviews,
+  dimensionSummary = [],
+  onOpenGuide,
 }: {
   attemptId: string;
   running: boolean;
   reviews: Feedback[];
+  dimensionSummary?: DimensionSummary[];
+  onOpenGuide?: (guideId: string) => void;
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [followUpDraft, setFollowUpDraft] = useState('');
@@ -45,6 +59,7 @@ export function FeedbackView({
   }
   const index = selectedIndex < reviews.length ? selectedIndex : 0;
   const feedback = reviews[index];
+  const previous = reviews.slice(index + 1).find((item) => item.parsed);
   const formattedDate = formatTimestamp(feedback.createdAt);
   const canProbe = index === 0 && attemptId !== '' && feedback.parsed && feedback.followUpQuestions.length > 0;
 
@@ -104,7 +119,16 @@ export function FeedbackView({
             </Paper>
           </Stack>
         )}
-        {feedback.parsed ? <Structured feedback={feedback} /> : <Raw raw={feedback.raw} />}
+        {feedback.parsed ? (
+          <Structured
+            feedback={feedback}
+            previous={previous}
+            dimensionSummary={dimensionSummary}
+            onOpenGuide={onOpenGuide}
+          />
+        ) : (
+          <Raw raw={feedback.raw} />
+        )}
         {canProbe && (
           <Stack gap="xs">
             <SectionLabel>Interactive follow-up round</SectionLabel>
@@ -137,13 +161,36 @@ export function FeedbackView({
   );
 }
 
-function Structured({ feedback }: { feedback: Feedback }) {
+function Structured({
+  feedback,
+  previous,
+  dimensionSummary,
+  onOpenGuide,
+}: {
+  feedback: Feedback;
+  previous?: Feedback;
+  dimensionSummary: DimensionSummary[];
+  onOpenGuide?: (guideId: string) => void;
+}) {
+  const guideByDimension = new Map(dimensionSummary.map((item) => [item.name, item.guideId]));
+  const previousScores = new Map(previous?.dimensions.map((item) => [item.name, item.score]) ?? []);
+  const showVerdictProgression =
+    previous !== undefined &&
+    previous.verdict !== '' &&
+    feedback.verdict !== '' &&
+    previous.verdict !== feedback.verdict;
+
   return (
     <Stack gap="sm">
-      <Group gap="xs">
+      <Group gap="xs" align="center">
         <Badge size="lg" color={VERDICT_COLORS[feedback.verdict] ?? 'gray'}>
           {feedback.verdict}
         </Badge>
+        {showVerdictProgression && (
+          <Text size="xs" c="dimmed" aria-label="Verdict progression">
+            {`${previous.verdict} → ${feedback.verdict}`}
+          </Text>
+        )}
       </Group>
       <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
         {feedback.summary}
@@ -157,20 +204,40 @@ function Structured({ feedback }: { feedback: Feedback }) {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {feedback.dimensions.map((dimension) => (
-            <Table.Tr key={dimension.name}>
-              <Table.Td>{dimension.name}</Table.Td>
-              <Table.Td>
-                <Badge variant="light" color={dimension.score >= 3 ? 'teal' : dimension.score === 2 ? 'yellow' : 'red'}>
-                  {dimension.score} / 4
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                <Items items={dimension.strengths} prefix="+" />
-                <Items items={dimension.gaps} prefix="−" />
-              </Table.Td>
-            </Table.Tr>
-          ))}
+          {feedback.dimensions.map((dimension) => {
+            const priorScore = previousScores.get(dimension.name);
+            const delta = priorScore !== undefined ? dimension.score - priorScore : 0;
+            const guideId = guideByDimension.get(dimension.name) ?? DEFAULT_DIMENSION_GUIDES[dimension.name] ?? '';
+            return (
+              <Table.Tr key={dimension.name}>
+                <Table.Td>{dimension.name}</Table.Td>
+                <Table.Td>
+                  <Group gap={4} wrap="wrap">
+                    <Badge
+                      variant="light"
+                      color={dimension.score >= 3 ? 'teal' : dimension.score === 2 ? 'yellow' : 'red'}
+                    >
+                      {dimension.score} / 4
+                    </Badge>
+                    {delta !== 0 && (
+                      <Badge size="xs" variant="light" color={delta > 0 ? 'teal' : 'red'}>
+                        {delta > 0 ? `+${delta}` : String(delta)}
+                      </Badge>
+                    )}
+                    {dimension.score <= 2 && onOpenGuide && guideId !== '' && (
+                      <Button size="compact-xs" variant="subtle" onClick={() => onOpenGuide(guideId)}>
+                        Study guide
+                      </Button>
+                    )}
+                  </Group>
+                </Table.Td>
+                <Table.Td>
+                  <Items items={dimension.strengths} prefix="+" />
+                  <Items items={dimension.gaps} prefix="−" />
+                </Table.Td>
+              </Table.Tr>
+            );
+          })}
         </Table.Tbody>
       </Table>
       <Bullets label="Follow-up questions" items={feedback.followUpQuestions} />

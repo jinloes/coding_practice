@@ -46,6 +46,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-system-design-plugin-npm-
 
-      - name: Run plugin checks and coverage gate
+      - name: Cache Gradle-managed Node.js
+        uses: actions/cache@v4
+        with:
+          path: system-design-plugin/.gradle/nodejs
+          key: ${{ runner.os }}-system-design-plugin-node-${{ hashFiles('system-design-plugin/build.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-system-design-plugin-node-
+
+      - name: Run plugin checks, coverage gate, and distribution build
         working-directory: system-design-plugin
-        run: bash ./gradlew check --no-daemon --console=plain
+        run: |
+          bash ./gradlew check buildPlugin verifyPluginProjectConfiguration verifyPluginStructure --no-daemon --console=plain
+          test -f build/distributions/system-design-plugin-1.0-SNAPSHOT.zip

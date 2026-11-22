@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,6 +70,12 @@ class PageStateTest {
         assertThat(state.getAsJsonArray("levels")).hasSize(DesignCatalog.LEVELS.size());
         assertThat(state.getAsJsonArray("tracks")).isNotEmpty();
         assertThat(state.getAsJsonArray("guides")).isNotEmpty();
+        JsonArray dimensionSummary = state.getAsJsonArray("dimensionSummary");
+        assertThat(dimensionSummary).hasSize(DesignCatalog.DIMENSIONS.size());
+        assertThat(dimensionSummary.get(0).getAsJsonObject().get("name").getAsString())
+                .isEqualTo(DesignCatalog.DIMENSIONS.get(0));
+        assertThat(dimensionSummary.get(0).getAsJsonObject().get("reviewedCount").getAsInt()).isZero();
+        assertThat(dimensionSummary.get(0).getAsJsonObject().get("guideId").getAsString()).isNotBlank();
         JsonArray problems = state.getAsJsonArray("problems");
         assertThat(problems).hasSameSizeAs(DesignCatalog.all());
         for (int i = 0; i < problems.size(); i++) {
@@ -178,6 +185,24 @@ class PageStateTest {
         assertThat(reviews.get(1).getAsJsonObject().get("raw").getAsString()).isEqualTo("older raw");
         assertThat(reviews.get(1).getAsJsonObject().get("stale").getAsBoolean()).isTrue();
         assertThat(state.get("stale").getAsBoolean()).isFalse();
+    }
+
+    @Test
+    void serializesNonZeroDimensionReadinessSummaries() {
+        List<PageState.DimensionSummary> summaries = List.of(
+                new PageState.DimensionSummary(
+                        "Capacity estimates", 2.7, 3, "numbers-that-matter", "Back-of-the-Envelope Numbers"));
+        View view = new View(
+                Map.of(PROBLEM.id(), "Hire"), summaries, null, List.of(), "", 0, "Senior", false, List.of(), "");
+
+        JsonArray serialized = render(view).getAsJsonArray("dimensionSummary");
+        assertThat(serialized).hasSize(1);
+        JsonObject item = serialized.get(0).getAsJsonObject();
+        assertThat(item.get("name").getAsString()).isEqualTo("Capacity estimates");
+        assertThat(item.get("averageScore").getAsDouble()).isEqualTo(2.7);
+        assertThat(item.get("reviewedCount").getAsInt()).isEqualTo(3);
+        assertThat(item.get("guideId").getAsString()).isEqualTo("numbers-that-matter");
+        assertThat(item.get("guideTitle").getAsString()).isEqualTo("Back-of-the-Envelope Numbers");
     }
 
     @Test

@@ -26,22 +26,25 @@ the web pages.
 ## Workflow
 
 1. Open the **System Design** tool window, browse the **Guides** tab for 8
-   concise delivery, storage-matrix, API/security, and architecture guides, or
-   filter **Problems** by keyword, domain track, difficulty, and status
-   (including `Needs retry`), use **Surprise me** for a random cold prompt, and
-   set your **Target level** (`Mid-Level`, `Senior`, or `Staff+`).
+   concise delivery, storage-matrix, API/security, and architecture guides, check
+   your **Rubric readiness** averages across dimensions, or filter **Problems**
+   by keyword, domain track, difficulty, and status (including `Needs retry`),
+   use **Surprise me** for a random cold prompt, and set your **Target level**
+   (`Mid-Level`, `Senior`, or `Staff+`).
 2. Switch to **Ambiguous prompt** mode if you want to practice gathering
-   requirements and scale assumptions before revealing the full specification.
-   Click **New attempt** (and optionally start the **45-minute paced timer**).
-   The plugin creates an attempt and opens its `design.excalidraw` diagram
-   (preloaded with offline system-design stencils in the Library drawer) and its
+   requirements and scale assumptions before revealing the full specification, or
+   jump to **Related guides** for the selected problem. Click **New attempt**
+   (and optionally start the wall-clock **45-minute paced timer**). The plugin
+   creates an attempt and opens its `design.excalidraw` diagram (preloaded with
+   offline system-design stencils in the Library drawer) and its
    delivery-framework `notes.md`. Attempts persist across restarts and projects
    and can be renamed or deleted.
-3. Reveal up to three hints, one at a time, and run through the **Pre-review
-   self-check** before grading.
+3. Reveal up to three hints, one at a time, and run through the level-calibrated
+   **Pre-review self-check** before grading.
 4. Click **Get feedback**. Open diagrams are saved first; the interviewer grades
    against your selected target level and returns a verdict (`Strong hire` to
-   `No hire`), a 1–4 score with strengths and gaps for each rubric dimension,
+   `No hire`), a 1–4 score with strengths, gaps, review-over-review score
+   deltas, and targeted **Study guide** links for each rubric dimension,
    follow-up questions, and missed expectations.
 5. Answer the interviewer's probing questions directly in the **Interactive
    follow-up round** box (optionally updating your diagram or notes first) and
@@ -93,8 +96,10 @@ handshake can take up to 35 seconds to stop.
 
 Attempts live under `<IDE config>/system-design-practice/attempts/<problem>/<attempt>/`
 with `design.excalidraw`, `notes.md`, and `feedback/<timestamp>.json`. Progress
-(selected attempt, hints, last verdict) and interviewer settings are stored in
-`system-design-practice.xml` in the IDE options directory and are not synced.
+(selected attempt, custom labels and creation timestamps, hints, best verdict,
+and strongest-verdict per-problem dimension scores) and interviewer settings are
+stored in `system-design-practice.xml` in the IDE options directory and are not
+synced.
 
 ## Limitations
 

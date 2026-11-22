@@ -23,10 +23,10 @@ helpers (`OwnedDirectory`, `MarkdownHtml`) were copied deliberately.
 | `catalog` | Loads and validates `problems/`, `tracks/`, `guides/`, and the delivery-framework notes template | None |
 | `platform` | Symlink-safe owned-directory creation, writes, and deletion | None |
 | `workspace` | Attempt creation, symlink-safe deletion, lookup, ownership checks, fingerprints, feedback files | `PathManager` for the default root only |
-| `state` | `DesignProgress` persistent state: selections, custom attempt labels, hints, target level, verdicts, settings | Application service |
-| `interview` | Diagram summary, level-calibrated and follow-up prompt, feedback schema, Copilot CLI process, model list | Process handler, `EnvironmentUtil`; Copilot Java SDK |
-| `web` | Page contract: asset URL mapping, page events, state JSON, and tool-window view assembly (`ToolWindowView`) | None |
-| `ui` | Tool window, JCEF pages, diagram `FileEditor`, settings dialog | Full IDE |
+| `state` | `DesignProgress` persistent state: selections, custom attempt labels, creation timestamps, hints, target level, best verdicts, dimension scores, change listeners, settings | Application service |
+| `interview` | Spatial `DiagramLabels` attachment, `DiagramSummary`, level-calibrated and follow-up prompt, feedback schema, Copilot CLI process, model list | Process handler, `EnvironmentUtil`; Copilot Java SDK |
+| `web` | Page contract: asset URL mapping, page events, state JSON, `ToolWindowView` assembly, and `DesignSession` off-EDT state/review coordinator | None |
+| `ui` | Tool window, thin `DesignController` IDE/JCEF adapter, JCEF pages, diagram `FileEditor`, settings dialog | Full IDE |
 
 Everything outside `ui` is unit tested with the Java coverage gate, and `web/`
 is tested with Vitest (`webTest`). `ui` needs a live IDE and JCEF and is
@@ -71,10 +71,19 @@ locally, and `EXCALIDRAW_ASSET_PATH` points at the origin. Excalidraw's help,
 social, and remote library-browsing links are hidden while the local stencil
 drawer remains available.
 
-The tool window page is stateless. Java computes a `PageState.View` off the EDT,
-serializes it with `PageState.toJson`, and calls `window.designRender(state)`. The
-page sends events through `window.designSend`, which `PageEvent.parse` validates.
-A VFS listener on the attempts root re-renders so the stale flag follows edits.
+The tool window page renders from `PageState.View`. `DesignSession` in `web`
+coordinates problem/attempt selection, chronological attempt ordering (preferring
+`DesignProgress` creation timestamps over filesystem `creationTime`), lazy
+backfill of missing dimension scores across all attempts of the opened problem,
+newest-parsed follow-up question lookup, and off-EDT review recording;
+`ToolWindowView` aggregates per-dimension readiness averages (`DimensionSummary`,
+rounded to 1 decimal place) mapped to concept guides, and `DesignController` in
+`ui` adapts EDT/VFS/JCEF callbacks and cross-project `DesignProgress`
+subscriptions.
+Java serializes `PageState.View` with `PageState.toJson` and calls
+`window.designRender(state)`. The page sends events through `window.designSend`,
+which `PageEvent.parse` validates. A VFS listener on the attempts root and a
+`DesignProgress` listener re-render so open projects stay synchronized.
 
 The plugin injects `window.designSend` after each page load and then fires a
 `designbridge` window event. The diagram editor page posts `ready` once that bridge
@@ -95,20 +104,26 @@ before feedback.
    times out or an open diagram has an unresolved save error, abort before
    invoking the CLI so stale disk content is never graded.
 2. In a cancellable background task: fingerprint, read notes and diagram, and
-   build a text `DiagramSummary` (labeled shapes with duplicate disambiguation,
-   standalone text, directional and undirected connections, frames as sections;
-   at most 500 elements).
+   build a text `DiagramSummary`. Before applying the 500-element limit,
+   `DiagramLabels` attaches standalone `T`-tool text positioned inside unlabeled
+   shapes in the same frame and redirects arrows bound to those text elements to
+   the host shape; `DiagramSummary` then formats labeled shapes (with duplicate
+   disambiguation), remaining standalone text, directional and undirected
+   connections, and frames as sections.
 3. `InterviewPrompt` embeds the statement, target candidate level (`Mid-Level`,
    `Senior`, or `Staff+`), rubric, expectations, notes, diagram summary, and—on
-   an interactive follow-up round—the latest review's follow-up questions and
-   candidate follow-up answers. Learner content is fenced with markers that are
-   stripped from the content and bounded to 40,000 characters per section.
+   an interactive follow-up round—the newest parsed review's follow-up questions
+   and candidate follow-up answers. Learner content is fenced with markers that
+   are stripped from the content and bounded to 40,000 characters per section.
 4. `CopilotInterviewer` runs the CLI and parses the JSON reply. Invalid output is
    kept as a raw fallback (at most 64 KiB) rather than discarded.
-5. The feedback, fingerprint, model, target level, round (`initial` or
-   `follow-up`), optional follow-up answers, and time are saved under
-   `feedback/` (up to 20 reviews per attempt are surfaced newest-first in the
-   tool window), and the attempt's verdict is recorded in `DesignProgress`.
+5. `DesignSession.recordCompletedReview` saves the feedback, fingerprint, model,
+   target level, round (`initial` or `follow-up`), optional follow-up answers,
+   and time under `feedback/` (up to 20 reviews per attempt are surfaced
+   newest-first in the tool window), and records the problem's monotonic best
+   verdict and strongest-verdict dimension scores (paired with `scoresVerdict`)
+   in `DesignProgress` on the background worker thread so completion survives
+   tool-window disposal.
 
 ## Privacy and security boundary
 

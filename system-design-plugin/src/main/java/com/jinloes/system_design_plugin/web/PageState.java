@@ -56,8 +56,19 @@ public final class PageState {
         }
     }
 
+    /** Aggregate rubric score for one dimension across reviewed problems, paired with its primary study guide. */
+    public record DimensionSummary(String name, double averageScore, int reviewedCount,
+                                   String guideId, String guideTitle) {
+        public DimensionSummary {
+            name = Objects.requireNonNull(name, "name");
+            guideId = Objects.requireNonNull(guideId, "guideId");
+            guideTitle = Objects.requireNonNull(guideTitle, "guideTitle");
+        }
+    }
+
     /** Everything the tool window shows. {@code selected} may be {@code null}; {@code reviews} is newest first. */
-    public record View(Map<String, String> verdicts, Problem selected, List<AttemptInfo> attempts,
+    public record View(Map<String, String> verdicts, List<DimensionSummary> dimensionSummary,
+                       Problem selected, List<AttemptInfo> attempts,
                        String selectedAttempt, int hintsRevealed, String targetLevel, boolean running,
                        List<Review> reviews, String error) {
         public View(Set<String> reviewed, Problem selected, List<AttemptInfo> attempts, String selectedAttempt,
@@ -72,8 +83,16 @@ public final class PageState {
                     selected, attempts, selectedAttempt, hintsRevealed, targetLevel, running, reviews, error);
         }
 
+        public View(Map<String, String> verdicts, Problem selected, List<AttemptInfo> attempts,
+                    String selectedAttempt, int hintsRevealed, String targetLevel, boolean running,
+                    List<Review> reviews, String error) {
+            this(verdicts, ToolWindowView.summarizeDimensions(Map.of()), selected, attempts,
+                    selectedAttempt, hintsRevealed, targetLevel, running, reviews, error);
+        }
+
         public View {
             verdicts = Map.copyOf(verdicts);
+            dimensionSummary = List.copyOf(dimensionSummary);
             attempts = List.copyOf(attempts);
             selectedAttempt = Objects.requireNonNullElse(selectedAttempt, "");
             targetLevel = DesignCatalog.normalizeLevel(targetLevel);
@@ -115,6 +134,17 @@ public final class PageState {
             problems.add(item);
         }
         state.add("problems", problems);
+        JsonArray dimensionSummary = new JsonArray();
+        for (DimensionSummary item : view.dimensionSummary()) {
+            JsonObject summary = new JsonObject();
+            summary.addProperty("name", item.name());
+            summary.addProperty("averageScore", item.averageScore());
+            summary.addProperty("reviewedCount", item.reviewedCount());
+            summary.addProperty("guideId", item.guideId());
+            summary.addProperty("guideTitle", item.guideTitle());
+            dimensionSummary.add(summary);
+        }
+        state.add("dimensionSummary", dimensionSummary);
         state.add("selected", view.selected() == null ? null : selected(view));
         state.addProperty("running", view.running());
         JsonArray reviews = new JsonArray();

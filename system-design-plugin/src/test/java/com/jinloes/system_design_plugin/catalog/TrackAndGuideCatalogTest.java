@@ -52,6 +52,11 @@ class TrackAndGuideCatalogTest {
             assertThat(guide.relatedProblemIds()).isNotEmpty().doesNotHaveDuplicates();
             guide.relatedProblemIds().forEach(id -> assertThat(DesignCatalog.exists(id)).isTrue());
         }
+        for (Problem problem : DesignCatalog.all()) {
+            assertThat(GuideCatalog.all().stream().anyMatch(guide -> guide.relatedProblemIds().contains(problem.id())))
+                    .as("every problem is linked from at least one guide: %s", problem.id())
+                    .isTrue();
+        }
         assertThatThrownBy(() -> GuideCatalog.find("missing-guide"))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("missing-guide");
     }

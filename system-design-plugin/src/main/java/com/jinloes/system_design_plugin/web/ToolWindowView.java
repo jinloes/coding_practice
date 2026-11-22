@@ -2,6 +2,8 @@ package com.jinloes.system_design_plugin.web;
 
 import com.jinloes.system_design_plugin.catalog.DesignCatalog;
 import com.jinloes.system_design_plugin.catalog.DesignCatalog.Problem;
+import com.jinloes.system_design_plugin.catalog.GuideCatalog;
+import com.jinloes.system_design_plugin.catalog.GuideCatalog.Guide;
 import com.jinloes.system_design_plugin.interview.InterviewFeedback;
 
 import java.io.IOException;
@@ -23,7 +25,37 @@ import java.util.stream.Collectors;
  * feedback history. Attempts are ordered by creation time, then ID, and labeled by that order.
  */
 public final class ToolWindowView {
+    private static final Map<String, String> DIMENSION_GUIDES = Map.of(
+            "Requirements and scope", "delivery-framework",
+            "Capacity estimates", "numbers-that-matter",
+            "API and data model", "api-and-security-patterns",
+            "High-level architecture", "storage-tradeoff-matrix",
+            "Deep dives and scalability", "scaling-data",
+            "Reliability and tradeoffs", "reliability-patterns",
+            "Communication", "delivery-framework");
+
     private ToolWindowView() {
+    }
+
+    /** Aggregates per-problem dimension scores across {@link DesignCatalog#DIMENSIONS} and links each study guide. */
+    public static List<PageState.DimensionSummary> summarizeDimensions(
+            Map<String, Map<String, Integer>> problemScores) {
+        List<PageState.DimensionSummary> summaries = new ArrayList<>(DesignCatalog.DIMENSIONS.size());
+        for (String dimension : DesignCatalog.DIMENSIONS) {
+            int sum = 0;
+            int count = 0;
+            for (Map<String, Integer> scores : problemScores.values()) {
+                Integer value = scores.get(dimension);
+                if (value != null) {
+                    sum += value;
+                    count++;
+                }
+            }
+            double average = count == 0 ? 0.0 : Math.round((sum * 10.0) / count) / 10.0;
+            Guide guide = GuideCatalog.find(DIMENSION_GUIDES.get(dimension));
+            summaries.add(new PageState.DimensionSummary(dimension, average, count, guide.id(), guide.title()));
+        }
+        return List.copyOf(summaries);
     }
 
     /** One attempt of the selected problem and when it was created. */
@@ -60,10 +92,21 @@ public final class ToolWindowView {
                                        String targetLevel, Function<String, String> selectedAttempt,
                                        Function<String, String> attemptLabel,
                                        ToIntFunction<String> hintsRevealed, AttemptStore store, ZoneId zone) {
+        return build(problemId, running, error, verdicts, Map.of(), targetLevel,
+                selectedAttempt, attemptLabel, hintsRevealed, store, zone);
+    }
+
+    public static PageState.View build(String problemId, boolean running, String error, Map<String, String> verdicts,
+                                       Map<String, Map<String, Integer>> problemScores,
+                                       String targetLevel, Function<String, String> selectedAttempt,
+                                       Function<String, String> attemptLabel,
+                                       ToIntFunction<String> hintsRevealed, AttemptStore store, ZoneId zone) {
         String currentError = error;
         String level = DesignCatalog.normalizeLevel(targetLevel);
+        List<PageState.DimensionSummary> dimensionSummary = summarizeDimensions(problemScores);
         if (problemId == null || !DesignCatalog.exists(problemId)) {
-            return new PageState.View(verdicts, null, List.of(), "", 0, level, running, List.of(), currentError);
+            return new PageState.View(
+                    verdicts, dimensionSummary, null, List.of(), "", 0, level, running, List.of(), currentError);
         }
         Problem problem = DesignCatalog.find(problemId);
         List<AttemptEntry> attempts;
@@ -92,7 +135,8 @@ public final class ToolWindowView {
             selected = Optional.of(attempts.get(attempts.size() - 1));
         }
         if (selected.isEmpty()) {
-            return new PageState.View(verdicts, problem, infos, "", 0, level, running, List.of(), currentError);
+            return new PageState.View(
+                    verdicts, dimensionSummary, problem, infos, "", 0, level, running, List.of(), currentError);
         }
         String attemptId = selected.get().id();
         int hints = hintsRevealed.applyAsInt(attemptId);
@@ -109,7 +153,8 @@ public final class ToolWindowView {
         } catch (IOException exception) {
             // Unreadable feedback is shown as no feedback; the store reports the cause.
         }
-        return new PageState.View(verdicts, problem, infos, attemptId, hints, level, running, reviews, currentError);
+        return new PageState.View(
+                verdicts, dimensionSummary, problem, infos, attemptId, hints, level, running, reviews, currentError);
     }
 
     private static String currentFingerprint(AttemptStore store, String attemptId) {

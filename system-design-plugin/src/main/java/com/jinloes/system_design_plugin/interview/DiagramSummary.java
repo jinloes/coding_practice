@@ -31,7 +31,7 @@ public final class DiagramSummary {
     private DiagramSummary() {
     }
 
-    private record Element(JsonObject json, String id, String type) {
+    record Element(JsonObject json, String id, String type) {
         String frameId() {
             return string(json, "frameId");
         }
@@ -81,22 +81,13 @@ public final class DiagramSummary {
             }
         }
 
-        Map<String, String> labels = new HashMap<>();
-        for (Element element : raw) {
-            String container = string(element.json(), "containerId");
-            if ("text".equals(element.type()) && nonFramesById.containsKey(container)) {
-                String labelText = text(element);
-                if (!labelText.isEmpty()) {
-                    labels.merge(container, labelText, (first, second) -> first + " " + second);
-                }
-            }
-        }
+        DiagramLabels.Result labelResult = DiagramLabels.resolve(raw, nonFramesById, frameNames);
+        Map<String, String> labels = labelResult.labels();
 
         List<Element> live = new ArrayList<>();
         int omitted = 0;
         for (Element element : raw) {
-            if ("text".equals(element.type())
-                    && (nonFramesById.containsKey(string(element.json(), "containerId")) || text(element).isEmpty())) {
+            if (labelResult.consumedElements().contains(element)) {
                 continue;
             }
             if (live.size() >= MAX_ELEMENTS) {
@@ -115,7 +106,8 @@ public final class DiagramSummary {
                 byId.put(element.id(), element);
             }
         }
-        Map<String, String> shapeRefs = disambiguateShapes(live, byId, labels);
+        Map<String, String> shapeRefs = disambiguateShapes(
+                live, byId, labels, labelResult.consumedTextToShapeId());
 
         Map<String, Section> sections = new TreeMap<>(Comparator.comparing((String key) -> !key.isEmpty())
                 .thenComparing(key -> frameNames.getOrDefault(key, "")).thenComparing(key -> key));
@@ -124,7 +116,8 @@ public final class DiagramSummary {
             Section section = sections.computeIfAbsent(frameId, ignored -> new Section());
             switch (element.type()) {
                 case "text" -> section.texts.add(quote(text(element)));
-                case "arrow", "line" -> section.connections.add(connection(element, byId, frameNames, labels, shapeRefs));
+                case "arrow", "line" -> section.connections.add(
+                        connection(element, byId, frameNames, labels, shapeRefs, labelResult));
                 case "rectangle", "ellipse", "diamond" -> section.components.add(componentEntry(element, labels, shapeRefs));
                 default -> section.other.merge(element.type(), 1, Integer::sum);
             }
@@ -152,12 +145,13 @@ public final class DiagramSummary {
     }
 
     private static Map<String, String> disambiguateShapes(List<Element> live, Map<String, Element> byId,
-                                                          Map<String, String> labels) {
+                                                          Map<String, String> labels,
+                                                          Map<String, String> consumedTextToShapeId) {
         Set<String> connected = new HashSet<>();
         for (Element element : live) {
             if ("arrow".equals(element.type()) || "line".equals(element.type())) {
-                addBoundId(element.json(), "startBinding", byId, connected);
-                addBoundId(element.json(), "endBinding", byId, connected);
+                addBoundId(element.json(), "startBinding", byId, consumedTextToShapeId, connected);
+                addBoundId(element.json(), "endBinding", byId, consumedTextToShapeId, connected);
             }
         }
         Map<String, List<Element>> byLabel = new HashMap<>();
@@ -201,9 +195,11 @@ public final class DiagramSummary {
         return refs;
     }
 
-    private static void addBoundId(JsonObject arrow, String member, Map<String, Element> byId, Set<String> out) {
+    private static void addBoundId(JsonObject arrow, String member, Map<String, Element> byId,
+                                   Map<String, String> consumedTextToShapeId, Set<String> out) {
         if (arrow.get(member) instanceof JsonObject binding) {
-            String targetId = string(binding, "elementId");
+            String rawId = string(binding, "elementId");
+            String targetId = consumedTextToShapeId.getOrDefault(rawId, rawId);
             if (byId.containsKey(targetId)) {
                 out.add(targetId);
             }
@@ -218,9 +214,10 @@ public final class DiagramSummary {
     }
 
     private static String connection(Element arrow, Map<String, Element> byId, Map<String, String> frameNames,
-                                     Map<String, String> labels, Map<String, String> shapeRefs) {
-        String source = endpoint(arrow.json(), "startBinding", byId, frameNames, labels, shapeRefs);
-        String target = endpoint(arrow.json(), "endBinding", byId, frameNames, labels, shapeRefs);
+                                     Map<String, String> labels, Map<String, String> shapeRefs,
+                                     DiagramLabels.Result labelResult) {
+        String source = endpoint(arrow.json(), "startBinding", byId, frameNames, labels, shapeRefs, labelResult);
+        String target = endpoint(arrow.json(), "endBinding", byId, frameNames, labels, shapeRefs, labelResult);
         String label = labels.getOrDefault(arrow.id(), "");
         String line = source + connector(arrow) + target + (label.isBlank() ? "" : ": " + label);
         boolean unconnected = source.equals(UNCONNECTED) || target.equals(UNCONNECTED);
@@ -249,13 +246,18 @@ public final class DiagramSummary {
 
     private static String endpoint(JsonObject arrow, String member, Map<String, Element> byId,
                                    Map<String, String> frameNames, Map<String, String> labels,
-                                   Map<String, String> shapeRefs) {
+                                   Map<String, String> shapeRefs, DiagramLabels.Result labelResult) {
         if (!(arrow.get(member) instanceof JsonObject binding)) {
             return UNCONNECTED;
         }
-        String targetId = string(binding, "elementId");
+        String rawTargetId = string(binding, "elementId");
+        String targetId = labelResult.consumedTextToShapeId().getOrDefault(rawTargetId, rawTargetId);
         Element target = byId.get(targetId);
         if (target == null) {
+            String consumedText = labelResult.consumedTexts().get(rawTargetId);
+            if (consumedText != null) {
+                return quote(consumedText);
+            }
             String frameName = frameNames.get(targetId);
             return frameName == null ? UNCONNECTED : "frame " + quote(frameName);
         }
@@ -270,7 +272,7 @@ public final class DiagramSummary {
         return label == null ? target.type() + " (unlabeled)" : quote(label);
     }
 
-    private static boolean isShape(String type) {
+    static boolean isShape(String type) {
         return "rectangle".equals(type) || "ellipse".equals(type) || "diamond".equals(type);
     }
 
@@ -295,7 +297,7 @@ public final class DiagramSummary {
         return "frame".equals(type) || "magicframe".equals(type);
     }
 
-    private static String text(Element element) {
+    static String text(Element element) {
         String original = string(element.json(), "originalText");
         String value = original.isEmpty() ? string(element.json(), "text") : original;
         return value.replaceAll("\\s+", " ").strip();
@@ -309,7 +311,7 @@ public final class DiagramSummary {
         return value instanceof JsonPrimitive primitive && primitive.isBoolean() && primitive.getAsBoolean();
     }
 
-    private static String string(JsonObject object, String member) {
+    static String string(JsonObject object, String member) {
         return object.get(member) instanceof JsonPrimitive primitive && primitive.isString()
                 ? primitive.getAsString() : "";
     }

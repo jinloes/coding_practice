@@ -18,6 +18,7 @@ import {
 import { send, snapshot, subscribe } from './bridge';
 import { GuideView } from './GuideView';
 import { difficultyColor, ProblemView, SectionLabel } from './ProblemView';
+import { ReadinessPanel } from './ReadinessPanel';
 import type { ProblemItem, Theme, TrackItem } from './types';
 
 type Tab = 'practice' | 'guides';
@@ -40,6 +41,7 @@ function needsRetry(problem: ProblemItem): boolean {
 export function App() {
   const state = useSyncExternalStore(subscribe, snapshot);
   const [tab, setTab] = useState<Tab>('practice');
+  const [selectedGuideId, setSelectedGuideId] = useState<string>('');
   const [listCollapsed, setListCollapsed] = useState(false);
   const [query, setQuery] = useState('');
   const [trackFilter, setTrackFilter] = useState('all');
@@ -108,6 +110,11 @@ export function App() {
     send({ type: 'selectProblem', id: chosen.id });
   };
 
+  const openGuide = (guideId: string) => {
+    setSelectedGuideId(guideId);
+    setTab('guides');
+  };
+
   return (
     <MantineProvider theme={mantine} cssVariablesResolver={resolver} forceColorScheme={theme.dark ? 'dark' : 'light'}>
       <Box p="md">
@@ -150,17 +157,23 @@ export function App() {
             )}
           </Group>
 
-          {tab === 'guides' ? (
+          <ReadinessPanel dimensionSummary={state.dimensionSummary} onOpenGuide={openGuide} />
+
+          {tab === 'guides' && (
             <GuideView
               guides={state.guides}
               problems={state.problems}
+              selectedGuideId={selectedGuideId}
+              onSelectGuide={setSelectedGuideId}
               onSelectProblem={(id) => {
                 setTab('practice');
                 send({ type: 'selectProblem', id });
               }}
             />
-          ) : (
-            <>
+          )}
+
+          <div hidden={tab !== 'practice'} style={{ display: tab === 'practice' ? undefined : 'none' }}>
+            <Stack gap="md">
               {state.selected && (
                 <Group justify="space-between" align="center">
                   <SectionLabel>{`Problems (${filteredProblems.length} of ${state.problems.length})`}</SectionLabel>
@@ -233,14 +246,14 @@ export function App() {
               )}
 
               {state.selected ? (
-                <ProblemView key={state.selected.id} state={state} problem={state.selected} />
+                <ProblemView key={state.selected.id} state={state} problem={state.selected} onOpenGuide={openGuide} />
               ) : (
                 <Text c="dimmed" size="sm">
                   Choose a problem to start a design attempt.
                 </Text>
               )}
-            </>
-          )}
+            </Stack>
+          </div>
         </Stack>
       </Box>
     </MantineProvider>
@@ -273,10 +286,10 @@ function ProblemList({ problems }: { problems: ProblemItem[] }) {
               <Group gap={4} wrap="nowrap">
                 {problem.reviewed && (
                   <Badge
-                    color={VERDICT_BADGE_COLORS[problem.verdict] ?? 'teal'}
+                    color={VERDICT_BADGE_COLORS[problem.verdict] ?? 'gray'}
                     variant="light"
                     size="xs"
-                    aria-label="Reviewed"
+                    aria-label={problem.verdict ? `Verdict: ${problem.verdict}` : 'Reviewed (unparsed)'}
                   >
                     {problem.verdict || 'Reviewed'}
                   </Badge>

@@ -6,13 +6,17 @@ import type { GuideItem, ProblemItem } from './types';
 export function GuideView({
   guides,
   problems,
+  selectedGuideId,
+  onSelectGuide,
   onSelectProblem,
 }: {
   guides: GuideItem[];
   problems: ProblemItem[];
+  selectedGuideId?: string;
+  onSelectGuide?: (guideId: string) => void;
   onSelectProblem: (problemId: string) => void;
 }) {
-  const [selectedId, setSelectedId] = useState<string>(guides[0]?.id ?? '');
+  const [internalSelectedId, setInternalSelectedId] = useState<string>(guides[0]?.id ?? '');
   if (guides.length === 0) {
     return (
       <Text size="sm" c="dimmed">
@@ -20,7 +24,12 @@ export function GuideView({
       </Text>
     );
   }
-  const active = guides.find((guide) => guide.id === selectedId) ?? guides[0];
+  const effectiveId = selectedGuideId !== undefined && selectedGuideId !== '' ? selectedGuideId : internalSelectedId;
+  const active = guides.find((guide) => guide.id === effectiveId) ?? guides[0];
+  const selectGuide = (guideId: string) => {
+    setInternalSelectedId(guideId);
+    onSelectGuide?.(guideId);
+  };
   const problemById = new Map(problems.map((item) => [item.id, item]));
   const related = active.relatedProblemIds
     .map((id) => problemById.get(id))
@@ -38,7 +47,7 @@ export function GuideView({
               variant="light"
               label={guide.title}
               description={guide.summary}
-              onClick={() => setSelectedId(guide.id)}
+              onClick={() => selectGuide(guide.id)}
             />
           </div>
         ))}

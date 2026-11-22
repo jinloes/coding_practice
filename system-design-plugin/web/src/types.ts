@@ -61,6 +61,14 @@ export type SelectedProblem = {
 
 export type Dimension = { name: string; score: number; strengths: string[]; gaps: string[] };
 
+export type DimensionSummary = {
+  name: string;
+  averageScore: number;
+  reviewedCount: number;
+  guideId: string;
+  guideTitle: string;
+};
+
 export type Feedback = {
   parsed: boolean;
   verdict: string;
@@ -83,6 +91,7 @@ export type PageState = {
   targetLevel: string;
   tracks: TrackItem[];
   guides: GuideItem[];
+  dimensionSummary: DimensionSummary[];
   problems: ProblemItem[];
   selected: SelectedProblem | null;
   running: boolean;

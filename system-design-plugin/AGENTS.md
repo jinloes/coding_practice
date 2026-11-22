@@ -49,8 +49,10 @@ AssertJ, keep test classes package-private, and do not add JUnit 4 or Hamcrest.
 ## Problem Content Rules
 
 Each problem is `src/main/resources/problems/<id>.json`, with its id listed in
-`src/main/resources/problems/index.txt` and included in at least one track under
-`src/main/resources/tracks/<id>.json`. See "Adding a problem" in `CODE-MAP.md`.
+`src/main/resources/problems/index.txt`, included in at least one track under
+`src/main/resources/tracks/<id>.json`, and referenced in `relatedProblemIds` of
+at least one guide under `src/main/resources/guides/<id>.json`. See "Adding a
+problem" in `CODE-MAP.md`.
 
 - Write original problems. Never copy or paraphrase statements, diagrams, or
   solutions from books, courses, interview sites, or company question lists.

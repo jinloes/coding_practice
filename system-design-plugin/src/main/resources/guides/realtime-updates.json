@@ -8,6 +8,7 @@
     "chat-messaging",
     "news-feed",
     "live-reactions-comments",
-    "collaborative-document-editor"
+    "collaborative-document-editor",
+    "delivery-service"
   ]
 }

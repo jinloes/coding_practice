@@ -31,21 +31,47 @@ export function formatClock(remainingSeconds: number): string {
 }
 
 export function InterviewTimer() {
-  const [elapsed, setElapsed] = useState(0);
-  const [active, setActive] = useState(false);
+  const [accumulatedMs, setAccumulatedMs] = useState(0);
+  const [startedAtMs, setStartedAtMs] = useState<number | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const active = startedAtMs !== null;
 
   useEffect(() => {
     if (!active) {
       return undefined;
     }
-    const handle = window.setInterval(() => {
-      setElapsed((seconds) => seconds + 1);
-    }, 1000);
-    return () => window.clearInterval(handle);
+    const syncNow = () => setNowMs(Date.now());
+    const handle = window.setInterval(syncNow, 500);
+    document.addEventListener('visibilitychange', syncNow);
+    window.addEventListener('focus', syncNow);
+    return () => {
+      window.clearInterval(handle);
+      document.removeEventListener('visibilitychange', syncNow);
+      window.removeEventListener('focus', syncNow);
+    };
   }, [active]);
 
+  const totalElapsedMs = accumulatedMs + (startedAtMs !== null ? Math.max(0, nowMs - startedAtMs) : 0);
+  const elapsed = Math.floor(totalElapsedMs / 1000);
   const remaining = TOTAL_SECONDS - elapsed;
   const phase = phaseForElapsedSeconds(elapsed);
+
+  const toggleTimer = () => {
+    const now = Date.now();
+    if (startedAtMs !== null) {
+      setAccumulatedMs((prev) => prev + Math.max(0, now - startedAtMs));
+      setStartedAtMs(null);
+      setNowMs(now);
+    } else {
+      setStartedAtMs(now);
+      setNowMs(now);
+    }
+  };
+
+  const resetTimer = () => {
+    setAccumulatedMs(0);
+    setStartedAtMs(null);
+  };
 
   return (
     <Paper withBorder p="xs">
@@ -54,7 +80,7 @@ export function InterviewTimer() {
           <Text size="xs" fw={700} ff="monospace" aria-label="Remaining interview time">
             {remaining >= 0 ? formatClock(remaining) : `+${formatClock(-remaining)}`}
           </Text>
-          {(active || elapsed > 0) ? (
+          {active || elapsed > 0 ? (
             <Badge size="xs" variant="light" color={phase.color}>
               {phase.label}
             </Badge>
@@ -65,18 +91,11 @@ export function InterviewTimer() {
           )}
         </Group>
         <Group gap={4}>
-          <Button size="compact-xs" variant="light" onClick={() => setActive((running) => !running)}>
+          <Button size="compact-xs" variant="light" onClick={toggleTimer}>
             {active ? 'Pause timer' : elapsed > 0 ? 'Resume timer' : 'Start 45m timer'}
           </Button>
-          {elapsed > 0 && (
-            <Button
-              size="compact-xs"
-              variant="subtle"
-              onClick={() => {
-                setActive(false);
-                setElapsed(0);
-              }}
-            >
+          {(elapsed > 0 || accumulatedMs > 0) && (
+            <Button size="compact-xs" variant="subtle" onClick={resetTimer}>
               Reset
             </Button>
           )}

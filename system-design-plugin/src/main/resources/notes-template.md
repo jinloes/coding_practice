@@ -13,11 +13,14 @@ notes together with a text summary of your diagram.
 
 ## 3. API and system interface (~5 min)
 
-## 4. High-level architecture (~12 min)
+## 4. High-level architecture (~13 min)
 
 Describe the components in your diagram and how a request flows through them.
 
-## 5. Deep dives, scaling, and tradeoffs (~15 min)
+## 5. Deep dives, scaling, and tradeoffs (~20 min)
 
-Include capacity estimates where numbers drive a design choice (sharding, caching, bandwidth).
+- Capacity estimates that drive a design choice:
+- Scaling bottlenecks, partitioning, and caching:
+- Failure modes, consistency vs. availability, and degradation:
+- Key tradeoffs and rejected alternatives:
 

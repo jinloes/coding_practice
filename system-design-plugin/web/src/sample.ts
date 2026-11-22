@@ -62,6 +62,13 @@ export function renderSample(): void {
         relatedProblemIds: ['url-shortener', 'rate-limiter'],
       },
     ],
+    dimensionSummary: dimensions.map((name, index) => ({
+      name,
+      averageScore: (index % 4) + 1,
+      reviewedCount: 1,
+      guideId: 'delivery-framework',
+      guideTitle: 'The 45-Minute Interview Roadmap',
+    })),
     problems: [
       {
         id: 'url-shortener',

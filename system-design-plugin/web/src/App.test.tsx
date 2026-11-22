@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { render as renderBridge } from './bridge';
 import { formatClock, phaseForElapsedSeconds } from './InterviewTimer';
+import { selfCheckItemsForLevel } from './ProblemView';
 import type { PageState } from './types';
 
 function makeState(overrides: Partial<PageState> = {}): PageState {
@@ -65,6 +66,7 @@ function makeState(overrides: Partial<PageState> = {}): PageState {
         relatedProblemIds: ['news-feed'],
       },
     ],
+    dimensionSummary: [],
     problems: [
       {
         id: 'url-shortener',
@@ -180,5 +182,180 @@ describe('App and InterviewTimer', () => {
     expect(phaseForElapsedSeconds(15 * 60).label).toContain('High-level');
     expect(phaseForElapsedSeconds(30 * 60).label).toContain('Deep dives');
     expect(phaseForElapsedSeconds(46 * 60).label).toContain('Time up');
+  });
+
+  it('announces hiring verdicts accessibly and styles unparsed reviews as gray rather than teal', () => {
+    renderDom(<App />);
+    act(() =>
+      renderBridge(
+        makeState({
+          problems: [
+            {
+              id: 'url-shortener',
+              title: 'Link Shortening Service',
+              difficulty: 'Easy',
+              summary: 'Turn long links into short codes.',
+              tracks: ['core-foundations'],
+              reviewed: true,
+              verdict: 'Strong hire',
+              selected: true,
+            },
+            {
+              id: 'news-feed',
+              title: 'Social News Feed',
+              difficulty: 'Hard',
+              summary: 'Ranked home feed at scale.',
+              tracks: ['realtime-and-social'],
+              reviewed: true,
+              verdict: '',
+              selected: false,
+            },
+          ],
+        }),
+      ),
+    );
+
+    const strongHireBadge = screen.getByLabelText('Verdict: Strong hire');
+    const unparsedBadge = screen.getByLabelText('Reviewed (unparsed)');
+    expect(strongHireBadge).toHaveTextContent('Strong hire');
+    expect(unparsedBadge).toHaveTextContent('Reviewed');
+    expect(unparsedBadge.getAttribute('style')).toContain('gray');
+    expect(unparsedBadge.getAttribute('style')).not.toContain('teal');
+  });
+
+  it('preserves mock state across Guides tab switches and resets attempt-scoped state on non-empty attempt switch', async () => {
+    const user = userEvent.setup();
+    renderDom(<App />);
+
+    // Cold-start on an unattempted problem preserves timer and Ambiguous prompt when first attempt arrives.
+    const base = makeState();
+    act(() =>
+      renderBridge(
+        makeState({
+          selected: {
+            ...base.selected!,
+            attempts: [],
+            selectedAttempt: '',
+          },
+          reviews: [],
+          feedback: null,
+        }),
+      ),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Start 45m timer' }));
+    await user.click(screen.getByText('Ambiguous prompt'));
+    expect(screen.getByRole('button', { name: 'Pause timer' })).toBeInTheDocument();
+    expect(screen.queryByText('Scale: 50M links/month.')).not.toBeInTheDocument();
+
+    act(() => renderBridge(makeState()));
+    expect(screen.getByRole('button', { name: 'Pause timer' })).toBeInTheDocument();
+    expect(screen.queryByText('Scale: 50M links/month.')).not.toBeInTheDocument();
+
+    // Reveal scope, check a self-check item, type follow-up draft, then visit Guides and return.
+    await user.click(screen.getByRole('button', { name: /Reveal requirements/i }));
+    expect(screen.getByText('Scale: 50M links/month.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Show checklist' }));
+    await user.click(screen.getByLabelText(/Scoped top 3–4/i));
+    expect(screen.getByText('Pre-review self-check (1/5)')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Follow-up answers'), 'Keep hot keys in local L1 cache.');
+
+    await user.click(screen.getByText('Guides (1)'));
+    expect(screen.getByRole('heading', { name: 'The 45-Minute Interview Roadmap' })).toBeInTheDocument();
+    await user.click(screen.getByText('Problems (2)'));
+
+    expect(screen.getByRole('button', { name: 'Pause timer' })).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Keep hot keys in local L1 cache.')).toBeInTheDocument();
+    expect(screen.getByText('Pre-review self-check (1/5)')).toBeInTheDocument();
+
+    // Switching from non-empty a1 -> a2 resets timer, scopeRevealed, and checkedItems while keeping Ambiguous mode.
+    act(() =>
+      renderBridge(
+        makeState({
+          selected: {
+            ...base.selected!,
+            attempts: [
+              { id: 'url-shortener-a1', label: 'Attempt 1', customLabel: '' },
+              { id: 'url-shortener-a2', label: 'Attempt 2', customLabel: '' },
+            ],
+            selectedAttempt: 'url-shortener-a2',
+          },
+        }),
+      ),
+    );
+
+    expect(screen.getByRole('button', { name: 'Start 45m timer' })).toBeInTheDocument();
+    expect(screen.getByText('Pre-review self-check (0/5)')).toBeInTheDocument();
+    expect(screen.queryByText('Scale: 50M links/month.')).not.toBeInTheDocument();
+  });
+
+  it('calibrates self-check items by target level and opens related concept guides from ProblemView', async () => {
+    expect(selfCheckItemsForLevel('Mid-Level')).toHaveLength(5);
+    expect(selfCheckItemsForLevel('Senior')).toHaveLength(5);
+    expect(selfCheckItemsForLevel('Staff+')).toHaveLength(5);
+    expect(selfCheckItemsForLevel('Mid-Level')[4]).not.toEqual(selfCheckItemsForLevel('Senior')[4]);
+    expect(selfCheckItemsForLevel('Staff+')[4]).toContain('multi-region');
+
+    const user = userEvent.setup();
+    renderDom(<App />);
+    act(() =>
+      renderBridge(
+        makeState({
+          targetLevel: 'Mid-Level',
+          guides: [
+            {
+              id: 'delivery-framework',
+              title: 'The 45-Minute Interview Roadmap',
+              summary: 'Pace your system design interview.',
+              bodyHtml: '<h4>1. Requirements</h4><p>Focus on top capabilities.</p>',
+              relatedProblemIds: ['news-feed'],
+            },
+            {
+              id: 'scaling-data',
+              title: 'Scaling Reads, Writes & Hot Keys',
+              summary: 'Partitioning, caching, and hot-spot mitigation.',
+              bodyHtml: '<h4>Sharding</h4><p>Hash by tenant or key.</p>',
+              relatedProblemIds: ['url-shortener'],
+            },
+          ],
+        }),
+      ),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Show checklist' }));
+    await user.click(screen.getByLabelText(/Scoped top 3–4/i));
+    await user.click(screen.getByLabelText(/Diagram shows end-to-end request & data flow/i));
+    expect(screen.getByText('Pre-review self-check (2/5)')).toBeInTheDocument();
+
+    act(() =>
+      renderBridge(
+        makeState({
+          targetLevel: 'Staff+',
+          guides: [
+            {
+              id: 'delivery-framework',
+              title: 'The 45-Minute Interview Roadmap',
+              summary: 'Pace your system design interview.',
+              bodyHtml: '<h4>1. Requirements</h4><p>Focus on top capabilities.</p>',
+              relatedProblemIds: ['news-feed'],
+            },
+            {
+              id: 'scaling-data',
+              title: 'Scaling Reads, Writes & Hot Keys',
+              summary: 'Partitioning, caching, and hot-spot mitigation.',
+              bodyHtml: '<h4>Sharding</h4><p>Hash by tenant or key.</p>',
+              relatedProblemIds: ['url-shortener'],
+            },
+          ],
+        }),
+      ),
+    );
+
+    expect(screen.getByText('Pre-review self-check (1/5)')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Scoped top 3–4/i)).toBeChecked();
+    expect(screen.getByLabelText(/blast-radius isolation/i)).not.toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: 'Scaling Reads, Writes & Hot Keys' }));
+    expect(screen.getByRole('heading', { name: 'Scaling Reads, Writes & Hot Keys' })).toBeInTheDocument();
   });
 });

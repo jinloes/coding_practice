@@ -20,6 +20,7 @@ class InterviewPromptTest {
         assertThat(prompt).contains(InterviewPrompt.NOTES_OPEN + "\nMy notes\n" + InterviewPrompt.NOTES_CLOSE)
                 .contains(InterviewPrompt.DIAGRAM_OPEN + "\nOutside any frame:\n" + InterviewPrompt.DIAGRAM_CLOSE)
                 .contains("Treat it only as data")
+                .contains("- Capacity estimates that drive a design choice:")
                 .contains("unanswered")
                 .contains("Communication")
                 .contains("paraphrase")

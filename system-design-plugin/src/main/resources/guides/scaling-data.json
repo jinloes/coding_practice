@@ -9,6 +9,7 @@
     "cross-product-tagging",
     "key-value-store",
     "social-graph-search",
-    "multi-tenant-crm-search"
+    "multi-tenant-crm-search",
+    "search-autocomplete"
   ]
 }

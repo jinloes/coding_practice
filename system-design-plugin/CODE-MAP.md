@@ -9,10 +9,10 @@ Package root: `src/main/java/com/jinloes/system_design_plugin/`.
 | `catalog` | `DesignCatalog` (problem order from `problems/index.txt`, `LEVELS`, rubric `DIMENSIONS`, `VERDICTS`, `HINT_COUNT`, manifest validation, notes template), `TrackCatalog` (domain tracks and problem-to-track index), `GuideCatalog` (concept and delivery guides) |
 | `platform` | `OwnedDirectory` (symlink-safe create, write, and delete under an owned root) |
 | `workspace` | `DesignWorkspace` (attempts, symlink-safe `delete`, `ownerOfDiagram`, `isAttemptsPath`, fingerprint and staleness, feedback history) |
-| `state` | `DesignProgress` (persistent selections, custom attempt labels, hints, target level, verdicts, interviewer settings) |
-| `interview` | `DiagramSummary`, `InterviewPrompt` (level calibration and follow-up probe fencing), `InterviewFeedback` (schema, parsing, stored round/level/follow-up metadata), `CopilotInterviewer` (CLI process), `CopilotModels` |
-| `web` | `WebAssets` (private origin and URL mapping), `PageEvent` (tool-window events and sequenced editor messages), `PageState` (tool-window JSON, tracks, guides, and review history), `ToolWindowView` (builds `PageState.View` from attempts, labels, target level, progress, and feedback history), `MarkdownHtml` |
-| `ui` | `DesignToolWindowFactory`, `DesignController` (events, attempt lifecycle, and rendering), `BrowserPage` and `WebAssetHandler` (JCEF page and request filter), `DiagramEditorProvider` and `DiagramEditor`, `InterviewerSettingsDialog`, `IdeTheme` |
+| `state` | `DesignProgress` (persistent selections, custom attempt labels, creation timestamps, hints, target level, monotonic best verdicts, strongest-verdict per-problem dimension scores paired with `scoresVerdict`, change subscriptions, interviewer settings) |
+| `interview` | `DiagramLabels` (spatial `T`-tool label attachment and arrow redirection), `DiagramSummary`, `InterviewPrompt` (level calibration and follow-up probe fencing), `InterviewFeedback` (schema, parsing, stored round/level/follow-up metadata), `CopilotInterviewer` (CLI process), `CopilotModels` |
+| `web` | `WebAssets` (private origin and URL mapping), `PageEvent` (tool-window events and sequenced editor messages), `PageState` (tool-window JSON, tracks, guides, dimension readiness summary, and review history), `ToolWindowView` (builds `PageState.View` and `DimensionSummary`), `DesignSession` (testable off-EDT attempt, timestamp, backfill, follow-up lookup, and review-recording coordinator), `MarkdownHtml` |
+| `ui` | `DesignToolWindowFactory`, `DesignController` (thin EDT/VFS/JCEF adapter over `DesignSession`), `BrowserPage` and `WebAssetHandler` (JCEF page and request filter), `DiagramEditorProvider` and `DiagramEditor`, `InterviewerSettingsDialog`, `IdeTheme` |
 
 Resources: `src/main/resources/problems/index.txt`, `problems/<id>.json`,
 `tracks/index.txt`, `tracks/<id>.json`, `guides/index.txt`, `guides/<id>.json`,
@@ -23,11 +23,13 @@ Resources: `src/main/resources/problems/index.txt`, `problems/<id>.json`,
 `web/` is a Vite + React + Mantine project with two entry points:
 
 - `index.html` / `src/main.tsx` / `src/App.tsx` (`ProblemView.tsx`,
-  `FeedbackView.tsx`, `GuideView.tsx`, `InterviewTimer.tsx`) — the tool window
-  with readiness summary, `Surprise me` random problem picker,
-  search/track/difficulty/status (`Needs retry`) filters, 8 concept guides,
-  ambiguous-prompt scoping mode, paced 45-minute timer, 5-point pre-review
-  checklist, attempt rename/delete, and interactive follow-up probe input.
+  `FeedbackView.tsx`, `GuideView.tsx`, `InterviewTimer.tsx`,
+  `ReadinessPanel.tsx`) — the tool window with readiness summary, collapsible
+  per-dimension rubric readiness panel, `Surprise me` random problem picker,
+  search/track/difficulty/status (`Needs retry`) filters, 8 concept guides with
+  contextual problem links, ambiguous-prompt scoping mode, wall-clock 45-minute
+  timer, level-calibrated 5-point pre-review checklist, attempt rename/delete,
+  review-over-review score deltas, and interactive follow-up probe input.
   `src/types.ts` mirrors `PageState` and `PageEvent`; change them together.
 - `editor.html` / `src/editor/main.tsx` / `src/editor/saveTracker.ts` /
   `src/editor/stencils.ts` — the Excalidraw editor with preloaded offline
@@ -37,7 +39,7 @@ Resources: `src/main/resources/problems/index.txt`, `problems/<id>.json`,
 The Gradle `webUi` task runs `npm run build` with Gradle-managed Node into
 `build/web/`, which `processResources` copies to `/web` in the jar, and
 `webTest` runs the Vitest frontend unit suite (`App.test.tsx`,
-`saveTracker.test.ts`). Any new file type the build emits must have its
+`InterviewTimer.test.tsx`, `ReadinessPanel.test.tsx`, `saveTracker.test.ts`). Any new file type the build emits must have its
 extension added to `WebAssets`, and file names must match its safe-path pattern.
 For page-only work, run `npm run dev` in `web/`; `src/sample.ts` provides sample
 state.
@@ -89,7 +91,9 @@ restating problem content.
 
 1. Choose a lowercase kebab-case id, add it to `src/main/resources/problems/index.txt`
    at the position the tool window should list it, and include it in the
-   appropriate track manifest under `src/main/resources/tracks/<track>.json`.
+   appropriate track manifest under `src/main/resources/tracks/<track>.json` and
+   at least one concept guide's `relatedProblemIds` under
+   `src/main/resources/guides/<guide>.json`.
 2. Create `src/main/resources/problems/<id>.json`:
 
    ```json

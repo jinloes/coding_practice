@@ -56,10 +56,13 @@ class DesignCatalogTest {
         assertThat(DesignCatalog.normalizeLevel("Principal")).isEqualTo("Senior");
         assertThat(DesignCatalog.notesTemplate())
                 .startsWith("# Design notes")
-                .contains("## 1. Requirements and scope")
-                .contains("## 2. Core entities")
-                .contains("## 3. API and system interface")
-                .contains("## 5. Deep dives");
+                .contains("## 1. Requirements and scope (~5 min)")
+                .contains("## 2. Core entities (~2 min)")
+                .contains("## 3. API and system interface (~5 min)")
+                .contains("## 4. High-level architecture (~13 min)")
+                .contains("## 5. Deep dives, scaling, and tradeoffs (~20 min)")
+                .contains("- Capacity estimates that drive a design choice:")
+                .contains("- Failure modes, consistency vs. availability, and degradation:");
     }
 
     @Test

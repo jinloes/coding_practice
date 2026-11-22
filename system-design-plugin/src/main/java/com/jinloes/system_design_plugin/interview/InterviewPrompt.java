@@ -79,8 +79,8 @@ public final class InterviewPrompt {
                 ## Evaluation rules
                 - Calibrate every score and the overall `verdict` to the `%s` bar above.
                 - Treat empty starter-template headings or bullet prompts (such as bare `# Design notes`, \
-                `- Functional:`, or `- Non-functional:`) with no candidate content beneath them as unanswered, not as \
-                completed sections.
+                `- Functional:`, `- Non-functional:`, or `- Capacity estimates that drive a design choice:`) with no \
+                candidate content beneath them as unanswered, not as completed sections.
                 - Score `Communication` on structure, clarity, explicit assumptions and tradeoffs, and consistency \
                 between the notes and diagram. Do not penalize for spoken delivery or for visual layout, colors, or \
                 embedded images that the text diagram summary omits.

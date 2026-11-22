@@ -236,4 +236,46 @@ class ToolWindowViewTest {
                 new AttemptInfo("a", "Sharded KV (" + label("2026-01-15T14:30:00Z") + ")", "Sharded KV"),
                 new AttemptInfo("b", "Attempt 2 (" + label("2026-02-01T00:00:00Z") + ")", ""));
     }
+
+    @Test
+    void summarizesDimensionScoresAndLinksStudyGuides() {
+        Map<String, Map<String, Integer>> scores = new HashMap<>();
+        scores.put("p-0", Map.of("Capacity estimates", 3, "Reliability and tradeoffs", 2));
+        scores.put("p-1", Map.of("Capacity estimates", 3, "Reliability and tradeoffs", 3));
+        scores.put("p-2", Map.of("Capacity estimates", 2, "Reliability and tradeoffs", 3));
+        for (int index = 3; index < 20; index++) {
+            scores.put("p-" + index, Map.of("Reliability and tradeoffs", 3));
+        }
+
+        View view = ToolWindowView.build(
+                PROBLEM.id(), false, "", Map.of("url-shortener", "Hire"), scores,
+                "Senior", NO_SELECTION, ignored -> "", NO_HINTS, new FakeStore(), ZoneOffset.UTC);
+
+        assertThat(view.dimensionSummary())
+                .extracting(PageState.DimensionSummary::name)
+                .containsExactlyElementsOf(DesignCatalog.DIMENSIONS);
+        assertThat(view.dimensionSummary())
+                .extracting(PageState.DimensionSummary::guideId)
+                .containsExactly(
+                        "delivery-framework",
+                        "numbers-that-matter",
+                        "api-and-security-patterns",
+                        "storage-tradeoff-matrix",
+                        "scaling-data",
+                        "reliability-patterns",
+                        "delivery-framework");
+
+        PageState.DimensionSummary capacity = view.dimensionSummary().get(1);
+        assertThat(capacity.averageScore()).isEqualTo(2.7);
+        assertThat(capacity.reviewedCount()).isEqualTo(3);
+        assertThat(capacity.guideTitle()).isNotBlank();
+
+        PageState.DimensionSummary reliability = view.dimensionSummary().get(5);
+        assertThat(reliability.averageScore()).isEqualTo(3.0);
+        assertThat(reliability.reviewedCount()).isEqualTo(20);
+
+        PageState.DimensionSummary communication = view.dimensionSummary().get(6);
+        assertThat(communication.averageScore()).isZero();
+        assertThat(communication.reviewedCount()).isZero();
+    }
 }
