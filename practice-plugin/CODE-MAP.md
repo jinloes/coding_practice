@@ -43,10 +43,10 @@ practice-plugin/
 | `app` | Cross-package application use cases | `LegacyImportService` |
 | `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example/verification libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
-| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `CheckRunConfigurations`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
+| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `ExampleExecution`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `CheckRunConfigurations`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `runner` (`verificationRunner`) | Java 17 child-JVM coordinator and JUnit Platform XML runner packaged into `verification-runner.jar` | `VerificationMain`, `JUnitSuiteRunner` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI, rendering, and IDE actions | `PracticePanel`, `ExerciseFilters`, `AttemptBar`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `PracticeIdeActions`, `ExerciseCellRenderer`, `CustomInputPrompt`, `PracticePage`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `ui` | Tool window UI, rendering, and IDE actions | `PracticePanel`, `RunStatusPresenter`, `ExerciseFilters`, `AttemptBar`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `PracticeIdeActions`, `ExerciseCellRenderer`, `CustomInputPrompt`, `PracticePage`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
 | `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
@@ -80,9 +80,11 @@ complexity probe is timing-sensitive; run the final full suite on an otherwise
 idle machine.
 
 Set `idePath` in `practice-plugin/gradle.properties` or user-level Gradle
-properties to use a local IDE. Never commit a real machine path. On Windows,
-forked IDE and test JVMs set `winp.folder.preferred` to `build/winp` so `winp`
-never extracts native helpers into Gradle's immutable platform transform cache.
+properties to use a local IDE. Never commit a real machine path. Plugin
+sandboxes (`build/sandbox`) live under `build/`, while `.intellijPlatform/`
+retains cached IDE/platform artifacts across `clean` builds. On Windows, forked
+IDE and test JVMs set `winp.folder.preferred` to `build/winp` so `winp` never
+extracts native helpers into Gradle's immutable platform transform cache.
 
 ### Web pages
 
@@ -122,8 +124,9 @@ cd web && npm ci && npm test && npm run dev
 - Keep user-facing errors actionable, bounded, and suitable for display in the
   tool window.
 - Keep each source and test file under about 20 KB so agent tooling can read it
-  in one pass. Split by responsibility (for example, `FullCheck` out of
-  `PracticeRunner`) rather than by arbitrary line ranges.
+  in one pass. Split by responsibility (for example, `ExampleExecution` and
+  `FullCheck` out of `PracticeRunner`, or `RunStatusPresenter` out of
+  `PracticePanel`) rather than by arbitrary line ranges.
 
 ## Test Conventions
 
@@ -159,7 +162,8 @@ also run after test failures with `--continue`.
     `getState()` returns and some anonymous IDE wrappers.
   - `Os.IS_WINDOWS` ternaries, which take only one side per OS.
   - JVM invariants such as a missing SHA-256 `MessageDigest`.
-  - A few IDE race and launch-failure paths in `PracticeRunner` and `FullCheck`.
+  - A few IDE race and launch-failure paths in `PracticeRunner`,
+    `ExampleExecution`, and `FullCheck`.
   New code must not add to this list without a reason.
 - **Excluded, with reasons:**
   - `ui/**`: Swing and JCEF components need a live IDE or browser. Its pure
@@ -296,7 +300,8 @@ inflate the first measurement. When writing a workload:
 When modifying example or full-check execution, inspect these surfaces
 together:
 
-- `PracticeRunner` and `RunSession` for ownership and state transitions;
+- `PracticeRunner`, `ExampleExecution`, and `RunSession` for ownership and state
+  transitions;
 - `FullCheck` and `BoundedProcessHandler` for full-check launch, watchdog
   limits, output bounds, and result translation;
 - `CheckRunConfigurations` and `ExampleRunConfigurations` for temporary check
@@ -307,15 +312,17 @@ together:
 - `VerificationWorkspace`, `VerificationMain`, and `JUnitSuiteRunner` for
   offline full checks;
 - `ManagedPracticeProgress` for persisted result semantics;
-- `PracticePanel` for controls, status, and stale-result presentation;
+- `PracticePanel` and `RunStatusPresenter` for controls, status, and
+  stale-result presentation;
 - integration tests for cancellation, timeout, cleanup, and report freshness:
   `ExampleExecutionIntegrationTest` and `FullCheckIntegrationTest`, which share
   the fixture in `PracticeExecutionTestBase`.
 
 Do not introduce a second independent run-state flag. The atomic `RunSession`
-is the source of truth. `FullCheck` holds no guard state: `PracticeRunner`
+is the source of truth. `ExampleExecution` operates against that shared
+`RunSession` reference, and `FullCheck` holds no guard state (`PracticeRunner`
 claims the guard before starting it and releases it from the completion
-callback.
+callback).
 
 ## Changing Storage Or Cleanup
 
@@ -338,7 +345,7 @@ expected base, marked by the plugin, and inactive.
 | Runtime, storage, lifecycle, security, or data flow | `ARCHITECTURE.md` |
 | Build commands, dependencies, conventions, or extension steps | `CODE-MAP.md` |
 | User workflow or supported feature set | `README.md` |
-| Contributor/agent invariant | `AGENTS.md` |
+| Contributor/agent invariant | `AGENTS.md` (and `../.github/instructions/practice-plugin-content.instructions.md` for catalog content rules) |
 
 Documentation-only changes do not require tests unless a test explicitly
 validates that documentation.

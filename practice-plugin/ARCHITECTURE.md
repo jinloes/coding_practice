@@ -118,7 +118,9 @@ selected guide or, when no guide is selected, the selected track, `LimitsDialog`
 execution limits, and `PracticeViews` provides stateless Swing building blocks;
 none of them hold panel state. Pass marks come from
 `ManagedPracticeProgress.passedExerciseIds()`, derived from stored history.
-`ExerciseCellRenderer`, `AttemptBar`, `ResultsView`, `HintButton`, `PracticeActions` (the run toolbar and
+`RunStatusPresenter` coordinates result banners, attempt freshness checks,
+edit-staleness feedback, error notifications, and `RunEvent` transitions for the
+panel. `ExerciseCellRenderer`, `AttemptBar`, `ResultsView`, `HintButton`, `PracticeActions` (the run toolbar and
 title actions), `PracticeIdeActions` (the global `Tools > Algorithm Practice` IDE actions for Find Action and custom keymap shortcuts), and `CustomInputPrompt` are the native Swing and action-system pieces.
 
 #### Problem and Study Guide pages
@@ -183,6 +185,10 @@ project-based storage format. New attempts never use it.
 It allows one active practice run per project, saves documents before launch,
 publishes structured `RunEvent`s to UI listeners, owns cancellation and watchdog behavior, and
 records full-check results.
+
+`ExampleExecution` prepares, compiles, launches, and cleans up visible-example
+and custom-input runs on behalf of `PracticeRunner` while operating against the
+runner's atomic `RunSession` guard rather than owning separate run state.
 
 `FullCheck` launches one full check on behalf of the runner: it builds the
 verification process, enforces setup and suite limits with a watchdog, bounds

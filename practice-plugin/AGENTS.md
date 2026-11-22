@@ -39,12 +39,17 @@ The Problem and Study Guide tabs are React + Mantine pages in `web/`, rendered
 in JCEF with a Swing HTML fallback. Keep `web/src/types.ts` and
 `ui/PageJson.java` in sync, and see the "Web pages" section of `CODE-MAP.md`.
 
-For plugin code searches (`grep`, `glob`, and IDE MCP `search_*` `paths`),
-exclude `!**/resources/**` (or scope to `src/main/java/**`, `src/test/java/**`,
-`src/verificationRunner/**`, `web/src/**`, prefixed with `practice-plugin/` when
-working from the repo root) so ~2,200 exercise Java/JSON files do not flood
-results. Pass whichever project root is open in IntelliJ (repo root or
-`practice-plugin/`) as the IDE MCP `projectPath`.
+For plugin code work, scope to the relevant packages (`CODE-MAP.md`) rather than
+loading all ~820 KB (~210k tokens) of plugin source and tests at once. Root
+`.ignore` already excludes exercise/reference/known-wrong content and build
+caches from ripgrep `grep` by default (while keeping `exercises/index.txt`
+visible and allowing explicit-path reads/greps on named exercise IDs). File
+`glob` tools and IDE MCP `search_*` calls do not read `.ignore`: scope `paths`
+to `src/main/java/**`, `src/test/java/**`, `src/verificationRunner/**`, or
+`web/src/**` (prefixed with `practice-plugin/` when working from the repo root)
+so ~2,200 exercise files and Gradle/Node caches do not flood results. Pass
+whichever project root is open in IntelliJ (repo root or `practice-plugin/`) as
+the IDE MCP `projectPath`.
 
 ## Build And Test
 
@@ -103,83 +108,15 @@ change, run the full suite with the coverage gate:
   the failing input or iteration would otherwise be unclear.
 - Keep test classes and test methods package-private.
 
-## Exercise Content Rules
+## Content Rules
 
-Every exercise ID listed in `src/main/resources/exercises/index.txt` must
-provide:
-
-```text
-src/main/resources/exercises/<id>/
-  exercise.json
-  Solution.java
-  ExamplesTest.java
-  CorrectnessTest.java
-  ExampleRunner.java
-  Workload.java
-src/test/resources/reference/<id>/Solution.java
-src/test/resources/known-wrong/<id>/Solution.java
-```
-
-The known-wrong candidate compiles against the shipped tests but must fail at
-least one of them; `KnownWrongSolutions` loads it from the test resources.
-
-- Starters contain only the learner API, no `main`, assertions, or harness, and
-  throw `UnsupportedOperationException("Implement <method>")`.
-- `ExamplesTest.java` and `CorrectnessTest.java` use one plain `@Test` per
-  case. Do not use `@ParameterizedTest`, `@TestFactory`, or `@Timeout` there:
-  expected test counts come from counting `@Test` annotations, and a
-  parameterized or dynamic test runs more tests than it declares, so the check
-  reports an incomplete run. The verification runner already applies the
-  learner's per-test timeout. Plugin tests under `src/test/` are not affected.
-- Test counts must match the manifest-derived `exampleCount()` and
-  `fullCount()`.
-- Assert any legal answer when the contract permits multiple results.
-- `ExampleRunner` must support no-argument visible examples and custom-input
-  mode, use AssertJ for examples, and print `Examples passed: N` on success.
-- The runner's `USAGE` value must be byte-identical to the manifest
-  `inputSyntax`; invalid custom input must print it.
-- `Workload` must declare `UNIT`, `SIZES`, `prepare`, `run`, and `units`.
-  Preparation stays outside the timed region, mutable inputs are rebuilt for
-  every repetition, and complexity probes measure rather than assert.
-- Intended complexity strings must be compatible with the classifier labels in
-  `ComplexityAnalysis`.
-
-## Study Guide Content Rules
-
-Every guide ID listed in `GuideCatalog` must provide
-`src/main/resources/guides/<id>.json` with a matching `id`, non-blank `title`,
-`summary`, and `lesson`, and a non-empty `exercises` array of existing,
-non-duplicated exercise IDs.
-
-- Lessons are original text in the `MarkdownHtml` subset (paragraphs, `- `
-  bullets, inline code) and contain the label lines `How it works`,
-  `When to reach for it`, `Common patterns`, and `Pitfalls`, each followed by
-  bullets.
-- Lessons teach the technique; they must not walk through a listed exercise's
-  solution, which belongs to that exercise's hints.
-- Guides never declare difficulty. Levels come from each exercise's manifest
-  and must be `Easy`, `Medium`, or `Hard`.
-- An exercise may appear in several guides. Update the guide order in
-  `GuideCatalogTest` when the guide list changes; membership is checked against
-  the manifests.
-
-## Practice Track Content Rules
-
-Every track ID listed in `TrackCatalog` must provide
-`src/main/resources/tracks/<id>.json` in the guide manifest schema with a
-non-empty `exercises` array of existing, non-duplicated exercise IDs. Tracks
-are hand-curated problem lists such as Blind 75 or a company list.
-
-- Every summary must say the list is not an official or verified question
-  list. Company tracks must also say they are approximate, and their notes must
-  not claim specific questions.
-- Notes are original text in the `MarkdownHtml` subset with the label lines
-  `About this list`, `What to expect`, and `How to prepare`.
-- Exercises on a track are original problems. Never copy or paraphrase
-  third-party problem statements, and never scrape or copy third-party
-  company-tag data (for example paid question-frequency lists) into a track.
-- Track IDs must not collide with guide IDs. Update `TrackCatalogTest` when the
-  track list or membership changes.
+Authoring invariants for exercises (`src/main/resources/exercises/<id>/`,
+`src/test/resources/{reference,known-wrong}/<id>/`), study guides
+(`src/main/resources/guides/<id>.json`), and practice tracks
+(`src/main/resources/tracks/<id>.json`) live in
+`../.github/instructions/practice-plugin-content.instructions.md` and the
+"Adding ..." sections of `CODE-MAP.md`. Read them before adding or modifying
+catalog content.
 
 ## Repository Hygiene
 

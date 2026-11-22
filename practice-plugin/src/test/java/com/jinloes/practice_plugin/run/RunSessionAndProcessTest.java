@@ -151,7 +151,7 @@ class RunSessionAndProcessTest {
 
         InMemoryProcessHandler handler = new InMemoryProcessHandler();
         running.active(handler);
-        PracticeRunner.stopOwnedExampleProcess(running, handler);
+        ExampleExecution.stopOwnedProcess(running, handler);
     }
 
     private static final class RecordingFuture implements ScheduledFuture<Object> {

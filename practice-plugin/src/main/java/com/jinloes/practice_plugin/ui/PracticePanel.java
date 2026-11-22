@@ -2,8 +2,6 @@ package com.jinloes.practice_plugin.ui;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.icons.AllIcons;
-import com.intellij.notification.NotificationGroupManager;
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -64,6 +62,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     private final ActionLink resetFilters = new ActionLink(
             "Reset filters", (ActionListener) _ -> filters.resetAll());
     private final AttemptBar attemptBar;
+    private final RunStatusPresenter runStatus;
     private final PageView problem;
     private final PageView guide;
     private final JBTabbedPane tabs = new JBTabbedPane();
@@ -113,6 +112,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
 
         attemptBar = new AttemptBar(attempt -> AttemptBar.statusOf(progress, attempt),
                 this::showAttempt, () -> guarded(this::startOrResume), () -> guarded(this::newAttempt));
+        runStatus = new RunStatusPresenter(project, progress, workspace, attemptBar, results, status, tasks);
         toolbar = PracticeActions.runToolbar(this, this);
         add(PracticeViews.column(attemptBar.component(), toolbar.getComponent(), status), BorderLayout.SOUTH);
 
@@ -213,23 +213,13 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         updateButtons();
         if (attempt == null || exercise == null) {
             setHintsHtml(LOCKED_HINTS_HTML);
-            status.setText("Choose Start Attempt to create your first managed attempt.");
+            runStatus.showNoAttempt();
             return;
         }
         progress.getState().selectedAttempts.put(exercise.id(), attempt.id());
         var entry = progress.entry(attempt.id(), exercise.id());
         setHintsHtml(HintButton.revealedHtml(exercise.hints(), entry.hintsRevealed));
-        status.setText("Attempt " + attempt.id() + ": " + ResultsView.label(entry.status));
-        results.showEntry(entry);
-        if (!entry.checkedFingerprint.isEmpty()) {
-            tasks.run("Checking result freshness", () -> workspace.fingerprint(attempt), hash -> {
-                if (attempt.equals(attemptBar.selected())
-                        && (!hash.equals(entry.checkedFingerprint) || AttemptFiles.hasUnsavedChanges(attempt))) {
-                    status.setText("Edited since last check; previous result is stale.");
-                    results.markStale("check the current solution again.");
-                }
-            });
-        }
+        runStatus.showAttempt(attempt, entry);
     }
 
     private void setHintsHtml(String body) {
@@ -373,16 +363,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     }
 
     void onAttemptEdited() {
-        var attempt = attemptBar.selected();
-        Exercise exercise = exercises.getSelectedValue();
-        if (attempt == null || exercise == null) {
-            return;
-        }
-        var entry = progress.entry(attempt.id(), exercise.id());
-        if (!entry.checkedFingerprint.isEmpty() || results.hasDisplayedResult()) {
-            status.setText("Edited since displayed result; check again.");
-            results.markStale("solution was edited; run or check again.");
-        }
+        runStatus.onAttemptEdited(attemptBar.selected(), exercises.getSelectedValue());
     }
 
     private void syncActivePageTab() {
@@ -411,69 +392,21 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     }
 
     private void error(String text) {
-        if (attemptBar != null) {
-            attemptBar.resetBusy();
-        }
-        status.setText("Action failed; see Results.");
-        results.showError(text);
-        NotificationGroupManager.getInstance().getNotificationGroup("Algorithm Practice")
-                .createNotification(text, NotificationType.ERROR).notify(project);
+        runStatus.error(text);
     }
 
     private void onRunEvent(RunEvent event) {
-        if (disposed) {
-            return;
-        }
-        switch (event) {
-            case RunEvent.Started started -> {
-                if (started.attemptId().isEmpty() || attemptBar.matches(started.attemptId())) {
-                    results.showRunning();
-                    results.showOutput(started.text());
-                    if (AttemptFiles.hasUnsavedChanges(attemptBar.selected())) {
-                        results.markStale("there are unsaved changes. Check again after saving.");
-                    }
-                }
-                status.setText("Running...");
-                updateButtons();
-            }
-            case RunEvent.FailedToStart failed -> {
-                error(failed.text());
-                updateButtons();
-            }
-            case RunEvent.CheckFinished finished -> {
-                passed = progress.passedExerciseIds();
-                updateCount();
-                exercises.repaint();
-                refreshGuide();
-                attemptBar.component().repaint();
-                updateButtons();
-                var entry = progress.entry(finished.attemptId(), finished.exerciseId());
-                if (attemptBar.matches(finished.attemptId())) {
-                    results.showStatus(entry);
-                    showSelectedRunFinished(finished.text());
-                } else {
-                    status.setText("Check finished for " + finished.attemptId() + ": "
-                            + ResultsView.label(entry.status));
-                }
-            }
-            case RunEvent.ExampleFinished finished -> {
-                updateButtons();
-                if (finished.attemptId().isEmpty() || attemptBar.matches(finished.attemptId())) {
-                    results.showRunFinished(finished.text());
-                    showSelectedRunFinished(finished.text());
-                } else {
-                    status.setText("Example run finished for " + finished.attemptId() + ".");
-                }
-            }
+        if (!disposed) {
+            runStatus.onRunEvent(event, this::refreshAfterCheck, this::updateButtons);
         }
     }
 
-    private void showSelectedRunFinished(String outputText) {
-        results.showOutput(outputText);
-        if (AttemptFiles.hasUnsavedChanges(attemptBar.selected())) {
-            results.markStale("there are unsaved changes. Check again after saving.");
-        }
-        status.setText("Run finished; see Results.");
+    private void refreshAfterCheck() {
+        passed = progress.passedExerciseIds();
+        updateCount();
+        exercises.repaint();
+        refreshGuide();
+        attemptBar.component().repaint();
     }
 
     private void refreshGuide() {

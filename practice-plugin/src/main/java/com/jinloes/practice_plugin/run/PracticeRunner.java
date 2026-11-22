@@ -5,10 +5,7 @@ import com.intellij.execution.ExecutionListener;
 import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
-import com.intellij.execution.application.ApplicationConfiguration;
-import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.process.KillableProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionUtil;
@@ -17,13 +14,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteIntentReadAction;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.util.concurrency.AppExecutorUtil;
-import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
@@ -31,15 +22,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import static com.jinloes.practice_plugin.run.RunDecisions.exampleFinishedText;
-import static com.jinloes.practice_plugin.run.RunDecisions.exampleInstallPreflight;
-import static com.jinloes.practice_plugin.run.RunDecisions.exampleResultText;
-import static com.jinloes.practice_plugin.run.RunDecisions.exampleRunnerOwned;
-import static com.jinloes.practice_plugin.run.RunDecisions.exampleStart;
 import static com.jinloes.practice_plugin.run.RunDecisions.fullCheckMessage;
 import static com.jinloes.practice_plugin.run.RunDecisions.normalizedInput;
 
@@ -49,6 +34,7 @@ public final class PracticeRunner implements Disposable {
     private final ManagedPracticeWorkspace attempts = ManagedPracticeWorkspace.get();
     private final AtomicReference<RunSession> session = new AtomicReference<>(RunSession.IDLE);
     private final AtomicReference<RunnerAndConfigurationSettings> pendingCheckSettings = new AtomicReference<>();
+    private final ExampleExecution examples;
     private final Consumer<Runnable> continuationDispatcher;
     private final RunEvent.Listeners listeners = new RunEvent.Listeners();
 
@@ -60,49 +46,34 @@ public final class PracticeRunner implements Disposable {
     PracticeRunner(Project project, Consumer<Runnable> continuationDispatcher) {
         this.project = project;
         this.continuationDispatcher = continuationDispatcher;
+        this.examples = new ExampleExecution(project, attempts, session, this::publish, this::untrackAndRemove);
         project.getMessageBus().connect(this).subscribe(ExecutionManager.EXECUTION_TOPIC, new ExecutionListener() {
             @Override
             public void processStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment,
                                        @NotNull ProcessHandler handler) {
-                RunSession.ExampleSession examples = examplesFor(environment);
-                if (examples == null) {
-                    return;
+                RunSession.ExampleSession running = examples.matching(environment);
+                if (running != null) {
+                    examples.processStarted(running, handler);
                 }
-                handleExampleProcessStarted(examples, handler);
             }
 
             @Override
             public void processNotStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment) {
-                handleExampleProcessNotStarted(examplesFor(environment));
+                examples.processNotStarted(examples.matching(environment));
                 handleCheckProcessNotStarted(environment);
             }
 
             @Override
             public void processTerminated(@NotNull String executorId, @NotNull ExecutionEnvironment environment,
                                           @NotNull ProcessHandler handler, int exitCode) {
-                RunSession.ExampleSession examples = examplesFor(environment);
-                if (examples != null) {
-                    finishExamples(exampleFinishedText(examples.input(), exitCode));
-                }
+                examples.processTerminated(examples.matching(environment), exitCode);
             }
         });
     }
 
-    void handleExampleProcessStarted(RunSession.ExampleSession examples, ProcessHandler handler) {
-        RunSession.RunControl control = examples.control();
-        control.active(handler);
-        RunDecisions.ExampleStart start = exampleStart(examples);
-        if (start.cancelled()) {
-            stopOwnedExampleProcess(control, handler);
-            return;
-        }
-        publish(new RunEvent.Started(RunEvent.attemptId(examples.attempt()), start.message()));
-    }
-
-    void handleExampleProcessNotStarted(RunSession.ExampleSession examples) {
-        if (examples != null) {
-            finishExamples("Example launch did not complete. See the IDE notification and Run console.");
-        }
+    @TestOnly
+    ExampleExecution examples() {
+        return examples;
     }
 
     void handleCheckProcessNotStarted(ExecutionEnvironment environment) {
@@ -118,13 +89,6 @@ public final class PracticeRunner implements Disposable {
 
     private RunnerAndConfigurationSettings claimPendingCheck(RunnerAndConfigurationSettings candidate) {
         return candidate != null && pendingCheckSettings.compareAndSet(candidate, null) ? candidate : null;
-    }
-
-    /** The example run this environment belongs to, or null when the event is not ours. */
-    private RunSession.ExampleSession examplesFor(ExecutionEnvironment environment) {
-        return session.get() instanceof RunSession.ExampleSession examples
-                && environment.getRunProfile() == examples.configuration()
-                ? examples : null;
     }
 
     public void addEventListener(Consumer<RunEvent> listener) {
@@ -194,80 +158,7 @@ public final class PracticeRunner implements Disposable {
     private void launchExamples(String attemptId, String input, boolean debug) throws ExecutionException {
         ensureIdle();
         String argument = normalizedInput(input);
-        runAfterSavingDocuments(() -> launchExamplesAfterSave(attemptId, argument, debug));
-    }
-
-    private void launchExamplesAfterSave(String attemptId, String input, boolean debug)
-            throws ExecutionException {
-        ManagedPracticeWorkspace.Attempt attempt;
-        try {
-            attempt = attempts.read(attemptId);
-        } catch (IOException exception) {
-            throw new ExecutionException(exception.getMessage(), exception);
-        }
-        PracticeModuleWorkspace modules = PracticeModuleWorkspace.get(project);
-        modules.open(attempt);
-        Path runner = modules.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId()));
-        String fingerprint;
-        try {
-            fingerprint = attempts.fingerprint(attempt);
-        } catch (IOException exception) {
-            modules.clearExampleHarness(attempt);
-            throw new ExecutionException(exception.getMessage(), exception);
-        }
-        RunSession.ExampleSession claimed = new RunSession.ExampleSession(
-                attempt, input, debug, fingerprint, null, null, new RunSession.RunControl());
-        if (!session.compareAndSet(RunSession.IDLE, claimed)) {
-            modules.clearExampleHarness(attempt);
-            throw new ExecutionException("A practice run is already active. Stop it before starting another.");
-        }
-        publish(new RunEvent.Started(attemptId, "Compiling examples."));
-        AppExecutorUtil.getAppExecutorService().execute(() -> {
-            try {
-                modules.compileExamples(attempt, runner);
-            } catch (ExecutionException exception) {
-                finishExamples(exception.getMessage());
-                return;
-            }
-            ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
-                    installExampleConfiguration(attempt, attemptId, runner, input, debug));
-        });
-    }
-
-    private void installExampleConfiguration(
-            ManagedPracticeWorkspace.Attempt attempt, String attemptId, Path runner, String input, boolean debug) {
-        try {
-            WriteIntentReadAction.runThrowable(() -> {
-                RunDecisions.ExampleInstallPreflight preflight = exampleInstallPreflight(project.isDisposed(), session.get());
-                if (!preflight.proceed()) {
-                    finishExamples(preflight.message());
-                    return;
-                }
-                RunSession.ExampleSession current = preflight.current();
-                requireModelAccess();
-                var expectedModule = PracticeModuleWorkspace.get(project).open(attempt);
-                var runnerFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(runner);
-                var psiFile = runnerFile == null ? null : PsiManager.getInstance(project).findFile(runnerFile);
-                var module = runnerFile == null ? null : ModuleUtilCore.findModuleForFile(runnerFile, project);
-                if (!(psiFile instanceof PsiJavaFile javaFile) || !exampleRunnerOwned(javaFile, module, expectedModule)) {
-                    finishExamples("Generated example runner is not owned by the attempt module.");
-                    return;
-                }
-                RunnerAndConfigurationSettings settings = ExampleRunConfigurations.install(
-                        project, attempt, attemptId, javaFile, module, input, debug);
-                session.set(current.installed((ApplicationConfiguration) settings.getConfiguration(), settings));
-                try {
-                    ExecutionUtil.runConfiguration(settings, debug
-                            ? DefaultDebugExecutor.getDebugExecutorInstance()
-                            : DefaultRunExecutor.getRunExecutorInstance());
-                } catch (RuntimeException failure) {
-                    finishExamples("Example launch failed before execution: " + failure.getMessage());
-                    throw failure;
-                }
-            });
-        } catch (ExecutionException exception) {
-            finishExamples("Example launch failed before execution: " + exception.getMessage());
-        }
+        runAfterSavingDocuments(() -> examples.launchAfterSave(attemptId, argument, debug));
     }
 
     public void stop() {
@@ -278,7 +169,7 @@ public final class PracticeRunner implements Disposable {
         control.requestCancel();
         ProcessHandler handler = control.active();
         if (handler != null && !handler.isProcessTerminated()) {
-            stopOwnedExampleProcess(control, handler);
+            ExampleExecution.stopOwnedProcess(control, handler);
         }
     }
 
@@ -296,30 +187,6 @@ public final class PracticeRunner implements Disposable {
                                 attempt.id(), attempt.exerciseId(), fullCheckMessage(attempt, result)));
                     }
                 }));
-    }
-
-    private void finishExamples(String text) {
-        ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
-                WriteIntentReadAction.run(() -> {
-                    String resultText = text;
-                    ManagedPracticeWorkspace.Attempt attempt = null;
-                    String fingerprint = null;
-                    RunnerAndConfigurationSettings settings = null;
-                    if (session.getAndSet(RunSession.IDLE) instanceof RunSession.ExampleSession examples) {
-                        attempt = examples.attempt();
-                        fingerprint = examples.fingerprint();
-                        settings = examples.settings();
-                    }
-                    untrackAndRemove(settings);
-                    if (attempt != null && !project.isDisposed()) {
-                        ManagedPracticeWorkspace.Attempt finishedAttempt = attempt;
-                        PracticeModuleWorkspace.get(project).clearExampleHarness(finishedAttempt);
-                        resultText = exampleResultText(resultText, fingerprint,
-                                () -> attempts.fingerprint(finishedAttempt));
-                    }
-                    publish(new RunEvent.ExampleFinished(RunEvent.attemptId(attempt), resultText));
-                }
-        ));
     }
 
     private void removeTemporaryConfiguration(RunnerAndConfigurationSettings settings) {
@@ -393,7 +260,7 @@ public final class PracticeRunner implements Disposable {
         }
     }
 
-    private static void requireModelAccess() {
+    static void requireModelAccess() {
         ApplicationManager.getApplication().assertReadAccessAllowed();
         ApplicationManager.getApplication().assertWriteIntentLockAcquired();
     }
@@ -405,15 +272,6 @@ public final class PracticeRunner implements Disposable {
 
     private void publish(RunEvent event) {
         listeners.publish(project, event);
-    }
-
-    static void stopOwnedExampleProcess(RunSession.RunControl control, ProcessHandler handler) {
-        if (handler instanceof KillableProcessHandler killable) {
-            killable.setShouldKillProcessSoftly(false);
-        }
-        control.captureChildrenOf(handler);
-        control.terminateOwnedChildren();
-        handler.destroyProcess();
     }
 
     @Override

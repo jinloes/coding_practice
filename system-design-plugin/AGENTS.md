@@ -11,11 +11,15 @@ Inspect their headings (`^#{1,3} `) and read the relevant sections before
 changing behavior, storage, the page contract, the interviewer, or the build,
 and update affected sections in the same change.
 
-For code searches (`grep`, `glob`, and IDE MCP `search_*` `paths`), exclude
-`!**/resources/**`, `!**/build/**`, and `!**/node_modules/**` (and scope to
-`system-design-plugin/**` when working from the repo root). Pass whichever
-project root is open in IntelliJ (repo root or `system-design-plugin/`) as the
-IDE MCP `projectPath`.
+Root `.ignore` excludes `problems/*.json` and build caches from ripgrep `grep`
+by default (keeping `problems/index.txt` visible and allowing explicit-path
+reads/greps on named problem files). File `glob` tools and IDE MCP `search_*`
+calls do not read `.ignore`: scope `paths` to `src/main/java/**`,
+`src/test/java/**`, or `web/src/**` (or exclude `!**/resources/**`,
+`!**/build/**`, `!**/node_modules/**`, `!**/.gradle/**`,
+`!**/.intellijPlatform/**`, prefixed with `system-design-plugin/**` from the
+repo root). Pass whichever project root is open in IntelliJ (repo root or
+`system-design-plugin/`) as the IDE MCP `projectPath`.
 
 ## Interviewer Invariants
 

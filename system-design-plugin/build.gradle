@@ -51,6 +51,7 @@ dependencies {
 }
 
 intellijPlatform {
+    sandboxContainer = layout.buildDirectory.dir('sandbox')
     // The plugin registers no IDE Settings configurables, so building searchable options would boot a headless IDE for an empty index.
     buildSearchableOptions = false
     pluginConfiguration {

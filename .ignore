@@ -4,3 +4,15 @@
 
 # Generated npm lockfile; edit web/package.json and regenerate instead.
 package-lock.json
+
+# Build outputs and Gradle/IntelliJ Platform caches and sandboxes.
+build/
+.gradle/
+.intellijPlatform/
+
+# Per-exercise and per-problem content trees (~685k tokens across ~2,240 files).
+# Keep index.txt visible; read or grep individual <id> paths explicitly when needed.
+practice-plugin/src/main/resources/exercises/*/
+practice-plugin/src/test/resources/reference/
+practice-plugin/src/test/resources/known-wrong/
+system-design-plugin/src/main/resources/problems/*.json

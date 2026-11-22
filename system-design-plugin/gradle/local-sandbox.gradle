@@ -216,7 +216,7 @@ intellijPlatformTesting {
             localPath.convention(layout.dir(providers.provider {
                 LocalSandboxSupport.findLatestInstalledIde(projectRootDir, idePathProperty.orNull)
             }))
-            def sandboxWorkspace = layout.projectDirectory.dir('.intellijPlatform/sandbox-workspace').asFile
+            def sandboxWorkspace = layout.buildDirectory.dir('sandbox-workspace').get().asFile
             task {
                 description = 'Runs a sandbox IDE using the newest locally installed IntelliJ IDEA build.'
                 args(sandboxWorkspace.absolutePath)

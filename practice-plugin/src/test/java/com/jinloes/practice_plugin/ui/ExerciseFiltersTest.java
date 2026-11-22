@@ -127,4 +127,59 @@ class ExerciseFiltersTest {
             assertThat(notifications).as("reveal batches filter mutations into one refresh").hasValue(1);
         });
     }
+
+    @Test
+    void guideFilterListsItsProblemsEasiestFirstAndCombinesWithOtherFilters() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            ExerciseFilters filters = new ExerciseFilters();
+
+            filters.selectGuide("stacks-queues");
+            var guide = filters.selectedGuide();
+            assertThat(filters.visible(Set.of()))
+                    .as("the guide's exercises, Easy then Medium then Hard")
+                    .isNotEmpty()
+                    .containsExactlyElementsOf(guide.exercises());
+
+            filters.selectDifficulty("Medium");
+            assertThat(filters.visible(Set.of()))
+                    .as("the existing filters still narrow a guide")
+                    .isNotEmpty()
+                    .containsExactlyElementsOf(guide.exercisesAt("Medium"));
+
+            filters.selectGuide(null);
+            filters.selectDifficulty("All difficulties");
+            assertThat(filters.selectedGuide()).isNull();
+            assertThat(filters.visible(Set.of()))
+                    .as("all guides keeps the catalog order")
+                    .containsExactlyElementsOf(ExerciseCatalog.all());
+        });
+    }
+
+    @Test
+    void trackFilterListsItsProblemsAndIntersectsWithAGuide() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            ExerciseFilters filters = new ExerciseFilters();
+
+            filters.selectTrack("google");
+            assertThat(filters.shownGuide()).isSameAs(filters.selectedTrack());
+            assertThat(filters.visible(Set.of()))
+                    .as("the track's exercises, Easy then Medium then Hard")
+                    .containsExactlyElementsOf(filters.selectedTrack().exercises());
+
+            var track = filters.selectedTrack();
+            filters.selectGuide("stacks-queues");
+            assertThat(filters.shownGuide()).isSameAs(filters.selectedGuide());
+            assertThat(filters.visible(Set.of()))
+                    .as("a guide narrowed to the problems in the track")
+                    .isNotEmpty()
+                    .containsExactlyElementsOf(filters.selectedGuide().exercises().stream()
+                            .filter(track.exercises()::contains)
+                            .toList());
+
+            filters.selectGuide(null);
+            filters.selectTrack(null);
+            assertThat(filters.shownGuide()).isNull();
+            assertThat(filters.visible(Set.of())).containsExactlyElementsOf(ExerciseCatalog.all());
+        });
+    }
 }

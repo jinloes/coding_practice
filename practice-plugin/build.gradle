@@ -67,6 +67,7 @@ dependencies {
 }
 
 intellijPlatform {
+    sandboxContainer = layout.buildDirectory.dir('sandbox')
     pluginConfiguration {
         name = 'Algorithm Practice'
         ideaVersion {

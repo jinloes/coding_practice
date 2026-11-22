@@ -65,10 +65,12 @@ the Gradle configuration cache, build cache, parallel execution, and skips the
 IntelliJ plugin self-update network check. `buildSearchableOptions` is disabled
 because the plugin registers no IDE Settings configurables, `npmInstall` uses
 `fastNpmInstall`, and `webUi` and `test` normalize path inputs so both cache
-cleanly across `clean` builds. `runLocalIde` and `generateIdeRunConfig` live in
-`gradle/local-sandbox.gradle`. Forked IDE and test JVMs set
-`winp.folder.preferred` to `build/winp` so `winp` never extracts native helpers
-into Gradle's immutable platform transform cache on Windows.
+cleanly across `clean` builds. `runLocalIde` and `generateIdeRunConfig` live in `gradle/local-sandbox.gradle`.
+Plugin sandboxes (`build/sandbox`) and the default sandbox workspace
+(`build/sandbox-workspace`) live under `build/`, while `.intellijPlatform/`
+retains cached IDE/platform artifacts across `clean` builds. Forked IDE and test
+JVMs set `winp.folder.preferred` to `build/winp` so `winp` never extracts native
+helpers into Gradle's immutable platform transform cache on Windows.
 
 ## Coverage
 
