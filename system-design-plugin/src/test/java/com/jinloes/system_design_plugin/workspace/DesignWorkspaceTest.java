@@ -143,6 +143,35 @@ class DesignWorkspaceTest {
     }
 
     @Test
+    void reviewInputCapturesImmutableTextAndTheExactLegacyByteFingerprint() throws IOException {
+        DesignWorkspace workspace = workspace();
+        Attempt attempt = workspace.create(DesignCatalog.find("url-shortener"));
+        String notes = "notes\r\n\0\u6f22";
+        String diagram = "{\"elements\":[]}\n";
+        Files.writeString(attempt.notes(), notes, StandardCharsets.UTF_8);
+        Files.writeString(attempt.diagram(), diagram, StandardCharsets.UTF_8);
+        String expected = "64fea2bee19a4f70f3f6911eb2b3f1492949a207286098b6f1742252fe2ec1e9";
+        DesignWorkspace.ReviewInput captured = workspace.reviewInput(attempt);
+
+        assertThat(captured.notes()).isEqualTo(notes);
+        assertThat(captured.diagram()).isEqualTo(diagram);
+        assertThat(captured.fingerprint()).isEqualTo(expected);
+        assertThat(workspace.fingerprint(attempt)).isEqualTo(expected);
+        assertThat(workspace.fingerprint(attempt.id())).isEqualTo(expected);
+
+        Files.writeString(attempt.notes(), "later notes", StandardCharsets.UTF_8);
+        Files.writeString(attempt.diagram(), "later diagram", StandardCharsets.UTF_8);
+        assertThat(captured.notes()).isEqualTo(notes);
+        assertThat(captured.diagram()).isEqualTo(diagram);
+        assertThat(captured.fingerprint()).isEqualTo(expected);
+        assertThat(workspace.isStale(attempt, expected)).isTrue();
+
+        Files.write(attempt.notes(), new byte[]{(byte) 0xff});
+        assertThatThrownBy(() -> workspace.reviewInput(attempt)).isInstanceOf(IOException.class);
+        assertThat(workspace.fingerprint(attempt)).hasSize(64);
+    }
+
+    @Test
     void fingerprintTracksNotesAndDiagramBytesOnly() throws IOException {
         DesignWorkspace workspace = workspace();
         Attempt attempt = workspace.create(FIRST);

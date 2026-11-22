@@ -63,11 +63,23 @@ Run commands from the repository root with `./gradlew`:
 ./gradlew :system-design-plugin:check
 ```
 
+The **Root Modules** CI workflow covers root-module, root-build, and wrapper
+changes on pull requests and pushes to main/master. Its local equivalent is:
+
+```bash
+bash ./gradlew :concurrency:check :cryptography:check :reflection:check :regex:check :system-design:check --no-daemon --console=plain
+```
+
+Use JDK 25 and a working native PCRE2 library; Ubuntu CI installs
+`libpcre2-8-0`. The two standalone plugin workflows remain separate.
+
 ## Notes About `regex`
 
 - Uses `pcre4j` with the JNA backend
-- On macOS, tests expect `libpcre2-8.dylib` from Homebrew (Windows/Linux hosts without native `libpcre2-8` can exclude `-x :regex:test`)
-- The module includes a `checkPcre2` task to verify or install `pcre2` before tests run
+- On macOS, tests expect `libpcre2-8.dylib` from Homebrew; Linux and Windows
+  also require a compatible native PCRE2 library available to JNA.
+- `checkPcre2` provisions Homebrew PCRE2 only on macOS. Skipping native tests
+  is not equivalent to passing the root-module CI gate.
 
 ## IntelliJ Practice Plugin
 

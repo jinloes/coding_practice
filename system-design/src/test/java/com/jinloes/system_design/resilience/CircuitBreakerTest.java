@@ -70,6 +70,94 @@ class CircuitBreakerTest {
         assertThat(breaker.state()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 
+    @Test
+    void staleHalfOpenSuccessCannotCompleteANewerRecoveryWindow() {
+        MutableClock clock = new MutableClock(Instant.EPOCH);
+        CircuitBreaker breaker = new CircuitBreaker(1, Duration.ofSeconds(10), 2, clock);
+        assertThatThrownBy(() -> breaker.execute(() -> {
+            throw new IllegalStateException("initial failure");
+        })).isInstanceOf(IllegalStateException.class);
+        clock.advance(Duration.ofSeconds(10));
+
+        assertThat(breaker.execute(() -> {
+            assertThatThrownBy(() -> breaker.execute(() -> {
+                throw new IllegalStateException("failed concurrent probe");
+            })).isInstanceOf(IllegalStateException.class);
+            clock.advance(Duration.ofSeconds(10));
+            assertThat(breaker.execute(() -> "new probe")).isEqualTo("new probe");
+            return "old probe";
+        })).isEqualTo("old probe");
+
+        assertThat(breaker.state()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(breaker.execute(() -> "second new probe")).isEqualTo("second new probe");
+        assertThat(breaker.state()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    void staleHalfOpenFailureCannotReopenARecoveredGeneration() {
+        MutableClock clock = new MutableClock(Instant.EPOCH);
+        CircuitBreaker breaker = new CircuitBreaker(1, Duration.ofSeconds(10), 2, clock);
+        assertThatThrownBy(() -> breaker.execute(() -> {
+            throw new IllegalStateException("initial failure");
+        })).isInstanceOf(IllegalStateException.class);
+        clock.advance(Duration.ofSeconds(10));
+        Error staleFailure = new AssertionError("old probe failed");
+
+        assertThatThrownBy(() -> breaker.execute(() -> {
+            assertThatThrownBy(() -> breaker.execute(() -> {
+                throw new IllegalStateException("failed concurrent probe");
+            })).isInstanceOf(IllegalStateException.class);
+            clock.advance(Duration.ofSeconds(10));
+            breaker.execute(() -> "new probe one");
+            breaker.execute(() -> "new probe two");
+            throw staleFailure;
+        })).isSameAs(staleFailure);
+
+        assertThat(breaker.state()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    void staleClosedSuccessCannotResetFailuresInANewerClosedGeneration() {
+        MutableClock clock = new MutableClock(Instant.EPOCH);
+        CircuitBreaker breaker = new CircuitBreaker(2, Duration.ofSeconds(10), 1, clock);
+        assertThat(breaker.execute(() -> {
+            for (int i = 0; i < 2; i++) {
+                assertThatThrownBy(() -> breaker.execute(() -> {
+                    throw new IllegalStateException("trip");
+                })).isInstanceOf(IllegalStateException.class);
+            }
+            clock.advance(Duration.ofSeconds(10));
+            breaker.execute(() -> "recovery");
+            assertThatThrownBy(() -> breaker.execute(() -> {
+                throw new IllegalStateException("new generation failure");
+            })).isInstanceOf(IllegalStateException.class);
+            return "old success";
+        })).isEqualTo("old success");
+
+        assertThatThrownBy(() -> breaker.execute(() -> {
+            throw new IllegalStateException("second new generation failure");
+        })).isInstanceOf(IllegalStateException.class);
+        assertThat(breaker.state()).isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
+    @Test
+    void staleClosedFailureCannotTripANewerClosedGeneration() {
+        MutableClock clock = new MutableClock(Instant.EPOCH);
+        CircuitBreaker breaker = new CircuitBreaker(1, Duration.ofSeconds(10), 1, clock);
+        RuntimeException staleFailure = new IllegalStateException("old closed call failed");
+
+        assertThatThrownBy(() -> breaker.execute(() -> {
+            assertThatThrownBy(() -> breaker.execute(() -> {
+                throw new IllegalStateException("current failure");
+            })).isInstanceOf(IllegalStateException.class);
+            clock.advance(Duration.ofSeconds(10));
+            breaker.execute(() -> "recovered");
+            throw staleFailure;
+        })).isSameAs(staleFailure);
+
+        assertThat(breaker.state()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
     private static final class MutableClock extends Clock {
         private Instant instant;
 

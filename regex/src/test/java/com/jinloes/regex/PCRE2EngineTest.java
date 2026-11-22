@@ -3,6 +3,10 @@ package com.jinloes.regex;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -75,5 +79,62 @@ class PCRE2EngineTest {
     void findsUnicodeCharactersWithJit() {
         assertThat(engine.findMatches("CJK: 漢 字", "\\p{han}", true))
             .isEqualTo(List.of("漢", "字"));
+    }
+
+    @Test
+    void emptyMatchesTerminateAndAdvanceAcrossUnicodeWithAndWithoutJit() throws Exception {
+        String classpath = String.join(File.pathSeparator, List.of(
+                EmptyMatchProbe.class, PCRE2Engine.class, org.pcre4j.Pcre2Code.class,
+                org.pcre4j.api.IPcre2.class, org.pcre4j.jna.Pcre2.class, Class.forName("com.sun.jna.Native"))
+                .stream().map(type -> {
+                    try {
+                        return Path.of(type.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+                    } catch (java.net.URISyntaxException exception) {
+                        throw new IllegalStateException(exception);
+                    }
+                }).distinct().toList());
+        for (boolean jitAllowed : List.of(false, true)) {
+            Process process = new ProcessBuilder(
+                    Path.of(System.getProperty("java.home"), "bin",
+                            System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString(),
+                    "-Xmx64m", "-Dpcre2.regex.jit=" + jitAllowed, "-classpath", classpath,
+                    EmptyMatchProbe.class.getName()).start();
+            try {
+                assertThat(process.waitFor(10, TimeUnit.SECONDS))
+                        .as("zero-width matching must terminate (JIT allowed: %s)", jitAllowed).isTrue();
+                assertThat(process.exitValue())
+                        .as(new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8)).isZero();
+                assertThat(new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8)
+                        .lines().toList()).containsExactly(
+                                "1|", "2||", "3|||", "2||", "2||", "2|a|", "2||b", "1|", "1|", "1|", "2||",
+                                "1|", "2||", "3|||", "2||", "2||", "2|a|", "2||b", "1|", "1|", "1|", "2||");
+            } finally {
+                process.destroyForcibly();
+                assertThat(process.waitFor(5, TimeUnit.SECONDS)).isTrue();
+            }
+        }
+    }
+
+    public static final class EmptyMatchProbe {
+        public static void main(String[] args) {
+            PCRE2Engine engine = new PCRE2Engine();
+            for (boolean useJit : List.of(false, true)) {
+                for (String[] example : List.of(
+                        new String[]{"", ""},
+                        new String[]{"a", ""},
+                        new String[]{"ab", ""},
+                        new String[]{"\u6f22", ""},
+                        new String[]{"\uD83D\uDE00", ""},
+                        new String[]{"a", "a*"},
+                        new String[]{"ab", "(?=a)|b"},
+                        new String[]{"abc", "^"},
+                        new String[]{"abc", "$"},
+                        new String[]{"ab", "(?=b)"},
+                        new String[]{"b", "a*"})) {
+                    List<String> matches = engine.findMatches(example[0], example[1], useJit);
+                    System.out.println(matches.size() + "|" + String.join("|", matches));
+                }
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.jinloes.system_design_plugin.web.PageEvent;
+import com.jinloes.system_design_plugin.web.DiagramSaveGuard;
 import com.jinloes.system_design_plugin.web.WebAssets;
 import com.jinloes.system_design_plugin.workspace.DesignWorkspace;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -58,6 +60,7 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
     private long lastWrittenSeq;
     private long lastHandledSeq;
     private volatile String lastSaveError = "";
+    private DiagramSaveGuard saveGuard;
 
     DiagramEditor(Project project, VirtualFile file) {
         this.file = file;
@@ -134,11 +137,14 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
                 throw new IOException("This file is not a System Design Practice attempt.");
             }
             file.refresh(false, false);
-            String scene = new String(file.contentsToByteArray(false), StandardCharsets.UTF_8);
+            byte[] loadedBytes = file.contentsToByteArray(false);
+            String scene = new String(loadedBytes, StandardCharsets.UTF_8);
+            saveGuard = new DiagramSaveGuard(loadedBytes);
             clearSaveState();
             page.execute("window.designLoad(" + GSON.toJson(scene) + ", " + IdeTheme.isDark() + ");");
         } catch (IOException | RuntimeException exception) {
             LOG.warn("Could not load " + file.getPath(), exception);
+            saveGuard = null;
             clearSaveState();
             page.execute("window.designLoad('', " + IdeTheme.isDark() + ");window.designSaveResult(-1, "
                     + GSON.toJson("Could not load the diagram: " + exception.getMessage()) + ");");
@@ -161,7 +167,15 @@ final class DiagramEditor extends UserDataHolderBase implements FileEditor {
                     .ownerOfDiagram(file.toNioPath()).isEmpty()) {
                 throw new IOException("The diagram is no longer inside the practice workspace.");
             }
-            WriteAction.run(() -> file.setBinaryContent(pending.scene().getBytes(StandardCharsets.UTF_8), -1, -1, this));
+            if (saveGuard == null) {
+                throw new IOException("The diagram has not loaded successfully. Copy your unsaved scene before reopening it.");
+            }
+            byte[] sceneBytes = pending.scene().getBytes(StandardCharsets.UTF_8);
+            WriteAction.run(() -> {
+                saveGuard.requireUnchanged(Files.readAllBytes(file.toNioPath()));
+                file.setBinaryContent(sceneBytes, -1, -1, this);
+                saveGuard.recordSaved(sceneBytes);
+            });
         } catch (IOException | RuntimeException exception) {
             LOG.warn("Could not save " + file.getPath(), exception);
             error = "The diagram was not saved: " + exception.getMessage();

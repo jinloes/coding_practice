@@ -4,6 +4,11 @@ This lab demonstrates the
 [change data capture pattern](../../docs/patterns/outbox-and-cdc.md) by
 building an eventually consistent Elasticsearch read model from PostgreSQL.
 
+This is a local-only lab, not a remote deployment. Its demonstration credentials
+and disabled Elasticsearch authentication are not production security. All
+published ports bind to `127.0.0.1`; localhost URLs and internal service
+connections are unchanged.
+
 ## What you will learn
 
 - How PostgreSQL's write-ahead log becomes an ordered change stream.

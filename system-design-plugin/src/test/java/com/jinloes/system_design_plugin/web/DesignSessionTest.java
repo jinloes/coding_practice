@@ -126,6 +126,39 @@ class DesignSessionTest {
     }
 
     @Test
+    void preparedPromptAndRecordedReviewKeepTheirCapturedInputAfterLaterSaves() throws IOException {
+        Attempt attempt = session.createAttempt("url-shortener");
+        java.nio.file.Files.writeString(attempt.notes(), "Captured notes");
+        java.nio.file.Files.writeString(attempt.diagram(),
+                "{\"elements\":[{\"id\":\"t\",\"type\":\"text\",\"text\":\"Captured diagram\"}]}");
+        String fingerprint = workspace.fingerprint(attempt);
+        DesignSession.PreparedReview prepared = session.preparePrompt(attempt, "Senior", null);
+        assertThat(prepared.prompt()).contains("Captured notes", "Captured diagram");
+        assertThat(prepared.fingerprint()).isEqualTo(fingerprint);
+
+        java.nio.file.Files.writeString(attempt.notes(), "Later notes");
+        java.nio.file.Files.writeString(attempt.diagram(), DesignWorkspace.EMPTY_SCENE);
+        InterviewFeedback.Stored recorded = session.recordCompletedReview(
+                prepared, parsedFeedback("Hire", 3, List.of("How does recovery work?")), "model");
+        assertThat(prepared.prompt()).contains("Captured notes", "Captured diagram").doesNotContain("Later notes");
+        assertThat(recorded.fingerprint()).isEqualTo(fingerprint);
+        assertThat(workspace.latestFeedback(attempt, InterviewFeedback.Stored::fromJson).orElseThrow().fingerprint())
+                .isEqualTo(fingerprint);
+        assertThat(workspace.isStale(attempt, recorded.fingerprint())).isTrue();
+
+        DesignSession.PreparedReview followUp = session.preparePrompt(attempt, "Senior", "Retry within a deadline.");
+        String followUpFingerprint = followUp.fingerprint();
+        assertThat(followUp.prompt()).contains("Later notes", "How does recovery work?");
+        java.nio.file.Files.writeString(attempt.notes(), "Another edit");
+        clock.incrementAndGet();
+        InterviewFeedback.Stored recordedFollowUp = session.recordCompletedReview(
+                followUp, parsedFeedback("Hire", 3, List.of()), "model");
+        assertThat(recordedFollowUp.fingerprint()).isEqualTo(followUpFingerprint);
+        assertThat(recordedFollowUp.round()).isEqualTo(InterviewFeedback.ROUND_FOLLOW_UP);
+        assertThat(workspace.isStale(attempt, recordedFollowUp.fingerprint())).isTrue();
+    }
+
+    @Test
     void preparesPromptsUsingNewestParsedFollowUpsAndRecordsCompletedReviews() throws IOException {
         Attempt attempt = session.createAttempt("url-shortener");
 

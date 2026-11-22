@@ -4,15 +4,15 @@ services:
     image: debezium/zookeeper:latest
     restart: always
     ports:
-    - 2181:2181
-    - 2888:2888
-    - 3888:3888
+    - "127.0.0.1:2181:2181"
+    - "127.0.0.1:2888:2888"
+    - "127.0.0.1:3888:3888"
 
   kafka:
     image: wurstmeister/kafka:latest
     restart: always
     ports:
-    - 9092:9092
+    - "127.0.0.1:9092:9092"
     links:
     - zookeeper
     environment:
@@ -25,7 +25,7 @@ services:
     build: ./postgres
     restart: always
     ports:
-    - 5432:5432
+    - "127.0.0.1:5432:5432"
     command: postgres -c config_file=/home/postgres.conf
     environment:
     - POSTGRES_USER=postgres
@@ -36,7 +36,7 @@ services:
     image: elasticsearch:7.13.2
     restart: always
     ports:
-    - 9200:9200
+    - "127.0.0.1:9200:9200"
     environment:
     - http.host=0.0.0.0
     - transport.host=127.0.0.1
@@ -47,8 +47,8 @@ services:
     build: ./debezium-jdbc-es
     restart: always
     ports:
-    - 8083:8083
-    - 5005:5005
+    - "127.0.0.1:8083:8083"
+    - "127.0.0.1:5005:5005"
     links:
     - kafka
     - postgres

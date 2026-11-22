@@ -7,6 +7,7 @@ import com.jinloes.system_design_plugin.catalog.DesignCatalog.Problem;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
@@ -66,6 +67,9 @@ public final class DesignWorkspace {
         public Path feedbackDirectory() {
             return directory.resolve(FEEDBACK);
         }
+    }
+
+    public record ReviewInput(String notes, String diagram, String fingerprint) {
     }
 
     public DesignWorkspace() {
@@ -185,11 +189,26 @@ public final class DesignWorkspace {
     }
 
     private String fingerprintOwned(Attempt stored) throws IOException {
+        return fingerprint(stored.problemId(), Files.readAllBytes(stored.notes()), Files.readAllBytes(stored.diagram()));
+    }
+
+    public ReviewInput reviewInput(Attempt attempt) throws IOException {
+        Attempt stored = read(attempt.id());
+        byte[] notes = Files.readAllBytes(stored.notes());
+        byte[] diagram = Files.readAllBytes(stored.diagram());
+        return new ReviewInput(decode(notes), decode(diagram), fingerprint(stored.problemId(), notes, diagram));
+    }
+
+    private static String decode(byte[] bytes) throws IOException {
+        return StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
+    }
+
+    private static String fingerprint(String problemId, byte[] notes, byte[] diagram) {
         MessageDigest digest = digest("SHA-256");
         update(digest, ("revision=" + REVISION).getBytes(StandardCharsets.UTF_8));
-        update(digest, ("problem=" + stored.problemId()).getBytes(StandardCharsets.UTF_8));
-        update(digest, Files.readAllBytes(stored.notes()));
-        update(digest, Files.readAllBytes(stored.diagram()));
+        update(digest, ("problem=" + problemId).getBytes(StandardCharsets.UTF_8));
+        update(digest, notes);
+        update(digest, diagram);
         return HexFormat.of().formatHex(digest.digest());
     }
 

@@ -33,6 +33,10 @@ well-informed layer and propagate deadlines.
 - **Open:** calls fail fast or use an explicit fallback.
 - **Half-open:** a small number of probes test recovery.
 
+Each call belongs to the state generation that granted its permission. Completions
+from an older generation still return or throw, but cannot reset health, reopen
+the breaker, or complete a newer recovery window.
+
 Use error rate and latency over a meaningful sample, not one failure. A circuit
 breaker protects capacity; it does not repair the dependency.
 

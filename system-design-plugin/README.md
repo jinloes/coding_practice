@@ -49,10 +49,17 @@ the web pages.
    `No hire`), a 1–4 score with strengths, gaps, review-over-review score
    deltas, and targeted **Study guide** links for each rubric dimension,
    follow-up questions, and missed expectations.
+   Notes and diagram text are captured once per submission; the stored review
+   fingerprint identifies exactly those captured bytes, even if you edit later.
 5. Answer the interviewer's probing questions directly in the **Interactive
    follow-up round** box (optionally updating your diagram or notes first) and
    click **Submit follow-up answers** for a probed debrief. Earlier reviews on
    the same attempt remain available from the review history selector.
+
+If another project/editor saves the same diagram first, your stale scene is not
+allowed to overwrite it. The save-conflict banner keeps your local scene dirty:
+copy it before reopening the diagram. Feedback waits until save errors are
+resolved; the plugin does not silently reload or merge conflicting scenes.
 
 The rubric dimensions are: Requirements and scope, Capacity estimates, API and
 data model, High-level architecture, Deep dives and scalability, Reliability and

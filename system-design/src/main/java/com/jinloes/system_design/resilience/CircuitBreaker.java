@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 /**
  * State-machine circuit breaker ({@code CLOSED -> OPEN -> HALF_OPEN}) that fails fast while a
  * downstream dependency is unhealthy and bounds recovery probe concurrency.
+ * Outcomes update health only in the state generation that granted their permission.
  *
  * <p>See {@code docs/patterns/resilience.md}.
  */
@@ -31,6 +32,7 @@ public final class CircuitBreaker {
     private final Clock clock;
 
     private State state = State.CLOSED;
+    private long generation;
     private int consecutiveFailures;
     private Instant openedAt;
     private int halfOpenInFlightOrUsedProbes;
@@ -60,18 +62,21 @@ public final class CircuitBreaker {
 
     public <T> T execute(Supplier<T> call) {
         Objects.requireNonNull(call, "call must not be null");
-        State observedState = acquirePermission();
+        Permission permission = acquirePermission();
         try {
             T result = call.get();
-            onSuccess(observedState);
+            onSuccess(permission);
             return result;
         } catch (RuntimeException | Error ex) {
-            onFailure(observedState);
+            onFailure(permission);
             throw ex;
         }
     }
 
-    private synchronized State acquirePermission() {
+    private record Permission(State state, long generation) {
+    }
+
+    private synchronized Permission acquirePermission() {
         advanceIfOpenExpired();
         if (state == State.OPEN) {
             throw new CallNotPermittedException(State.OPEN);
@@ -82,11 +87,14 @@ public final class CircuitBreaker {
             }
             halfOpenInFlightOrUsedProbes++;
         }
-        return state;
+        return new Permission(state, generation);
     }
 
-    private synchronized void onSuccess(State callState) {
-        if (callState == State.HALF_OPEN && state == State.HALF_OPEN) {
+    private synchronized void onSuccess(Permission permission) {
+        if (permission.generation() != generation) {
+            return;
+        }
+        if (permission.state() == State.HALF_OPEN) {
             halfOpenSuccesses++;
             if (halfOpenSuccesses >= halfOpenMaxProbes) {
                 transitionToClosed();
@@ -96,8 +104,11 @@ public final class CircuitBreaker {
         }
     }
 
-    private synchronized void onFailure(State callState) {
-        if (callState == State.HALF_OPEN || state == State.HALF_OPEN) {
+    private synchronized void onFailure(Permission permission) {
+        if (permission.generation() != generation) {
+            return;
+        }
+        if (permission.state() == State.HALF_OPEN) {
             tripOpen();
             return;
         }
@@ -112,6 +123,7 @@ public final class CircuitBreaker {
     private void advanceIfOpenExpired() {
         if (state == State.OPEN && !clock.instant().isBefore(openedAt.plus(openDuration))) {
             state = State.HALF_OPEN;
+            generation++;
             halfOpenInFlightOrUsedProbes = 0;
             halfOpenSuccesses = 0;
         }
@@ -119,6 +131,7 @@ public final class CircuitBreaker {
 
     private void tripOpen() {
         state = State.OPEN;
+        generation++;
         openedAt = clock.instant();
         consecutiveFailures = 0;
         halfOpenInFlightOrUsedProbes = 0;
@@ -127,6 +140,7 @@ public final class CircuitBreaker {
 
     private void transitionToClosed() {
         state = State.CLOSED;
+        generation++;
         consecutiveFailures = 0;
         openedAt = null;
         halfOpenInFlightOrUsedProbes = 0;

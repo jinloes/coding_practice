@@ -64,6 +64,8 @@ public class PCRE2Engine {
    * <p>The input is encoded as UTF-8 before matching. PCRE2 returns byte offsets in the
    * ovector, so after each match the byte end offset is decoded back to a Java char offset
    * to advance the search position correctly for multi-byte characters.
+   * Empty matches are retained, then advance by one Unicode code point; an empty
+   * match at the end of the input terminates the search.
    *
    * @param input  the string to search
    * @param regex  the PCRE2 pattern
@@ -87,6 +89,12 @@ public class PCRE2Engine {
       matches.add(new String(inputBytes, start, end - start, StandardCharsets.UTF_8));
       // Convert byte end offset back to char offset for the next match call
       charOffset = new String(inputBytes, 0, end, StandardCharsets.UTF_8).length();
+      if (start == end) {
+        if (charOffset == input.length()) {
+          break;
+        }
+        charOffset = input.offsetByCodePoints(charOffset, 1);
+      }
     }
     return matches;
   }

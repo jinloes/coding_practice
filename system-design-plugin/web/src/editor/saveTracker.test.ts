@@ -2,6 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { SaveTracker } from './saveTracker';
 
 describe('SaveTracker', () => {
+  it('keeps a conflicting local scene dirty and retries those same bytes on flush', () => {
+    const tracker = new SaveTracker();
+    tracker.reset('disk-0', 'norm-0', '');
+    tracker.recordChange('local-1', () => 'norm-1');
+    expect(tracker.prepareSave('local scene', 'local-1')).toEqual({ seq: 1, bytes: 'local scene' });
+    const conflict = 'Another editor changed this diagram. Copy your unsaved scene before reopening it.';
+
+    expect(tracker.handleResult(1, conflict)).toEqual({ dirty: true, error: conflict });
+    expect(tracker.prepareSave('local scene', 'local-1')).toEqual({ seq: 2, bytes: 'local scene' });
+    expect(tracker.handleResult(2, conflict)).toEqual({ dirty: true, error: conflict });
+  });
+
   it('ignores initial render when normalized content matches loaded content', () => {
     const tracker = new SaveTracker();
     tracker.reset('{"type":"excalidraw","elements":[]}', '[[],{}]', '');

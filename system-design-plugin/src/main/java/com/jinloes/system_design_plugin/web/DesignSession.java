@@ -133,13 +133,12 @@ public final class DesignSession {
         Attempt stored = workspace.read(attempt.id());
         Problem problem = DesignCatalog.find(stored.problemId());
         String normalizedLevel = DesignCatalog.normalizeLevel(targetLevel);
-        String fingerprint = workspace.fingerprint(stored);
-        String notes = workspace.readNotes(stored);
-        String summary = DiagramSummary.summarize(workspace.readDiagram(stored));
+        DesignWorkspace.ReviewInput input = workspace.reviewInput(stored);
+        String summary = DiagramSummary.summarize(input.diagram());
         String answers = followUpAnswers == null ? "" : followUpAnswers;
         List<String> priorFollowUps = answers.isBlank() ? List.of() : latestParsedFollowUpQuestions(stored);
-        String prompt = InterviewPrompt.build(problem, normalizedLevel, notes, summary, priorFollowUps, answers);
-        return new PreparedReview(stored, problem, normalizedLevel, fingerprint, answers, prompt);
+        String prompt = InterviewPrompt.build(problem, normalizedLevel, input.notes(), summary, priorFollowUps, answers);
+        return new PreparedReview(stored, problem, normalizedLevel, input.fingerprint(), answers, prompt);
     }
 
     public InterviewFeedback.Stored recordCompletedReview(

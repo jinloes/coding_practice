@@ -16,7 +16,12 @@ Use the Gradle wrapper from the repository root (requires JDK 25 for the Gradle 
 ./gradlew :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
 ./gradlew :practice-plugin:test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=pair-sum
 ./gradlew :system-design-plugin:check
+bash ./gradlew :concurrency:check :cryptography:check :reflection:check :regex:check :system-design:check --no-daemon --console=plain
 ```
+
+The last command matches `.github/workflows/root-modules.yml`. It requires a
+working native PCRE2 library; Ubuntu CI installs `libpcre2-8-0`. Root-only
+changes do not replace the standalone plugin checks.
 
 ## Coding And Test Conventions
 

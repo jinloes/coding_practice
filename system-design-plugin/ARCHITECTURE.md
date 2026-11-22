@@ -54,7 +54,9 @@ editor never opens other `.excalidraw` files.
 
 The fingerprint is a SHA-256 over the workspace revision, the problem id, and the
 notes and diagram bytes. Stored feedback records the fingerprint it graded;
-feedback is stale when the current fingerprint differs. The diagram editor writes
+prompt preparation captures each file once and derives immutable text and the
+revision-1 fingerprint from those exact raw bytes. Later saves cannot change a
+prepared review's provenance. Feedback is stale when the current fingerprint differs. The diagram editor writes
 only when elements or files change, so panning or zooming does not make feedback
 stale.
 
@@ -91,7 +93,11 @@ exists, receives `designLoad(scene, dark)`, and
 posts sequenced whole-scene `save` (`{type, seq, scene}`) messages debounced by
 300 ms. `PageEvent.parseEditor` rejects scenes over 10 MiB or that are not
 Excalidraw JSON while preserving any extractable `seq`; `DiagramEditor`
-re-checks ownership, ignores superseded sequences, writes through the VFS, and
+re-checks ownership, ignores superseded sequences, and compares persisted bytes
+against a defensively owned load/last-successful-save baseline before replacement
+in the same VFS WriteAction. Only successful writes advance the baseline. A
+conflicting editor must copy its unsaved scene before reopening; there is no
+automatic merge or reload. The editor
 reports the result with `designSaveResult(seq, error)`. A failed save keeps the
 scene dirty and shows a banner. `designFlush(seq)` saves immediately and posts a
 sequenced `flushed` (`{type, seq}`) message; once `ready` has arrived, the IDE
@@ -103,7 +109,8 @@ before feedback.
 1. Save all documents and flush open diagram editors for the attempt; if a flush
    times out or an open diagram has an unresolved save error, abort before
    invoking the CLI so stale disk content is never graded.
-2. In a cancellable background task: fingerprint, read notes and diagram, and
+2. In a cancellable background task: capture notes and diagram once, fingerprint
+   those exact bytes, and
    build a text `DiagramSummary`. Before applying the 500-element limit,
    `DiagramLabels` attaches standalone `T`-tool text positioned inside unlabeled
    shapes in the same frame and redirects arrows bound to those text elements to
