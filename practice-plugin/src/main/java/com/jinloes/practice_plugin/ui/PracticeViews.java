@@ -3,6 +3,8 @@ package com.jinloes.practice_plugin.ui;
 import com.intellij.ui.ColorUtil;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.OnePixelSplitter;
+import com.intellij.ui.SimpleTextAttributes;
+import com.intellij.ui.components.ActionLink;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
@@ -63,10 +65,6 @@ final class PracticeViews {
         };
     }
 
-    static String problemText(Exercise exercise) {
-        return problemText(exercise, Set.of());
-    }
-
     static String problemText(Exercise exercise, Set<String> passed) {
         StringBuilder html = new StringBuilder()
                 .append("<h2>").append(MarkdownHtml.inline(exercise.title()))
@@ -103,16 +101,37 @@ final class PracticeViews {
     }
 
     /**
-     * Renders the Problem tab, whose statements are Markdown. Uses Swing's own HTML kit rather than
-     * a platform-specific pane so the rendering does not depend on an IDE version's HTML API.
+     * Renders themed Markdown HTML panes. Uses Swing's own HTML kit rather than a platform-specific
+     * pane so rendering does not depend on an IDE version's HTML API, and refreshes CSS rules across
+     * Look-and-Feel changes while preserving the current scroll/caret position.
      */
     static JEditorPane htmlPane() {
-        JEditorPane pane = new JEditorPane();
+        return htmlPane(null);
+    }
+
+    static JEditorPane htmlPane(Supplier<String> bodySupplier) {
+        JEditorPane pane = new JEditorPane() {
+            @Override
+            public void updateUI() {
+                int savedCaret = getDocument() == null ? 0 : getCaretPosition();
+                super.updateUI();
+                applyHtmlTheme(this);
+                String body = bodySupplier == null ? null : bodySupplier.get();
+                if (body != null) {
+                    setText("<html><body>" + body + "</body></html>");
+                    setCaretPosition(Math.min(savedCaret, getDocument().getLength()));
+                }
+            }
+        };
         pane.setEditable(false);
         pane.setOpaque(true);
         pane.setBorder(JBUI.Borders.empty());
-        applyHtmlTheme(pane);
         return pane;
+    }
+
+    static void setHtmlBody(JEditorPane pane, String bodyHtml) {
+        pane.setText("<html><body>" + bodyHtml + "</body></html>");
+        pane.setCaretPosition(0);
     }
 
     static void applyHtmlTheme(JEditorPane pane) {
@@ -176,7 +195,7 @@ final class PracticeViews {
         });
     }
 
-    static JPanel hintTab(JBTextArea hints, HintButton hintButton) {
+    static JPanel hintTab(JComponent hints, HintButton hintButton) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JBScrollPane(hints), BorderLayout.CENTER);
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -193,31 +212,38 @@ final class PracticeViews {
         return panel;
     }
 
-    static JPanel header(ExerciseFilters filters, JBLabel count) {
+    static JPanel header(ExerciseFilters filters, JBLabel count, ActionLink resetFilters) {
         JPanel panel = column();
         filters.addTo(panel);
         count.setFont(JBFont.small());
         count.setForeground(UIUtil.getContextHelpForeground());
-        panel.add(count);
+        resetFilters.setFont(JBFont.small());
+        JPanel footer = new JPanel(new BorderLayout(8, 0));
+        footer.add(count, BorderLayout.WEST);
+        footer.add(resetFilters, BorderLayout.EAST);
+        panel.add(footer);
         return panel;
     }
 
     static JBList<Exercise> exerciseList(
             DefaultListModel<Exercise> model,
             Supplier<Set<String>> passed,
-            Runnable onActivate
+            Runnable onActivate,
+            Runnable onResetFilters
     ) {
         JBList<Exercise> list = new JBList<>(model);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setCellRenderer(new ExerciseCellRenderer(passed));
         list.getEmptyText().setText("No exercises match these filters");
+        list.getEmptyText().appendSecondaryText(
+                "Reset filters", SimpleTextAttributes.LINK_PLAIN_ATTRIBUTES, _ -> onResetFilters.run());
         list.getAccessibleContext().setAccessibleName("Exercises");
         installListActivation(list, onActivate);
         return list;
     }
 
     static OnePixelSplitter splitter(JComponent first, JComponent second) {
-        OnePixelSplitter split = new OnePixelSplitter(true, 0.35f);
+        OnePixelSplitter split = new OnePixelSplitter(true, "algorithm.practice.splitter", 0.35f);
         split.setFirstComponent(new JBScrollPane(first));
         split.setSecondComponent(second);
         return split;

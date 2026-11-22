@@ -72,13 +72,20 @@ jobs:
           else
             DIFF_RANGE="HEAD~1...HEAD"
           fi
-          CHANGED=$(git diff --name-only "$DIFF_RANGE" 2>/dev/null \
-            | sed -n -E 's#^practice-plugin/src/(main/resources/exercises|test/resources/(reference|known-wrong))/([^/]+)/.*#\3#p' \
-            | sort -u | paste -sd, - || true)
-          if [ -n "$CHANGED" ]; then
-            ONLY=$(printf "%s,%s" "$BASE_IDS" "$CHANGED" | tr ',' '\n' | sort -u | paste -sd, -)
-          else
-            ONLY="$BASE_IDS"
+          CHANGED=$(git diff --diff-filter=ACMR --name-only "$DIFF_RANGE" 2>/dev/null \
+            | sed -n -E 's#^practice-plugin/src/(main/resources/exercises|test/resources/(reference|known-wrong))/([^/]+)/.*#\3#p' || true)
+          filter_existing() {
+            while IFS= read -r id; do
+              if [ -n "$id" ] && [ -f "practice-plugin/src/main/resources/exercises/$id/exercise.json" ]; then
+                printf '%s\n' "$id"
+              fi
+            done
+          }
+          ONLY=$({ printf '%s\n' "$BASE_IDS" | tr ',' '\n'; printf '%s\n' "$CHANGED"; } \
+            | sort -u | filter_existing | paste -sd, - || true)
+          if [ -z "$ONLY" ] && [ -f "practice-plugin/src/main/resources/exercises/index.txt" ]; then
+            ONLY=$(tr -d '\r' < "practice-plugin/src/main/resources/exercises/index.txt" \
+              | filter_existing | sed -n '1,3p' | paste -sd, - || true)
           fi
           echo "only=$ONLY" >> "$GITHUB_OUTPUT"
 

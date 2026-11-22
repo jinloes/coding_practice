@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.util.execution.ParametersListUtil;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
+import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 
 /** Builds the temporary native Application run configuration for a visible-example or input run. */
 final class ExampleRunConfigurations {
@@ -16,8 +17,8 @@ final class ExampleRunConfigurations {
     }
 
     /**
-     * Creates, registers as temporary, and selects the configuration. Requires the caller to hold
-     * read access and the write-intent lock.
+     * Creates, registers as temporary, tracks for project disposal, and selects the configuration.
+     * Requires the caller to hold read access and the write-intent lock.
      */
     static RunnerAndConfigurationSettings install(
             Project project,
@@ -38,6 +39,7 @@ final class ExampleRunConfigurations {
         configuration.setWorkingDirectory(attempt.directory().toString());
         configuration.setProgramParameters(input.isEmpty() ? null : encodeArgument(input));
         manager.setTemporaryConfiguration(settings);
+        PracticeModuleWorkspace.get(project).track(settings);
         manager.setSelectedConfiguration(settings);
         return settings;
     }

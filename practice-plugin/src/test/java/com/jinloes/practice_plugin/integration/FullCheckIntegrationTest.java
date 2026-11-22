@@ -38,7 +38,8 @@ class FullCheckIntegrationTest extends PracticeExecutionTestBase {
         CountDownLatch completed = new CountDownLatch(1);
         AtomicReference<String> result = new AtomicReference<>("");
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.addListener(text -> {
+        runner.addEventListener(event -> {
+            String text = event.text();
             result.set(text);
             if (text.startsWith("Managed attempt:") && text.contains("Full check:")) {
                 completed.countDown();
@@ -139,11 +140,11 @@ class FullCheckIntegrationTest extends PracticeExecutionTestBase {
     @Test
     void runnerListenersCanBeRemoved() {
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        java.util.function.Consumer<String> listener = ignored -> {};
+        java.util.function.Consumer<com.jinloes.practice_plugin.run.RunEvent> listener = ignored -> {};
 
-        runner.addListener(listener);
+        runner.addEventListener(listener);
         assertThat(runner.listenerCount()).isPositive();
-        runner.removeListener(listener);
+        runner.removeEventListener(listener);
 
         assertThat(runner.listenerCount()).isZero();
     }
@@ -213,7 +214,8 @@ class FullCheckIntegrationTest extends PracticeExecutionTestBase {
     private ManagedCheck launchFullCheck() throws Exception {
         ManagedCheck check = new ManagedCheck();
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.addListener(text -> {
+        runner.addEventListener(event -> {
+            String text = event.text();
             check.status.set(text);
             if (text.startsWith("Managed attempt:") && text.contains("Full check:")) {
                 check.completed.countDown();

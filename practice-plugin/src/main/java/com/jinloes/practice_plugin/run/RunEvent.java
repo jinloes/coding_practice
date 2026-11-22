@@ -52,20 +52,14 @@ public sealed interface RunEvent {
 
     /** Thread-safe listener registry shared by one {@link PracticeRunner}. */
     final class Listeners {
-        private record Registration(Object key, Consumer<RunEvent> consumer) {}
-
-        private final List<Registration> entries = new CopyOnWriteArrayList<>();
+        private final List<Consumer<RunEvent>> entries = new CopyOnWriteArrayList<>();
 
         void addEvent(Consumer<RunEvent> listener) {
-            entries.add(new Registration(listener, listener));
+            entries.add(listener);
         }
 
-        void remove(Object key) {
-            entries.removeIf(entry -> entry.key().equals(key));
-        }
-
-        void addText(Consumer<String> listener) {
-            entries.add(new Registration(listener, event -> listener.accept(event.text())));
+        void remove(Consumer<RunEvent> listener) {
+            entries.remove(listener);
         }
 
         int size() {
@@ -75,7 +69,7 @@ public sealed interface RunEvent {
         void publish(Project project, RunEvent event) {
             ApplicationManager.getApplication().invokeLater(() -> {
                 if (!project.isDisposed()) {
-                    entries.forEach(each -> each.consumer().accept(event));
+                    entries.forEach(each -> each.accept(event));
                 }
             });
         }

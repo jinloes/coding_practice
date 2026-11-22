@@ -1,6 +1,6 @@
 import { act, render as renderDom, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { attachSend, render as pushState, resetBridgeForTest, send, snapshot } from './bridge';
 import { renderSample } from './sample';
@@ -18,7 +18,12 @@ const THEME: Theme = {
   fontSize: 13,
 };
 
-function problemState(id: string, passed = true): PageState {
+function problemState(
+  id: string,
+  passed = true,
+  hasAttempt = true,
+  canRunExamples = true,
+): PageState {
   return {
     theme: THEME,
     page: {
@@ -32,8 +37,11 @@ function problemState(id: string, passed = true): PageState {
         statementHtml: '<p>Find two indices.</p>',
         examples: [{ input: 'nums = [2, 7], target = 9', output: '[0, 1]' }],
         inputSyntax: 'Input: <nums> | <target>, for example: [2,7] | 9',
+        sampleInput: '[2, 7] 9',
         intendedTime: 'O(n)',
         intendedSpace: 'O(n)',
+        hasAttempt,
+        canRunExamples,
         guides: [{ id: 'hash-maps', title: 'Hash Maps and Sets' }],
         tracks: [{ id: 'blind-75', title: 'Blind 75' }],
       },
@@ -66,6 +74,10 @@ describe('bridge', () => {
 describe('App', () => {
   beforeEach(() => {
     resetBridgeForTest();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('renders problem metadata, resets accordion state across exercises, and forwards badge clicks', async () => {
@@ -108,6 +120,83 @@ describe('App', () => {
       pushState({ theme: THEME, page: { kind: 'problem', problem: null } });
     });
     expect(screen.getByText('No exercises match these filters.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Reset filters' }));
+    expect(sent).toContainEqual({ type: 'clearFilters' });
+  });
+
+  it('wires problem action buttons and sample input controls', async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText');
+    const sent: unknown[] = [];
+    attachSend((message) => sent.push(JSON.parse(message)));
+
+    renderDom(<App />);
+    act(() => {
+      pushState(problemState('pair-sum', false, false, false));
+    });
+
+    expect(screen.getByRole('button', { name: 'Start Attempt' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Run Examples' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Start Attempt' }));
+    expect(sent).toEqual([{ type: 'startOrOpen' }]);
+
+    act(() => {
+      pushState(problemState('pair-sum', false, true, false));
+    });
+    expect(screen.getByRole('button', { name: 'Open Solution.java' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Run Examples' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Custom input format' }));
+    expect(screen.getByRole('button', { name: 'Run sample' })).toBeDisabled();
+
+    act(() => {
+      pushState(problemState('pair-sum', false, true, true));
+    });
+    expect(screen.getByRole('button', { name: 'Open Solution.java' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Run Examples' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Run Examples' }));
+
+    expect(screen.getByText('[2, 7] 9')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Copy sample input' }));
+    expect(writeText).toHaveBeenCalledWith('[2, 7] 9');
+    expect(await screen.findByText('Copied')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Run sample' }));
+    expect(sent).toEqual([
+      { type: 'startOrOpen' },
+      { type: 'runExamples' },
+      { type: 'runSample' },
+    ]);
+  });
+
+  it('falls back to execCommand when clipboard.writeText rejects and hides Copied when copy fails', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
+    const execCommand = vi.fn(() => true);
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      writable: true,
+      value: execCommand,
+    });
+
+    renderDom(<App />);
+    act(() => {
+      pushState(problemState('pair-sum'));
+    });
+    await user.click(screen.getByRole('button', { name: 'Custom input format' }));
+    await user.click(screen.getByRole('button', { name: 'Copy sample input' }));
+    expect(execCommand).toHaveBeenCalledWith('copy');
+    expect(await screen.findByText('Copied')).toBeInTheDocument();
+
+    execCommand.mockImplementation(() => {
+      throw new Error('unsupported');
+    });
+    act(() => {
+      pushState(problemState('binary-search'));
+    });
+    await user.click(screen.getByRole('button', { name: 'Custom input format' }));
+    await user.click(screen.getByRole('button', { name: 'Copy sample input' }));
+    await Promise.resolve();
+    expect(screen.queryByText('Copied')).not.toBeInTheDocument();
   });
 
   it('renders study guides, practice tracks, and chooser states', async () => {
@@ -150,10 +239,32 @@ describe('App', () => {
     expect(screen.getByText('1/3 passed')).toBeInTheDocument();
     expect(screen.getByText('1/2 passed')).toBeInTheDocument();
     expect(screen.getByText('0/1 passed')).toBeInTheDocument();
-    expect(screen.getByText('No Medium problems in this guide yet.')).toBeInTheDocument();
+    expect(screen.getByText('No Medium problems in this track yet.')).toBeInTheDocument();
 
     await user.click(screen.getByText('Move Zeroes'));
     expect(onSend).toHaveBeenCalledWith(JSON.stringify({ type: 'selectExercise', id: 'move-zeroes' }));
+
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'guide',
+          guide: {
+            id: 'graphs',
+            title: 'Graphs',
+            kind: 'guide',
+            summaryHtml: 'Graph traversals.',
+            lessonHtml: '<p>How it works</p>',
+            levels: [
+              { level: 'Easy', exercises: [] },
+              { level: 'Medium', exercises: [{ id: 'course-schedule', title: 'Course Schedule', topic: 'Graphs', passed: false, selected: false }] },
+              { level: 'Hard', exercises: [] },
+            ],
+          },
+        },
+      });
+    });
+    expect(screen.getByText('No Easy problems in this guide yet.')).toBeInTheDocument();
 
     act(() => {
       pushState({

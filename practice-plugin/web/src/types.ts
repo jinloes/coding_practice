@@ -25,8 +25,11 @@ export type Problem = {
   statementHtml: string;
   examples: Example[];
   inputSyntax: string;
+  sampleInput: string;
   intendedTime: string;
   intendedSpace: string;
+  hasAttempt: boolean;
+  canRunExamples: boolean;
   guides: Link[];
   tracks: Link[];
 };
@@ -59,4 +62,6 @@ export type Page =
 
 export type PageState = { theme: Theme; page: Page };
 
-export type PageEvent = { type: 'selectExercise' | 'selectGuide' | 'selectTrack'; id: string };
+export type PageEvent =
+  | { type: 'selectExercise' | 'selectGuide' | 'selectTrack'; id: string }
+  | { type: 'clearFilters' | 'startOrOpen' | 'runExamples' | 'runSample'; id?: string };

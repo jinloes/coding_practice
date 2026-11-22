@@ -10,10 +10,15 @@ import java.util.Set;
 sealed interface PracticePage {
     Set<String> passed();
 
-    /** The selected exercise's statement, or the empty state when {@code exercise} is null. */
-    record Problem(Exercise exercise, Set<String> passed) implements PracticePage {
+    /** The selected exercise's statement and action state, or the empty state when {@code exercise} is null. */
+    record Problem(Exercise exercise, Set<String> passed, boolean hasAttempt, boolean canRunExamples)
+            implements PracticePage {
         public Problem {
             passed = Set.copyOf(Objects.requireNonNull(passed, "passed"));
+        }
+
+        Problem(Exercise exercise, Set<String> passed) {
+            this(exercise, passed, false, false);
         }
     }
 

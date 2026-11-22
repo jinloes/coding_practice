@@ -60,7 +60,10 @@ final class ResultsView {
         stale = false;
         showStatus(entry);
         String details = entry.details == null ? "" : entry.details;
-        String complexity = entry.complexity == null || entry.complexity.isBlank() ? "" : "\n\n" + entry.complexity;
+        String complexity = "PASSED".equals(entry.status)
+                && entry.complexity != null && !entry.complexity.isBlank()
+                ? "\n\n" + entry.complexity
+                : "";
         setOutput(details + complexity);
     }
 

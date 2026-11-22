@@ -23,6 +23,7 @@ final class StudyGuideView {
         if (guide == null) {
             return chooser(selected);
         }
+        boolean track = TrackCatalog.isTrack(guide.id());
         StringBuilder html = new StringBuilder()
                 .append("<h2>").append(MarkdownHtml.inline(guide.title())).append("</h2>")
                 .append("<p><i>").append(MarkdownHtml.inline(guide.summary())).append("</i></p>")
@@ -33,7 +34,8 @@ final class StudyGuideView {
             html.append("<h3>").append(level).append(" (").append(done).append('/')
                     .append(exercises.size()).append(" passed)</h3>");
             if (exercises.isEmpty()) {
-                html.append("<p>No ").append(level).append(" problems in this guide yet.</p>");
+                html.append("<p>No ").append(level).append(" problems in this ")
+                        .append(track ? "track" : "guide").append(" yet.</p>");
                 continue;
             }
             html.append("<ul>");

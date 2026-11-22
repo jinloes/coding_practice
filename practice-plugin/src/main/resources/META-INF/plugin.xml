@@ -16,4 +16,30 @@
         <notificationGroup id="Algorithm Practice" displayType="BALLOON"/>
         <configurationType implementation="com.jinloes.practice_plugin.run.PracticeConfigurationType"/>
     </extensions>
+    <actions>
+        <group id="AlgorithmPractice.Actions" text="Algorithm Practice"
+               description="Algorithm Practice actions" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="AlgorithmPractice.StartOrOpenAttempt"
+                    class="com.jinloes.practice_plugin.ui.PracticeIdeActions$StartOrOpenAttempt"
+                    text="Start or Open Attempt"
+                    description="Create or open Solution.java for the selected exercise"/>
+            <action id="AlgorithmPractice.RunExamples"
+                    class="com.jinloes.practice_plugin.ui.PracticeIdeActions$RunExamples"
+                    text="Run Examples"
+                    description="Run the visible examples for the selected attempt"/>
+            <action id="AlgorithmPractice.DebugExamples"
+                    class="com.jinloes.practice_plugin.ui.PracticeIdeActions$DebugExamples"
+                    text="Debug Examples"
+                    description="Debug the visible examples for the selected attempt"/>
+            <action id="AlgorithmPractice.CheckSolution"
+                    class="com.jinloes.practice_plugin.ui.PracticeIdeActions$CheckSolution"
+                    text="Check Solution"
+                    description="Run the full test suite and complexity probe for the selected attempt"/>
+            <action id="AlgorithmPractice.StopRun"
+                    class="com.jinloes.practice_plugin.ui.PracticeIdeActions$StopRun"
+                    text="Stop Practice Run"
+                    description="Stop the active practice run or full check"/>
+        </group>
+    </actions>
 </idea-plugin>

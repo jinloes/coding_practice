@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,7 +24,7 @@ class HtmlPageViewTest {
         String passed = HtmlPageView.html(new PracticePage.Problem(exercise, Set.of(exercise.id())));
 
         assertThat(unpassed)
-                .isEqualTo(PracticeViews.problemText(exercise))
+                .isEqualTo(PracticeViews.problemText(exercise, Set.of()))
                 .contains(exercise.title(), exercise.difficulty(), exercise.topic(),
                         exercise.intendedTime(), exercise.intendedSpace(), exercise.inputSyntax(),
                         "Two Pointers", "Linked Lists", "Blind 75")
@@ -33,7 +34,7 @@ class HtmlPageViewTest {
                 .contains("Not part of any guide yet.")
                 .doesNotContain("Practice tracks:");
         assertThat(HtmlPageView.html(new PracticePage.Problem(null, Set.of())))
-                .isEqualTo("<p>No exercises match these filters.</p>");
+                .isEqualTo("<p>No exercises match these filters. Use Reset filters above the exercise list to show all exercises.</p>");
     }
 
     @Test
@@ -105,6 +106,16 @@ class HtmlPageViewTest {
         assertThat(kit.getStyleSheet())
                 .as("plugin HTML panes must not mutate Swing's shared default StyleSheet")
                 .isNotSameAs(globalStyles);
+
+        AtomicReference<String> supplied = new AtomicReference<>("<p>Initial hint body</p>");
+        var suppliedPane = PracticeViews.htmlPane(supplied::get);
+        assertThat(suppliedPane.getText())
+                .as("supplier-backed HTML panes populate their initial document during construction")
+                .contains("Initial hint body");
+        assertThat(suppliedPane.getDocument().getLength()).isPositive();
+        supplied.set("<p>Updated hint body</p>");
+        suppliedPane.updateUI();
+        assertThat(suppliedPane.getText()).contains("Updated hint body");
 
         HtmlPageView view = new HtmlPageView();
         view.show(new PracticePage.Problem(ExerciseCatalog.find("pair-sum"), Set.of("pair-sum")));

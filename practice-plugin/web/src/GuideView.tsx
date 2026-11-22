@@ -37,13 +37,13 @@ export function GuideView({ guide }: { guide: Guide }) {
       <Html html={guide.lessonHtml} />
 
       {guide.levels.map((level) => (
-        <LevelSection key={level.level} level={level} />
+        <LevelSection key={level.level} level={level} kind={guide.kind} />
       ))}
     </Stack>
   );
 }
 
-function LevelSection({ level }: { level: GuideLevel }) {
+function LevelSection({ level, kind }: { level: GuideLevel; kind: Guide['kind'] }) {
   const passed = level.exercises.filter((exercise) => exercise.passed).length;
   return (
     <Stack gap={4}>
@@ -55,7 +55,7 @@ function LevelSection({ level }: { level: GuideLevel }) {
       </Group>
       {level.exercises.length === 0 ? (
         <Text size="sm" c="dimmed">
-          No {level.level} problems in this guide yet.
+          No {level.level} problems in this {kind === 'track' ? 'track' : 'guide'} yet.
         </Text>
       ) : (
         level.exercises.map((exercise) => (

@@ -54,16 +54,21 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
 ## Practice workflow
 
 1. Open **View > Tool Windows > Practice**.
-2. Choose a problem and **Start / Resume** (or double-click it or press
-   **Enter** in the exercise list). The plugin creates
+2. Choose a problem and click **Start Attempt** (or **Open Solution** /
+   **Open Solution.java** when an attempt already exists, or double-click or
+   press **Enter** in the exercise list). If active filters hide all exercises,
+   click **Reset filters** in the header, empty list, or Problem tab to restore
+   the full catalog. Creating an attempt writes
    `algorithm-practice/attempts/<exercise-id>/<attempt-id>/src/main/java/`
    `com/jinloes/practice/Solution.java` below the IDE configuration directory,
    opens it, and remembers it from every host project. **New Attempt** creates a
    distinct attempt and never overwrites an earlier one.
 3. Write only the requested API in the opened `Solution.java`. Starters contain
    no main method, assertions, or test harness. The Problem tab shows three
-   structured input/output examples.
-4. **Run Examples** generates a temporary AssertJ-backed `ExampleRunner.java`
+   structured input/output examples plus a **Custom input format** section with
+   **Copy sample input** and **Run sample** controls.
+4. **Run Examples** (available on both the Problem tab and the run toolbar)
+   generates a temporary AssertJ-backed `ExampleRunner.java`
    outside durable storage, compiled and launched against the AssertJ jars the
    plugin bundles, and **Debug Examples** launches those visible examples under
    the debugger. **Run With Input...** prompts for one case, shows that
@@ -75,8 +80,9 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    breakpoint in the solution gives IntelliJ's usual stepping and variable
    inspection. After a run the **Results** banner says whether the examples
    passed, did not finish successfully, or could not run; custom input only
-   points you to the Run console. **Reveal Next Hint** is available once an
-   attempt is started or resumed.
+   points you to the Run console. On the **Hints** tab, **Reveal Hint** unlocks
+   progressive formatted hints (`Reveal Hint 1 of 3` .. `3 of 3`) once an
+   attempt is selected and disables automatically after all hints are revealed.
 5. **Check Solution** copies the saved solution and bundled tests to a unique
    plugin-owned workspace, compiles them with `javac --release 17`, and executes
    examples and additional correctness cases offline against bundled JUnit and
@@ -84,7 +90,10 @@ Open `practice-plugin/` as its own Gradle project when developing the plugin.
    and assertion details, or the native **Run** console for compiler diagnostics
    and process output. When every test passes, a separate child JVM measures how
    the saved solution scales and reports the result alongside the exercise's
-   intended complexity.
+   intended complexity. While editing `Solution.java`, you can also invoke
+   **Start or Open Attempt**, **Run Examples**, **Debug Examples**,
+   **Check Solution**, and **Stop Practice Run** from **Tools > Algorithm
+   Practice**, **Find Action**, or custom **Settings > Keymap** shortcuts.
 
 The catalog includes 276 exercises (67 Easy, 176 Medium, 33 Hard). Browse them
 in the Practice tool window by topic, difficulty, guide, or track;
@@ -131,7 +140,8 @@ through a curated set of problems. Bundled tracks:
   voting, and stateful grid simulation.
 
 Tracks are hand curated from the plugin's own original exercises; they are not
-official, verified, or leaked question lists. The **Study Guide** tab shows the
+official, verified, or leaked question lists. When a track is open without a
+study guide selected, the guide tab switches to **Practice Track** and shows the
 track's notes (about the list, what to expect, and how to prepare) and its
 problems grouped by difficulty with your pass progress. Choosing a guide as
 well narrows that guide to the problems in the track, and the other filters

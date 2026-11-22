@@ -32,6 +32,10 @@ final class ExerciseFilters {
             new ComboBox<>(new String[]{"All progress", "Passed before", "Not passed"});
     private final SearchTextField search = new SearchTextField(false);
 
+    private boolean mutating;
+    private Runnable onFilterChange = () -> {};
+    private Runnable onCollectionChange = () -> {};
+
     ExerciseFilters() {
         search.getTextEditor().getEmptyText().setText("Search exercises");
         search.getTextEditor().getAccessibleContext().setAccessibleName("Search exercises");
@@ -68,21 +72,45 @@ final class ExerciseFilters {
     }
 
     void onChange(Runnable changed) {
-        topic.addActionListener(event -> changed.run());
-        difficulty.addActionListener(event -> changed.run());
-        progress.addActionListener(event -> changed.run());
+        onFilterChange = changed;
+        topic.addActionListener(_ -> {
+            if (!mutating) {
+                changed.run();
+            }
+        });
+        difficulty.addActionListener(_ -> {
+            if (!mutating) {
+                changed.run();
+            }
+        });
+        progress.addActionListener(_ -> {
+            if (!mutating) {
+                changed.run();
+            }
+        });
         search.addDocumentListener(new DocumentAdapter() {
             @Override
             protected void textChanged(@NotNull javax.swing.event.DocumentEvent event) {
-                changed.run();
+                if (!mutating) {
+                    changed.run();
+                }
             }
         });
     }
 
     /** Runs {@code changed} when the selected guide or practice track changes. */
     void onGuideChange(Runnable changed) {
-        guide.addActionListener(event -> changed.run());
-        track.addActionListener(event -> changed.run());
+        onCollectionChange = changed;
+        guide.addActionListener(_ -> {
+            if (!mutating) {
+                changed.run();
+            }
+        });
+        track.addActionListener(_ -> {
+            if (!mutating) {
+                changed.run();
+            }
+        });
     }
 
     /** The selected guide, or null for all guides. */
@@ -126,22 +154,101 @@ final class ExerciseFilters {
         track.setSelectedItem(id == null ? ALL_TRACKS : TrackCatalog.find(id));
     }
 
+    /** Opens a study guide from a Problem-tab link, clearing any selected track so the guide owns the view. */
+    void openGuide(String id) {
+        Object target = id == null ? ALL_GUIDES : GuideCatalog.find(id);
+        mutating = true;
+        try {
+            track.setSelectedItem(ALL_TRACKS);
+            guide.setSelectedItem(target);
+        } finally {
+            mutating = false;
+        }
+        onCollectionChange.run();
+    }
+
+    /** Opens a practice track from a Problem-tab link, clearing any selected guide so the track owns the view. */
+    void openTrack(String id) {
+        Object target = id == null ? ALL_TRACKS : TrackCatalog.find(id);
+        mutating = true;
+        try {
+            guide.setSelectedItem(ALL_GUIDES);
+            track.setSelectedItem(target);
+        } finally {
+            mutating = false;
+        }
+        onCollectionChange.run();
+    }
+
+    boolean hasActiveFilters() {
+        return !search.getText().isBlank()
+                || guide.getSelectedIndex() != 0
+                || track.getSelectedIndex() != 0
+                || topic.getSelectedIndex() != 0
+                || difficulty.getSelectedIndex() != 0
+                || progress.getSelectedIndex() != 0;
+    }
+
+    void resetAll() {
+        if (!hasActiveFilters()) {
+            if (!search.getText().isEmpty()) {
+                mutating = true;
+                try {
+                    search.setText("");
+                } finally {
+                    mutating = false;
+                }
+            }
+            return;
+        }
+        boolean collectionWasActive = guide.getSelectedIndex() != 0 || track.getSelectedIndex() != 0;
+        mutating = true;
+        try {
+            search.setText("");
+            guide.setSelectedIndex(0);
+            track.setSelectedIndex(0);
+            topic.setSelectedIndex(0);
+            difficulty.setSelectedIndex(0);
+            progress.setSelectedIndex(0);
+        } finally {
+            mutating = false;
+        }
+        if (collectionWasActive) {
+            onCollectionChange.run();
+        } else {
+            onFilterChange.run();
+        }
+    }
+
     /**
      * Clears whichever filters would hide {@code exercise}: the search, topic, difficulty, and progress
      * filters, and the guide or track only when it does not include the exercise.
      */
     void reveal(Exercise exercise) {
-        search.setText("");
-        topic.setSelectedIndex(0);
-        difficulty.setSelectedIndex(0);
-        progress.setSelectedIndex(0);
-        Guide selected = selectedGuide();
-        if (selected != null && !selected.exercises().contains(exercise)) {
-            guide.setSelectedItem(ALL_GUIDES);
+        boolean collectionChanged = false;
+        mutating = true;
+        try {
+            search.setText("");
+            topic.setSelectedIndex(0);
+            difficulty.setSelectedIndex(0);
+            progress.setSelectedIndex(0);
+            Guide selected = selectedGuide();
+            if (selected != null && !selected.exercises().contains(exercise)) {
+                guide.setSelectedItem(ALL_GUIDES);
+                collectionChanged = true;
+            }
+            Guide selectedTrack = selectedTrack();
+            if (selectedTrack != null && !selectedTrack.exercises().contains(exercise)) {
+                track.setSelectedItem(ALL_TRACKS);
+                collectionChanged = true;
+            }
+        } finally {
+            mutating = false;
         }
-        Guide selectedTrack = selectedTrack();
-        if (selectedTrack != null && !selectedTrack.exercises().contains(exercise)) {
-            track.setSelectedItem(ALL_TRACKS);
+        if (collectionChanged) {
+            onCollectionChange.run();
+        } else {
+            onFilterChange.run();
         }
     }
 
@@ -149,11 +256,23 @@ final class ExerciseFilters {
         difficulty.setSelectedItem(value);
     }
 
+    void selectTopic(String value) {
+        topic.setSelectedItem(value);
+    }
+
+    void selectProgress(String value) {
+        progress.setSelectedItem(value);
+    }
+
+    void setSearchText(String value) {
+        search.setText(value);
+    }
+
     private boolean matches(Exercise exercise, boolean passed) {
-        String query = search.getText().toLowerCase(Locale.ROOT);
+        String query = search.getText().strip().toLowerCase(Locale.ROOT);
         return (topic.getSelectedIndex() == 0 || exercise.topic().equals(topic.getSelectedItem()))
                 && (difficulty.getSelectedIndex() == 0 || exercise.difficulty().equals(difficulty.getSelectedItem()))
                 && (progress.getSelectedIndex() == 0 || passed == (progress.getSelectedIndex() == 1))
-                && (exercise.title() + " " + exercise.topic()).toLowerCase(Locale.ROOT).contains(query);
+                && (query.isEmpty() || (exercise.title() + " " + exercise.topic()).toLowerCase(Locale.ROOT).contains(query));
     }
 }

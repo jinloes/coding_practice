@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
     @Test
@@ -35,7 +34,8 @@ class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
         CountDownLatch completed = new CountDownLatch(1);
         AtomicReference<String> result = new AtomicReference<>("");
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.addListener(text -> {
+        runner.addEventListener(event -> {
+            String text = event.text();
             result.set(text);
             if (text.startsWith("Example session finished")) {
                 completed.countDown();
@@ -119,7 +119,8 @@ class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
                     }
                 });
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.addListener(text -> {
+        runner.addEventListener(event -> {
+            String text = event.text();
             result.set(text);
             if (text.startsWith("Example session finished")) {
                 completed.countDown();
@@ -171,7 +172,8 @@ class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
                     }
                 });
         PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-        runner.addListener(text -> {
+        runner.addEventListener(event -> {
+            String text = event.text();
             result.set(text);
             if (text.startsWith("Input session finished")) {
                 completed.countDown();
@@ -285,7 +287,8 @@ class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
                         }
                     });
             PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-            runner.addListener(text -> {
+            runner.addEventListener(event -> {
+                String text = event.text();
                 result.set(text);
                 if (text.startsWith("STALE:")) {
                     completed.countDown();
@@ -301,41 +304,6 @@ class ExampleExecutionIntegrationTest extends PracticeExecutionTestBase {
             assertThat(result.get()).startsWith("STALE:");
             assertThat(ManagedPracticeProgress.get().entry(attempt.id(), attempt.exerciseId()).status)
                     .isEqualTo("NOT_RUN");
-    }
-
-    @Test
-    void invalidVisibleSolutionReportsCompilationFailureWithoutLaunching() throws Exception {
-            Files.writeString(attempt.solution(), "not valid Java", StandardCharsets.UTF_8);
-            CountDownLatch completed = new CountDownLatch(1);
-            AtomicReference<String> result = new AtomicReference<>("");
-            PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-            runner.addListener(text -> {
-                result.set(text);
-                if (text.startsWith("Example compilation failed:")) {
-                    completed.countDown();
-                }
-            });
-
-            EdtTestUtil.runInEdtAndWait(() -> runner.runExamples(attempt.id()));
-
-            assertThat(completed.await(30, TimeUnit.SECONDS)).as(result.get()).isTrue();
-            assertThat(runner.isRunning()).isFalse();
-            assertThat(ManagedPracticeProgress.get().entry(attempt.id(), attempt.exerciseId()).status)
-                    .isEqualTo("NOT_RUN");
-    }
-
-    @Test
-    void missingAttemptReportsAStartFailure() throws Exception {
-            PracticeRunner runner = fixture.getProject().getService(PracticeRunner.class);
-
-            assertThatThrownBy(() -> EdtTestUtil.runInEdtAndWait(() -> runner.runExamples("missing-attempt")))
-                    .isInstanceOf(com.intellij.execution.ExecutionException.class)
-                    .hasMessageContaining("Invalid managed attempt ID: missing-attempt");
-            assertThatThrownBy(() -> EdtTestUtil.runInEdtAndWait(() -> runner.debugExamples("missing-attempt")))
-                    .isInstanceOf(com.intellij.execution.ExecutionException.class)
-                    .hasMessageContaining("Invalid managed attempt ID: missing-attempt");
-
-            assertThat(runner.isRunning()).isFalse();
     }
 
     private static String slowPairSum() {

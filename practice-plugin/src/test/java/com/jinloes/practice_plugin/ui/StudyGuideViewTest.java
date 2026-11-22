@@ -84,5 +84,12 @@ class StudyGuideViewTest {
                 .contains("<h2>Google</h2>")
                 .contains(MarkdownHtml.toHtml(track.lesson()))
                 .contains("<li>Course Schedule (passed)</li>");
+
+        var sparseTrack = new GuideCatalog.Guide(
+                track.id(), track.title(), track.summary(), track.lesson(),
+                track.exercisesAt("Medium"));
+        assertThat(StudyGuideView.html(sparseTrack, null, Set.of()))
+                .contains("No Easy problems in this track yet.")
+                .doesNotContain("in this guide yet.");
     }
 }

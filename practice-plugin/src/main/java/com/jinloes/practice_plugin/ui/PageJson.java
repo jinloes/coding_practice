@@ -60,7 +60,7 @@ final class PageJson {
         JsonObject state = new JsonObject();
         state.add("theme", GSON.toJsonTree(theme));
         state.add("page", switch (page) {
-            case PracticePage.Problem problem -> problemPage(problem.exercise(), problem.passed());
+            case PracticePage.Problem problem -> problemPage(problem);
             case PracticePage.Study study when study.guide() != null ->
                     guidePage(study.guide(), study.selected(), study.passed());
             case PracticePage.Study study -> chooserPage(study.selected());
@@ -68,7 +68,8 @@ final class PageJson {
         return GSON.toJson(state);
     }
 
-    private static JsonObject problemPage(Exercise exercise, Set<String> passed) {
+    private static JsonObject problemPage(PracticePage.Problem source) {
+        Exercise exercise = source.exercise();
         JsonObject page = kind("problem");
         if (exercise == null) {
             page.add("problem", null);
@@ -79,7 +80,7 @@ final class PageJson {
         problem.addProperty("title", exercise.title());
         problem.addProperty("topic", exercise.topic());
         problem.addProperty("difficulty", exercise.difficulty());
-        problem.addProperty("passed", passed.contains(exercise.id()));
+        problem.addProperty("passed", source.passed().contains(exercise.id()));
         problem.addProperty("statementHtml", MarkdownHtml.toHtml(exercise.statement()));
         JsonArray examples = new JsonArray();
         exercise.examples().forEach(example -> {
@@ -90,8 +91,11 @@ final class PageJson {
         });
         problem.add("examples", examples);
         problem.addProperty("inputSyntax", exercise.inputSyntax());
+        problem.addProperty("sampleInput", exercise.sampleInput());
         problem.addProperty("intendedTime", exercise.intendedTime());
         problem.addProperty("intendedSpace", exercise.intendedSpace());
+        problem.addProperty("hasAttempt", source.hasAttempt());
+        problem.addProperty("canRunExamples", source.canRunExamples());
         addMemberships(problem, exercise);
         page.add("problem", problem);
         return page;

@@ -61,7 +61,8 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
         return new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-                return getProject().getService(PracticeRunner.class).startCheck(attemptId);
+                return getProject().getService(PracticeRunner.class)
+                        .startCheck(attemptId, environment.getRunnerAndConfigurationSettings());
             }
         };
     }

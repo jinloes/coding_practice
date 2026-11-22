@@ -43,10 +43,10 @@ practice-plugin/
 | `app` | Cross-package application use cases | `LegacyImportService` |
 | `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example/verification libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
-| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
+| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `CheckRunConfigurations`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `runner` (`verificationRunner`) | Java 17 child-JVM coordinator and JUnit Platform XML runner packaged into `verification-runner.jar` | `VerificationMain`, `JUnitSuiteRunner` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI and rendering | `PracticePanel`, `ExerciseFilters`, `AttemptBar`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `ExerciseCellRenderer`, `CustomInputPrompt`, `PracticePage`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `ui` | Tool window UI, rendering, and IDE actions | `PracticePanel`, `ExerciseFilters`, `AttemptBar`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `PracticeIdeActions`, `ExerciseCellRenderer`, `CustomInputPrompt`, `PracticePage`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
 | `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
@@ -95,8 +95,9 @@ cd web && npm ci && npm test && npm run dev
 
 - Change `web/src/types.ts` and `ui/PageJson.java` together, and update
   `PageJsonTest`.
-- New page actions need a `PageEvent.Type`, a handler in
-  `PracticePanel.onPageEvent`, and a `PageEventTest` case.
+- New page actions need a `PageEvent.Type` (`selectExercise`, `selectGuide`,
+  `selectTrack`, `clearFilters`, `startOrOpen`, `runExamples`, `runSample`), a
+  handler in `PracticePanel.onPageEvent`, and a `PageEventTest` case.
 - Pages must work offline: Vite inlines all JS and CSS into one `index.html`,
   so do not add runtime CDN or font URLs.
 - `HtmlPageView` is the fallback when JCEF is unavailable and in unit tests.
@@ -160,8 +161,10 @@ also run after test failures with `--continue`.
   New code must not add to this list without a reason.
 - **Excluded, with reasons:**
   - `ui/**`: Swing and JCEF components need a live IDE or browser. Its pure
-    logic is still tested directly (`PageJsonTest`, `PageEventTest`,
-    `HtmlPageViewTest`, `StudyGuideViewTest`, `MarkdownHtmlTest`).
+    logic and action wiring are still tested directly (`PageJsonTest`,
+    `PageEventTest`, `HtmlPageViewTest`, `StudyGuideViewTest`,
+    `MarkdownHtmlTest`, `ResultsViewTest`, `HintButtonTest`, `AttemptBarTest`,
+    `ExerciseFiltersTest`, `PracticeIdeActionsTest`, `PracticePanelTest`).
 - To add an exclusion, change `coverageExclusions` in `build.gradle` and add
   the class and its reason to the list above.
 
@@ -294,8 +297,8 @@ together:
 - `PracticeRunner` and `RunSession` for ownership and state transitions;
 - `FullCheck` and `BoundedProcessHandler` for full-check launch, watchdog
   limits, output bounds, and result translation;
-- `ExampleRunConfigurations` for the temporary example/input run
-  configuration;
+- `CheckRunConfigurations` and `ExampleRunConfigurations` for temporary check
+  and example/input run configurations;
 - `PracticeModuleWorkspace` for module, SDK, harness, compilation, and native
   run integration, with `GeneratedDirectories` for marked harness and output
   directories;

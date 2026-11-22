@@ -6,9 +6,9 @@ import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.application.ApplicationConfiguration;
-import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
+import com.intellij.execution.process.KillableProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionUtil;
@@ -47,17 +47,8 @@ import static com.jinloes.practice_plugin.run.RunDecisions.normalizedInput;
 public final class PracticeRunner implements Disposable {
     private final Project project;
     private final ManagedPracticeWorkspace attempts = ManagedPracticeWorkspace.get();
-    /** The one piece of run lifecycle state. Only its owner may transition it. */
     private final AtomicReference<RunSession> session = new AtomicReference<>(RunSession.IDLE);
-    /**
-     * Settings created by {@link #check(String)} and handed to the {@link #startCheck(String)} the
-     * IDE calls back, which is the only place that can claim the guard for them.
-     */
     private final AtomicReference<RunnerAndConfigurationSettings> pendingCheckSettings = new AtomicReference<>();
-    /**
-     * Dispatches the post-save continuation when something other than the IDE's own write-thread
-     * dispatch must run it. Null is the real one: the IDE dispatch used in production.
-     */
     private final Consumer<Runnable> continuationDispatcher;
     private final RunEvent.Listeners listeners = new RunEvent.Listeners();
 
@@ -83,6 +74,7 @@ public final class PracticeRunner implements Disposable {
             @Override
             public void processNotStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment) {
                 handleExampleProcessNotStarted(examplesFor(environment));
+                handleCheckProcessNotStarted(environment);
             }
 
             @Override
@@ -113,6 +105,21 @@ public final class PracticeRunner implements Disposable {
         }
     }
 
+    void handleCheckProcessNotStarted(ExecutionEnvironment environment) {
+        RunnerAndConfigurationSettings pending = claimPendingCheck(environment.getRunnerAndConfigurationSettings());
+        if (pending != null) {
+            removeTemporaryConfiguration(pending);
+            if (!isRunning()) {
+                publish(new RunEvent.FailedToStart(
+                        "Check launch did not complete. See the IDE notification and Run console."));
+            }
+        }
+    }
+
+    private RunnerAndConfigurationSettings claimPendingCheck(RunnerAndConfigurationSettings candidate) {
+        return candidate != null && pendingCheckSettings.compareAndSet(candidate, null) ? candidate : null;
+    }
+
     /** The example run this environment belongs to, or null when the event is not ours. */
     private RunSession.ExampleSession examplesFor(ExecutionEnvironment environment) {
         return session.get() instanceof RunSession.ExampleSession examples
@@ -125,14 +132,6 @@ public final class PracticeRunner implements Disposable {
     }
 
     public void removeEventListener(Consumer<RunEvent> listener) {
-        listeners.remove(listener);
-    }
-
-    public void addListener(Consumer<String> listener) {
-        listeners.addText(listener);
-    }
-
-    public void removeListener(Consumer<String> listener) {
         listeners.remove(listener);
     }
 
@@ -164,33 +163,31 @@ public final class PracticeRunner implements Disposable {
     public void check(String attemptId) throws ExecutionException {
         ensureIdle();
         runAfterSavingDocuments(() -> {
-            RunManager manager = RunManager.getInstance(project);
-            var type = ConfigurationTypeUtil.findConfigurationType(PracticeConfigurationType.class);
-            RunnerAndConfigurationSettings settings = manager.createConfiguration(
-                    "Check " + attemptId, type.getConfigurationFactories()[0]);
-            var configuration = (PracticeRunConfiguration) settings.getConfiguration();
-            configuration.attemptId = attemptId;
-            manager.setTemporaryConfiguration(settings);
-            PracticeModuleWorkspace.get(project).track(settings);
-            pendingCheckSettings.set(settings);
-            manager.setSelectedConfiguration(settings);
+            RunnerAndConfigurationSettings settings = CheckRunConfigurations.install(project, attemptId);
+            removeTemporaryConfiguration(pendingCheckSettings.getAndSet(settings));
             ExecutionUtil.runConfiguration(settings, DefaultRunExecutor.getRunExecutorInstance());
         });
     }
 
-    ProcessHandler startCheck(String attemptId) throws ExecutionException {
+    ProcessHandler startCheck(String attemptId, RunnerAndConfigurationSettings launchedSettings)
+            throws ExecutionException {
+        RunnerAndConfigurationSettings owned = claimPendingCheck(launchedSettings);
+        RunnerAndConfigurationSettings temp = owned != null ? owned
+                : launchedSettings != null && launchedSettings.isTemporary() ? launchedSettings : null;
         RunSession.RunControl control = new RunSession.RunControl();
-        if (!session.compareAndSet(RunSession.IDLE, new RunSession.CheckSession(attemptId, null, control))) {
+        if (!session.compareAndSet(RunSession.IDLE, new RunSession.CheckSession(attemptId, temp, control))) {
+            removeTemporaryConfiguration(temp);
             throw new ExecutionException("A practice run is already active. Stop it before starting another.");
         }
-        // The guard is held now, so the settings this check must clean up can be taken over safely.
-        session.set(new RunSession.CheckSession(attemptId, pendingCheckSettings.getAndSet(null), control));
         try {
             return new FullCheck(project, attempts, text -> publish(new RunEvent.Started(attemptId, text)),
                     this::stop, this::finishCheck).start(attemptId, control);
         } catch (IOException | ExecutionException | IllegalArgumentException exception) {
             session.set(RunSession.IDLE);
-            throw new ExecutionException("Cannot start managed check: " + exception.getMessage(), exception);
+            removeTemporaryConfiguration(temp);
+            String message = "Cannot start managed check: " + exception.getMessage();
+            publish(new RunEvent.FailedToStart(message));
+            throw new ExecutionException(message, exception);
         }
     }
 
@@ -224,6 +221,7 @@ public final class PracticeRunner implements Disposable {
             modules.clearExampleHarness(attempt);
             throw new ExecutionException("A practice run is already active. Stop it before starting another.");
         }
+        publish(new RunEvent.Started(attemptId, "Compiling examples."));
         AppExecutorUtil.getAppExecutorService().execute(() -> {
             try {
                 modules.compileExamples(attempt, runner);
@@ -237,12 +235,7 @@ public final class PracticeRunner implements Disposable {
     }
 
     private void installExampleConfiguration(
-            ManagedPracticeWorkspace.Attempt attempt,
-            String attemptId,
-            Path runner,
-            String input,
-            boolean debug
-    ) {
+            ManagedPracticeWorkspace.Attempt attempt, String attemptId, Path runner, String input, boolean debug) {
         try {
             WriteIntentReadAction.runThrowable(() -> {
                 RunDecisions.ExampleInstallPreflight preflight = exampleInstallPreflight(project.isDisposed(), session.get());
@@ -295,11 +288,7 @@ public final class PracticeRunner implements Disposable {
                     RunnerAndConfigurationSettings settings =
                             session.getAndSet(RunSession.IDLE) instanceof RunSession.CheckSession check
                                     ? check.settings() : null;
-                    if (settings != null && !project.isDisposed()) {
-                        requireModelAccess();
-                        RunManager.getInstance(project).removeConfiguration(settings);
-                        PracticeModuleWorkspace.get(project).untrack(settings);
-                    }
+                    untrackAndRemove(settings);
                     if (!project.isDisposed()) {
                         ManagedPracticeProgress.get().record(
                                 attempt.id(), attempt.exerciseId(), fingerprint, result);
@@ -321,10 +310,7 @@ public final class PracticeRunner implements Disposable {
                         fingerprint = examples.fingerprint();
                         settings = examples.settings();
                     }
-                    if (settings != null && !project.isDisposed()) {
-                        requireModelAccess();
-                        RunManager.getInstance(project).removeConfiguration(settings);
-                    }
+                    untrackAndRemove(settings);
                     if (attempt != null && !project.isDisposed()) {
                         ManagedPracticeWorkspace.Attempt finishedAttempt = attempt;
                         PracticeModuleWorkspace.get(project).clearExampleHarness(finishedAttempt);
@@ -334,6 +320,27 @@ public final class PracticeRunner implements Disposable {
                     publish(new RunEvent.ExampleFinished(RunEvent.attemptId(attempt), resultText));
                 }
         ));
+    }
+
+    private void removeTemporaryConfiguration(RunnerAndConfigurationSettings settings) {
+        if (settings == null) {
+            return;
+        }
+        ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
+                WriteIntentReadAction.run(() -> untrackAndRemove(settings)));
+    }
+
+    private void untrackAndRemove(RunnerAndConfigurationSettings settings) {
+        if (settings != null && !project.isDisposed()) {
+            requireModelAccess();
+            RunManager.getInstance(project).removeConfiguration(settings);
+            PracticeModuleWorkspace.get(project).untrack(settings);
+        }
+    }
+
+    @TestOnly
+    void setPendingCheckForTest(RunnerAndConfigurationSettings settings) {
+        pendingCheckSettings.set(settings);
     }
 
     @TestOnly
@@ -401,7 +408,7 @@ public final class PracticeRunner implements Disposable {
     }
 
     static void stopOwnedExampleProcess(RunSession.RunControl control, ProcessHandler handler) {
-        if (handler instanceof com.intellij.execution.process.KillableProcessHandler killable) {
+        if (handler instanceof KillableProcessHandler killable) {
             killable.setShouldKillProcessSoftly(false);
         }
         control.captureChildrenOf(handler);

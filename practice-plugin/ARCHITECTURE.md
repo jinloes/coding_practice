@@ -28,10 +28,10 @@ never in the IDE process itself.
 ```text
 plugin.xml
   |
-  v
-PracticeToolWindowFactory
-  |
-  v
+  +-- PracticeToolWindowFactory
+  +-- PracticeIdeActions (Tools > Algorithm Practice)
+        |
+        v
 PracticePanel -------------------------------------------+
   |                                                      |
   | selects/opens attempts                               | runs/checks/stops
@@ -119,7 +119,7 @@ execution limits, and `PracticeViews` provides stateless Swing building blocks;
 none of them hold panel state. Pass marks come from
 `ManagedPracticeProgress.passedExerciseIds()`, derived from stored history.
 `ExerciseCellRenderer`, `AttemptBar`, `ResultsView`, `HintButton`, `PracticeActions` (the run toolbar and
-title actions), and `CustomInputPrompt` are the native Swing pieces.
+title actions), `PracticeIdeActions` (the global `Tools > Algorithm Practice` IDE actions for Find Action and custom keymap shortcuts), and `CustomInputPrompt` are the native Swing and action-system pieces.
 
 #### Problem and Study Guide pages
 
@@ -134,8 +134,10 @@ re-selected. There are two concrete implementations:
   `PageJson` serializes the page and the current IDE `Theme`. The page queues
   clicks in `bridge.ts` until `window.practiceAttachSend` connects the
   `JBCefJSQuery`, forwarding JSON that `PageEvent` parses so the panel handles
-  events on the EDT. A page can only ask to select an exercise, guide, or track;
-  it cannot run code or touch files.
+  events on the EDT. A page can ask the panel to select an exercise, guide, or
+  track, reset active filters, start or open the current attempt, or run visible
+  examples or the manifest sample input; the page itself never executes code or
+  touches files directly.
 - `HtmlPageView` is the fallback: a non-interactive Swing `JEditorPane` that
   reuses `PracticeViews.problemText` (including metadata, target complexity,
   input syntax, and memberships) and `StudyGuideView.html`.
@@ -179,7 +181,7 @@ project-based storage format. New attempts never use it.
 
 `PracticeRunner` is a project service and the single coordinator for execution.
 It allows one active practice run per project, saves documents before launch,
-publishes structured `RunEvent`s (and text updates) to UI listeners, owns cancellation and watchdog behavior, and
+publishes structured `RunEvent`s to UI listeners, owns cancellation and watchdog behavior, and
 records full-check results.
 
 `FullCheck` launches one full check on behalf of the runner: it builds the
@@ -187,6 +189,7 @@ verification process, enforces setup and suite limits with a watchdog, bounds
 console output through `BoundedProcessHandler`, and translates the finished
 process into a `CheckResult`. It never touches the run guard; the runner claims
 the guard first and releases it when `FullCheck` reports completion.
+`CheckRunConfigurations` builds the temporary full-check run configuration and
 `ExampleRunConfigurations` builds the temporary native Application
 configuration for example and custom-input runs.
 

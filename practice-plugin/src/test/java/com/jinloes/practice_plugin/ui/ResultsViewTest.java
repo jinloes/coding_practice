@@ -86,4 +86,29 @@ class ResultsViewTest {
         assertThat(view.bannerText()).isEqualTo("Stale");
         assertThat(view.outputText()).isEqualTo("STALE: orphan");
     }
+
+    @Test
+    void showEntryAppendsComplexityOnlyWhenCurrentStatusIsPassed() {
+        ResultsView view = new ResultsView();
+        var passed = new com.jinloes.practice_plugin.state.ManagedPracticeProgress.Entry();
+        passed.status = "PASSED";
+        passed.complexity = "Scaling: O(n) (intended O(n))";
+        passed.details = "All 10 supplied cases passed.";
+
+        view.showEntry(passed);
+        assertThat(view.bannerText()).isEqualTo("Passed");
+        assertThat(view.outputText())
+                .isEqualTo("All 10 supplied cases passed.\n\nScaling: O(n) (intended O(n))");
+
+        var regressed = new com.jinloes.practice_plugin.state.ManagedPracticeProgress.Entry();
+        regressed.status = "ASSERTION_FAILED";
+        regressed.complexity = "Scaling: O(n) (intended O(n))";
+        regressed.details = "1 case failed.";
+
+        view.showEntry(regressed);
+        assertThat(view.bannerText()).isEqualTo("Failed: wrong answer");
+        assertThat(view.outputText())
+                .as("prior scaling output must not appear on non-passing results")
+                .isEqualTo("1 case failed.");
+    }
 }

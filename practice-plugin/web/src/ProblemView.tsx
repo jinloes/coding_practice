@@ -1,12 +1,35 @@
-import { Accordion, Badge, Code, Group, Paper, Stack, Text, ThemeIcon, Title, Tooltip } from '@mantine/core';
+import { useEffect, useRef, useState } from 'react';
+import { Accordion, Badge, Button, Code, Group, Paper, Stack, Text, ThemeIcon, Title, Tooltip } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
+import { send } from './bridge';
 import { DifficultyBadge, Html, Memberships, SectionLabel } from './common';
 import type { Problem } from './types';
 
 export function ProblemView({ problem }: { problem: Problem | null }) {
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (copyTimer.current !== null) {
+      window.clearTimeout(copyTimer.current);
+    }
+  }, []);
+
   if (!problem) {
-    return <Text c="dimmed">No exercises match these filters.</Text>;
+    return (
+      <Stack gap="xs" align="flex-start">
+        <Text c="dimmed">No exercises match these filters.</Text>
+        <Button variant="light" size="xs" onClick={() => send({ type: 'clearFilters' })}>
+          Reset filters
+        </Button>
+      </Stack>
+    );
   }
+
+  const runDisabledReason = problem.hasAttempt
+    ? 'Wait for the active run to finish'
+    : 'Start an attempt to run examples';
+
   return (
     <Stack gap="md">
       <Stack gap={6}>
@@ -29,6 +52,23 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
         <Text size="sm" c="dimmed">
           Target: {problem.intendedTime} time, {problem.intendedSpace} space
         </Text>
+        <Group gap="xs" mt={4}>
+          <Button size="xs" onClick={() => send({ type: 'startOrOpen' })}>
+            {problem.hasAttempt ? 'Open Solution.java' : 'Start Attempt'}
+          </Button>
+          <Tooltip label={runDisabledReason} disabled={problem.canRunExamples}>
+            <span style={{ display: 'inline-block' }}>
+              <Button
+                size="xs"
+                variant="default"
+                disabled={!problem.canRunExamples}
+                onClick={() => send({ type: 'runExamples' })}
+              >
+                Run Examples
+              </Button>
+            </span>
+          </Tooltip>
+        </Group>
       </Stack>
 
       <Html html={problem.statementHtml} />
@@ -48,11 +88,54 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
         ))}
       </Stack>
 
-      <Accordion variant="contained">
+      <Accordion variant="contained" transitionDuration={0}>
         <Accordion.Item value="input">
           <Accordion.Control>Custom input format</Accordion.Control>
           <Accordion.Panel>
-            <Code block>{problem.inputSyntax}</Code>
+            <Stack gap="xs">
+              <Field label="Format" value={problem.inputSyntax} />
+              <Field label="Sample input" value={problem.sampleInput} />
+              <Group gap="xs">
+                <Button
+                  size="xs"
+                  variant="default"
+                  onClick={() => {
+                    void copyText(problem.sampleInput).then((ok) => {
+                      if (!ok) {
+                        return;
+                      }
+                      setCopied(true);
+                      if (copyTimer.current !== null) {
+                        window.clearTimeout(copyTimer.current);
+                      }
+                      copyTimer.current = window.setTimeout(() => {
+                        setCopied(false);
+                        copyTimer.current = null;
+                      }, 2000);
+                    });
+                  }}
+                >
+                  Copy sample input
+                </Button>
+                <Tooltip label={runDisabledReason} disabled={problem.canRunExamples}>
+                  <span style={{ display: 'inline-block' }}>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      disabled={!problem.canRunExamples}
+                      onClick={() => send({ type: 'runSample' })}
+                    >
+                      Run sample
+                    </Button>
+                  </span>
+                </Tooltip>
+                {copied && (
+                  <Text size="xs" c="teal">
+                    Copied
+                  </Text>
+                )}
+              </Group>
+            </Stack>
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>
@@ -60,6 +143,36 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
       <Memberships guides={problem.guides} tracks={problem.tracks} />
     </Stack>
   );
+}
+
+async function copyText(value: string): Promise<boolean> {
+  const clipboard = navigator.clipboard;
+  if (clipboard && typeof clipboard.writeText === 'function') {
+    try {
+      await clipboard.writeText(value);
+      return true;
+    } catch {
+      return fallbackCopy(value);
+    }
+  }
+  return fallbackCopy(value);
+}
+
+function fallbackCopy(value: string): boolean {
+  const area = document.createElement('textarea');
+  area.value = value;
+  area.setAttribute('readonly', 'true');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  try {
+    return document.execCommand?.('copy') === true;
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(area);
+  }
 }
 
 function Field({ label, value }: { label: string; value: string }) {

@@ -30,7 +30,8 @@ class PageJsonTest {
     void rendersAProblemWithItsExamplesProgressAndMemberships() {
         var exercise = ExerciseCatalog.find("merge-sorted-lists");
 
-        JsonObject page = render(new PracticePage.Problem(exercise, Set.of(exercise.id()))).getAsJsonObject("page");
+        JsonObject page = render(new PracticePage.Problem(exercise, Set.of(exercise.id()), true, false))
+                .getAsJsonObject("page");
         JsonObject problem = page.getAsJsonObject("problem");
 
         assertThat(page.get("kind").getAsString()).isEqualTo("problem");
@@ -43,6 +44,9 @@ class PageJsonTest {
         assertThat(problem.getAsJsonArray("examples").get(0).getAsJsonObject().get("input").getAsString())
                 .isEqualTo(exercise.examples().get(0).input());
         assertThat(problem.get("inputSyntax").getAsString()).isEqualTo(exercise.inputSyntax());
+        assertThat(problem.get("sampleInput").getAsString()).isEqualTo(exercise.sampleInput());
+        assertThat(problem.get("hasAttempt").getAsBoolean()).isTrue();
+        assertThat(problem.get("canRunExamples").getAsBoolean()).isFalse();
         assertThat(ids(problem, "guides")).containsExactly("two-pointers", "linked-lists");
         assertThat(ids(problem, "tracks")).containsExactly("blind-75", "neetcode-150");
     }

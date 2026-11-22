@@ -12,14 +12,15 @@ import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.components.ActionLink;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBTabbedPane;
-import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.JBUI;
 import com.jinloes.practice_plugin.app.LegacyImportService;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
+import com.jinloes.practice_plugin.catalog.TrackCatalog;
 import com.jinloes.practice_plugin.run.PracticeRunner;
 import com.jinloes.practice_plugin.run.RunEvent;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
@@ -31,8 +32,10 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -40,26 +43,32 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 final class PracticePanel extends JPanel implements Disposable, PracticeActions.RunControls {
     private static final int PROBLEM_TAB = 0;
     private static final int GUIDE_TAB = 1;
+    private static final int HINTS_TAB = 2;
+    private static final String LOCKED_HINTS_HTML = "<p>Start or resume an attempt to reveal hints.</p>";
 
     private final Project project;
-    private final ManagedPracticeProgress progress;
-    private final ManagedPracticeWorkspace workspace;
-    private final LegacyImportService legacyImport;
+    private final ManagedPracticeProgress progress = ManagedPracticeProgress.get();
+    private final ManagedPracticeWorkspace workspace = ManagedPracticeWorkspace.get();
+    private final LegacyImportService legacyImport = new LegacyImportService(workspace);
     private final PracticeRunner runner;
     private final BackgroundTasks tasks;
     private final DefaultListModel<Exercise> model = new DefaultListModel<>();
     private final JBList<Exercise> exercises;
     private final ExerciseFilters filters = new ExerciseFilters();
     private final JBLabel count = new JBLabel();
+    private final ActionLink resetFilters = new ActionLink(
+            "Reset filters", (ActionListener) _ -> filters.resetAll());
     private final AttemptBar attemptBar;
     private final PageView problem;
     private final PageView guide;
     private final JBTabbedPane tabs = new JBTabbedPane();
-    private final JBTextArea hints = PracticeViews.textArea();
+    private String hintsHtml = LOCKED_HINTS_HTML;
+    private final JEditorPane hints = PracticeViews.htmlPane(() -> hintsHtml);
     private final ResultsView results = new ResultsView();
     private final HintButton hintButton = new HintButton(() -> guarded(this::revealHint));
     private final JBLabel status = new JBLabel("Choose an exercise.");
@@ -70,17 +79,14 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     private boolean disposed;
     private int selectionGeneration;
 
-    /** Held as a field so {@link #dispose()} removes this exact registration from the project-scoped runner. */
+    /** Removed on {@link #dispose()} from the project-scoped runner. */
     private final Consumer<RunEvent> runEvents = this::onRunEvent;
 
     PracticePanel(Project project) {
         super(new BorderLayout(0, 6));
         this.project = project;
-        progress = ManagedPracticeProgress.get();
-        workspace = ManagedPracticeWorkspace.get();
-        legacyImport = new LegacyImportService(workspace);
         runner = project.getService(PracticeRunner.class);
-        tasks = new BackgroundTasks(project, () -> !disposed, this::error);
+        tasks = new BackgroundTasks(project, () -> !disposed, this::error, this::onTaskCancelled);
         problem = PageView.lazy(this, this::onPageEvent, true);
         guide = PageView.lazy(this, this::onPageEvent, false);
         setBorder(JBUI.Borders.empty(8));
@@ -96,21 +102,21 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
                     () -> true, () -> guarded(this::importLegacyAttempts)));
         }
 
-        add(PracticeViews.header(filters, count), BorderLayout.NORTH);
-        exercises = PracticeViews.exerciseList(model, () -> passed, () -> guarded(this::startOrResume));
+        add(PracticeViews.header(filters, count, resetFilters), BorderLayout.NORTH);
+        exercises = PracticeViews.exerciseList(
+                model, () -> passed, () -> guarded(this::startOrResume), filters::resetAll);
         tabs.addTab("Problem", problem.component());
         tabs.addTab("Study Guide", guide.component());
         tabs.addTab("Hints", PracticeViews.hintTab(hints, hintButton));
         tabs.addTab("Results", results.component());
         add(PracticeViews.splitter(exercises, tabs), BorderLayout.CENTER);
 
-        attemptBar = new AttemptBar(
-                this::showAttempt,
-                () -> guarded(this::startOrResume),
-                () -> guarded(this::newAttempt));
+        attemptBar = new AttemptBar(attempt -> AttemptBar.statusOf(progress, attempt),
+                this::showAttempt, () -> guarded(this::startOrResume), () -> guarded(this::newAttempt));
         toolbar = PracticeActions.runToolbar(this, this);
         add(PracticeViews.column(attemptBar.component(), toolbar.getComponent(), status), BorderLayout.SOUTH);
 
+        PracticeIdeActions.register(project, this);
         runner.addEventListener(runEvents);
         exercises.addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting()) {
@@ -125,7 +131,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
                 tabs.setSelectedIndex(GUIDE_TAB);
             }
         });
-        tabs.addChangeListener(event -> syncActivePageTab());
+        tabs.addChangeListener(_ -> syncActivePageTab());
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
@@ -138,7 +144,6 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         filter();
     }
 
-    /** The tool window title bar actions: limits, cleanup, and legacy import for legacy projects. */
     List<AnAction> titleActions() {
         return List.copyOf(titleActions);
     }
@@ -161,17 +166,24 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     }
 
     private void updateCount() {
-        long shownPassed = java.util.stream.IntStream.range(0, model.size())
+        long shownPassed = IntStream.range(0, model.size())
                 .filter(index -> passed.contains(model.get(index).id())).count();
         count.setText(model.size() + " exercises · " + shownPassed + " passed");
+        boolean active = filters.hasActiveFilters();
+        resetFilters.setEnabled(active);
+        resetFilters.setVisible(active);
     }
 
     private void onPageEvent(PageEvent event) {
         guarded(() -> {
             switch (event.type()) {
                 case SELECT_EXERCISE -> selectExercise(ExerciseCatalog.find(event.id()));
-                case SELECT_GUIDE -> filters.selectGuide(event.id());
-                case SELECT_TRACK -> filters.selectTrack(event.id());
+                case SELECT_GUIDE -> filters.openGuide(event.id());
+                case SELECT_TRACK -> filters.openTrack(event.id());
+                case CLEAR_FILTERS -> filters.resetAll();
+                case START_OR_OPEN -> startOrResume();
+                case RUN_EXAMPLES -> runExamples();
+                case RUN_SAMPLE -> runSample();
             }
         });
     }
@@ -187,11 +199,11 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     private void showExercise() {
         int generation = ++selectionGeneration;
         Exercise exercise = exercises.getSelectedValue();
-        refreshPages();
-        hints.setText("Start or resume an attempt to reveal hints.");
+        setHintsHtml(LOCKED_HINTS_HTML);
         results.clear();
         attemptBar.loadFor(exercise, generation, () -> selectionGeneration,
                 exercises::getSelectedValue, workspace, progress, tasks);
+        refreshGuide();
         updateButtons();
     }
 
@@ -200,23 +212,37 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         Exercise exercise = exercises.getSelectedValue();
         updateButtons();
         if (attempt == null || exercise == null) {
-            status.setText("Choose Start / Resume to create your first managed attempt.");
+            setHintsHtml(LOCKED_HINTS_HTML);
+            status.setText("Choose Start Attempt to create your first managed attempt.");
             return;
         }
         progress.getState().selectedAttempts.put(exercise.id(), attempt.id());
         var entry = progress.entry(attempt.id(), exercise.id());
-        hints.setText(HintButton.revealedText(exercise.hints(), entry.hintsRevealed));
+        setHintsHtml(HintButton.revealedHtml(exercise.hints(), entry.hintsRevealed));
         status.setText("Attempt " + attempt.id() + ": " + ResultsView.label(entry.status));
         results.showEntry(entry);
         if (!entry.checkedFingerprint.isEmpty()) {
-            background("Checking result freshness", () -> workspace.fingerprint(attempt), hash -> {
+            tasks.run("Checking result freshness", () -> workspace.fingerprint(attempt), hash -> {
                 if (attempt.equals(attemptBar.selected())
-                        && (!hash.equals(entry.checkedFingerprint) || hasUnsavedAttemptFile())) {
+                        && (!hash.equals(entry.checkedFingerprint) || AttemptFiles.hasUnsavedChanges(attempt))) {
                     status.setText("Edited since last check; previous result is stale.");
                     results.markStale("check the current solution again.");
                 }
             });
         }
+    }
+
+    private void setHintsHtml(String body) {
+        hintsHtml = body;
+        PracticeViews.setHtmlBody(hints, body);
+    }
+
+    boolean hasSelectedExercise() {
+        return exercises.getSelectedValue() != null;
+    }
+
+    void startOrOpenAttempt() {
+        guarded(this::startOrResume);
     }
 
     private void startOrResume() throws IOException {
@@ -227,12 +253,19 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         attemptBar.newAttempt(project, workspace, progress, tasks, runner::isRunning, exercises::getSelectedValue);
     }
 
+    private void runSample() {
+        launch(() -> {
+            var attempt = attemptBar.selectedOrThrow();
+            runner.runExamples(attempt.id(), ExerciseCatalog.find(attempt.exerciseId()).sampleInput());
+        });
+    }
+
     private void importLegacyAttempts() throws IOException {
         if (!isLegacyWorkspace()) {
             throw new IOException("The current project is not a marked legacy practice project.");
         }
         Path legacyRoot = Path.of(Objects.requireNonNull(project.getBasePath())).toRealPath();
-        background("Importing legacy attempts", () -> legacyImport.importLegacy(
+        tasks.run("Importing legacy attempts", () -> legacyImport.importLegacy(
                 legacyRoot, PracticeProgress.get(project), progress), imported -> {
             showExercise();
             results.showMessage("Legacy import finished", imported.summary());
@@ -293,6 +326,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     private void launch(Action action) {
         tabs.setSelectedComponent(results.component());
         guarded(action);
+        updateButtons();
     }
 
     private void revealHint() throws IOException {
@@ -313,12 +347,17 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     }
 
     private void updateButtons() {
-        hintButton.update(attemptBar.selected() != null);
+        var attempt = attemptBar.selected();
+        Exercise exercise = exercises.getSelectedValue();
+        int totalHints = exercise == null ? 3 : exercise.hints().size();
+        int revealed = attempt == null || exercise == null
+                ? 0 : progress.entry(attempt.id(), exercise.id()).hintsRevealed;
+        boolean hasAttempt = attempt != null && exercise != null;
+        hintButton.update(hasAttempt, revealed, totalHints);
+        tabs.setTitleAt(HINTS_TAB, HintButton.tabTitle(hasAttempt, revealed, totalHints));
+        problem.show(new PracticePage.Problem(
+                exercise, passed, attempt != null, canRun()));
         toolbar.updateActionsAsync();
-    }
-
-    private boolean hasUnsavedAttemptFile() {
-        return AttemptFiles.hasUnsavedChanges(attemptBar.selected());
     }
 
     HintButton hintButton() {
@@ -365,12 +404,16 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         }
     }
 
-    private <T> void background(String title, BackgroundTasks.IoTask<T> operation, Consumer<T> completed) {
-        tasks.run(title, operation, completed);
+    private void onTaskCancelled() {
+        if (attemptBar != null) {
+            attemptBar.resetBusy();
+        }
     }
 
     private void error(String text) {
-        attemptBar.resetBusy();
+        if (attemptBar != null) {
+            attemptBar.resetBusy();
+        }
         status.setText("Action failed; see Results.");
         results.showError(text);
         NotificationGroupManager.getInstance().getNotificationGroup("Algorithm Practice")
@@ -386,7 +429,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
                 if (started.attemptId().isEmpty() || attemptBar.matches(started.attemptId())) {
                     results.showRunning();
                     results.showOutput(started.text());
-                    if (hasUnsavedAttemptFile()) {
+                    if (AttemptFiles.hasUnsavedChanges(attemptBar.selected())) {
                         results.markStale("there are unsaved changes. Check again after saving.");
                     }
                 }
@@ -401,7 +444,8 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
                 passed = progress.passedExerciseIds();
                 updateCount();
                 exercises.repaint();
-                refreshPages();
+                refreshGuide();
+                attemptBar.component().repaint();
                 updateButtons();
                 var entry = progress.entry(finished.attemptId(), finished.exerciseId());
                 if (attemptBar.matches(finished.attemptId())) {
@@ -426,25 +470,23 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
 
     private void showSelectedRunFinished(String outputText) {
         results.showOutput(outputText);
-        if (hasUnsavedAttemptFile()) {
+        if (AttemptFiles.hasUnsavedChanges(attemptBar.selected())) {
             results.markStale("there are unsaved changes. Check again after saving.");
         }
         status.setText("Run finished; see Results.");
     }
 
-    private void refreshPages() {
-        Exercise selected = exercises.getSelectedValue();
-        problem.show(new PracticePage.Problem(selected, passed));
-        refreshGuide();
-    }
-
     private void refreshGuide() {
-        guide.show(new PracticePage.Study(filters.shownGuide(), exercises.getSelectedValue(), passed));
+        var shown = filters.shownGuide();
+        tabs.setTitleAt(GUIDE_TAB,
+                shown != null && TrackCatalog.isTrack(shown.id()) ? "Practice Track" : "Study Guide");
+        guide.show(new PracticePage.Study(shown, exercises.getSelectedValue(), passed));
     }
 
     @Override
     public void dispose() {
         disposed = true;
+        PracticeIdeActions.unregister(project, this);
         runner.removeEventListener(runEvents);
     }
 
