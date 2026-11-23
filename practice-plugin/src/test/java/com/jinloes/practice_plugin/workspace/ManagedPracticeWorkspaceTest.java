@@ -257,4 +257,11 @@ class ManagedPracticeWorkspaceTest {
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("legacy solution");
     }
+
+    @Test
+    void digestRejectsUnavailableMessageDigestAlgorithms() {
+        assertThatThrownBy(() -> ManagedPracticeWorkspace.digest("NO-SUCH-ALGO"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("NO-SUCH-ALGO is required");
+    }
 }

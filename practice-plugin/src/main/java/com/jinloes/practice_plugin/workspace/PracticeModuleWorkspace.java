@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 @Service(Service.Level.PROJECT)
 public final class PracticeModuleWorkspace implements Disposable {
@@ -137,24 +138,27 @@ public final class PracticeModuleWorkspace implements Disposable {
             Files.createDirectories(runner.getParent());
             Files.writeString(runner, ExerciseCatalog.resource(exercise, "ExampleRunner.java"),
                     StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
-            ApplicationManager.getApplication().runWriteAction(() -> {
-                var model = ModuleRootManager.getInstance(module).getModifiableModel();
-                var root = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(harness);
-                var source = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(sourceRoot);
-                if (root == null || source == null) {
-                    model.dispose();
-                    throw new IllegalArgumentException("Generated example runner is unavailable in the IDE.");
-                }
-                var entry = model.addContentEntry(root);
-                entry.addSourceFolder(source, false);
-                attachExampleLibraries(model, libraries);
-                model.commit();
-            });
+            ApplicationManager.getApplication().runWriteAction(() ->
+                    attachHarnessRoots(ModuleRootManager.getInstance(module).getModifiableModel(),
+                            harness, sourceRoot, libraries));
             return runner;
         } catch (IOException | IllegalArgumentException exception) {
             throw new ExecutionException("Cannot prepare the generated example runner: "
                     + exception.getMessage(), exception);
         }
+    }
+
+    static void attachHarnessRoots(ModifiableRootModel model, Path harness, Path sourceRoot, List<Path> libraries) {
+        var root = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(harness);
+        var source = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(sourceRoot);
+        if (root == null || source == null) {
+            model.dispose();
+            throw new IllegalArgumentException("Generated example runner is unavailable in the IDE.");
+        }
+        var entry = model.addContentEntry(root);
+        entry.addSourceFolder(source, false);
+        attachExampleLibraries(model, libraries);
+        model.commit();
     }
 
     public synchronized void clearExampleHarness(ManagedPracticeWorkspace.Attempt attempt) {
@@ -183,7 +187,7 @@ public final class PracticeModuleWorkspace implements Disposable {
 
     public void compileExamples(ManagedPracticeWorkspace.Attempt attempt, Path runner) throws ExecutionException {
         Path output = generated.base(GeneratedDirectories.MODULE_OUTPUT).resolve(attempt.id()).normalize();
-        Path compiler = javaHome().resolve("bin").resolve(Os.IS_WINDOWS ? "javac.exe" : "javac");
+        Path compiler = javaHome().resolve("bin").resolve(Os.executable("javac"));
         Path diagnostics = output.resolve("compiler.log");
         Process process = null;
         try {
@@ -268,11 +272,13 @@ public final class PracticeModuleWorkspace implements Disposable {
     }
 
     private void disposeTrackedConfigurationsAndModules() {
-        RunManager manager = RunManager.getInstance(project);
-        temporaryConfigurations.forEach(manager::removeConfiguration);
+        if (!project.isDisposed()) {
+            RunManager manager = RunManager.getInstance(project);
+            temporaryConfigurations.forEach(manager::removeConfiguration);
+            modules.values().stream().filter(module -> !module.isDisposed())
+                    .forEach(module -> ModuleManager.getInstance(project).disposeModule(module));
+        }
         temporaryConfigurations.clear();
-        modules.values().stream().filter(module -> !module.isDisposed())
-                .forEach(module -> ModuleManager.getInstance(project).disposeModule(module));
         modules.clear();
     }
 
@@ -287,14 +293,18 @@ public final class PracticeModuleWorkspace implements Disposable {
                 return candidate;
             }
         }
-        Path ideJdk = Path.of(System.getProperty("java.home"));
+        return createFallbackSdk(Path.of(System.getProperty("java.home")),
+                (name, home) -> JavaSdk.getInstance().createJdk(name, home, false));
+    }
+
+    Sdk createFallbackSdk(Path ideJdk, BiFunction<String, String, Sdk> jdkFactory) throws ExecutionException {
         if (!JavaSdk.getInstance().isValidSdkHome(ideJdk.toString())) {
             throw new ExecutionException("The IDE runtime is not a full Java 17 or newer JDK.");
         }
-        Sdk fallback = JavaSdk.getInstance().createJdk(
+        Sdk fallback = jdkFactory.apply(
                 OWNED_SDK_PREFIX + ProcessHandle.current().pid() + "-"
                         + Integer.toUnsignedString(project.getLocationHash().hashCode()),
-                ideJdk.toString(), false);
+                ideJdk.toString());
         if (!isUsableJavaSdk(fallback)) {
             throw new ExecutionException("The IDE runtime is not a full Java 17 or newer JDK.");
         }
@@ -372,7 +382,7 @@ public final class PracticeModuleWorkspace implements Disposable {
         }
     }
 
-    private static boolean isUsableJavaSdk(Sdk candidate) {
+    static boolean isUsableJavaSdk(Sdk candidate) {
         if (candidate == null || candidate.getHomePath() == null || candidate.getSdkType() != JavaSdk.getInstance()) {
             return false;
         }

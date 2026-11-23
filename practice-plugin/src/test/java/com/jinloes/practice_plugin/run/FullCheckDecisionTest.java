@@ -163,6 +163,113 @@ class FullCheckDecisionTest {
         assertThat(FullCheck.withMeasuredComplexity(failed, "O(n)", "O(1)", tempDir)).isSameAs(failed);
     }
 
+    @Test
+    void finishReportsResultProcessingAndWorkspaceCleanupFailures() throws Exception {
+        var workspace = new com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace();
+        var exercise = com.jinloes.practice_plugin.catalog.ExerciseCatalog.find("pair-sum");
+        var attempt = workspace.create(exercise);
+        var attempt2 = workspace.create(exercise);
+        try {
+            String fingerprint = workspace.fingerprint(attempt);
+            var verification1 = com.jinloes.practice_plugin.workspace.VerificationWorkspace.create(
+                    attempt, exercise, fingerprint);
+            Files.delete(attempt.solution());
+            var recorded1 = new java.util.concurrent.atomic.AtomicReference<CheckResult>();
+            new FullCheck(null, workspace, ignored -> {}, () -> {},
+                    (finishedAttempt, fp, result) -> recorded1.set(result))
+                    .finish(attempt, exercise, fingerprint, verification1, new RunSession.RunControl(), 0);
+            assertThat(recorded1.get().status()).isEqualTo(RUNNER_ERROR);
+            assertThat(verification1.root()).doesNotExist();
+
+            String fingerprint2 = workspace.fingerprint(attempt2);
+            var verification2 = com.jinloes.practice_plugin.workspace.VerificationWorkspace.create(
+                    attempt2, exercise, fingerprint2);
+            try {
+                Files.delete(verification2.root().resolve(".algorithm-practice-verification"));
+                RunSession.RunControl cancelled = new RunSession.RunControl();
+                cancelled.requestCancel();
+                var recorded2 = new java.util.concurrent.atomic.AtomicReference<CheckResult>();
+                new FullCheck(null, workspace, ignored -> {}, () -> {},
+                        (finishedAttempt, fp, result) -> recorded2.set(result))
+                        .finish(attempt2, exercise, fingerprint2, verification2, cancelled, 0);
+                assertThat(recorded2.get().status()).isEqualTo(RUNNER_ERROR);
+                assertThat(recorded2.get().details()).startsWith("Verification cleanup failed:");
+            } finally {
+                com.intellij.openapi.util.io.NioFiles.deleteRecursively(verification2.root());
+            }
+        } finally {
+            com.intellij.openapi.util.io.NioFiles.deleteRecursively(attempt.directory());
+            com.intellij.openapi.util.io.NioFiles.deleteRecursively(attempt2.directory());
+        }
+    }
+
+    @Test
+    void launchCleanupHandlesListenerDetachmentInterruptionAndRejectedExecutors() throws Exception {
+        var handler = new InMemoryProcessHandler(true);
+        var listener = new com.intellij.execution.process.ProcessListener() {};
+        handler.addProcessListener(listener);
+        FullCheckLaunchCleanup.releaseFailedLaunch(
+                null, null, handler, listener, new RunSession.RunControl(), new IOException("failed"));
+        FullCheckLaunchCleanup.releaseFailedLaunch(
+                null, null, new InMemoryProcessHandler(true), null, new RunSession.RunControl(), new IOException("failed"));
+
+        Process deadProcess = new Process() {
+            @Override public OutputStream getOutputStream() { return OutputStream.nullOutputStream(); }
+            @Override public java.io.InputStream getInputStream() { return java.io.InputStream.nullInputStream(); }
+            @Override public java.io.InputStream getErrorStream() { return java.io.InputStream.nullInputStream(); }
+            @Override public int waitFor() { return 0; }
+            @Override public int exitValue() { return 0; }
+            @Override public void destroy() {}
+            @Override public boolean isAlive() { return false; }
+        };
+
+        IOException rejectedOriginal = new IOException("launch");
+        java.util.concurrent.ExecutorService shutDown = java.util.concurrent.Executors.newSingleThreadExecutor();
+        shutDown.shutdownNow();
+        FullCheckLaunchCleanup.releaseFailedHandler(shutDown, handler, deadProcess, rejectedOriginal);
+        assertThat(rejectedOriginal.getSuppressed()).hasSize(1);
+        assertThat(rejectedOriginal.getSuppressed()[0])
+                .isInstanceOf(java.util.concurrent.RejectedExecutionException.class);
+
+        var enteredWait = new java.util.concurrent.CountDownLatch(1);
+        var releaseWait = new java.util.concurrent.CountDownLatch(1);
+        var blockingHandler = new ProcessHandler() {
+            @Override protected void destroyProcessImpl() {}
+            @Override protected void detachProcessImpl() {}
+            @Override public boolean detachIsDefault() { return false; }
+            @Override public OutputStream getProcessInput() { return null; }
+            @Override public boolean waitFor(long timeoutInMilliseconds) {
+                enteredWait.countDown();
+                try {
+                    releaseWait.await(5, TimeUnit.SECONDS);
+                } catch (InterruptedException ignored) {
+                }
+                return true;
+            }
+        };
+        Thread caller = Thread.currentThread();
+        Thread interrupter = new Thread(() -> {
+            try {
+                if (enteredWait.await(5, TimeUnit.SECONDS)) {
+                    caller.interrupt();
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+        IOException interruptedOriginal = new IOException("launch");
+        interrupter.start();
+        try {
+            FullCheckLaunchCleanup.releaseFailedHandler(blockingHandler, deadProcess, interruptedOriginal);
+            assertThat(Thread.interrupted()).isTrue();
+            assertThat(interruptedOriginal.getSuppressed()).hasSize(1);
+            assertThat(interruptedOriginal.getSuppressed()[0]).isInstanceOf(InterruptedException.class);
+        } finally {
+            releaseWait.countDown();
+            interrupter.join(5_000);
+            Thread.interrupted();
+        }
+    }
+
     private static final class InMemoryProcessHandler extends ProcessHandler {
         private final boolean terminated;
 

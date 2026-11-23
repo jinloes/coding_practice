@@ -122,11 +122,11 @@ class FullCheckWorkspaceCleanupPathsTest {
     @Test
     void releaseFailedHandlerSkipsLiveProcessPreservesInterruptAndSuppressesDrainFailure() {
         var original = new java.io.IOException("launch failed");
-        FullCheck.releaseFailedHandler(null, null, original);
-        FullCheck.releaseFailedHandler(new StubProcessHandler(), null, original);
+        FullCheckLaunchCleanup.releaseFailedHandler(null, null, original);
+        FullCheckLaunchCleanup.releaseFailedHandler(new StubProcessHandler(), null, original);
 
         var liveHandler = new StubProcessHandler();
-        FullCheck.releaseFailedHandler(liveHandler, new RefusingProcess(false), original);
+        FullCheckLaunchCleanup.releaseFailedHandler(liveHandler, new RefusingProcess(false), original);
         assertThat(liveHandler.isStartNotified()).isFalse();
         assertThat(original.getSuppressed()).isEmpty();
 
@@ -139,7 +139,7 @@ class FullCheckWorkspaceCleanupPathsTest {
         var terminatedHandler = new StubProcessHandler();
         Thread.currentThread().interrupt();
         try {
-            FullCheck.releaseFailedHandler(terminatedHandler, deadProcess, original);
+            FullCheckLaunchCleanup.releaseFailedHandler(terminatedHandler, deadProcess, original);
             assertThat(Thread.interrupted()).isTrue();
         } finally {
             Thread.interrupted();
@@ -153,7 +153,7 @@ class FullCheckWorkspaceCleanupPathsTest {
                 return false;
             }
         };
-        FullCheck.releaseFailedHandler(timedOutHandler, deadProcess, original);
+        FullCheckLaunchCleanup.releaseFailedHandler(timedOutHandler, deadProcess, original);
         assertThat(original.getSuppressed()).hasSize(1);
         assertThat(original.getSuppressed()[0]).hasCauseInstanceOf(IllegalStateException.class);
     }
@@ -207,7 +207,7 @@ class FullCheckWorkspaceCleanupPathsTest {
             assertThat(failure).isNotNull();
 
             RunSession.RunControl control = new RunSession.RunControl();
-            FullCheck.cleanupLaunchFailure(workspace, process, control, failure);
+            FullCheckLaunchCleanup.cleanupLaunchFailure(workspace, process, control, failure);
 
             assertThat(process.isAlive()).isFalse();
             assertThat(child.isAlive()).isFalse();
@@ -222,7 +222,7 @@ class FullCheckWorkspaceCleanupPathsTest {
             }
             destroyProcessTree(process);
             Files.writeString(marker, validMarker);
-            FullCheck.cleanupLaunchFailure(workspace, null, new RunSession.RunControl(), new java.io.IOException("launch"));
+            FullCheckLaunchCleanup.cleanupLaunchFailure(workspace, null, new RunSession.RunControl(), new java.io.IOException("launch"));
         }
     }
 
@@ -291,7 +291,7 @@ class FullCheckWorkspaceCleanupPathsTest {
             RefusingProcess process = new RefusingProcess(interrupted);
             java.io.IOException original = new java.io.IOException("marker registration failed");
             try {
-                FullCheck.cleanupLaunchFailure(workspace, process, new RunSession.RunControl(), original);
+                FullCheckLaunchCleanup.cleanupLaunchFailure(workspace, process, new RunSession.RunControl(), original);
                 assertThat(Thread.interrupted()).isEqualTo(interrupted);
                 assertThat(process.destroyed).isTrue();
                 assertThat(workspace.root()).isDirectory();
@@ -299,10 +299,10 @@ class FullCheckWorkspaceCleanupPathsTest {
                 assertThat(original.getSuppressed()).hasSize(1);
             } finally {
                 Thread.interrupted();
-                FullCheck.cleanupLaunchFailure(workspace);
+                FullCheckLaunchCleanup.cleanupLaunchFailure(workspace);
             }
         }
-        FullCheck.cleanupLaunchFailure(null, null, new RunSession.RunControl(), new java.io.IOException("launch"));
+        FullCheckLaunchCleanup.cleanupLaunchFailure(null, null, new RunSession.RunControl(), new java.io.IOException("launch"));
     }
 
     @Test
@@ -321,7 +321,7 @@ class FullCheckWorkspaceCleanupPathsTest {
         };
         java.io.IOException original = new java.io.IOException("marker registration failed");
 
-        FullCheck.cleanupLaunchFailure(null, process, new RunSession.RunControl(), original);
+        FullCheckLaunchCleanup.cleanupLaunchFailure(null, process, new RunSession.RunControl(), original);
 
         assertThat(process.destroyed).isTrue();
         assertThat(child.exitAwaited).isTrue();
@@ -466,7 +466,7 @@ class FullCheckWorkspaceCleanupPathsTest {
                 attempt, ExerciseCatalog.find("pair-sum"), "fingerprint");
         Path root = workspace.root();
 
-        FullCheck.cleanupLaunchFailure(workspace);
+        FullCheckLaunchCleanup.cleanupLaunchFailure(workspace);
 
         assertThat(root).doesNotExist();
     }

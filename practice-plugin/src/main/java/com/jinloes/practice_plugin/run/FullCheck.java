@@ -6,7 +6,6 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.openapi.diagnostic.ControlFlowException;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
@@ -16,7 +15,6 @@ import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 import com.jinloes.practice_plugin.workspace.VerificationWorkspace;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
@@ -24,14 +22,12 @@ import java.io.UncheckedIOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
 import static com.jinloes.practice_plugin.run.CheckResult.Status.*;
+import static com.jinloes.practice_plugin.run.FullCheckLaunchCleanup.releaseFailedLaunch;
 
 /**
  * Launches one full correctness check in an isolated verification workspace, enforces its setup and
@@ -47,7 +43,6 @@ final class FullCheck {
             Key.create("algorithm-practice.full-check-command-setup");
     private static final long SETUP_LIMIT_NANOS = TimeUnit.SECONDS.toNanos(60);
     private static final long PROBE_COORDINATOR_LIMIT_MILLIS = 30_000;
-    private static final Logger LOG = Logger.getInstance(FullCheck.class);
 
     /**
      * Receives the final result of a check whose process started.
@@ -111,7 +106,7 @@ final class FullCheck {
             long setupStarted = System.nanoTime();
             completionListener = new ProcessListener() {
                 @Override
-                public void processTerminated(@NotNull ProcessEvent event) {
+                public void processTerminated(ProcessEvent event) {
                     control.cancelWatchdog();
                     control.terminateOwnedChildren();
                     AppExecutorUtil.getAppExecutorService().execute(() -> finish(
@@ -135,16 +130,6 @@ final class FullCheck {
             }
             throw new ExecutionException(exception.getMessage(), exception);
         }
-    }
-
-    private static void releaseFailedLaunch(VerificationWorkspace workspace, Process acquired,
-                                            ProcessHandler acquiredHandler, ProcessListener completionListener,
-                                            RunSession.RunControl control, Exception exception) {
-        if (acquiredHandler != null && completionListener != null) {
-            acquiredHandler.removeProcessListener(completionListener);
-        }
-        cleanupLaunchFailure(workspace, acquired, control, exception);
-        releaseFailedHandler(acquiredHandler, acquired, exception);
     }
 
     void scheduleWatchdog(ProcessHandler handler, RunSession.RunControl control, Path resultRoot,
@@ -235,7 +220,7 @@ final class FullCheck {
         return null;
     }
 
-    private void finish(
+    void finish(
             ManagedPracticeWorkspace.Attempt attempt,
             ExerciseCatalog.Exercise exercise,
             String fingerprint,
@@ -335,85 +320,6 @@ final class FullCheck {
     static CheckResult cleanupFailureResult(CheckResult result, IOException cleanupFailure) {
         return new CheckResult(RUNNER_ERROR, result.tests(), result.failures(),
                 "Verification cleanup failed: " + cleanupFailure.getMessage());
-    }
-
-    static void cleanupLaunchFailure(VerificationWorkspace workspace) {
-        try {
-            workspace.markFinished("launch-failed");
-            workspace.cleanupAfterRun();
-        } catch (IOException ignored) {
-            // Preserve uncertain workspaces.
-        }
-    }
-
-    static void cleanupLaunchFailure(VerificationWorkspace workspace, Process acquired,
-                                     RunSession.RunControl control, Exception original) {
-        if (acquired != null) {
-            control.cancelWatchdog();
-            var descendants = new LinkedHashMap<Long, ProcessHandle>();
-            acquired.descendants().forEach(child -> descendants.put(child.pid(), child));
-            acquired.destroyForcibly();
-            acquired.descendants().forEach(child -> descendants.put(child.pid(), child));
-            descendants.values().forEach(control::capture);
-            control.terminateOwnedChildren();
-            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-            try {
-                if (!acquired.waitFor(5, TimeUnit.SECONDS)) {
-                    throw new IOException("The acquired verification process did not exit.");
-                }
-                for (ProcessHandle child : descendants.values()) {
-                    if (child.isAlive()) {
-                        child.onExit().get(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
-                    }
-                }
-                control.active(null);
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                IOException failure = new IOException("Interrupted while terminating the acquired verification process.", exception);
-                original.addSuppressed(failure);
-                LOG.warn("Verification launch cleanup failed; workspace preserved.", failure);
-                return;
-            } catch (IOException | java.util.concurrent.ExecutionException | TimeoutException exception) {
-                original.addSuppressed(exception);
-                LOG.warn("Verification launch cleanup failed; workspace preserved.", exception);
-                return;
-            }
-        }
-        if (workspace != null) {
-            cleanupLaunchFailure(workspace);
-        }
-    }
-
-    static void releaseFailedHandler(ProcessHandler handler, Process acquired, Exception original) {
-        if (handler == null || acquired == null || acquired.isAlive()) {
-            return;
-        }
-        boolean interrupted = Thread.interrupted();
-        try {
-            // Drain ProcessWaitFor and EOF stream readers off the EDT.
-            Future<?> drain = AppExecutorUtil.getAppExecutorService().submit(() -> {
-                handler.startNotify();
-                if (!handler.waitFor(5_000L)) {
-                    throw new IllegalStateException("Verification handler did not finish draining.");
-                }
-            });
-            try {
-                drain.get(5, TimeUnit.SECONDS);
-            } catch (InterruptedException exception) {
-                drain.cancel(true);
-                interrupted = true;
-                original.addSuppressed(exception);
-            } catch (java.util.concurrent.ExecutionException | TimeoutException exception) {
-                drain.cancel(true);
-                original.addSuppressed(exception);
-            }
-        } catch (RuntimeException exception) {
-            original.addSuppressed(exception);
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
-        }
     }
 
     record TimerState(boolean testsStarted, long elapsed, String phase) {

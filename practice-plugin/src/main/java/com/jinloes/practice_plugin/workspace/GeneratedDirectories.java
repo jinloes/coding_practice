@@ -142,7 +142,7 @@ final class GeneratedDirectories {
     }
 
     private static boolean isInactive(long pid) {
-        return ProcessHandle.of(pid).map(handle -> !handle.isAlive()).orElse(true);
+        return !ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false);
     }
 
     private record Marker(String kind, String attemptId, long pid) {}

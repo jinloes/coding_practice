@@ -6,7 +6,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -42,12 +41,12 @@ public final class PracticeProgress implements PersistentStateComponent<Practice
     }
 
     @Override
-    public @NotNull Data getState() {
+    public Data getState() {
         return data;
     }
 
     @Override
-    public void loadState(@NotNull Data state) {
+    public void loadState(Data state) {
         data = state;
     }
 

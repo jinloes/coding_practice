@@ -7,7 +7,6 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.jinloes.practice_plugin.run.CheckResult;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -53,12 +52,12 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
     }
 
     @Override
-    public @NotNull Data getState() {
+    public Data getState() {
         return data;
     }
 
     @Override
-    public void loadState(@NotNull Data state) {
+    public void loadState(Data state) {
         if (state.attempts == null) {
             state.attempts = new LinkedHashMap<>();
         }

@@ -141,6 +141,7 @@ class OwnedDirectoryTest {
         Files.writeString(foreign, "schema=1\npid=" + deadPid() + "\n", StandardCharsets.UTF_8);
         Files.createSymbolicLink(markerIsSymlink.resolve(MARKER), foreign);
 
+        assertThatThrownBy(() -> owned.readMarker(owned.resolve("missing-dir"))).isInstanceOf(IOException.class);
         assertThatThrownBy(() -> owned.readMarker(unmarked)).isInstanceOf(IOException.class);
         assertThatThrownBy(() -> owned.readMarker(markerIsDirectory)).isInstanceOf(IOException.class);
         assertThatThrownBy(() -> owned.readMarker(markerIsSymlink)).isInstanceOf(IOException.class);
@@ -193,6 +194,8 @@ class OwnedDirectoryTest {
         OwnedDirectory symlinked = base("symlinked-base");
         Files.createSymbolicLink(symlinked.base(), realBase);
 
+        assertThatThrownBy(() -> symlinked.readMarker(symlinked.resolve("child")))
+                .isInstanceOf(IOException.class);
         symlinked.cleanupAbandoned((candidate, marker) -> true);
 
         assertThat(child).as("a symlinked owned base is never walked").isDirectory();

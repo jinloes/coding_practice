@@ -5,7 +5,6 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.util.Key;
-import org.jetbrains.annotations.NotNull;
 
 /** A full-check process handler that caps console output and reports every stop as a cancellation. */
 final class BoundedProcessHandler extends KillableColoredProcessHandler {
@@ -31,7 +30,7 @@ final class BoundedProcessHandler extends KillableColoredProcessHandler {
     }
 
     @Override
-    public synchronized void coloredTextAvailable(@NotNull String text, @NotNull Key outputType) {
+    public synchronized void coloredTextAvailable(String text, Key outputType) {
         OutputChunk chunk = clip(text, captured);
         if (chunk.skip()) {
             return;

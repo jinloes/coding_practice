@@ -1,6 +1,7 @@
 package com.jinloes.practice_plugin.run;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.Executor;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.application.ApplicationConfiguration;
 import com.intellij.execution.executors.DefaultDebugExecutor;
@@ -24,6 +25,7 @@ import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.jinloes.practice_plugin.run.RunDecisions.exampleFinishedText;
@@ -45,17 +47,28 @@ final class ExampleExecution {
     private final AtomicReference<RunSession> session;
     private final Consumer<RunEvent> publish;
     private final Consumer<RunnerAndConfigurationSettings> untrackAndRemove;
+    private final BiConsumer<RunnerAndConfigurationSettings, Executor> configurationLauncher;
 
     ExampleExecution(Project project,
                      ManagedPracticeWorkspace attempts,
                      AtomicReference<RunSession> session,
                      Consumer<RunEvent> publish,
                      Consumer<RunnerAndConfigurationSettings> untrackAndRemove) {
+        this(project, attempts, session, publish, untrackAndRemove, ExecutionUtil::runConfiguration);
+    }
+
+    ExampleExecution(Project project,
+                     ManagedPracticeWorkspace attempts,
+                     AtomicReference<RunSession> session,
+                     Consumer<RunEvent> publish,
+                     Consumer<RunnerAndConfigurationSettings> untrackAndRemove,
+                     BiConsumer<RunnerAndConfigurationSettings, Executor> configurationLauncher) {
         this.project = project;
         this.attempts = attempts;
         this.session = session;
         this.publish = publish;
         this.untrackAndRemove = untrackAndRemove;
+        this.configurationLauncher = configurationLauncher;
     }
 
     /** The example run this environment belongs to, or null when the event is not ours. */
@@ -98,19 +111,7 @@ final class ExampleExecution {
         PracticeModuleWorkspace modules = PracticeModuleWorkspace.get(project);
         modules.open(attempt);
         Path runner = modules.prepareExampleHarness(attempt, ExerciseCatalog.find(attempt.exerciseId()));
-        String fingerprint;
-        try {
-            fingerprint = attempts.fingerprint(attempt);
-        } catch (IOException exception) {
-            modules.clearExampleHarness(attempt);
-            throw new ExecutionException(exception.getMessage(), exception);
-        }
-        RunSession.ExampleSession claimed = new RunSession.ExampleSession(
-                attempt, input, debug, fingerprint, null, null, new RunSession.RunControl());
-        if (!session.compareAndSet(RunSession.IDLE, claimed)) {
-            modules.clearExampleHarness(attempt);
-            throw new ExecutionException("A practice run is already active. Stop it before starting another.");
-        }
+        claimSession(modules, attempt, input, debug, () -> attempts.fingerprint(attempt));
         publish.accept(new RunEvent.Started(attemptId, "Compiling examples."));
         AppExecutorUtil.getAppExecutorService().execute(() -> {
             try {
@@ -124,7 +125,25 @@ final class ExampleExecution {
         });
     }
 
-    private void installConfiguration(
+    void claimSession(PracticeModuleWorkspace modules, ManagedPracticeWorkspace.Attempt attempt,
+                      String input, boolean debug, RunDecisions.Fingerprinter fingerprinter)
+            throws ExecutionException {
+        String fingerprint;
+        try {
+            fingerprint = fingerprinter.fingerprint();
+        } catch (IOException exception) {
+            modules.clearExampleHarness(attempt);
+            throw new ExecutionException(exception.getMessage(), exception);
+        }
+        RunSession.ExampleSession claimed = new RunSession.ExampleSession(
+                attempt, input, debug, fingerprint, null, null, new RunSession.RunControl());
+        if (!session.compareAndSet(RunSession.IDLE, claimed)) {
+            modules.clearExampleHarness(attempt);
+            throw new ExecutionException("A practice run is already active. Stop it before starting another.");
+        }
+    }
+
+    void installConfiguration(
             ManagedPracticeWorkspace.Attempt attempt, String attemptId, Path runner, String input, boolean debug) {
         try {
             WriteIntentReadAction.runThrowable(() -> {
@@ -148,7 +167,7 @@ final class ExampleExecution {
                         project, attempt, attemptId, javaFile, module, input, debug);
                 session.set(current.installed((ApplicationConfiguration) settings.getConfiguration(), settings));
                 try {
-                    ExecutionUtil.runConfiguration(settings, debug
+                    configurationLauncher.accept(settings, debug
                             ? DefaultDebugExecutor.getDebugExecutorInstance()
                             : DefaultRunExecutor.getRunExecutorInstance());
                 } catch (RuntimeException failure) {
@@ -161,7 +180,7 @@ final class ExampleExecution {
         }
     }
 
-    private void finish(String text) {
+    void finish(String text) {
         ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
                 WriteIntentReadAction.run(() -> {
                     String resultText = text;

@@ -215,6 +215,148 @@ class PracticeRunnerLifecyclePathsTest {
         }
     }
 
+    @Test
+    void exampleExecutionCoversClaimContentionRunnerValidationAndLaunchFailures() throws Exception {
+        var project = fixture.getProject();
+        var workspace = ManagedPracticeWorkspace.get();
+        var exercise = ExerciseCatalog.find("pair-sum");
+        var attempt = workspace.create(exercise);
+        var otherAttempt = workspace.create(exercise);
+        var modules = PracticeModuleWorkspace.get(project);
+        PracticeRunner runner = project.getService(PracticeRunner.class);
+
+        Path emptyJavaPath = host.resolve("EmptyFile.java");
+        Files.writeString(emptyJavaPath, "package p;\n");
+        Path plainTextPath = host.resolve("notes.txt");
+        Files.writeString(plainTextPath, "plain text");
+
+        inEdtWrite(() -> {
+            var expectedModule = modules.open(attempt);
+            var otherModule = modules.open(otherAttempt);
+            var runnerPath = modules.prepareExampleHarness(attempt, exercise);
+            var runnerPsi = (PsiJavaFile) PsiManager.getInstance(project)
+                    .findFile(LocalFileSystem.getInstance().refreshAndFindFileByNioFile(runnerPath));
+            var emptyPsi = (PsiJavaFile) PsiManager.getInstance(project)
+                    .findFile(LocalFileSystem.getInstance().refreshAndFindFileByNioFile(emptyJavaPath));
+            assertThat(RunDecisions.exampleRunnerOwned(runnerPsi, expectedModule, expectedModule)).isTrue();
+            assertThat(RunDecisions.exampleRunnerOwned(emptyPsi, expectedModule, expectedModule)).isFalse();
+            assertThat(RunDecisions.exampleRunnerOwned(runnerPsi, null, expectedModule)).isFalse();
+            assertThat(RunDecisions.exampleRunnerOwned(runnerPsi, otherModule, expectedModule)).isFalse();
+            com.intellij.openapi.application.WriteAction.run(() ->
+                    com.intellij.openapi.module.ModuleManager.getInstance(project).disposeModule(otherModule));
+            assertThat(RunDecisions.exampleRunnerOwned(runnerPsi, otherModule, expectedModule)).isFalse();
+
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> runner.examples().claimSession(
+                    modules, attempt, "", false, () -> {
+                        throw new java.io.IOException("fingerprint failed");
+                    })).isInstanceOf(ExecutionException.class).hasMessageContaining("fingerprint failed");
+
+            modules.prepareExampleHarness(attempt, exercise);
+            runner.replaceSessionForTest(new RunSession.CheckSession("active", null, new RunSession.RunControl()));
+            try {
+                org.assertj.core.api.Assertions.assertThatThrownBy(() -> runner.examples().claimSession(
+                        modules, attempt, "", false, () -> "fp"))
+                        .isInstanceOf(ExecutionException.class)
+                        .hasMessageContaining("already active");
+            } finally {
+                runner.replaceSessionForTest(RunSession.IDLE);
+            }
+            return null;
+        });
+
+        List<RunEvent> events = new CopyOnWriteArrayList<>();
+        runner.addEventListener(events::add);
+        try {
+            for (Path candidate : List.of(host.resolve("missing-runner.java"), plainTextPath, otherAttempt.solution())) {
+                events.clear();
+                CountDownLatch done = new CountDownLatch(1);
+                Consumer<RunEvent> waiter = event -> {
+                    if (event instanceof RunEvent.ExampleFinished) {
+                        done.countDown();
+                    }
+                };
+                runner.addEventListener(waiter);
+                try {
+                    runner.replaceSessionForTest(exampleSession(attempt));
+                    EdtTestUtil.runInEdtAndWait(() ->
+                            runner.examples().installConfiguration(attempt, attempt.id(), candidate, "", false));
+                    assertThat(done.await(10, TimeUnit.SECONDS)).isTrue();
+                    assertThat(events).anySatisfy(event ->
+                            assertThat(event.text()).isEqualTo("Generated example runner is not owned by the attempt module."));
+                } finally {
+                    runner.removeEventListener(waiter);
+                }
+            }
+
+            var deletedAttempt = workspace.create(exercise);
+            NioFiles.deleteRecursively(deletedAttempt.directory());
+            CountDownLatch openFailed = new CountDownLatch(1);
+            Consumer<RunEvent> openWaiter = event -> {
+                if (event instanceof RunEvent.ExampleFinished) {
+                    openFailed.countDown();
+                }
+            };
+            runner.addEventListener(openWaiter);
+            try {
+                runner.replaceSessionForTest(exampleSession(deletedAttempt));
+                EdtTestUtil.runInEdtAndWait(() -> runner.examples().installConfiguration(
+                        deletedAttempt, deletedAttempt.id(), host.resolve("missing.java"), "", false));
+                assertThat(openFailed.await(10, TimeUnit.SECONDS)).isTrue();
+            } finally {
+                runner.removeEventListener(openWaiter);
+            }
+
+            for (boolean debug : List.of(false, true)) {
+                var runnerPath = inEdtWrite(() -> modules.prepareExampleHarness(attempt, exercise));
+                AtomicReference<RunSession> customSession = new AtomicReference<>(exampleSession(attempt));
+                List<RunEvent> customEvents = new CopyOnWriteArrayList<>();
+                CountDownLatch launchFailed = new CountDownLatch(1);
+                var failingExamples = new ExampleExecution(project, workspace, customSession, event -> {
+                    customEvents.add(event);
+                    if (event instanceof RunEvent.ExampleFinished) {
+                        launchFailed.countDown();
+                    }
+                }, settings -> {}, (settings, executor) -> {
+                    throw new IllegalStateException("executor exploded");
+                });
+                EdtTestUtil.runInEdtAndWait(() -> org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        failingExamples.installConfiguration(attempt, attempt.id(), runnerPath, "", debug))
+                        .isInstanceOf(IllegalStateException.class));
+                EdtTestUtil.runInEdtAndWait(() -> {});
+                assertThat(launchFailed.await(10, TimeUnit.SECONDS)).isTrue();
+                assertThat(customEvents).anySatisfy(event ->
+                        assertThat(event.text()).contains("Example launch failed before execution: executor exploded"));
+            }
+        } finally {
+            runner.removeEventListener(events::add);
+        }
+    }
+
+    @Test
+    void finishCheckAndExampleFinishTolerateDisposedProjects() throws Exception {
+        var attempt = ManagedPracticeWorkspace.get().create(ExerciseCatalog.find("pair-sum"));
+        var project = fixture.getProject();
+        PracticeRunner runner = project.getService(PracticeRunner.class);
+        var settings = inEdtWrite(() -> CheckRunConfigurations.install(project, attempt.id()));
+
+        EdtTestUtil.runInEdtAndWait(() -> fixture.tearDown());
+        fixture = null;
+        assertThat(project.isDisposed()).isTrue();
+
+        runner.replaceSessionForTest(RunSession.IDLE);
+        runner.finishCheck(attempt, "fp", new CheckResult(CheckResult.Status.PASSED, 1, 0, "ok"));
+        EdtTestUtil.runInEdtAndWait(com.intellij.testFramework.PlatformTestUtil::dispatchAllInvocationEventsInIdeEventQueue);
+
+        runner.replaceSessionForTest(
+                new RunSession.CheckSession(attempt.id(), settings, new RunSession.RunControl()));
+        runner.finishCheck(attempt, "fp", new CheckResult(CheckResult.Status.PASSED, 1, 0, "ok"));
+        EdtTestUtil.runInEdtAndWait(com.intellij.testFramework.PlatformTestUtil::dispatchAllInvocationEventsInIdeEventQueue);
+
+        runner.replaceSessionForTest(exampleSession(attempt));
+        runner.examples().finish("stopped");
+        EdtTestUtil.runInEdtAndWait(com.intellij.testFramework.PlatformTestUtil::dispatchAllInvocationEventsInIdeEventQueue);
+    }
+
     private static <T> T inEdtWrite(ThrowableComputable<T, Exception> action) throws Exception {
         return EdtTestUtil.runInEdtAndGet(() -> WriteIntentReadAction.computeThrowable(action));
     }

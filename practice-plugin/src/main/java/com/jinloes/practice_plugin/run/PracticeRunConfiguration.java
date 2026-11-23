@@ -14,7 +14,6 @@ import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import org.jdom.Element;
-import org.jetbrains.annotations.NotNull;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -29,11 +28,11 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
     }
 
     @Override
-    public @NotNull SettingsEditor<PracticeRunConfiguration> getConfigurationEditor() {
+    public SettingsEditor<PracticeRunConfiguration> getConfigurationEditor() {
         return new SettingsEditor<>() {
-            @Override protected void resetEditorFrom(@NotNull PracticeRunConfiguration configuration) {}
-            @Override protected void applyEditorTo(@NotNull PracticeRunConfiguration configuration) {}
-            @Override protected @NotNull JComponent createEditor() {
+            @Override protected void resetEditorFrom(PracticeRunConfiguration configuration) {}
+            @Override protected void applyEditorTo(PracticeRunConfiguration configuration) {}
+            @Override protected JComponent createEditor() {
                 return new JLabel("Select an attempt and launch examples or a full check from the Practice tool window.");
             }
         };
@@ -52,7 +51,7 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
     }
 
     @Override
-    public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment)
+    public RunProfileState getState(Executor executor, ExecutionEnvironment environment)
             throws ExecutionException {
         if (!com.intellij.execution.executors.DefaultRunExecutor.EXECUTOR_ID.equals(executor.getId())) {
             throw new ExecutionException(
@@ -60,7 +59,7 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
         }
         return new CommandLineState(environment) {
             @Override
-            protected @NotNull ProcessHandler startProcess() throws ExecutionException {
+            protected ProcessHandler startProcess() throws ExecutionException {
                 return getProject().getService(PracticeRunner.class)
                         .startCheck(attemptId, environment.getRunnerAndConfigurationSettings());
             }
@@ -68,13 +67,13 @@ public final class PracticeRunConfiguration extends RunConfigurationBase<Practic
     }
 
     @Override
-    public void readExternal(@NotNull Element element) throws com.intellij.openapi.util.InvalidDataException {
+    public void readExternal(Element element) throws com.intellij.openapi.util.InvalidDataException {
         super.readExternal(element);
         attemptId = element.getAttributeValue("attempt", "");
     }
 
     @Override
-    public void writeExternal(@NotNull Element element) throws com.intellij.openapi.util.WriteExternalException {
+    public void writeExternal(Element element) throws com.intellij.openapi.util.WriteExternalException {
         super.writeExternal(element);
         element.setAttribute("attempt", attemptId);
     }

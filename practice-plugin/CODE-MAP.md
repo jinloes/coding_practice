@@ -43,7 +43,7 @@ practice-plugin/
 | `app` | Cross-package application use cases | `LegacyImportService` |
 | `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example/verification libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
-| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `ExampleExecution`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `CheckRunConfigurations`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
+| `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `ExampleExecution`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `FullCheckLaunchCleanup`, `CheckRunConfigurations`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `runner` (`verificationRunner`) | Java 17 child-JVM coordinator and JUnit Platform XML runner packaged into `verification-runner.jar` | `VerificationMain`, `JUnitSuiteRunner` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
 | `ui` | Tool window UI, rendering, and IDE actions | `PracticePanel`, `RunStatusPresenter`, `ExerciseFilters`, `AttemptBar`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `PracticeIdeActions`, `ExerciseCellRenderer`, `CustomInputPrompt`, `PracticePage`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
@@ -156,19 +156,11 @@ also run after test failures with `--continue`.
 - **Gated:** every package except `ui`, measured on the instrumented classes
   (`instrumentCode`). The test IDE loads plugin classes with `PathClassLoader`,
   which is why the test task sets `includeNoLocationClasses`.
-- **Minimums:** 98% line and 93% branch, a ratchet just below the measured
-  baseline of 98.3% line and 93.1% branch (Windows, Developer Mode on so the
-  symlink tests run). Raise the minimums as coverage improves; never lower
-  them. Without symlink support, the symlink-safety tests fail and coverage
-  drops below the gate.
-- **Known uncoverable misses (not excluded, just accepted):**
-  - Branches that IntelliJ's `@NotNull` instrumentation adds, such as
-    `getState()` returns and some anonymous IDE wrappers.
-  - `Os.IS_WINDOWS` ternaries, which take only one side per OS.
-  - JVM invariants such as a missing SHA-256 `MessageDigest`.
-  - A few IDE race and launch-failure paths in `PracticeRunner`,
-    `ExampleExecution`, and `FullCheck`.
-  New code must not add to this list without a reason.
+- **Minimums:** 100% line (`1.00`) and 100% branch (`1.00`) across all non-`ui`
+  packages (Windows requires Developer Mode or symlink privileges so the
+  symlink-safety tests run). Never lower these minimums. Avoid `@NotNull` on
+  gated Java classes because IntelliJ's `instrumentCode` weaves synthetic
+  null-check branches that cannot be reached through normal callers.
 - **Excluded, with reasons:**
   - `ui/**`: Swing and JCEF components need a live IDE or browser. Its pure
     logic and action wiring are still tested directly (`PageJsonTest`,

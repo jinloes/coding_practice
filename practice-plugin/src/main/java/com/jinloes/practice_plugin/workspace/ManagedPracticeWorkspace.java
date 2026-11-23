@@ -152,17 +152,21 @@ public final class ManagedPracticeWorkspace {
                 || !stored.exerciseId().equals(attempt.exerciseId())) {
             throw new IOException("Managed attempt path does not match its ID.");
         }
+        MessageDigest digest = digest("SHA-256");
+        update(digest, "revision=" + stored.revision());
+        update(digest, "exercise=" + stored.exerciseId());
+        update(digest, Files.readAllBytes(stored.solution()));
+        Exercise exercise = ExerciseCatalog.find(stored.exerciseId());
+        update(digest, ExerciseCatalog.resource(exercise, "ExamplesTest.java"));
+        update(digest, ExerciseCatalog.resource(exercise, "CorrectnessTest.java"));
+        return HexFormat.of().formatHex(digest.digest());
+    }
+
+    static MessageDigest digest(String algorithm) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            update(digest, "revision=" + stored.revision());
-            update(digest, "exercise=" + stored.exerciseId());
-            update(digest, Files.readAllBytes(stored.solution()));
-            Exercise exercise = ExerciseCatalog.find(stored.exerciseId());
-            update(digest, ExerciseCatalog.resource(exercise, "ExamplesTest.java"));
-            update(digest, ExerciseCatalog.resource(exercise, "CorrectnessTest.java"));
-            return HexFormat.of().formatHex(digest.digest());
-        } catch (NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("SHA-256 is required by the Java runtime", impossible);
+            return MessageDigest.getInstance(algorithm);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(algorithm + " is required by the Java runtime", exception);
         }
     }
 

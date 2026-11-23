@@ -84,7 +84,7 @@ public final class VerificationWorkspace {
     }
 
     public List<String> command(Path javaHome, int testSeconds, int heapMb) {
-        String java = javaHome.resolve("bin").resolve(Os.IS_WINDOWS ? "java.exe" : "java").toString();
+        String java = javaHome.resolve("bin").resolve(Os.executable("java")).toString();
         return List.of(
                 java,
                 "-Xmx128m",

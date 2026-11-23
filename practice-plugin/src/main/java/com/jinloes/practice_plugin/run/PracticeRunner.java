@@ -18,7 +18,6 @@ import com.intellij.openapi.project.Project;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
@@ -49,8 +48,8 @@ public final class PracticeRunner implements Disposable {
         this.examples = new ExampleExecution(project, attempts, session, this::publish, this::untrackAndRemove);
         project.getMessageBus().connect(this).subscribe(ExecutionManager.EXECUTION_TOPIC, new ExecutionListener() {
             @Override
-            public void processStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment,
-                                       @NotNull ProcessHandler handler) {
+            public void processStarted(String executorId, ExecutionEnvironment environment,
+                                       ProcessHandler handler) {
                 RunSession.ExampleSession running = examples.matching(environment);
                 if (running != null) {
                     examples.processStarted(running, handler);
@@ -58,14 +57,14 @@ public final class PracticeRunner implements Disposable {
             }
 
             @Override
-            public void processNotStarted(@NotNull String executorId, @NotNull ExecutionEnvironment environment) {
+            public void processNotStarted(String executorId, ExecutionEnvironment environment) {
                 examples.processNotStarted(examples.matching(environment));
                 handleCheckProcessNotStarted(environment);
             }
 
             @Override
-            public void processTerminated(@NotNull String executorId, @NotNull ExecutionEnvironment environment,
-                                          @NotNull ProcessHandler handler, int exitCode) {
+            public void processTerminated(String executorId, ExecutionEnvironment environment,
+                                          ProcessHandler handler, int exitCode) {
                 examples.processTerminated(examples.matching(environment), exitCode);
             }
         });
@@ -173,7 +172,7 @@ public final class PracticeRunner implements Disposable {
         }
     }
 
-    private void finishCheck(ManagedPracticeWorkspace.Attempt attempt, String fingerprint, CheckResult result) {
+    void finishCheck(ManagedPracticeWorkspace.Attempt attempt, String fingerprint, CheckResult result) {
         ApplicationManager.getApplication().invokeLaterOnWriteThread(() ->
                 WriteIntentReadAction.run(() -> {
                     RunnerAndConfigurationSettings settings =

@@ -5,7 +5,6 @@ import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
 
 public final class PracticeConfigurationType extends ConfigurationTypeBase {
     public PracticeConfigurationType() {
@@ -13,12 +12,12 @@ public final class PracticeConfigurationType extends ConfigurationTypeBase {
                 AllIcons.Actions.Execute);
         addFactory(new ConfigurationFactory(this) {
             @Override
-            public @NotNull String getId() {
+            public String getId() {
                 return "AlgorithmPractice";
             }
 
             @Override
-            public @NotNull RunConfiguration createTemplateConfiguration(@NotNull Project project) {
+            public RunConfiguration createTemplateConfiguration(Project project) {
                 return new PracticeRunConfiguration(project, this, "Practice");
             }
         });

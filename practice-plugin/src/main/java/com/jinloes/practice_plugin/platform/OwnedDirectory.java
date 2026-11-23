@@ -121,7 +121,7 @@ public final class OwnedDirectory {
         // NOFOLLOW_LINKS type checks are false for symlinks, so they also reject redirected entries.
         if (!Files.isDirectory(normalized, LinkOption.NOFOLLOW_LINKS)
                 || !Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS)
-                || !normalized.getParent().toRealPath().equals(ownedBase.toRealPath())) {
+                || Files.isSymbolicLink(ownedBase)) {
             throw new IOException("Refusing to modify an unmarked plugin-owned directory.");
         }
         Properties properties = new Properties();

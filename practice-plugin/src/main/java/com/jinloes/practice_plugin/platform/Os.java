@@ -6,8 +6,20 @@ public final class Os {
      * Whether the plugin is running on Windows. Read once: the host OS cannot change while the IDE
      * is running, and a single constant keeps every platform branch answering the same question.
      */
-    public static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
+    public static final boolean IS_WINDOWS = isWindows(System.getProperty("os.name", ""));
 
     private Os() {
+    }
+
+    public static String executable(String name) {
+        return executable(name, IS_WINDOWS);
+    }
+
+    static String executable(String name, boolean windows) {
+        return windows ? name + ".exe" : name;
+    }
+
+    static boolean isWindows(String osName) {
+        return osName.startsWith("Windows");
     }
 }

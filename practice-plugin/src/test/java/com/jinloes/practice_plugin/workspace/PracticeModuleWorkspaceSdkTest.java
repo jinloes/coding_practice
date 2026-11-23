@@ -1,11 +1,13 @@
 package com.jinloes.practice_plugin.workspace;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SimpleJavaSdkType;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.testFramework.EdtTestUtil;
@@ -19,8 +21,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PracticeModuleWorkspaceSdkTest {
     @TempDir Path temporary;
@@ -116,6 +120,75 @@ class PracticeModuleWorkspaceSdkTest {
             removeJdk(noHomeName);
             removeJdk(oldVersionName);
         }
+    }
+
+    @Test
+    void validatesSdkFallbackHarnessRootsModuleLibrariesAndDisposedModules() throws Exception {
+        var attempt = attempts.create(ExerciseCatalog.find("pair-sum"));
+        var support = PracticeModuleWorkspace.get(fixture.getProject());
+        var module = EdtTestUtil.runInEdtAndGet(() -> support.open(attempt));
+
+        Sdk nonJava = SimpleJavaSdkType.getInstance().createJdk("simple-jdk", System.getProperty("java.home"));
+        Sdk blankVersion = JavaSdk.getInstance().createJdk("blank-version", System.getProperty("java.home"), false);
+        Sdk oldVersion = JavaSdk.getInstance().createJdk("old-version", System.getProperty("java.home"), false);
+        EdtTestUtil.runInEdtAndWait(() -> WriteAction.run(() -> {
+            var blankMod = blankVersion.getSdkModificator();
+            blankMod.setVersionString("unparseable");
+            blankMod.commitChanges();
+            var oldMod = oldVersion.getSdkModificator();
+            oldMod.setVersionString("1.8");
+            oldMod.commitChanges();
+        }));
+        assertThat(PracticeModuleWorkspace.isUsableJavaSdk(nonJava)).isFalse();
+        assertThat(PracticeModuleWorkspace.isUsableJavaSdk(blankVersion)).isFalse();
+        assertThatThrownBy(() -> support.createFallbackSdk(temporary, (name, home) -> null))
+                .isInstanceOf(ExecutionException.class)
+                .hasMessageContaining("not a full Java 17");
+        assertThatThrownBy(() -> support.createFallbackSdk(
+                Path.of(System.getProperty("java.home")), (name, home) -> oldVersion))
+                .isInstanceOf(ExecutionException.class)
+                .hasMessageContaining("not a full Java 17");
+
+        Path missingHarness = temporary.resolve("missing-harness");
+        Path harnessWithoutSrc = Files.createDirectories(temporary.resolve("harness-without-src"));
+        EdtTestUtil.runInEdtAndWait(() -> WriteAction.run(() -> {
+            assertThatThrownBy(() -> PracticeModuleWorkspace.attachHarnessRoots(
+                    ModuleRootManager.getInstance(module).getModifiableModel(),
+                    missingHarness, missingHarness.resolve("src"), List.of()))
+                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> PracticeModuleWorkspace.attachHarnessRoots(
+                    ModuleRootManager.getInstance(module).getModifiableModel(),
+                    harnessWithoutSrc, harnessWithoutSrc.resolve("src"), List.of()))
+                    .isInstanceOf(IllegalArgumentException.class);
+            var model = ModuleRootManager.getInstance(module).getModifiableModel();
+            model.getModuleLibraryTable().createLibrary("learner-lib");
+            model.commit();
+        }));
+
+        EdtTestUtil.runInEdtAndGet(() -> support.prepareExampleHarness(attempt, ExerciseCatalog.find("pair-sum")));
+        EdtTestUtil.runInEdtAndWait(() -> support.clearExampleHarness(attempt));
+        EdtTestUtil.runInEdtAndWait(() -> {
+            var checkModel = ModuleRootManager.getInstance(module).getModifiableModel();
+            try {
+                assertThat(checkModel.getModuleLibraryTable().getLibraryByName("learner-lib")).isNotNull();
+            } finally {
+                checkModel.dispose();
+            }
+        });
+
+        Sdk selected = ModuleRootManager.getInstance(module).getSdk();
+        EdtTestUtil.runInEdtAndWait(() -> WriteAction.run(() -> {
+            var mod = selected.getSdkModificator();
+            mod.setHomePath(null);
+            mod.commitChanges();
+        }));
+        assertThatThrownBy(support::javaHome)
+                .isInstanceOf(ExecutionException.class)
+                .hasMessageContaining("No usable full Java 17");
+
+        EdtTestUtil.runInEdtAndWait(() -> WriteAction.run(() ->
+                ModuleManager.getInstance(fixture.getProject()).disposeModule(module)));
+        EdtTestUtil.runInEdtAndWait(support::cleanupGeneratedArtifacts);
     }
 
     private Path generatedBase(String kind) {
