@@ -42,8 +42,17 @@ class FencedLeaseTest {
         assertThat(storage.highestSeenToken()).isEqualTo(2L);
 
         // Explicit release with stale token fails; release with active owner + token succeeds.
+        assertThat(coordinator.release("unknown-partition", "leader-a", 1L)).isFalse();
         assertThat(coordinator.release("partition-7", "leader-a", leaseA.fencingToken())).isFalse();
+        assertThat(coordinator.release("partition-7", "leader-b", 999L)).isFalse();
         assertThat(coordinator.release("partition-7", "leader-b", leaseB.fencingToken())).isTrue();
+
+        assertThatThrownBy(() -> storage.write(0L, "invalid"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> coordinator.tryAcquireOrRenew("partition-7", "leader-a", Duration.ZERO))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> coordinator.tryAcquireOrRenew("partition-7", "leader-a", Duration.ofSeconds(-1)))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     private static final class MutableClock extends Clock {

@@ -112,5 +112,25 @@ class OutboxAndIdempotencyTest {
             "{\"amount\":9999}",
             () -> "pay_3"
         )).isInstanceOf(IdempotentInbox.IdempotencyConflictException.class);
+        assertThatThrownBy(() -> IdempotentInbox.digest("NO-SUCH-ALGO"))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void relayHonorsBatchSizeSkipsAlreadyPublishedEventsAndValidatesBatchSize() {
+        Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
+        TransactionalOutbox outbox = new TransactionalOutbox(clock);
+        outbox.executeAtomically(tx -> {
+            tx.recordOutbox(new TransactionalOutbox.PendingEvent("o-1", "created", "{}"));
+            tx.recordOutbox(new TransactionalOutbox.PendingEvent("o-2", "paid", "{}"));
+        });
+
+        assertThatThrownBy(() -> outbox.relayPending(0, event -> {}))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        List<String> relayedIds = new ArrayList<>();
+        assertThat(outbox.relayPending(1, event -> relayedIds.add(event.aggregateId()))).isEqualTo(1);
+        assertThat(outbox.relayPending(10, event -> relayedIds.add(event.aggregateId()))).isEqualTo(1);
+        assertThat(relayedIds).containsExactly("o-1", "o-2");
     }
 }

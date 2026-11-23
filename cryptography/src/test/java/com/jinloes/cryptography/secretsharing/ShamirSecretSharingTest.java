@@ -36,9 +36,20 @@ class ShamirSecretSharingTest {
 
     @Test
     void validatesArguments() {
+        assertThatThrownBy(() -> ShamirSecretSharing.split(rootKey, 3, 1)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ShamirSecretSharing.split(rootKey, 3, 4)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ShamirSecretSharing.split(rootKey, 256, 2)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ShamirSecretSharing.combine(List.of())).isInstanceOf(IllegalArgumentException.class);
+
         Share share = ShamirSecretSharing.split(rootKey, 3, 2).get(0);
         assertThatThrownBy(() -> ShamirSecretSharing.combine(List.of(share, share)))
                 .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ShamirSecretSharing.combine(List.of(share, new Share(2, new byte[1]))))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ShamirSecretSharing.combine(List.of(new Share(0, new byte[rootKey.length]))))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ShamirSecretSharing.combine(List.of(new Share(256, new byte[rootKey.length]))))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ShamirSecretSharing.div(1, 0)).isInstanceOf(ArithmeticException.class);
     }
 }

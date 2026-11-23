@@ -83,7 +83,7 @@ public final class SlidingWindowCounterRateLimiter {
         long remainingInWindow,
         BigInteger windowBig
     ) {
-        if (state.previousCount == 0L || state.currentCount >= maxRequests) {
+        if (state.previousCount == 0L) {
             return Math.max(1L, remainingInWindow);
         }
         long previousSlotsToShed = state.previousCount - (maxRequests - 1L - state.currentCount);

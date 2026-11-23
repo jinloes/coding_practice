@@ -1,10 +1,9 @@
 package com.jinloes.cryptography.kms;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -20,22 +19,19 @@ public final class EncryptionContext {
 
     public static byte[] canonicalize(Map<String, String> context) {
         Map<String, String> sorted = new TreeMap<>(context == null ? Map.of() : context);
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        try (DataOutputStream out = new DataOutputStream(bytes)) {
-            out.writeInt(sorted.size());
-            for (Map.Entry<String, String> entry : sorted.entrySet()) {
-                writeString(out, entry.getKey());
-                writeString(out, entry.getValue());
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        List<byte[]> encoded = new ArrayList<>(sorted.size() * 2);
+        int totalBytes = Integer.BYTES;
+        for (Map.Entry<String, String> entry : sorted.entrySet()) {
+            byte[] key = entry.getKey().getBytes(StandardCharsets.UTF_8);
+            byte[] value = entry.getValue().getBytes(StandardCharsets.UTF_8);
+            encoded.add(key);
+            encoded.add(value);
+            totalBytes += 2 * Integer.BYTES + key.length + value.length;
         }
-        return bytes.toByteArray();
-    }
-
-    private static void writeString(DataOutputStream out, String value) throws IOException {
-        byte[] utf8 = value.getBytes(StandardCharsets.UTF_8);
-        out.writeInt(utf8.length);
-        out.write(utf8);
+        ByteBuffer out = ByteBuffer.allocate(totalBytes).putInt(sorted.size());
+        for (byte[] utf8 : encoded) {
+            out.putInt(utf8.length).put(utf8);
+        }
+        return out.array();
     }
 }

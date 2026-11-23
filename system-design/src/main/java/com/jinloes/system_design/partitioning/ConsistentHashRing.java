@@ -105,12 +105,15 @@ public final class ConsistentHashRing<N> {
     }
 
     static long hash(String input) {
+        byte[] digest = digest("SHA-256").digest(input.getBytes(StandardCharsets.UTF_8));
+        return ByteBuffer.wrap(digest, 0, Long.BYTES).getLong();
+    }
+
+    static MessageDigest digest(String algorithm) {
         try {
-            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-            byte[] digest = sha256.digest(input.getBytes(StandardCharsets.UTF_8));
-            return ByteBuffer.wrap(digest, 0, Long.BYTES).getLong();
+            return MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 is required by the Java platform", e);
+            throw new IllegalStateException(algorithm + " is required by the Java platform", e);
         }
     }
 }

@@ -158,6 +158,19 @@ class CircuitBreakerTest {
         assertThat(breaker.state()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 
+    @Test
+    void rejectsInvalidConstructorArguments() {
+        Clock clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC);
+        assertThatThrownBy(() -> new CircuitBreaker(0, Duration.ofSeconds(1), 1, clock))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new CircuitBreaker(1, Duration.ZERO, 1, clock))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new CircuitBreaker(1, Duration.ofSeconds(-1), 1, clock))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new CircuitBreaker(1, Duration.ofSeconds(1), 0, clock))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
     private static final class MutableClock extends Clock {
         private Instant instant;
 

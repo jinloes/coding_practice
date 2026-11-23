@@ -56,6 +56,11 @@ class EnvelopeEncryptorTest {
     void rejectsMalformedEnvelope() {
         assertThatThrownBy(() -> encryptor.decrypt(new byte[] {1, 0x7f, 0, 0, 0}, CONTEXT))
                 .isInstanceOf(GeneralSecurityException.class);
+        assertThatThrownBy(() -> encryptor.decrypt(
+                new byte[] {1, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff}, CONTEXT))
+                .isInstanceOf(GeneralSecurityException.class);
+        assertThatThrownBy(() -> encryptor.decrypt(new byte[] {1, 0, 0}, CONTEXT))
+                .isInstanceOf(GeneralSecurityException.class);
         assertThatThrownBy(() -> encryptor.decrypt(new byte[] {9}, CONTEXT))
                 .isInstanceOf(GeneralSecurityException.class);
     }

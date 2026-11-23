@@ -62,6 +62,9 @@ class CachingDataKeySourceTest {
 
     @Test
     void callerZeroingReturnedKeyDoesNotCorruptCache() throws Exception {
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                () -> new CachingDataKeySource(kms::generateDataKey, Duration.ofMinutes(1), 0, clock))
+                .isInstanceOf(IllegalArgumentException.class);
         EnvelopeEncryptor encryptor = new EnvelopeEncryptor(kms, cache, keyId);
         byte[] first = encryptor.encrypt("one".getBytes(), CONTEXT);
         byte[] second = encryptor.encrypt("two".getBytes(), CONTEXT);

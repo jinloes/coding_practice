@@ -37,7 +37,10 @@ class HkdfTest {
     }
 
     @Test
-    void rejectsOutOfRangeLength() {
+    void rejectsOutOfRangeLength() throws Exception {
+        assertThat(Hkdf.expand(new byte[32], null, 32)).hasSize(32);
+        assertThatThrownBy(() -> Hkdf.expand(new byte[32], null, 0))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> Hkdf.expand(new byte[32], null, 255 * 32 + 1))
                 .isInstanceOf(IllegalArgumentException.class);
     }

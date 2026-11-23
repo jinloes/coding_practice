@@ -56,13 +56,40 @@ class ConsistentHashRingTest {
         assertThat(replicas.get(0)).isEqualTo(ring.route("order-42").orElseThrow());
 
         // Requesting more replicas than physical nodes caps at physicalNodeCount().
+        assertThat(ring.physicalNodeCount()).isEqualTo(3);
+        assertThat(ring.removeNode("missing-node")).isFalse();
         assertThat(ring.routeReplicas("order-42", 5))
             .hasSize(3)
             .containsExactlyInAnyOrder("n1", "n2", "n3");
+
+        // Exercise clockwise wrap-around across ring boundary in routeReplicas.
+        ConsistentHashRing<String> smallRing = new ConsistentHashRing<>(3, List.of("n1", "n2"));
+        for (int i = 0; i < 64; i++) {
+            assertThat(smallRing.routeReplicas("wrap-key-" + i, 2))
+                .hasSize(2)
+                .containsExactlyInAnyOrder("n1", "n2");
+        }
+
+        // Exercise full ring scan when distinct physical nodes share virtual-node hashes.
+        record SameLabelNode(int id) {
+            @Override
+            public String toString() {
+                return "same";
+            }
+        }
+        ConsistentHashRing<SameLabelNode> colliding = new ConsistentHashRing<>(
+            2,
+            List.of(new SameLabelNode(1), new SameLabelNode(2))
+        );
+        for (int i = 0; i < 32; i++) {
+            assertThat(colliding.routeReplicas("probe-" + i, 2)).containsExactly(new SameLabelNode(2));
+        }
 
         assertThatThrownBy(() -> new ConsistentHashRing<>(0))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ring.routeReplicas("order-42", 0))
             .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ConsistentHashRing.digest("NO-SUCH-ALGO"))
+            .isInstanceOf(IllegalStateException.class);
     }
 }

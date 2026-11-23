@@ -57,11 +57,14 @@ public final class IdempotentInbox<R> {
     }
 
     private static String sha256Hex(String payload) {
+        return HexFormat.of().formatHex(digest("SHA-256").digest(payload.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    static MessageDigest digest(String algorithm) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(payload.getBytes(StandardCharsets.UTF_8)));
+            return MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 is required by the Java platform", e);
+            throw new IllegalStateException(algorithm + " is required by the Java platform", e);
         }
     }
 

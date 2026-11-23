@@ -50,7 +50,10 @@ class AesGcmTest {
     }
 
     @Test
-    void rejectsTruncatedInputAndBadKeySizes() {
+    void rejectsTruncatedInputAndBadKeySizes() throws Exception {
+        AesGcm aes128 = new AesGcm(new byte[16]);
+        byte[] encryptedWithoutAad = aes128.encrypt(plaintext, null);
+        assertThat(aes128.decrypt(encryptedWithoutAad, null)).isEqualTo(plaintext);
         assertThatThrownBy(() -> aead.decrypt(new byte[10], aad)).isInstanceOf(AEADBadTagException.class);
         assertThatThrownBy(() -> new AesGcm(new byte[20])).isInstanceOf(IllegalArgumentException.class);
     }

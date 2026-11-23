@@ -28,6 +28,11 @@ class PasswordHasherTest {
 
         assertThat(hasher.needsRehash(weak)).isTrue();
         assertThat(hasher.needsRehash(hasher.hash("pw".toCharArray()))).isFalse();
+        assertThat(hasher.needsRehash("md5$deadbeef")).isTrue();
+        assertThat(hasher.needsRehash("argon2id$1000$aa$bb")).isTrue();
         assertThat(hasher.verify("pw".toCharArray(), "md5$deadbeef")).isFalse();
+        assertThat(hasher.verify("pw".toCharArray(), "argon2id$1000$aa$bb")).isFalse();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new PasswordHasher(0))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

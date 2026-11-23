@@ -99,7 +99,7 @@ public final class CircuitBreaker {
             if (halfOpenSuccesses >= halfOpenMaxProbes) {
                 transitionToClosed();
             }
-        } else if (state == State.CLOSED) {
+        } else {
             consecutiveFailures = 0;
         }
     }
@@ -112,11 +112,9 @@ public final class CircuitBreaker {
             tripOpen();
             return;
         }
-        if (state == State.CLOSED) {
-            consecutiveFailures++;
-            if (consecutiveFailures >= failureThreshold) {
-                tripOpen();
-            }
+        consecutiveFailures++;
+        if (consecutiveFailures >= failureThreshold) {
+            tripOpen();
         }
     }
 

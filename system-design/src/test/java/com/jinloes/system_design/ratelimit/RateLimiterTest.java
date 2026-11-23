@@ -62,21 +62,36 @@ class RateLimiterTest {
 
         clock.advance(blocked.retryAfter());
         assertThat(limiter.tryAcquire("client-1").allowed()).isTrue();
+
+        // Skipping multiple full windows resets both previous and current counters cleanly.
+        clock.advance(Duration.ofMinutes(5));
+        assertThat(limiter.tryAcquire("client-1")).isEqualTo(new RateLimitDecision(true, 9, Duration.ZERO));
     }
 
     @Test
     void rejectsInvalidRateLimiterArguments() {
         Clock clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC);
+        TokenBucketRateLimiter validBucket = new TokenBucketRateLimiter(5, 1.0, clock);
 
         assertThatThrownBy(() -> new TokenBucketRateLimiter(0, 1.0, clock))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TokenBucketRateLimiter(5, 0.0, clock))
             .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new TokenBucketRateLimiter(5, Double.POSITIVE_INFINITY, clock))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> validBucket.tryAcquire("k", 0))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> validBucket.tryAcquire("k", 6))
+            .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new SlidingWindowCounterRateLimiter(0, Duration.ofSeconds(1), clock))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new SlidingWindowCounterRateLimiter(5, Duration.ZERO, clock))
             .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new SlidingWindowCounterRateLimiter(5, Duration.ofSeconds(-1), clock))
+            .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new RateLimitDecision(false, -1, Duration.ZERO))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new RateLimitDecision(false, 0, Duration.ofNanos(-1)))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

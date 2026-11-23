@@ -74,5 +74,7 @@ class SagaOrchestratorTest {
         assertThat(result.compensatedSteps()).containsExactly("step-1");
         assertThat(result.compensationFailures()).hasSize(1);
         assertThat(events).containsExactly("do-1", "do-2", "undo-1");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new SagaOrchestrator<>(List.of()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

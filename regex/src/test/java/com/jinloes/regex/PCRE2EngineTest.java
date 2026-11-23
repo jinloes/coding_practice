@@ -82,6 +82,30 @@ class PCRE2EngineTest {
     }
 
     @Test
+    void testsAnchoredPatternsWithAndWithoutJitAndEmptyMatchesInProcess() {
+        assertThat(engine.test("abc", null, "a.c", true)).isPositive();
+        assertThat(engine.test("abcd", null, "a.c", true)).isNegative();
+
+        String previous = System.getProperty("pcre2.regex.jit");
+        try {
+            System.setProperty("pcre2.regex.jit", "false");
+            assertThat(engine.test("abc", java.util.EnumSet.of(org.pcre4j.option.Pcre2CompileOption.UTF), "a.c", true))
+                .isPositive();
+            assertThat(engine.findMatches("a", "a*", true)).containsExactly("a", "");
+        } finally {
+            if (previous == null) {
+                System.clearProperty("pcre2.regex.jit");
+            } else {
+                System.setProperty("pcre2.regex.jit", previous);
+            }
+        }
+
+        assertThat(engine.findMatches("", "")).containsExactly("");
+        assertThat(engine.findMatches("\uD83D\uDE00", "")).containsExactly("", "");
+        assertThat(engine.findMatches("ab", "(?=a)|b")).containsExactly("", "b");
+    }
+
+    @Test
     void emptyMatchesTerminateAndAdvanceAcrossUnicodeWithAndWithoutJit() throws Exception {
         String classpath = String.join(File.pathSeparator, List.of(
                 EmptyMatchProbe.class, PCRE2Engine.class, org.pcre4j.Pcre2Code.class,
@@ -93,12 +117,20 @@ class PCRE2EngineTest {
                         throw new IllegalStateException(exception);
                     }
                 }).distinct().toList());
+        String pcre2Lib = System.getProperty("pcre2.library.name");
         for (boolean jitAllowed : List.of(false, true)) {
-            Process process = new ProcessBuilder(
-                    Path.of(System.getProperty("java.home"), "bin",
-                            System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString(),
-                    "-Xmx64m", "-Dpcre2.regex.jit=" + jitAllowed, "-classpath", classpath,
-                    EmptyMatchProbe.class.getName()).start();
+            List<String> command = new java.util.ArrayList<>();
+            command.add(Path.of(System.getProperty("java.home"), "bin",
+                    System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString());
+            command.add("-Xmx64m");
+            if (pcre2Lib != null) {
+                command.add("-Dpcre2.library.name=" + pcre2Lib);
+            }
+            command.add("-Dpcre2.regex.jit=" + jitAllowed);
+            command.add("-classpath");
+            command.add(classpath);
+            command.add(EmptyMatchProbe.class.getName());
+            Process process = new ProcessBuilder(command).start();
             try {
                 assertThat(process.waitFor(10, TimeUnit.SECONDS))
                         .as("zero-width matching must terminate (JIT allowed: %s)", jitAllowed).isTrue();

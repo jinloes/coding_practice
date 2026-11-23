@@ -34,6 +34,19 @@ tasks.named('test').configure {
         environment 'PATH', "${brewBase}/bin:${System.getenv('PATH') ?: ''}"
         jvmArgs "-Djna.library.path=${brewBase}/lib"
     }
+    if (System.getProperty('pcre2.library.name') != null) {
+        systemProperty 'pcre2.library.name', System.getProperty('pcre2.library.name')
+    } else if (org.gradle.internal.os.OperatingSystem.current().isWindows()
+            && System.getProperty('jna.library.path') == null) {
+        def winPcre2 = [
+                'C:/Program Files/Git/mingw64/bin/libpcre2-8-0.dll',
+                'C:/msys64/mingw64/bin/libpcre2-8-0.dll',
+                'C:/msys64/ucrt64/bin/libpcre2-8-0.dll'
+        ].find { new File(it).exists() }
+        if (winPcre2 != null) {
+            systemProperty 'pcre2.library.name', winPcre2
+        }
+    }
 }
 
 dependencies {

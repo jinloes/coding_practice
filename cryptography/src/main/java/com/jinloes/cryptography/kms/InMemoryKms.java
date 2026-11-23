@@ -1,10 +1,6 @@
 package com.jinloes.cryptography.kms;
 
 import com.jinloes.cryptography.aead.AesGcm;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -160,17 +156,13 @@ public final class InMemoryKms implements KeyManagementService {
     }
 
     private static byte[] header(String keyId, int version) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        try (DataOutputStream out = new DataOutputStream(bytes)) {
-            byte[] id = keyId.getBytes(StandardCharsets.UTF_8);
-            out.writeByte(FORMAT_VERSION);
-            out.writeShort(id.length);
-            out.write(id);
-            out.writeInt(version);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return bytes.toByteArray();
+        byte[] id = keyId.getBytes(StandardCharsets.UTF_8);
+        return ByteBuffer.allocate(1 + Short.BYTES + id.length + Integer.BYTES)
+                .put(FORMAT_VERSION)
+                .putShort((short) id.length)
+                .put(id)
+                .putInt(version)
+                .array();
     }
 
     private static byte[] associatedData(byte[] header, Map<String, String> context) {

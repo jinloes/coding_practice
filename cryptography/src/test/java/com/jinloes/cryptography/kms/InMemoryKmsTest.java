@@ -80,8 +80,38 @@ class InMemoryKmsTest {
     }
 
     @Test
-    void rejectsMalformedAndOversizedInput() {
+    void rejectsMalformedAndOversizedInput() throws Exception {
+        byte[] withoutContext = kms.encrypt(keyId, secret, null);
+        assertThat(kms.decrypt(withoutContext, null)).isEqualTo(secret);
+
+        assertThatThrownBy(() -> kms.decrypt(new byte[] {99}, CONTEXT)).isInstanceOf(GeneralSecurityException.class);
         assertThatThrownBy(() -> kms.decrypt(new byte[] {1, 0}, CONTEXT)).isInstanceOf(GeneralSecurityException.class);
+        assertThatThrownBy(() -> kms.decrypt(new byte[] {1, (byte) 0xff, (byte) 0xff}, CONTEXT))
+                .isInstanceOf(GeneralSecurityException.class);
+        assertThatThrownBy(() -> kms.decrypt(new byte[] {1, 0, 10, 0}, CONTEXT))
+                .isInstanceOf(GeneralSecurityException.class);
+
+        InMemoryKms otherKms = new InMemoryKms();
+        String foreignKey = otherKms.createKey();
+        byte[] foreignBlob = otherKms.encrypt(foreignKey, secret, CONTEXT);
+        assertThatThrownBy(() -> kms.decrypt(foreignBlob, CONTEXT)).isInstanceOf(GeneralSecurityException.class);
+
+        int versionOffset = 1 + Short.BYTES + keyId.getBytes(UTF_8).length;
+        byte[] zeroVersionBlob = withoutContext.clone();
+        java.nio.ByteBuffer.wrap(zeroVersionBlob, versionOffset, Integer.BYTES).putInt(0);
+        assertThatThrownBy(() -> kms.decrypt(zeroVersionBlob, null)).isInstanceOf(GeneralSecurityException.class);
+
+        byte[] unknownVersionBlob = withoutContext.clone();
+        java.nio.ByteBuffer.wrap(unknownVersionBlob, versionOffset, Integer.BYTES).putInt(99);
+        assertThatThrownBy(() -> kms.decrypt(unknownVersionBlob, null)).isInstanceOf(GeneralSecurityException.class);
+
+        assertThatThrownBy(() -> kms.rotateKey("missing-key")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> kms.state(keyId, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> kms.state(keyId, 99)).isInstanceOf(IllegalArgumentException.class);
+
+        kms.disableVersion(keyId, 1);
+        assertThatThrownBy(() -> kms.primaryVersion(keyId)).isInstanceOf(IllegalStateException.class);
+
         assertThatThrownBy(() -> kms.encrypt(keyId, new byte[KeyManagementService.MAX_PLAINTEXT_BYTES + 1], CONTEXT))
                 .isInstanceOf(IllegalArgumentException.class);
     }

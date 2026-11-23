@@ -8,7 +8,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Node {
 
-    private final Lock lock = new ReentrantLock();
+    private final Lock lock;
+
+    public Node() {
+        this(new ReentrantLock());
+    }
+
+    Node(Lock lock) {
+        this.lock = lock;
+    }
 
     public void propagateUpdate(String update, Node backup) {
         boolean done = false;

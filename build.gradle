@@ -56,6 +56,10 @@ subprojects {
             testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher'
         }
 
+        jacoco {
+            toolVersion = '0.8.15'
+        }
+
         test {
             useJUnitPlatform()
             finalizedBy jacocoTestReport
@@ -67,6 +71,28 @@ subprojects {
                 xml.required = true
                 html.required = true
             }
+        }
+
+        jacocoTestCoverageVerification {
+            dependsOn test
+            violationRules {
+                rule {
+                    limit {
+                        counter = 'LINE'
+                        value = 'COVEREDRATIO'
+                        minimum = 1.00
+                    }
+                    limit {
+                        counter = 'BRANCH'
+                        value = 'COVEREDRATIO'
+                        minimum = 1.00
+                    }
+                }
+            }
+        }
+
+        tasks.named('check').configure {
+            dependsOn jacocoTestCoverageVerification
         }
     }
 }
