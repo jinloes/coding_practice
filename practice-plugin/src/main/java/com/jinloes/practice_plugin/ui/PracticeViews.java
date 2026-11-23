@@ -1,5 +1,7 @@
 package com.jinloes.practice_plugin.ui;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.ui.ColorUtil;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.OnePixelSplitter;
@@ -136,9 +138,17 @@ final class PracticeViews {
 
     static void applyHtmlTheme(JEditorPane pane) {
         Font font = UIUtil.getLabelFont();
+        int fontSize = font.getSize();
+        if (ApplicationManager.getApplication() != null) {
+            EditorColorsManager colors = EditorColorsManager.getInstance();
+            if (colors != null) {
+                fontSize = Math.max(fontSize, colors.getGlobalScheme().getEditorFontSize());
+            }
+        }
+        int readableSize = Math.max(14, fontSize);
         String body = ColorUtil.toHex(UIUtil.getLabelForeground());
         HTMLEditorKit kit = new HTMLEditorKit() {
-            private final StyleSheet styles = createStyles(super.getStyleSheet(), font, body);
+            private final StyleSheet styles = createStyles(super.getStyleSheet(), font, readableSize, body);
 
             @Override
             public StyleSheet getStyleSheet() {
@@ -149,13 +159,13 @@ final class PracticeViews {
         pane.setBackground(UIUtil.getPanelBackground());
     }
 
-    private static StyleSheet createStyles(StyleSheet defaults, Font font, String bodyHex) {
+    private static StyleSheet createStyles(StyleSheet defaults, Font font, int fontSize, String bodyHex) {
         StyleSheet css = new StyleSheet();
         if (defaults != null) {
             css.addStyleSheet(defaults);
         }
-        css.addRule("body { font-family: \"" + font.getFamily() + "\"; font-size: " + font.getSize()
-                + "pt; color: #" + bodyHex + "; margin: 8px; }");
+        css.addRule("body { font-family: \"" + font.getFamily() + "\"; font-size: " + fontSize
+                + "pt; line-height: 1.45; color: #" + bodyHex + "; margin: 10px; }");
         css.addRule("p { margin: 0 0 10px 0; }");
         css.addRule("ul { margin: 0 0 10px 0; }");
         css.addRule("li { margin: 0 0 6px 0; }");
@@ -220,9 +230,9 @@ final class PracticeViews {
     static JPanel header(ExerciseFilters filters, JBLabel count, ActionLink resetFilters) {
         JPanel panel = column();
         filters.addTo(panel);
-        count.setFont(JBFont.small());
+        count.setFont(JBFont.label());
         count.setForeground(UIUtil.getContextHelpForeground());
-        resetFilters.setFont(JBFont.small());
+        resetFilters.setFont(JBFont.label());
         JPanel footer = new JPanel(new BorderLayout(8, 0));
         footer.add(count, BorderLayout.WEST);
         footer.add(resetFilters, BorderLayout.EAST);

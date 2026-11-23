@@ -4,6 +4,8 @@ import com.intellij.ide.ui.LafManagerListener;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.colors.EditorColorsListener;
+import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefBrowserBase;
@@ -71,8 +73,9 @@ final class ReactPageView implements PageView {
                 }
             }
         }, browser.getCefBrowser());
-        ApplicationManager.getApplication().getMessageBus().connect(browser)
-                .subscribe(LafManagerListener.TOPIC, source -> push());
+        var connection = ApplicationManager.getApplication().getMessageBus().connect(browser);
+        connection.subscribe(LafManagerListener.TOPIC, source -> push());
+        connection.subscribe(EditorColorsManager.TOPIC, (EditorColorsListener) scheme -> push());
         browser.loadHTML(Html.PAGE);
     }
 

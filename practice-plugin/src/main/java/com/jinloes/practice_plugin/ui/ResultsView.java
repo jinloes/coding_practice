@@ -32,7 +32,7 @@ final class ResultsView {
         banner.setFont(JBFont.label().asBold().biggerOn(1));
         banner.setIconTextGap(JBUI.scale(6));
         history.setForeground(UIUtil.getContextHelpForeground());
-        history.setFont(JBFont.small());
+        history.setFont(JBFont.label());
         JPanel summary = new JPanel(new GridLayout(0, 1, 0, 2));
         summary.setBorder(JBUI.Borders.empty(8, 8, 0, 8));
         summary.add(banner);

@@ -5,6 +5,7 @@ import com.intellij.ui.ColoredListCellRenderer;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.util.ui.EmptyIcon;
+import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +18,7 @@ import java.util.function.Supplier;
 /** Catalog rows: a passed check mark, the title, a colored difficulty, and the topic. */
 final class ExerciseCellRenderer extends ColoredListCellRenderer<Exercise> {
     private static final Map<String, JBColor> DIFFICULTY_COLORS = Map.of(
-            "Easy", new JBColor(new Color(0x067D5B), new Color(0x5FB865)),
+            "Easy", new JBColor(new Color(0x067D5B), new Color(0x6CD173)),
             "Medium", new JBColor(new Color(0xA35C00), new Color(0xE0A83E)),
             "Hard", new JBColor(new Color(0xC92A2A), new Color(0xF06C6C)));
 
@@ -42,8 +43,9 @@ final class ExerciseCellRenderer extends ColoredListCellRenderer<Exercise> {
         setIcon(done ? AllIcons.RunConfigurations.TestPassed : EmptyIcon.ICON_16);
         append(exercise.title());
         append("  " + exercise.difficulty(),
-                new SimpleTextAttributes(SimpleTextAttributes.STYLE_SMALLER, difficultyColor(exercise.difficulty())));
-        append("  " + exercise.topic(), SimpleTextAttributes.GRAYED_SMALL_ATTRIBUTES);
+                new SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, difficultyColor(exercise.difficulty())));
+        append("  " + exercise.topic(),
+                new SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, UIUtil.getContextHelpForeground()));
         setToolTipText(done ? "Passed a full check before" : null);
     }
 }

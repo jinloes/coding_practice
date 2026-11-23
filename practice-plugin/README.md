@@ -33,21 +33,25 @@ Install `practice-plugin/build/distributions/practice-plugin-1.0-SNAPSHOT.zip`
 using **Settings > Plugins > gear menu > Install Plugin from Disk**, then restart
 if prompted. This is a local development distribution, not a Marketplace release.
 
-To launch an isolated development IDE:
+To launch an isolated development IDE using the newest locally installed
+IntelliJ IDEA build (or the pinned SDK with `runIde`):
 
 ```bash
-./gradlew :practice-plugin:runIde \
-  -PidePath="/Applications/IntelliJ IDEA CE.app"
+./gradlew :practice-plugin:runLocalIde   # newest locally installed IntelliJ build
+./gradlew :practice-plugin:runIde        # pinned target platform
 ```
 
-Open either the repository root (for **Algorithm Practice Sandbox (runIde)** in
+Open either the repository root (for **Algorithm Practice Sandbox (runLocalIde)** in
 `.run/`, alongside `system-design-plugin` and the Java modules) or
-`practice-plugin/` standalone (for **Sandbox IDE (runIde)** in
+`practice-plugin/` standalone (for **Sandbox IDE (runLocalIde)** in
 `practice-plugin/.run/`). Run it to launch the sandbox, or debug it to attach to
-the sandbox IDE and breakpoint plugin code. Set `idePath` in root
-`gradle.properties`, `practice-plugin/gradle.properties`, or
-`~/.gradle/gradle.properties` to reuse a local installation; otherwise the
-pinned SDK is downloaded.
+the sandbox IDE and breakpoint plugin code. `runLocalIde` auto-discovers the
+newest locally installed IntelliJ IDEA build (Ultimate preferred over
+Community) and opens a pre-trusted sandbox workspace with the Practice tool
+window visible. Set `idePath` in root `gradle.properties`,
+`practice-plugin/gradle.properties`, or `~/.gradle/gradle.properties` to override
+the discovered IDE path (or to build against a local installation instead of
+downloading the pinned SDK).
 
 ## Practice workflow
 

@@ -45,7 +45,7 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
         </Group>
         <Group gap={6}>
           <DifficultyBadge difficulty={problem.difficulty} />
-          <Badge color="gray" variant="light" style={{ textTransform: 'none' }}>
+          <Badge color="gray" variant="light" size="sm" style={{ textTransform: 'none' }}>
             {problem.topic}
           </Badge>
         </Group>
@@ -53,13 +53,13 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
           Target: {problem.intendedTime} time, {problem.intendedSpace} space
         </Text>
         <Group gap="xs" mt={4}>
-          <Button size="xs" onClick={() => send({ type: 'startOrOpen' })}>
+          <Button size="sm" onClick={() => send({ type: 'startOrOpen' })}>
             {problem.hasAttempt ? 'Open Solution.java' : 'Start Attempt'}
           </Button>
           <Tooltip label={runDisabledReason} disabled={problem.canRunExamples}>
             <span style={{ display: 'inline-block' }}>
               <Button
-                size="xs"
+                size="sm"
                 variant="default"
                 disabled={!problem.canRunExamples}
                 onClick={() => send({ type: 'runExamples' })}
@@ -97,7 +97,7 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
               <Field label="Sample input" value={problem.sampleInput} />
               <Group gap="xs">
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="default"
                   onClick={() => {
                     void copyText(problem.sampleInput).then((ok) => {
@@ -120,7 +120,7 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
                 <Tooltip label={runDisabledReason} disabled={problem.canRunExamples}>
                   <span style={{ display: 'inline-block' }}>
                     <Button
-                      size="xs"
+                      size="sm"
                       variant="light"
                       disabled={!problem.canRunExamples}
                       onClick={() => send({ type: 'runSample' })}
@@ -130,7 +130,7 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
                   </span>
                 </Tooltip>
                 {copied && (
-                  <Text size="xs" c="teal">
+                  <Text size="sm" c="teal">
                     Copied
                   </Text>
                 )}
@@ -178,7 +178,7 @@ function fallbackCopy(value: string): boolean {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <Text size="xs" c="dimmed">
+      <Text size="sm" c="dimmed">
         {label}
       </Text>
       <Code block style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

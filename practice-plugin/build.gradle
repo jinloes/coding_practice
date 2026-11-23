@@ -72,7 +72,7 @@ intellijPlatform {
         name = 'Algorithm Practice'
         ideaVersion {
             sinceBuild = '262.10968.63'
-            untilBuild = '262.*'
+            untilBuild = provider { null }
         }
         pluginVerification {
             ides {
@@ -246,3 +246,5 @@ tasks.named('processTestResources') {
     from('gradlew.bat') { into 'bootstrap' }
     from('gradle/wrapper') { into 'bootstrap/gradle/wrapper' }
 }
+
+apply from: 'gradle/local-sandbox.gradle'

@@ -5,6 +5,14 @@ import { ChooserView, GuideView } from './GuideView';
 import { ProblemView } from './ProblemView';
 import type { Page, Theme } from './types';
 
+/**
+ * Mantine's rem scale assumes a 16px root (md=16px, sm=14px, xs=12px). Setting the root directly to
+ * IntelliJ's 12-13px label font shrinks body, code, and badge text well below comfortable reading size.
+ */
+export function rootFontSizePx(themeFontSize: number): number {
+  return Math.max(16, Math.round(themeFontSize + 2));
+}
+
 export function App() {
   const state = useSyncExternalStore(subscribe, snapshot);
   const theme = state?.theme;
@@ -13,8 +21,7 @@ export function App() {
 
   useEffect(() => {
     if (theme) {
-      // Rem-based Mantine sizes follow the IDE label font size.
-      document.documentElement.style.fontSize = `${theme.fontSize}px`;
+      document.documentElement.style.fontSize = `${rootFontSizePx(theme.fontSize)}px`;
     }
   }, [theme]);
 

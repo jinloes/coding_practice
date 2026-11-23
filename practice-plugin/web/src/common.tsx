@@ -10,7 +10,7 @@ export function difficultyColor(difficulty: string): string {
 
 export function DifficultyBadge({ difficulty }: { difficulty: string }) {
   return (
-    <Badge color={difficultyColor(difficulty)} variant="light">
+    <Badge color={difficultyColor(difficulty)} variant="light" size="sm">
       {difficulty}
     </Badge>
   );

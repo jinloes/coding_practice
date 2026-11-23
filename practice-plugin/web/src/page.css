@@ -1,3 +1,19 @@
+/* Readable prose and inline/block code typography inside IDE tool windows. */
+.mantine-Typography-root {
+  line-height: 1.6;
+}
+
+.mantine-Typography-root code {
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border: 1px solid color-mix(in srgb, var(--mantine-color-default-border) 80%, transparent);
+}
+
+.mantine-Code-root[data-block] {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 /* Thin IDE-like scrollbars instead of Chromium's default arrowed ones. */
 ::-webkit-scrollbar {
   width: 10px;

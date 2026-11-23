@@ -12,6 +12,7 @@ practice-plugin/
   build.gradle
   settings.gradle
   gradle.properties
+  gradle/local-sandbox.gradle
   src/main/java/com/jinloes/practice_plugin/
     app/
     catalog/
@@ -63,7 +64,8 @@ Run from `practice-plugin/`:
 ./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
 ./gradlew check            # full suite plus the coverage gate
 ./gradlew buildPlugin
-./gradlew runIde
+./gradlew runLocalIde      # sandbox IDE on newest locally installed IntelliJ build
+./gradlew runIde           # sandbox IDE on pinned target platform
 ```
 
 The build is an isolated Gradle build included in the repository root via
@@ -82,7 +84,8 @@ idle machine.
 Set `idePath` in `practice-plugin/gradle.properties` or user-level Gradle
 properties to use a local IDE. Never commit a real machine path. Plugin
 sandboxes (`build/sandbox`) live under `build/`, while `.intellijPlatform/`
-retains cached IDE/platform artifacts across `clean` builds. On Windows, forked
+retains cached IDE/platform artifacts across `clean` builds. `runLocalIde` and
+`generateIdeRunConfig` live in `gradle/local-sandbox.gradle`. On Windows, forked
 IDE and test JVMs set `winp.folder.preferred` to `build/winp` so `winp` never
 extracts native helpers into Gradle's immutable platform transform cache.
 

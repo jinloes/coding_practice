@@ -95,7 +95,12 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Pair Sum' })).toBeInTheDocument();
     expect(screen.getByLabelText('Passed')).toBeInTheDocument();
     expect(screen.getByText('Target: O(n) time, O(n) space')).toBeInTheDocument();
-    expect(document.documentElement.style.fontSize).toBe('13px');
+    expect(document.documentElement.style.fontSize).toBe('16px');
+
+    act(() => {
+      pushState({ ...problemState('pair-sum'), theme: { ...THEME, fontSize: 18 } });
+    });
+    expect(document.documentElement.style.fontSize).toBe('20px');
 
     const accordionButton = screen.getByRole('button', { name: 'Custom input format' });
     expect(accordionButton).toHaveAttribute('aria-expanded', 'false');

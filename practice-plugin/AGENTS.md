@@ -59,7 +59,8 @@ Run from `practice-plugin/` with the repository wrapper:
 ./gradlew test
 ./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
 ./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
-./gradlew runIde
+./gradlew runLocalIde      # sandbox IDE on newest locally installed IntelliJ build
+./gradlew runIde           # sandbox IDE on pinned target platform
 ```
 
 `-PcatalogOnly` limits the slow per-exercise catalog checks to the listed

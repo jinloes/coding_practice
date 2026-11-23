@@ -5,10 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
+import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.ui.ColorUtil;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
-import com.intellij.util.ui.NamedColorUtil;
 import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.GuideCatalog;
@@ -39,12 +39,13 @@ final class PageJson {
 
         static Theme current() {
             Font font = UIUtil.getLabelFont();
-            String editorFont = EditorColorsManager.getInstance().getGlobalScheme().getEditorFontName();
+            EditorColorsScheme scheme = EditorColorsManager.getInstance().getGlobalScheme();
+            int fontSize = Math.max(font.getSize(), scheme.getEditorFontSize());
             return new Theme(!JBColor.isBright(), css(UIUtil.getPanelBackground()), css(UIUtil.getLabelForeground()),
-                    css(NamedColorUtil.getInactiveTextColor()), css(JBColor.border()),
+                    css(UIUtil.getContextHelpForeground()), css(JBColor.border()),
                     css(JBUI.CurrentTheme.Link.Foreground.ENABLED),
-                    family(font.getFamily(), "system-ui, sans-serif"), family(editorFont, "monospace"),
-                    font.getSize());
+                    family(font.getFamily(), "system-ui, sans-serif"), family(scheme.getEditorFontName(), "monospace"),
+                    fontSize);
         }
 
         private static String css(Color color) {
