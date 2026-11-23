@@ -19,7 +19,7 @@ class VerificationRunnerTest {
     Path tempDir;
 
     @Test
-    void rejectsWrongArgumentCountAndBuildsIsolatedJvmCommands() {
+    void rejectsWrongArgumentCountAndBuildsIsolatedJvmCommands() throws Exception {
         assertThatThrownBy(() -> VerificationMain.run(tempDir, "only-one"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Expected <javaHome> <testSeconds> <heapMb>");
@@ -27,6 +27,22 @@ class VerificationRunnerTest {
         Path javaHome = Path.of(System.getProperty("java.home"));
         Path classes = tempDir.resolve("classes");
         Path results = tempDir.resolve(".practice-results");
+        Files.createDirectories(results);
+        VerificationMain.writePhase(results, "testing");
+        VerificationMain.writePhase(results, "probing", (staged, target) -> {
+            assertThat(Files.readString(target, StandardCharsets.UTF_8)).isEqualTo("testing");
+            assertThat(Files.readString(staged, StandardCharsets.UTF_8)).isEqualTo("probing");
+            Files.move(staged, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        });
+        assertThat(Files.readString(results.resolve("phase"), StandardCharsets.UTF_8)).isEqualTo("probing");
+        assertThatThrownBy(() -> VerificationMain.writePhase(results, "broken", (staged, target) -> {
+            assertThat(Files.readString(target, StandardCharsets.UTF_8)).isEqualTo("probing");
+            throw new java.io.IOException("simulated move failure");
+        })).isInstanceOf(java.io.IOException.class).hasMessage("simulated move failure");
+        assertThat(Files.readString(results.resolve("phase"), StandardCharsets.UTF_8)).isEqualTo("probing");
+        try (var remaining = Files.list(results)) {
+            assertThat(remaining.map(path -> path.getFileName().toString()).toList()).containsExactly("phase");
+        }
 
         assertThat(VerificationMain.compileCommand(javaHome, "a.jar", tempDir, classes))
                 .contains("--release", "17", "-encoding", "UTF-8", "-classpath", "a.jar", "-d", classes.toString());
@@ -258,6 +274,40 @@ class VerificationRunnerTest {
                 CheckResult check = TestReports.read(workspace.resultDirectory(), exercise.fullCount(), exit);
                 assertThat(check.status()).isEqualTo(CheckResult.Status.PASSED);
                 assertThat(workspace.resultDirectory().resolve("complexity.txt")).isRegularFile();
+                Files.delete(workspace.resultDirectory().resolve("complexity.txt"));
+                Files.writeString(workspace.root().resolve("src/main/java/com/jinloes/practice/ComplexityProbe.java"), """
+                        package com.jinloes.practice;
+                        public class ComplexityProbe {
+                            public static void main(String[] args) throws Exception {
+                                if (args.length == 2) {
+                                    new java.util.concurrent.CountDownLatch(1).await();
+                                    return;
+                                }
+                                var javaExecutable = java.nio.file.Path.of(System.getProperty("java.home"), "bin",
+                                    System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java");
+                                Process child = new ProcessBuilder(javaExecutable.toString(), "-classpath",
+                                    System.getProperty("java.class.path"), ComplexityProbe.class.getName(),
+                                    args[0], "child").start();
+                                var results = java.nio.file.Path.of(args[0]);
+                                java.nio.file.Files.writeString(results.resolve("probe-root-pid"),
+                                    Long.toString(ProcessHandle.current().pid()));
+                                java.nio.file.Files.writeString(results.resolve("probe-child-pid"),
+                                    Long.toString(child.pid()));
+                                child.waitFor();
+                            }
+                        }
+                        """, StandardCharsets.UTF_8);
+                int expiredProbeExit = VerificationMain.run(
+                        workspace.root(), System.getProperty("java.home"), "5", "256");
+                assertThat(expiredProbeExit).isZero();
+                CheckResult passed = TestReports.read(workspace.resultDirectory(), exercise.fullCount(), expiredProbeExit);
+                assertThat(passed.status()).isEqualTo(CheckResult.Status.PASSED);
+                assertThat(com.jinloes.practice_plugin.run.ComplexityAnalysis.read(workspace.resultDirectory())
+                        .orElseThrow().render("O(n)", "O(1)")).contains("Scaling measurement unavailable", "10 seconds");
+                for (String pidFile : List.of("probe-root-pid", "probe-child-pid")) {
+                    long pid = Long.parseLong(Files.readString(workspace.resultDirectory().resolve(pidFile)));
+                    assertThat(ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false)).isFalse();
+                }
             } finally {
                 workspace.markFinished("fingerprint");
                 workspace.cleanupAfterRun();

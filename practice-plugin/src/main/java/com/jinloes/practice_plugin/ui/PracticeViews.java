@@ -172,8 +172,10 @@ final class PracticeViews {
         return area;
     }
 
-    static void installListActivation(JList<?> list, Runnable onActivate) {
-        new DoubleClickListener() {
+    static final String LIST_ACTIVATION = "practiceListActivation";
+
+    static DoubleClickListener installListActivation(JList<?> list, Runnable onActivate) {
+        DoubleClickListener listener = new DoubleClickListener() {
             @Override
             protected boolean onDoubleClick(@NotNull MouseEvent event) {
                 int index = list.locationToIndex(event.getPoint());
@@ -184,7 +186,9 @@ final class PracticeViews {
                 onActivate.run();
                 return true;
             }
-        }.installOn(list);
+        };
+        listener.installOn(list);
+        list.putClientProperty(LIST_ACTIVATION, listener);
         list.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "practiceStartOrResume");
         list.getActionMap().put("practiceStartOrResume", new AbstractAction() {
@@ -193,6 +197,7 @@ final class PracticeViews {
                 onActivate.run();
             }
         });
+        return listener;
     }
 
     static JPanel hintTab(JComponent hints, HintButton hintButton) {

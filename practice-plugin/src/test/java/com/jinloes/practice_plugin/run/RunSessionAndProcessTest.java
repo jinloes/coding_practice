@@ -43,17 +43,19 @@ class RunSessionAndProcessTest {
 
     @Test
     void capturedOwnedProcessesAreTerminatedAndForgotten() throws Exception {
-        Process process = new ProcessBuilder("powershell.exe", "-NoProfile", "-Command", "Start-Sleep -Seconds 30")
-                .start();
-        RunSession.RunControl control = new RunSession.RunControl();
-        control.capture(process.toHandle());
-
-        control.terminateOwnedChildren();
-        boolean exited = process.waitFor(30, TimeUnit.SECONDS);
-        control.terminateOwnedChildren();
-
-        assertThat(exited).isTrue();
-        assertThat(process.isAlive()).isFalse();
+        Process process = TestChildProcess.start(TestChildProcess.class, "waiting");
+        try {
+            RunSession.RunControl control = new RunSession.RunControl();
+            control.capture(process.toHandle());
+            control.terminateOwnedChildren();
+            boolean exited = process.waitFor(5, TimeUnit.SECONDS);
+            control.terminateOwnedChildren();
+            assertThat(exited).isTrue();
+            assertThat(process.isAlive()).isFalse();
+        } finally {
+            process.destroyForcibly();
+            assertThat(process.waitFor(5, TimeUnit.SECONDS)).isTrue();
+        }
     }
 
     @Test

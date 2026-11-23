@@ -1,10 +1,6 @@
 package com.jinloes.practice_plugin.run;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.ExecutionManager;
-import com.intellij.execution.Executor;
-import com.intellij.execution.RunManager;
-import com.intellij.execution.RunnerAndConfigurationSettings;
+import com.intellij.execution.*;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
@@ -23,12 +19,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -111,6 +111,162 @@ class PracticeRunnerCheckGuardTest {
             assertThat(runner.isRunning()).isFalse();
         } finally {
             runner.removeEventListener(listener);
+        }
+    }
+
+    @Test
+    void markerFailureAfterActualAcquisitionAwaitsOwnedProcessesBeforeReleasingGuard() throws Exception {
+        var project = fixture.getProject();
+        PracticeRunner runner = project.getService(PracticeRunner.class);
+        var attempt = ManagedPracticeWorkspace.get().create(ExerciseCatalog.find("pair-sum"));
+        AtomicReference<Process> acquired = new AtomicReference<>();
+        AtomicReference<ProcessHandle> child = new AtomicReference<>();
+        AtomicReference<Path> verificationRoot = new AtomicReference<>();
+        AtomicReference<String> validMarker = new AtomicReference<>();
+        AtomicBoolean boundedWait = new AtomicBoolean();
+        AtomicBoolean exitedWhenFailurePublished = new AtomicBoolean();
+        List<RunEvent> events = new CopyOnWriteArrayList<>();
+        Consumer<RunEvent> listener = event -> {
+            events.add(event);
+            if (event instanceof RunEvent.FailedToStart) {
+                exitedWhenFailurePublished.set(!runner.isRunning()
+                        && !acquired.get().isAlive() && !child.get().isAlive());
+            }
+        };
+        runner.addEventListener(listener);
+        project.putUserData(FullCheck.COMMAND_SETUP, command -> command.setProcessCreator(builder -> {
+            Path root = command.getWorkDirectory().toPath();
+            verificationRoot.set(root);
+            Path marker = root.resolve(".algorithm-practice-verification");
+            try {
+                validMarker.set(Files.readString(marker));
+                Path ready = host.resolve("registration-child-ready");
+                builder.command(TestChildProcess.command(
+                        FullCheckWorkspaceCleanupPathsTest.RegistrationChild.class, ready.toString()));
+                builder.environment().remove("JAVA_TOOL_OPTIONS");
+                builder.environment().remove("JDK_JAVA_OPTIONS");
+                Process process = builder.start();
+                acquired.set(process);
+                child.set(FullCheckWorkspaceCleanupPathsTest.awaitChildPid(ready));
+                assertThat(process.descendants().map(ProcessHandle::pid).toList()).contains(child.get().pid());
+                assertThat(runner.isRunning()).isTrue();
+                assertThat(process.isAlive()).isTrue();
+                assertThat(child.get().isAlive()).isTrue();
+                Files.writeString(marker, "schema=broken");
+                return new GuardedProcess(process, runner, boundedWait);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new UncheckedIOException(new IOException("Interrupted awaiting the test child.", exception));
+            } catch (IOException exception) {
+                throw new UncheckedIOException(exception);
+            }
+        }));
+        try {
+            var settings = installPendingCheck(project, runner, attempt.id());
+            assertThatThrownBy(() -> runner.startCheck(attempt.id(), settings))
+                    .isInstanceOf(ExecutionException.class)
+                    .hasMessageContaining("Unsupported verification workspace marker.");
+
+            assertSettingsAbsent(RunManager.getInstance(project), settings);
+            assertThat(boundedWait).isTrue();
+            assertThat(exitedWhenFailurePublished).isTrue();
+            assertThat(acquired.get().isAlive()).isFalse();
+            assertThat(child.get().isAlive()).isFalse();
+            assertThat(verificationRoot.get()).isDirectory();
+            assertThat(events).singleElement().isInstanceOf(RunEvent.FailedToStart.class);
+
+            assertThatThrownBy(() -> runner.startCheck("missing-after-marker-failure", null))
+                    .isInstanceOf(ExecutionException.class)
+                    .hasMessageContaining("Cannot start managed check:");
+            flushEdt();
+            assertThat(runner.isRunning()).isFalse();
+            assertThat(events).hasSize(2).allMatch(RunEvent.FailedToStart.class::isInstance);
+        } finally {
+            project.putUserData(FullCheck.COMMAND_SETUP, null);
+            runner.removeEventListener(listener);
+            if (child.get() != null) {
+                child.get().destroyForcibly();
+                child.get().onExit().get(5, TimeUnit.SECONDS);
+            }
+            FullCheckWorkspaceCleanupPathsTest.destroyProcessTree(acquired.get());
+            if (verificationRoot.get() != null && Files.exists(verificationRoot.get())) {
+                Files.writeString(verificationRoot.get().resolve(".algorithm-practice-verification"), validMarker.get());
+                NioFiles.deleteRecursively(verificationRoot.get());
+            }
+            NioFiles.deleteRecursively(attempt.directory());
+        }
+    }
+
+    private static final class GuardedProcess extends Process {
+        private final Process delegate;
+        private final PracticeRunner runner;
+        private final AtomicBoolean boundedWait;
+
+        private GuardedProcess(Process delegate, PracticeRunner runner, AtomicBoolean boundedWait) {
+            this.delegate = delegate;
+            this.runner = runner;
+            this.boundedWait = boundedWait;
+        }
+
+        @Override
+        public java.io.OutputStream getOutputStream() {
+            return delegate.getOutputStream();
+        }
+
+        @Override
+        public java.io.InputStream getInputStream() {
+            return delegate.getInputStream();
+        }
+
+        @Override
+        public java.io.InputStream getErrorStream() {
+            return delegate.getErrorStream();
+        }
+
+        @Override
+        public int waitFor() throws InterruptedException {
+            return delegate.waitFor();
+        }
+
+        @Override
+        public int exitValue() {
+            return delegate.exitValue();
+        }
+
+        @Override
+        public long pid() {
+            return delegate.pid();
+        }
+
+        @Override
+        public boolean isAlive() {
+            return delegate.isAlive();
+        }
+
+        @Override
+        public void destroy() {
+            delegate.destroy();
+        }
+
+        @Override
+        public java.util.stream.Stream<ProcessHandle> descendants() {
+            return delegate.descendants();
+        }
+
+        @Override
+        public Process destroyForcibly() {
+            assertThat(runner.isRunning()).isTrue();
+            delegate.destroyForcibly();
+            return this;
+        }
+
+        @Override
+        public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
+            assertThat(runner.isRunning()).isTrue();
+            boundedWait.set(true);
+            boolean exited = delegate.waitFor(timeout, unit);
+            assertThat(runner.isRunning()).isTrue();
+            return exited;
         }
     }
 

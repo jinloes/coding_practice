@@ -177,8 +177,12 @@ solution in isolated child JVMs; learner and test code never run in the IDE
 process.
 
 Default limits are 5 seconds per test, 60 seconds for test execution, and a
-256 MiB test heap. The scaling measurement runs inside that execution budget and
-caps its own work at about six seconds. Change these with **Limits** in the Practice tool window.
+256 MiB test heap. Change these with **Limits** in the Practice tool window.
+The advisory scaling measurement has a separate 10-second child deadline
+(its cooperative workload budget is about six seconds), plus up to five seconds
+for owned-tree cleanup. An expired measurement is unavailable, not a failed
+correctness check. A separate 30-second coordinator limit detects probing
+or cleanup failure.
 Compilation has a separate 60-second startup limit.
 **Stop** cancels the owned execution; timed-out checks stop their owned process
 tree. Example, custom-input, and debug runs have no automatic timeout, so

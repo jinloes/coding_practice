@@ -62,6 +62,54 @@ class FullCheckDecisionTest {
     }
 
     @Test
+    void advisoryProbeDoesNotConsumeTheCorrectnessSuiteTimeout() throws Exception {
+        Files.writeString(tempDir.resolve("phase"), "testing", StandardCharsets.UTF_8);
+        Files.writeString(tempDir.resolve("started"), "started", StandardCharsets.UTF_8);
+        Files.setLastModifiedTime(tempDir.resolve("started"),
+                java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() - 2_000));
+        Files.writeString(tempDir.resolve("TEST-com.jinloes.practice.ExamplesTest.xml"), "<testsuite/>",
+                StandardCharsets.UTF_8);
+        assertThat(FullCheck.watchdogStop(FullCheck.timerState(tempDir, System.nanoTime()), 1))
+                .isEqualTo(new FullCheck.WatchdogStop(TIMED_OUT,
+                        "Tests exceeded 1 seconds. The owned process tree was stopped."));
+
+        Path correctnessReport = tempDir.resolve("TEST-com.jinloes.practice.CorrectnessTest.xml");
+        Files.writeString(correctnessReport, "<testsuite/>", StandardCharsets.UTF_8);
+        java.util.concurrent.atomic.AtomicBoolean stopped = new java.util.concurrent.atomic.AtomicBoolean();
+        FullCheck fullCheck = new FullCheck(null, null, ignored -> {}, () -> stopped.set(true),
+                (attempt, fingerprint, result) -> {});
+        RunSession.RunControl transitionControl = new RunSession.RunControl();
+        fullCheck.runWatchdogTick(new InMemoryProcessHandler(false), transitionControl, tempDir, 0, 1);
+        assertThat(stopped).isFalse();
+        assertThat(transitionControl.stopReason()).isNull();
+
+        Files.setLastModifiedTime(correctnessReport,
+                java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() - 31_000));
+        assertThat(FullCheck.watchdogStop(FullCheck.timerState(tempDir, System.nanoTime()), 1))
+                .isEqualTo(new FullCheck.WatchdogStop(RUNNER_ERROR,
+                        "Advisory probe coordinator exceeded 30 seconds. The owned process tree was stopped."));
+
+        Files.writeString(tempDir.resolve("phase"), "probing", StandardCharsets.UTF_8);
+        assertThat(FullCheck.watchdogStop(FullCheck.timerState(tempDir, System.nanoTime()), 1)).isNull();
+        assertThat(FullCheck.watchdogStop(new FullCheck.TimerState(true, 30_001, "probing"), 1))
+                .isEqualTo(new FullCheck.WatchdogStop(RUNNER_ERROR,
+                        "Advisory probe coordinator exceeded 30 seconds. The owned process tree was stopped."));
+        assertThat(FullCheck.watchdogStop(new FullCheck.TimerState(true, 30_000, "probing"), 1)).isNull();
+
+        java.util.concurrent.atomic.AtomicInteger reads = new java.util.concurrent.atomic.AtomicInteger();
+        FullCheck.TimerState retried = FullCheck.readTimerWithRetry(() -> {
+            if (reads.getAndIncrement() < 2) {
+                throw new java.nio.file.FileSystemException("phase", null, "transient sharing violation");
+            }
+            return new FullCheck.TimerState(true, 10, "probing");
+        });
+        assertThat(retried.phase()).isEqualTo("probing");
+        assertThatThrownBy(() -> FullCheck.readTimerWithRetry(() -> {
+            throw new java.nio.file.FileSystemException("phase", null, "persistent sharing violation");
+        })).isInstanceOf(java.nio.file.FileSystemException.class);
+    }
+
+    @Test
     void processResultUsesCompilationPhaseBeforeReports() throws Exception {
         CheckResult report = new CheckResult(PASSED, 3, 0, "ok");
 
@@ -105,7 +153,8 @@ class FullCheckDecisionTest {
                 .isEqualTo("Verification cleanup failed: locked");
 
         CheckResult passed = new CheckResult(PASSED, 1, 0, "ok");
-        assertThat(FullCheck.withMeasuredComplexity(passed, "O(n)", "O(1)", tempDir)).isSameAs(passed);
+        assertThat(FullCheck.withMeasuredComplexity(passed, "O(n)", "O(1)", tempDir).complexity())
+                .contains("Scaling measurement unavailable", "did not produce a report");
 
         Files.writeString(tempDir.resolve(ComplexityAnalysis.FILE), "x".repeat(64_001), StandardCharsets.UTF_8);
         assertThat(FullCheck.withMeasuredComplexity(passed, "O(n)", "O(1)", tempDir).complexity())

@@ -5,8 +5,11 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
+import com.intellij.openapi.diagnostic.ControlFlowException;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
@@ -14,17 +17,21 @@ import com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace;
 import com.jinloes.practice_plugin.workspace.PracticeModuleWorkspace;
 import com.jinloes.practice_plugin.workspace.VerificationWorkspace;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
-import static com.jinloes.practice_plugin.run.CheckResult.Status.COMPILATION_FAILED;
-import static com.jinloes.practice_plugin.run.CheckResult.Status.RUNNER_ERROR;
-import static com.jinloes.practice_plugin.run.CheckResult.Status.TIMED_OUT;
+import static com.jinloes.practice_plugin.run.CheckResult.Status.*;
 
 /**
  * Launches one full correctness check in an isolated verification workspace, enforces its setup and
@@ -35,9 +42,16 @@ import static com.jinloes.practice_plugin.run.CheckResult.Status.TIMED_OUT;
  * the process ends.
  */
 final class FullCheck {
+    @TestOnly
+    static final Key<Consumer<GeneralCommandLine>> COMMAND_SETUP =
+            Key.create("algorithm-practice.full-check-command-setup");
     private static final long SETUP_LIMIT_NANOS = TimeUnit.SECONDS.toNanos(60);
+    private static final long PROBE_COORDINATOR_LIMIT_MILLIS = 30_000;
+    private static final Logger LOG = Logger.getInstance(FullCheck.class);
 
-    /** Receives the final result of a check whose process started. */
+    /**
+     * Receives the final result of a check whose process started.
+     */
     @FunctionalInterface
     interface Completion {
         void finished(ManagedPracticeWorkspace.Attempt attempt, String fingerprint, CheckResult result);
@@ -64,6 +78,9 @@ final class FullCheck {
      */
     ProcessHandler start(String attemptId, RunSession.RunControl control) throws IOException, ExecutionException {
         VerificationWorkspace workspace = null;
+        Process acquired = null;
+        BoundedProcessHandler acquiredHandler = null;
+        ProcessListener completionListener = null;
         try {
             FileDocumentManager.getInstance().saveAllDocuments();
             ManagedPracticeWorkspace.Attempt attempt = attempts.read(attemptId);
@@ -77,16 +94,22 @@ final class FullCheck {
                     home, progress.getState().testSeconds, progress.getState().heapMb))
                     .withWorkingDirectory(workspace.root())
                     .withEnvironment("JAVA_HOME", home.toString());
+            Consumer<GeneralCommandLine> setup = project.getUserData(COMMAND_SETUP);
+            if (setup != null) {
+                setup.accept(command);
+            }
             VerificationWorkspace currentWorkspace = workspace;
             var handler = new BoundedProcessHandler(command, () -> {
                 control.requestCancel();
                 control.terminateOwnedChildren();
             });
+            acquiredHandler = handler;
+            acquired = handler.getProcess();
             handler.setShouldKillProcessSoftly(false);
             currentWorkspace.markProcess(handler.getProcess().pid(), fingerprint);
             control.active(handler);
             long setupStarted = System.nanoTime();
-            handler.addProcessListener(new ProcessListener() {
+            completionListener = new ProcessListener() {
                 @Override
                 public void processTerminated(@NotNull ProcessEvent event) {
                     control.cancelWatchdog();
@@ -94,25 +117,40 @@ final class FullCheck {
                     AppExecutorUtil.getAppExecutorService().execute(() -> finish(
                             attempt, exercise, fingerprint, currentWorkspace, control, event.getExitCode()));
                 }
-            });
-            scheduleWatchdog(handler, control, currentWorkspace.resultDirectory(), setupStarted,
-                    progress.getState().suiteSeconds);
+            };
+            handler.addProcessListener(completionListener);
             message.accept("Managed attempt: " + attemptId + "\nRunning the isolated full correctness suite.\n"
                     + "Compilation limit: 60 seconds; test execution limit: "
                     + progress.getState().suiteSeconds + " seconds.");
+            scheduleWatchdog(handler, control, currentWorkspace.resultDirectory(), setupStarted,
+                    progress.getState().suiteSeconds);
             return handler;
         } catch (IOException | ExecutionException | IllegalArgumentException exception) {
-            if (workspace != null) {
-                cleanupLaunchFailure(workspace);
-            }
+            releaseFailedLaunch(workspace, acquired, acquiredHandler, completionListener, control, exception);
             throw exception;
+        } catch (RuntimeException exception) {
+            releaseFailedLaunch(workspace, acquired, acquiredHandler, completionListener, control, exception);
+            if (exception instanceof ControlFlowException) {
+                throw exception;
+            }
+            throw new ExecutionException(exception.getMessage(), exception);
         }
     }
 
+    private static void releaseFailedLaunch(VerificationWorkspace workspace, Process acquired,
+                                            ProcessHandler acquiredHandler, ProcessListener completionListener,
+                                            RunSession.RunControl control, Exception exception) {
+        if (acquiredHandler != null && completionListener != null) {
+            acquiredHandler.removeProcessListener(completionListener);
+        }
+        cleanupLaunchFailure(workspace, acquired, control, exception);
+        releaseFailedHandler(acquiredHandler, acquired, exception);
+    }
+
     void scheduleWatchdog(ProcessHandler handler, RunSession.RunControl control, Path resultRoot,
-                                  long setupStarted, int suiteSeconds) {
+                          long setupStarted, int suiteSeconds) {
         control.watchdog(AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() ->
-                runWatchdogTick(handler, control, resultRoot, setupStarted, suiteSeconds),
+                        runWatchdogTick(handler, control, resultRoot, setupStarted, suiteSeconds),
                 0, 250, TimeUnit.MILLISECONDS));
         if (handler.isProcessTerminated()) {
             control.cancelWatchdog();
@@ -130,7 +168,7 @@ final class FullCheck {
         }
         control.captureChildrenOf(handler);
         try {
-            WatchdogStop expired = watchdogStop(timer.read(), suiteSeconds);
+            WatchdogStop expired = watchdogStop(readTimerWithRetry(timer), suiteSeconds);
             if (expired != null) {
                 control.requestStop(expired.reason(), expired.details());
                 stop.run();
@@ -141,7 +179,33 @@ final class FullCheck {
         }
     }
 
+    static TimerState readTimerWithRetry(TimerReader timer) throws IOException {
+        for (int attempt = 0; ; attempt++) {
+            try {
+                return timer.read();
+            } catch (FileSystemException contention) {
+                if (attempt >= 2) {
+                    throw contention;
+                }
+                LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(5));
+            }
+        }
+    }
+
     static TimerState timerState(Path resultRoot, long setupStarted) throws IOException {
+        String phase = phaseOrSetup(resultRoot);
+        if ("probing".equals(phase)) {
+            return new TimerState(true,
+                    System.currentTimeMillis() - Files.getLastModifiedTime(resultRoot.resolve("phase")).toMillis(),
+                    phase);
+        }
+        Path correctnessReport = resultRoot.resolve("TEST-com.jinloes.practice.CorrectnessTest.xml");
+        if (Files.isRegularFile(resultRoot.resolve("TEST-com.jinloes.practice.ExamplesTest.xml"))
+                && Files.isRegularFile(correctnessReport)) {
+            return new TimerState(true,
+                    System.currentTimeMillis() - Files.getLastModifiedTime(correctnessReport).toMillis(),
+                    "probing");
+        }
         Path started = resultRoot.resolve("started");
         boolean testsStarted = Files.isRegularFile(started);
         return new TimerState(testsStarted, testsStarted
@@ -150,6 +214,12 @@ final class FullCheck {
     }
 
     static WatchdogStop watchdogStop(TimerState timer, int suiteSeconds) {
+        if ("probing".equals(timer.phase())) {
+            return timer.elapsed() > PROBE_COORDINATOR_LIMIT_MILLIS
+                    ? new WatchdogStop(RUNNER_ERROR,
+                    "Advisory probe coordinator exceeded 30 seconds. The owned process tree was stopped.")
+                    : null;
+        }
         return watchdogStop(timer.testsStarted(), timer.elapsed(), suiteSeconds);
     }
 
@@ -241,7 +311,8 @@ final class FullCheck {
             return ComplexityAnalysis.read(resultDirectory)
                     .map(report -> result.withComplexity(
                             report.render(intendedTime, intendedSpace)))
-                    .orElse(result);
+                    .orElseGet(() -> result.withComplexity(
+                            "Scaling measurement unavailable: the advisory probe did not produce a report."));
         } catch (IOException | RuntimeException failure) {
             return result.withComplexity("Scaling measurement unavailable: " + failure.getMessage());
         }
@@ -275,7 +346,80 @@ final class FullCheck {
         }
     }
 
-    record TimerState(boolean testsStarted, long elapsed) {
+    static void cleanupLaunchFailure(VerificationWorkspace workspace, Process acquired,
+                                     RunSession.RunControl control, Exception original) {
+        if (acquired != null) {
+            control.cancelWatchdog();
+            var descendants = new LinkedHashMap<Long, ProcessHandle>();
+            acquired.descendants().forEach(child -> descendants.put(child.pid(), child));
+            acquired.destroyForcibly();
+            acquired.descendants().forEach(child -> descendants.put(child.pid(), child));
+            descendants.values().forEach(control::capture);
+            control.terminateOwnedChildren();
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            try {
+                if (!acquired.waitFor(5, TimeUnit.SECONDS)) {
+                    throw new IOException("The acquired verification process did not exit.");
+                }
+                for (ProcessHandle child : descendants.values()) {
+                    if (child.isAlive()) {
+                        child.onExit().get(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
+                    }
+                }
+                control.active(null);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                IOException failure = new IOException("Interrupted while terminating the acquired verification process.", exception);
+                original.addSuppressed(failure);
+                LOG.warn("Verification launch cleanup failed; workspace preserved.", failure);
+                return;
+            } catch (IOException | java.util.concurrent.ExecutionException | TimeoutException exception) {
+                original.addSuppressed(exception);
+                LOG.warn("Verification launch cleanup failed; workspace preserved.", exception);
+                return;
+            }
+        }
+        if (workspace != null) {
+            cleanupLaunchFailure(workspace);
+        }
+    }
+
+    static void releaseFailedHandler(ProcessHandler handler, Process acquired, Exception original) {
+        if (handler == null || acquired == null || acquired.isAlive()) {
+            return;
+        }
+        boolean interrupted = Thread.interrupted();
+        try {
+            // Drain ProcessWaitFor and EOF stream readers off the EDT.
+            Future<?> drain = AppExecutorUtil.getAppExecutorService().submit(() -> {
+                handler.startNotify();
+                if (!handler.waitFor(5_000L)) {
+                    throw new IllegalStateException("Verification handler did not finish draining.");
+                }
+            });
+            try {
+                drain.get(5, TimeUnit.SECONDS);
+            } catch (InterruptedException exception) {
+                drain.cancel(true);
+                interrupted = true;
+                original.addSuppressed(exception);
+            } catch (java.util.concurrent.ExecutionException | TimeoutException exception) {
+                drain.cancel(true);
+                original.addSuppressed(exception);
+            }
+        } catch (RuntimeException exception) {
+            original.addSuppressed(exception);
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    record TimerState(boolean testsStarted, long elapsed, String phase) {
+        TimerState(boolean testsStarted, long elapsed) {
+            this(testsStarted, elapsed, testsStarted ? "testing" : "setup");
+        }
     }
 
     record WatchdogStop(CheckResult.Status reason, String details) {

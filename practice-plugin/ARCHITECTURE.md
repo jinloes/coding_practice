@@ -272,6 +272,13 @@ These runs are exploratory and never update correctness progress.
    `javac --release 17`, runs `JUnitSuiteRunner` in a heap-bounded child JVM,
    and—when every test passes—runs the advisory `ComplexityProbe` in a separate
    child JVM.
+   Setup has a 60-second deadline and testing retains the configured suite
+   deadline. Phase markers are staged to sibling temporary files and moved into
+   place atomically, and completed suite reports immediately transition timing
+   away from the testing deadline. Advisory probing has its own 10-second child
+   deadline, with up to five seconds for owned-tree termination; expiry reports
+   unavailable measurement without cancelling a correctness pass. A separate
+   30-second probing coordinator bound detects failure to finish or clean up.
 4. Visible and correctness tests run offline against the bundled JUnit Platform
    and AssertJ jars, writing per-suite XML reports.
 5. The runner reads fresh report files, compares the checked fingerprint with
@@ -279,6 +286,13 @@ These runs are exploratory and never update correctness progress.
    removes it.
 6. Timeout, cancellation, or disposal terminates owned children. Uncertain
    ownership or process state causes preservation rather than risky deletion.
+   The acquired root remains reachable before marker registration. Registration
+   failure terminates and bounded-waits for it and its known descendants before
+   launch failure releases the guard or cleans the workspace. Failed termination
+   preserves the workspace and is logged and attached to the original error.
+   Failure also removes the completion listener and, once the acquired process
+   has exited, starts notification and drains the IDE handler on the background
+   executor without publishing a check result.
 
 The scaling report never determines pass/fail. Its classifier deliberately
 groups growth rates that wall-clock measurements cannot reliably distinguish.

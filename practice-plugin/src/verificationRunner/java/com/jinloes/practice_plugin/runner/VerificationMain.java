@@ -3,10 +3,15 @@ package com.jinloes.practice_plugin.runner;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Stream;
 
 /**
@@ -46,15 +51,14 @@ public final class VerificationMain {
         }
 
         writePhase(results, "testing");
-        Files.writeString(results.resolve("started"),
-                Long.toString(System.currentTimeMillis()), StandardCharsets.UTF_8);
+        writeAtomic(results.resolve("started"), Long.toString(System.currentTimeMillis()));
         int testExit = launch(workspace, testCommand(javaHome, libsClasspath, classes, results, testSeconds, heapMb));
         if (testExit != 0) {
             return testExit;
         }
 
         writePhase(results, "probing");
-        launch(workspace, probeCommand(javaHome, classes, results, heapMb));
+        launchProbe(workspace, probeCommand(javaHome, classes, results, heapMb), results);
         return 0;
     }
 
@@ -127,8 +131,99 @@ public final class VerificationMain {
         }
     }
 
-    private static void writePhase(Path results, String phase) throws IOException {
-        Files.writeString(results.resolve("phase"), phase, StandardCharsets.UTF_8);
+    private static void launchProbe(Path workspace, List<String> command, Path results)
+            throws IOException, InterruptedException {
+        Process process = new ProcessBuilder(command).directory(workspace.toFile()).inheritIO().start();
+        var descendants = new java.util.LinkedHashMap<Long, ProcessHandle>();
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        boolean finished = false;
+        try {
+            while (System.nanoTime() < deadline) {
+                process.descendants().forEach(child -> descendants.put(child.pid(), child));
+                long remaining = Math.max(1, deadline - System.nanoTime());
+                if (process.waitFor(Math.min(remaining, java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(100)),
+                        java.util.concurrent.TimeUnit.NANOSECONDS)) {
+                    finished = true;
+                    break;
+                }
+            }
+        } finally {
+            process.descendants().forEach(child -> descendants.put(child.pid(), child));
+            process.destroyForcibly();
+            process.descendants().forEach(child -> descendants.put(child.pid(), child));
+            descendants.values().forEach(child -> {
+                child.descendants().forEach(ProcessHandle::destroyForcibly);
+                child.destroyForcibly();
+            });
+            long cleanupDeadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+            if (!process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                throw new IOException("Advisory probe process did not exit.");
+            }
+            for (ProcessHandle child : descendants.values()) {
+                if (child.isAlive()) {
+                    try {
+                        child.onExit().get(Math.max(1, cleanupDeadline - System.nanoTime()),
+                                java.util.concurrent.TimeUnit.NANOSECONDS);
+                    } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException exception) {
+                        throw new IOException("Advisory probe descendant did not exit.", exception);
+                    }
+                }
+            }
+        }
+        if (!finished) {
+            writeAtomic(results.resolve("complexity.txt"),
+                    "schema=1\nstatus=unavailable\nmessage=Scaling measurement unavailable: advisory probe exceeded 10 seconds.\n");
+        }
+    }
+
+    @FunctionalInterface
+    interface StagedMove {
+        void move(Path staged, Path target) throws IOException;
+    }
+
+    static void writePhase(Path results, String phase) throws IOException {
+        writePhase(results, phase, VerificationMain::moveAtomically);
+    }
+
+    static void writePhase(Path results, String phase, StagedMove move) throws IOException {
+        writeAtomic(results.resolve("phase"), phase, move);
+    }
+
+    private static void writeAtomic(Path target, String content) throws IOException {
+        writeAtomic(target, content, VerificationMain::moveAtomically);
+    }
+
+    private static void writeAtomic(Path target, String content, StagedMove move) throws IOException {
+        Path temporary = Files.createTempFile(target.getParent(), "." + target.getFileName() + "-", ".tmp");
+        try {
+            Files.writeString(temporary, content, StandardCharsets.UTF_8);
+            move.move(temporary, target);
+        } finally {
+            Files.deleteIfExists(temporary);
+        }
+    }
+
+    private static void moveAtomically(Path staged, Path target) throws IOException {
+        boolean atomic = true;
+        for (int attempt = 0; ; attempt++) {
+            try {
+                if (atomic) {
+                    Files.move(staged, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                } else {
+                    Files.move(staged, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+                return;
+            } catch (AtomicMoveNotSupportedException ignored) {
+                atomic = false;
+            } catch (java.nio.file.NoSuchFileException missing) {
+                throw missing;
+            } catch (java.nio.file.FileSystemException contention) {
+                if (!IS_WINDOWS || attempt >= 4) {
+                    throw contention;
+                }
+                LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(5));
+            }
+        }
     }
 
     private static String executable(Path javaHome, String tool) {

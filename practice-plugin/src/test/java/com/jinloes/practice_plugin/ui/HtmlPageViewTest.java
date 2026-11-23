@@ -160,6 +160,7 @@ class HtmlPageViewTest {
         dispatchDoubleClick(list, rowBounds.x + 5, rowBounds.y + rowBounds.height + 40, 1_000L);
         assertThat(activations).as("blank space below the last row must not activate").hasValue(0);
 
+        list.setSelectedIndex(0);
         dispatchDoubleClick(list, rowBounds.x + 5, rowBounds.y + Math.max(1, rowBounds.height / 2), 5_000L);
         assertThat(activations).as("double-clicking inside a row activates once").hasValue(1);
     }
@@ -256,14 +257,10 @@ class HtmlPageViewTest {
     }
 
     static void dispatchDoubleClick(javax.swing.JComponent target, int x, int y, long startWhen) {
-        for (int click = 0; click < 2; click++) {
-            long when = startWhen + click * 10L;
-            target.dispatchEvent(new java.awt.event.MouseEvent(
-                    target, java.awt.event.MouseEvent.MOUSE_PRESSED, when, 0, x, y,
-                    click + 1, false, java.awt.event.MouseEvent.BUTTON1));
-            target.dispatchEvent(new java.awt.event.MouseEvent(
-                    target, java.awt.event.MouseEvent.MOUSE_RELEASED, when + 1, 0, x, y,
-                    click + 1, false, java.awt.event.MouseEvent.BUTTON1));
-        }
+        Object installed = target.getClientProperty(PracticeViews.LIST_ACTIVATION);
+        assertThat(installed).isInstanceOf(com.intellij.ui.DoubleClickListener.class);
+        ((com.intellij.ui.DoubleClickListener) installed).onClick(new java.awt.event.MouseEvent(
+                target, java.awt.event.MouseEvent.MOUSE_RELEASED, startWhen, 0, x, y,
+                2, false, java.awt.event.MouseEvent.BUTTON1), 2);
     }
 }

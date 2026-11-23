@@ -57,12 +57,15 @@ class BoundedProcessHandlerAdditionalPathsTest {
     void killPathReportsCancellation() throws Exception {
         AtomicBoolean cancelled = new AtomicBoolean();
         BoundedProcessHandler handler = shortLivedHandler(() -> cancelled.set(true));
-
-        handler.startNotify();
-        assertThat(handler.waitFor(5_000)).isTrue();
-        handler.killProcess();
-
-        assertThat(cancelled).isTrue();
+        try {
+            handler.startNotify();
+            assertThat(handler.waitFor(5_000)).isTrue();
+            handler.killProcess();
+            assertThat(cancelled).isTrue();
+        } finally {
+            handler.getProcess().destroyForcibly();
+            assertThat(handler.getProcess().waitFor(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+        }
     }
 
     @Test
@@ -75,18 +78,23 @@ class BoundedProcessHandlerAdditionalPathsTest {
                 console.append(event.getText());
             }
         });
-        handler.startNotify();
-        assertThat(handler.waitFor(5_000)).isTrue();
-
-        handler.coloredTextAvailable("a".repeat(140 * 1024), ProcessOutputTypes.STDOUT);
-        handler.coloredTextAvailable("ignored", ProcessOutputTypes.STDOUT);
-
-        assertThat(console).hasSize(128 * 1024 + "\n[Practice console truncated at 128 KiB.]\n".length());
-        assertThat(console).endsWith("[Practice console truncated at 128 KiB.]\n");
+        try {
+            handler.startNotify();
+            assertThat(handler.waitFor(5_000)).isTrue();
+            handler.coloredTextAvailable("a".repeat(140 * 1024), ProcessOutputTypes.STDOUT);
+            handler.coloredTextAvailable("ignored", ProcessOutputTypes.STDOUT);
+            assertThat(console).hasSize(128 * 1024 + "\n[Practice console truncated at 128 KiB.]\n".length());
+            assertThat(console).endsWith("[Practice console truncated at 128 KiB.]\n");
+        } finally {
+            handler.getProcess().destroyForcibly();
+            assertThat(handler.getProcess().waitFor(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+        }
     }
 
     private static BoundedProcessHandler shortLivedHandler(Runnable cancelled) throws Exception {
         return new BoundedProcessHandler(
-                new GeneralCommandLine("cmd.exe", "/c", "exit", "/b", "0"), cancelled);
+                new GeneralCommandLine(TestChildProcess.command("silent"))
+                        .withEnvironment("JAVA_TOOL_OPTIONS", "")
+                        .withEnvironment("JDK_JAVA_OPTIONS", ""), cancelled);
     }
 }

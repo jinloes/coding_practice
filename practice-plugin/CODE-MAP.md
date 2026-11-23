@@ -137,6 +137,10 @@ cd web && npm ci && npm test && npm run dev
   verification runner supplies the timeout. Plugin tests may use any JUnit
   Jupiter feature.
 - Prefer behavior-level tests through public or package-visible seams.
+- Process fixtures use silent or waiting current-JDK children, never a
+  platform shell. Headless activation fixtures invoke the actual retained
+  plugin `DoubleClickListener`, explicitly selecting the row rather than
+  dispatching through Swing's display-dependent delegates.
 - Add regression tests for lifecycle, cleanup, persistence, path safety, report
   parsing, and generated source behavior when changing those areas.
 - The runtime-only JUnit 4 dependency exists only because the IntelliJ fixture
@@ -323,6 +327,17 @@ is the source of truth. `ExampleExecution` operates against that shared
 `RunSession` reference, and `FullCheck` holds no guard state (`PracticeRunner`
 claims the guard before starting it and releases it from the completion
 callback).
+
+Keep correctness and advisory deadlines separate. An expired probe must
+terminate its owned tree and preserve passing XML results; a hard coordinator
+bound still applies. Retain an acquired root before fallible marker registration,
+and prove root/descendant termination before safe cleanup and guard release.
+The launch regression runs through the real runner guard and registration path,
+using project-scoped command setup to acquire controlled children and observe
+bounded waits; helper-only cleanup tests do not prove launch ownership.
+Failed launches also remove the completion listener and, once the acquired
+process has exited, start notification and drain the IDE handler on the
+background executor without publishing a successful result.
 
 ## Changing Storage Or Cleanup
 
