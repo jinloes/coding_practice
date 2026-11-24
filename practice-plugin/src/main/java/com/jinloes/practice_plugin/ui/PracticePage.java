@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/** What a {@link PageView} shows: Problem, Study Guide, or AI Coach tab, with the learner's progress. */
+/** What a {@link PageView} shows: Problem, Study Guide, Hints, or AI Coach tab, with the learner's progress. */
 sealed interface PracticePage {
     Set<String> passed();
 
@@ -30,6 +30,15 @@ sealed interface PracticePage {
     record Study(Guide guide, Exercise selected, Set<String> passed) implements PracticePage {
         public Study {
             passed = Set.copyOf(Objects.requireNonNull(passed, "passed"));
+        }
+    }
+
+    /** Progressive hints for the selected exercise and attempt. */
+    record Hints(Exercise exercise, Set<String> passed, boolean hasAttempt, int revealedCount)
+            implements PracticePage {
+        public Hints {
+            passed = Set.copyOf(Objects.requireNonNull(passed, "passed"));
+            revealedCount = Math.max(revealedCount, 0);
         }
     }
 
@@ -63,6 +72,31 @@ sealed interface PracticePage {
             error = Objects.requireNonNullElse(error, "");
             modelLabel = Objects.requireNonNullElse(modelLabel, "");
             turns = turns == null ? List.of() : List.copyOf(turns);
+        }
+    }
+
+    /** The Results tab state: verdict, timestamps, staleness, raw output, and AI Coach unlock state. */
+    record Results(
+            String tone,
+            String banner,
+            String checkedAt,
+            String lastPassedAt,
+            boolean stale,
+            String staleReason,
+            boolean askCoachEnabled,
+            String output) implements PracticePage {
+        public Results {
+            tone = Objects.requireNonNullElse(tone, "idle");
+            banner = Objects.requireNonNullElse(banner, "");
+            checkedAt = Objects.requireNonNullElse(checkedAt, "");
+            lastPassedAt = Objects.requireNonNullElse(lastPassedAt, "");
+            staleReason = Objects.requireNonNullElse(staleReason, "");
+            output = Objects.requireNonNullElse(output, "");
+        }
+
+        @Override
+        public Set<String> passed() {
+            return Set.of();
         }
     }
 }

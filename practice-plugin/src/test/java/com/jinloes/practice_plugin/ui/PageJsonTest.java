@@ -39,7 +39,7 @@ class PageJsonTest {
         assertThat(problem.get("title").getAsString()).isEqualTo(exercise.title());
         assertThat(problem.get("difficulty").getAsString()).isEqualTo(exercise.difficulty());
         assertThat(problem.get("passed").getAsBoolean()).isTrue();
-        assertThat(problem.get("statementHtml").getAsString()).isEqualTo(MarkdownHtml.toHtml(exercise.statement()));
+        assertThat(problem.get("statement").getAsString()).isEqualTo(exercise.statement());
         assertThat(problem.getAsJsonArray("examples")).hasSize(exercise.examples().size());
         assertThat(problem.getAsJsonArray("examples").get(0).getAsJsonObject().get("input").getAsString())
                 .isEqualTo(exercise.examples().get(0).input());
@@ -69,7 +69,8 @@ class PageJsonTest {
                 .getAsJsonObject("page").getAsJsonObject("guide");
 
         assertThat(body.get("kind").getAsString()).isEqualTo("guide");
-        assertThat(body.get("lessonHtml").getAsString()).isEqualTo(MarkdownHtml.toHtml(guide.lesson()));
+        assertThat(body.get("summary").getAsString()).isEqualTo(guide.summary());
+        assertThat(body.get("lesson").getAsString()).isEqualTo(guide.lesson());
         var levels = body.getAsJsonArray("levels");
         assertThat(levels).hasSize(GuideCatalog.DIFFICULTIES.size());
         for (int index = 0; index < levels.size(); index++) {
@@ -134,9 +135,8 @@ class PageJsonTest {
         assertThat(coach.get("stale").getAsBoolean()).isTrue();
         assertThat(coach.get("modelLabel").getAsString()).isEqualTo("gpt-5");
         assertThat(coach.getAsJsonArray("turns")).hasSize(2);
-        assertThat(coach.getAsJsonArray("turns").get(1).getAsJsonObject().get("html").getAsString())
-                .contains("<h3>Step 1</h3>")
-                .contains("<pre><code>int x = 1;</code></pre>");
+        assertThat(coach.getAsJsonArray("turns").get(1).getAsJsonObject().get("markdown").getAsString())
+                .isEqualTo("## Step 1\n```java\nint x = 1;\n```");
 
         JsonObject emptyCoach = render(new PracticePage.Coach(
                 null, null, Set.of(), false, "Run Check first.", false, "", false, "", "CLI default", java.util.List.of()))
@@ -146,6 +146,49 @@ class PageJsonTest {
         assertThat(emptyCoach.get("attemptId").isJsonNull()).isTrue();
         assertThat(emptyCoach.get("unlocked").getAsBoolean()).isFalse();
         assertThat(emptyCoach.get("stale").getAsBoolean()).isFalse();
+    }
+
+    @Test
+    void rendersHintsPageWithLockedAndRevealedStates() {
+        var exercise = ExerciseCatalog.find("pair-sum");
+        JsonObject locked = render(new PracticePage.Hints(exercise, Set.of(), false, 2))
+                .getAsJsonObject("page").getAsJsonObject("hints");
+        assertThat(locked.get("exerciseTitle").getAsString()).isEqualTo(exercise.title());
+        assertThat(locked.get("hasAttempt").getAsBoolean()).isFalse();
+        assertThat(locked.get("revealedCount").getAsInt()).isZero();
+        assertThat(locked.getAsJsonArray("revealedHints")).isEmpty();
+
+        JsonObject revealed = render(new PracticePage.Hints(exercise, Set.of(), true, 1))
+                .getAsJsonObject("page").getAsJsonObject("hints");
+        assertThat(revealed.get("hasAttempt").getAsBoolean()).isTrue();
+        assertThat(revealed.get("revealedCount").getAsInt()).isEqualTo(1);
+        assertThat(revealed.get("totalCount").getAsInt()).isEqualTo(exercise.hints().size());
+        assertThat(revealed.getAsJsonArray("revealedHints").get(0).getAsString())
+                .isEqualTo(exercise.hints().get(0));
+
+        JsonObject empty = render(new PracticePage.Hints(null, Set.of(), false, 0))
+                .getAsJsonObject("page").getAsJsonObject("hints");
+        assertThat(empty.get("exerciseTitle").isJsonNull()).isTrue();
+    }
+
+    @Test
+    void rendersResultsPageWithStatusTimestampsAndOutput() {
+        var page = new PracticePage.Results(
+                "passed", "Passed", "2026-11-24T21:34:55Z", "2026-11-24T21:34:55Z",
+                true, "edited", true, "All 12 supplied cases passed.");
+        assertThat(page.passed()).isEmpty();
+
+        JsonObject rendered = render(page).getAsJsonObject("page");
+        assertThat(rendered.get("kind").getAsString()).isEqualTo("results");
+        JsonObject results = rendered.getAsJsonObject("results");
+        assertThat(results.get("tone").getAsString()).isEqualTo("passed");
+        assertThat(results.get("banner").getAsString()).isEqualTo("Passed");
+        assertThat(results.get("checkedAt").getAsString()).isEqualTo("2026-11-24T21:34:55Z");
+        assertThat(results.get("lastPassedAt").getAsString()).isEqualTo("2026-11-24T21:34:55Z");
+        assertThat(results.get("stale").getAsBoolean()).isTrue();
+        assertThat(results.get("staleReason").getAsString()).isEqualTo("edited");
+        assertThat(results.get("askCoachEnabled").getAsBoolean()).isTrue();
+        assertThat(results.get("output").getAsString()).isEqualTo("All 12 supplied cases passed.");
     }
 
     private static JsonObject render(PracticePage page) {

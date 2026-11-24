@@ -22,7 +22,7 @@ export type Problem = {
   topic: string;
   difficulty: string;
   passed: boolean;
-  statementHtml: string;
+  statement: string;
   examples: Example[];
   inputSyntax: string;
   sampleInput: string;
@@ -48,16 +48,24 @@ export type Guide = {
   id: string;
   title: string;
   kind: 'guide' | 'track';
-  summaryHtml: string;
-  lessonHtml: string;
+  summary: string;
+  lesson: string;
   levels: GuideLevel[];
+};
+
+export type Hints = {
+  exerciseTitle: string | null;
+  hasAttempt: boolean;
+  revealedCount: number;
+  totalCount: number;
+  revealedHints: string[];
 };
 
 export type Membership = { title: string; guides: Link[]; tracks: Link[] };
 
 export type CoachTurn = {
   role: string;
-  html: string;
+  markdown: string;
   createdAt: string;
 };
 
@@ -75,10 +83,23 @@ export type Coach = {
   turns: CoachTurn[];
 };
 
+export type Results = {
+  tone: 'passed' | 'failed' | 'error' | 'running' | 'stale' | 'info' | 'idle' | string;
+  banner: string;
+  checkedAt: string;
+  lastPassedAt: string;
+  stale: boolean;
+  staleReason: string;
+  askCoachEnabled: boolean;
+  output: string;
+};
+
 export type Page =
   | { kind: 'problem'; problem: Problem | null }
   | { kind: 'guide'; guide: Guide }
   | { kind: 'chooser'; selected: Membership | null }
+  | { kind: 'hints'; hints: Hints }
+  | { kind: 'results'; results: Results }
   | { kind: 'coach'; coach: Coach };
 
 export type PageState = { theme: Theme; page: Page };
@@ -92,6 +113,8 @@ export type PageEvent = {
     | 'startOrOpen'
     | 'runExamples'
     | 'runSample'
+    | 'revealHint'
+    | 'openCoach'
     | 'coachDiagnose'
     | 'coachTranslate'
     | 'coachCompare'

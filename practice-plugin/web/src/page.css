@@ -23,9 +23,104 @@
   font-size: 0.9rem;
 }
 
+.practice-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.92rem;
+}
+
+.practice-markdown th,
+.practice-markdown td {
+  border: 1px solid var(--mantine-color-default-border);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.practice-markdown th {
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--mantine-color-default-border) 35%, transparent);
+}
+
+.practice-markdown hr {
+  border: none;
+  border-top: 1px solid var(--mantine-color-default-border);
+  margin: 0.9rem 0;
+}
+
+.practice-markdown blockquote {
+  margin: 0.75rem 0;
+  padding: 0.25rem 0.75rem;
+  border-left: 3px solid var(--mantine-color-default-border);
+  color: var(--mantine-color-dimmed);
+}
+
 .mantine-Code-root[data-block] {
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+/* Results tab: tabular numerals and proportional inline scaling bars. */
+.results-hero {
+  border-left-width: 4px;
+}
+
+.results-scaling-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.88rem;
+}
+
+.results-scaling-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--mantine-color-dimmed);
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.results-scaling-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--mantine-color-default-border) 55%, transparent);
+  vertical-align: middle;
+}
+
+.results-scaling-table tr:last-child td {
+  border-bottom: none;
+}
+
+.results-scaling-num {
+  text-align: right;
+  font-family: var(--mantine-font-family-monospace);
+  white-space: nowrap;
+}
+
+.results-scaling-bar-cell {
+  width: 42%;
+  min-width: 72px;
+}
+
+.results-scaling-track {
+  height: 8px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--mantine-color-default-border) 50%, transparent);
+  overflow: hidden;
+}
+
+.results-scaling-fill {
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--mantine-color-teal-6);
+  min-width: 4px;
+}
+
+.results-raw-toggle {
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.85rem;
+  color: var(--mantine-color-dimmed);
 }
 
 /* Thin IDE-like scrollbars instead of Chromium's default arrowed ones. */

@@ -76,11 +76,25 @@ sealed interface RunSession {
      * to be reset before the next one.
      */
     final class RunControl {
+        private static final int MAX_CAPTURED_OUTPUT = 16_384;
         private final AtomicReference<CheckResult.Status> stopReason = new AtomicReference<>();
         private final AtomicReference<String> stopDetails = new AtomicReference<>();
         private final AtomicReference<ProcessHandler> active = new AtomicReference<>();
         private final AtomicReference<ScheduledFuture<?>> watchdog = new AtomicReference<>();
         private final Map<Long, ProcessHandle> ownedProcesses = new ConcurrentHashMap<>();
+        private final StringBuilder capturedOutput = new StringBuilder();
+
+        /** Appends process output up to a bounded cap for failure diagnosis. */
+        synchronized void appendOutput(String text) {
+            int remaining = MAX_CAPTURED_OUTPUT - capturedOutput.length();
+            if (remaining > 0) {
+                capturedOutput.append(text, 0, Math.min(text.length(), remaining));
+            }
+        }
+
+        synchronized String capturedOutput() {
+            return capturedOutput.toString();
+        }
 
         /** Records the first reason this run stopped; a later cancel never overwrites a diagnosis. */
         void requestCancel() {

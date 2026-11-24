@@ -85,7 +85,7 @@ class PracticePanelCoachTest {
                         .extracting(a -> a.getTemplatePresentation().getText()).contains("AI Coach Settings");
                 var tabs = UIUtil.findComponentsOfType(panel, JBTabbedPane.class).stream().findFirst().orElseThrow();
                 assertThat(IntStream.range(0, tabs.getTabCount()).mapToObj(tabs::getTitleAt)).contains("Coach");
-                assertThat(panel.resultsView().askCoachButton().isEnabled()).isFalse();
+                assertThat(panel.resultsView().isAskCoachEnabled()).isFalse();
             } finally {
                 Disposer.dispose(panel);
             }

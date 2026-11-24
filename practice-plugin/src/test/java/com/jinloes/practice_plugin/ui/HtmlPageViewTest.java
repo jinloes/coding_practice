@@ -89,6 +89,30 @@ class HtmlPageViewTest {
     }
 
     @Test
+    void rendersHintsFallbackHtmlForEmptyLockedAndRevealedStates() {
+        var exercise = ExerciseCatalog.find("pair-sum");
+        assertThat(HtmlPageView.html(new PracticePage.Hints(null, Set.of(), false, 0)))
+                .contains("Select an exercise to view hints.");
+        assertThat(HtmlPageView.html(new PracticePage.Hints(exercise, Set.of(), false, 1)))
+                .contains("Start or resume an attempt to reveal hints.");
+        assertThat(HtmlPageView.html(new PracticePage.Hints(exercise, Set.of(), true, 1)))
+                .contains("Hint 1 of " + exercise.hints().size());
+    }
+
+    @Test
+    void rendersResultsFallbackHtmlForEmptyAndPopulatedStates() {
+        assertThat(HtmlPageView.html(new PracticePage.Results(
+                "idle", "", "", "", false, "", false, ""))).isEmpty();
+        assertThat(HtmlPageView.html(new PracticePage.Results(
+                "passed", "Passed", "2026-11-24T21:34:55Z", "", false, "", true, "All 12 passed.")))
+                .contains("<h2>Passed</h2>", "Last full check: 2026-11-24T21:34:55Z", "Most recent pass: never",
+                        "<pre>All 12 passed.</pre>");
+        assertThat(HtmlPageView.html(new PracticePage.Results(
+                "failed", "Failed", "", "2026-11-24T21:34:55Z", false, "", false, "")))
+                .contains("Last full check: never", "Most recent pass: 2026-11-24T21:34:55Z");
+    }
+
+    @Test
     void rendersCoachFallbackHtmlForLockedAndUnlockedTranscripts() {
         var exercise = ExerciseCatalog.find("pair-sum");
         String locked = HtmlPageView.html(new PracticePage.Coach(

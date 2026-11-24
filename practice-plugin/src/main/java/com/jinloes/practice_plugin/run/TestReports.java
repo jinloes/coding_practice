@@ -1,5 +1,8 @@
 package com.jinloes.practice_plugin.run;
 
+import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
+import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Example;
+import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
@@ -18,6 +21,18 @@ public final class TestReports {
     private TestReports() {}
 
     public static CheckResult read(Path reportDirectory, int expectedTests, int exitCode)
+            throws IOException {
+        return read(reportDirectory, expectedTests, exitCode, null, null);
+    }
+
+    public static CheckResult read(Path reportDirectory, Exercise exercise, int exitCode)
+            throws IOException {
+        return read(reportDirectory, exercise.fullCount(), exitCode, exercise,
+                ExerciseCatalog.resource(exercise, "ExamplesTest.java"));
+    }
+
+    static CheckResult read(Path reportDirectory, int expectedTests, int exitCode,
+                            Exercise exercise, String examplesTestSource)
             throws IOException {
         int tests = 0;
         int failures = 0;
@@ -64,8 +79,12 @@ public final class TestReports {
                             timedOut |= type.contains("TimeoutException") || cause.contains("TimeoutException");
                             runtimeError |= isCrash(type) || (type.contains("Assertion") && isCrash(cause));
                             if (details.length() < 24_000) {
-                                String text = FailureText.render(className, test.getAttribute("name"),
-                                        type, failure.getAttribute("message"), trace);
+                                String testName = test.getAttribute("name");
+                                Example example = className.endsWith("ExamplesTest")
+                                        ? ExampleFailureDiagnosis.exampleForTest(exercise, examplesTestSource, testName)
+                                        : null;
+                                String text = FailureText.render(className, testName,
+                                        type, failure.getAttribute("message"), trace, example);
                                 details.append(text, 0, Math.min(text.length(), 24_000 - details.length()));
                             }
                         }

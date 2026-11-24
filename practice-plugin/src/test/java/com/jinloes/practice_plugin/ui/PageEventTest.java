@@ -23,6 +23,10 @@ class PageEventTest {
                 .isEqualTo(new PageEvent(PageEvent.Type.RUN_EXAMPLES, ""));
         assertThat(PageEvent.parse("{\"type\":\"runSample\"}"))
                 .isEqualTo(new PageEvent(PageEvent.Type.RUN_SAMPLE, ""));
+        assertThat(PageEvent.parse("{\"type\":\"revealHint\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.REVEAL_HINT, ""));
+        assertThat(PageEvent.parse("{\"type\":\"openCoach\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.OPEN_COACH, ""));
         assertThat(PageEvent.parse("{\"type\":\"coachDiagnose\"}"))
                 .isEqualTo(new PageEvent(PageEvent.Type.COACH_DIAGNOSE, ""));
         assertThat(PageEvent.parse("{\"type\":\"coachTranslate\"}"))

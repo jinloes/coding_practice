@@ -236,7 +236,7 @@ final class FullCheck {
             } else {
                 String phase = phaseOrSetup(workspace.resultDirectory());
                 result = resultForPhase(phase, exitCode,
-                        () -> TestReports.read(workspace.resultDirectory(), exercise.fullCount(), exitCode));
+                        () -> TestReports.read(workspace.resultDirectory(), exercise, exitCode));
                 result = withMeasuredComplexity(result, exercise, workspace);
             }
             if (!fingerprint.equals(attempts.fingerprint(attempt))) {

@@ -28,8 +28,38 @@ final class HtmlPageView implements PageView {
                     ? "<p>No exercises match these filters. Use Reset filters above the exercise list to show all exercises.</p>"
                     : PracticeViews.problemText(problem.exercise(), problem.passed());
             case PracticePage.Study study -> StudyGuideView.html(study.guide(), study.selected(), study.passed());
+            case PracticePage.Hints hints -> hintsHtml(hints);
+            case PracticePage.Results results -> resultsHtml(results);
             case PracticePage.Coach coach -> coachHtml(coach);
         };
+    }
+
+    private static String resultsHtml(PracticePage.Results results) {
+        StringBuilder out = new StringBuilder();
+        if (!results.banner().isBlank()) {
+            out.append("<h2>").append(MarkdownHtml.inline(results.banner())).append("</h2>");
+        }
+        if (!results.checkedAt().isBlank() || !results.lastPassedAt().isBlank()) {
+            out.append("<p>Last full check: ")
+                    .append(MarkdownHtml.inline(results.checkedAt().isBlank() ? "never" : results.checkedAt()))
+                    .append(" &middot; Most recent pass: ")
+                    .append(MarkdownHtml.inline(results.lastPassedAt().isBlank() ? "never" : results.lastPassedAt()))
+                    .append("</p>");
+        }
+        if (!results.output().isBlank()) {
+            out.append("<pre>").append(MarkdownHtml.inline(results.output())).append("</pre>");
+        }
+        return out.toString();
+    }
+
+    private static String hintsHtml(PracticePage.Hints hints) {
+        if (hints.exercise() == null) {
+            return "<p>Select an exercise to view hints.</p>";
+        }
+        if (!hints.hasAttempt()) {
+            return "<p>Start or resume an attempt to reveal hints.</p>";
+        }
+        return HintButton.revealedHtml(hints.exercise().hints(), hints.revealedCount());
     }
 
     private static String coachHtml(PracticePage.Coach coach) {

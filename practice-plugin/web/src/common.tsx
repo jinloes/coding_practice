@@ -1,7 +1,10 @@
 import { Badge, Group, Stack, Text, Typography } from '@mantine/core';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { send } from './bridge';
 import type { Link, PageEvent } from './types';
 
+const REMARK_PLUGINS = [remarkGfm];
 const DIFFICULTY_COLORS: Record<string, string> = { Easy: 'teal', Medium: 'yellow', Hard: 'red' };
 
 export function difficultyColor(difficulty: string): string {
@@ -16,11 +19,11 @@ export function DifficultyBadge({ difficulty }: { difficulty: string }) {
   );
 }
 
-/** Renders HTML the plugin already escaped with MarkdownHtml. */
-export function Html({ html }: { html: string }) {
+/** Renders Markdown safely with GitHub Flavored Markdown (tables, bold, rules, code blocks). */
+export function Markdown({ content }: { content: string }) {
   return (
-    <Typography>
-      <div dangerouslySetInnerHTML={{ __html: html }} />
+    <Typography className="practice-markdown">
+      <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{content}</ReactMarkdown>
     </Typography>
   );
 }

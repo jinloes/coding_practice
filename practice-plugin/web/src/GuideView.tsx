@@ -1,7 +1,7 @@
 import { Badge, Group, NavLink, Paper, Progress, Stack, Text, Title } from '@mantine/core';
 import { IconCircle, IconCircleCheckFilled } from '@tabler/icons-react';
 import { send } from './bridge';
-import { difficultyColor, Html, Memberships, SectionLabel } from './common';
+import { difficultyColor, Markdown, Memberships, SectionLabel } from './common';
 import type { Guide, GuideLevel, Membership } from './types';
 
 export function GuideView({ guide }: { guide: Guide }) {
@@ -13,7 +13,7 @@ export function GuideView({ guide }: { guide: Guide }) {
         <SectionLabel>{guide.kind === 'track' ? 'Practice track' : 'Study guide'}</SectionLabel>
         <Title order={3}>{guide.title}</Title>
         <Text c="dimmed" fs="italic" component="div">
-          <span dangerouslySetInnerHTML={{ __html: guide.summaryHtml }} />
+          <Markdown content={guide.summary} />
         </Text>
       </Stack>
 
@@ -34,7 +34,7 @@ export function GuideView({ guide }: { guide: Guide }) {
         />
       </Paper>
 
-      <Html html={guide.lessonHtml} />
+      <Markdown content={guide.lesson} />
 
       {guide.levels.map((level) => (
         <LevelSection key={level.level} level={level} kind={guide.kind} />

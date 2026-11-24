@@ -113,18 +113,23 @@ class ResultsViewTest {
     }
 
     @Test
-    void askCoachButtonStartsDisabledAndInvokesCallbackWhenEnabled() {
-        var clicked = new java.util.concurrent.atomic.AtomicInteger();
-        ResultsView view = new ResultsView(clicked::incrementAndGet);
+    void askCoachStateUpdatesRenderedResultsPage() {
+        var rendered = new java.util.concurrent.atomic.AtomicReference<PracticePage.Results>();
+        PageView fakeView = new PageView() {
+            @Override public javax.swing.JComponent component() { return new javax.swing.JPanel(); }
+            @Override public void show(PracticePage page) { rendered.set((PracticePage.Results) page); }
+        };
+        ResultsView view = new ResultsView(fakeView);
 
-        assertThat(view.askCoachButton().isEnabled()).isFalse();
-        view.askCoachButton().doClick();
-        assertThat(clicked).hasValue(0);
+        assertThat(view.isAskCoachEnabled()).isFalse();
+        assertThat(rendered.get().askCoachEnabled()).isFalse();
+
+        view.setAskCoachEnabled(false);
+        assertThat(view.isAskCoachEnabled()).isFalse();
 
         view.setAskCoachEnabled(true);
-        assertThat(view.askCoachButton().isEnabled()).isTrue();
-        view.askCoachButton().doClick();
-        assertThat(clicked).hasValue(1);
+        assertThat(view.isAskCoachEnabled()).isTrue();
+        assertThat(rendered.get().askCoachEnabled()).isTrue();
     }
 
     @Test

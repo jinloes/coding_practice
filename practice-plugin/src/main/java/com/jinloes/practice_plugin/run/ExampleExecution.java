@@ -7,13 +7,17 @@ import com.intellij.execution.application.ApplicationConfiguration;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.KillableProcessHandler;
+import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.process.ProcessListener;
+import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteIntentReadAction;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiManager;
@@ -81,6 +85,12 @@ final class ExampleExecution {
     void processStarted(RunSession.ExampleSession examples, ProcessHandler handler) {
         RunSession.RunControl control = examples.control();
         control.active(handler);
+        handler.addProcessListener(new ProcessListener() {
+            @Override
+            public void onTextAvailable(ProcessEvent event, Key outputType) {
+                control.appendOutput(event.getText());
+            }
+        });
         RunDecisions.ExampleStart start = exampleStart(examples);
         if (start.cancelled()) {
             stopOwnedProcess(control, handler);
@@ -97,8 +107,24 @@ final class ExampleExecution {
 
     void processTerminated(RunSession.ExampleSession examples, int exitCode) {
         if (examples != null) {
-            finish(exampleFinishedText(examples.input(), exitCode));
+            finish(diagnoseTermination(examples, exitCode));
         }
+    }
+
+    static String diagnoseTermination(RunSession.ExampleSession examples, int exitCode) {
+        String message = exampleFinishedText(examples.input(), exitCode);
+        if (exitCode != 0 && examples.attempt() != null) {
+            var exercise = ExerciseCatalog.find(examples.attempt().exerciseId());
+            String runnerSource = ExerciseCatalog.resource(exercise, "ExampleRunner.java");
+            String diagnosis = ExampleFailureDiagnosis.describe(
+                    exercise, runnerSource, examples.input(), examples.control().capturedOutput());
+            ProcessHandler handler = examples.control().active();
+            if (handler != null) {
+                handler.notifyTextAvailable("\n" + diagnosis + "\n", ProcessOutputTypes.STDERR);
+            }
+            message = message + "\n\n" + diagnosis;
+        }
+        return message;
     }
 
     void launchAfterSave(String attemptId, String input, boolean debug) throws ExecutionException {

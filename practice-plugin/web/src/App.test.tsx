@@ -34,7 +34,7 @@ function problemState(
         topic: 'Arrays',
         difficulty: 'Easy',
         passed,
-        statementHtml: '<p>Find two indices.</p>',
+        statement: 'Find **two** indices.',
         examples: [{ input: 'nums = [2, 7], target = 9', output: '[0, 1]' }],
         inputSyntax: 'Input: <nums> | <target>, for example: [2,7] | 9',
         sampleInput: '[2, 7] 9',
@@ -219,8 +219,8 @@ describe('App', () => {
             id: 'blind-75',
             title: 'Blind 75',
             kind: 'track',
-            summaryHtml: 'Original practice problems.',
-            lessonHtml: '<p>About this list</p>',
+            summary: 'Original practice problems.',
+            lesson: 'About this list',
             levels: [
               {
                 level: 'Easy',
@@ -258,8 +258,8 @@ describe('App', () => {
             id: 'graphs',
             title: 'Graphs',
             kind: 'guide',
-            summaryHtml: 'Graph traversals.',
-            lessonHtml: '<p>How it works</p>',
+            summary: 'Graph traversals.',
+            lesson: 'How it works',
             levels: [
               { level: 'Easy', exercises: [] },
               { level: 'Medium', exercises: [{ id: 'course-schedule', title: 'Course Schedule', topic: 'Graphs', passed: false, selected: false }] },
@@ -306,7 +306,7 @@ describe('App', () => {
             error: '',
             modelLabel: 'CLI default',
             turns: [
-              { role: 'user', html: '<p>Saved prior turn</p>', createdAt: '2026-01-01T00:00:00Z' },
+              { role: 'user', markdown: 'Saved prior turn', createdAt: '2026-01-01T00:00:00Z' },
             ],
           },
         },
@@ -341,10 +341,23 @@ describe('App', () => {
             error: '',
             modelLabel: 'gpt-5',
             turns: [
-              { role: 'user', html: '<p>Translate my approach</p>', createdAt: '2026-01-01T00:00:00Z' },
+              { role: 'user', markdown: 'Translate my approach', createdAt: '2026-01-01T00:00:00Z' },
               {
                 role: 'assistant',
-                html: '<h3>State</h3><p>Define <code>dp[a]</code>.</p><pre><code>int[] dp = new int[amount + 1];</code></pre>',
+                markdown: [
+                  '### State',
+                  'Define **optimal** `dp[a]`.',
+                  '',
+                  '| Approach | Time |',
+                  '| --- | --- |',
+                  '| Bottom-up | O(n) |',
+                  '',
+                  '---',
+                  '',
+                  '```java',
+                  'int[] dp = new int[amount + 1];',
+                  '```',
+                ].join('\n'),
                 createdAt: '2026-01-01T00:00:05Z',
               },
             ],
@@ -357,6 +370,9 @@ describe('App', () => {
     expect(screen.getByText('Edited since last check')).toBeInTheDocument();
     expect(screen.getByText(/model-inferred optimal approach/i)).toBeInTheDocument();
     expect(screen.getByText('int[] dp = new int[amount + 1];')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByText('Bottom-up')).toBeInTheDocument();
+    expect(screen.getByText('optimal').tagName).toBe('STRONG');
 
     await user.click(screen.getByRole('button', { name: 'Diagnose my attempt' }));
     await user.click(screen.getByRole('button', { name: 'Translate my approach' }));
@@ -428,6 +444,155 @@ describe('App', () => {
     expect(screen.getByText('Previous timeout')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(sent).toContainEqual({ type: 'coachCancel' });
+  });
+
+  it('renders progressive hints with Markdown and dispatches revealHint', async () => {
+    const user = userEvent.setup();
+    const sent: unknown[] = [];
+    attachSend((message) => sent.push(JSON.parse(message)));
+
+    renderDom(<App />);
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'hints',
+          hints: {
+            exerciseTitle: 'Pair Sum',
+            hasAttempt: false,
+            revealedCount: 0,
+            totalCount: 3,
+            revealedHints: [],
+          },
+        },
+      });
+    });
+
+    expect(screen.getByText('Start or resume an attempt to reveal hints.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reveal Hint' })).toBeDisabled();
+
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'hints',
+          hints: {
+            exerciseTitle: 'Pair Sum',
+            hasAttempt: true,
+            revealedCount: 1,
+            totalCount: 3,
+            revealedHints: ['Store **seen** indices in a `Map`.'],
+          },
+        },
+      });
+    });
+
+    expect(screen.getByText('Hint 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('seen').tagName).toBe('STRONG');
+    await user.click(screen.getByRole('button', { name: 'Reveal Hint 2 of 3' }));
+    expect(sent).toEqual([{ type: 'revealHint' }]);
+
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'hints',
+          hints: {
+            exerciseTitle: 'Pair Sum',
+            hasAttempt: true,
+            revealedCount: 3,
+            totalCount: 3,
+            revealedHints: ['One', 'Two', 'Three'],
+          },
+        },
+      });
+    });
+    expect(screen.getByRole('button', { name: 'All 3 Hints Revealed' })).toBeDisabled();
+  });
+
+  it('renders structured Results for passed scaling, failure diagnosis, and Ask AI Coach', async () => {
+    const user = userEvent.setup();
+    const sent: unknown[] = [];
+    attachSend((message) => sent.push(JSON.parse(message)));
+
+    renderDom(<App />);
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'results',
+          results: {
+            tone: 'passed',
+            banner: 'Passed',
+            checkedAt: '2026-11-24T21:34:55.720275Z',
+            lastPassedAt: '2026-11-24T21:34:55.720275Z',
+            stale: false,
+            staleReason: '',
+            askCoachEnabled: true,
+            output: [
+              'Managed attempt: tree-max-depth-44dce720dbbe44369a8ee7544eb0744a',
+              'Full check: PASSED',
+              'All 12 supplied cases passed. This does not prove optimal complexity.',
+              '',
+              'Measured scaling (per call)',
+              '         n            time       allocated',
+              '     32768           74 us           792 B',
+              '     65536          186 us           792 B',
+              '    524288         1193 us           792 B',
+              '',
+              'Time:  O(n) or O(n log n) (consistent with the intended O(n))',
+              'Space: O(1) (consistent with the intended O(1))',
+              'Measured on this machine under load; it indicates growth, not proof of complexity.',
+            ].join('\n'),
+          },
+        },
+      });
+    });
+
+    expect(screen.getByRole('heading', { name: 'Passed' })).toBeInTheDocument();
+    expect(screen.getByText('All 12 supplied cases passed. This does not prove optimal complexity.')).toBeInTheDocument();
+    expect(screen.getByText('O(n) or O(n log n)')).toBeInTheDocument();
+    expect(screen.getByText('Matches intended O(n)')).toBeInTheDocument();
+    expect(screen.getByText('O(1)')).toBeInTheDocument();
+    expect(screen.getByText('Matches intended O(1)')).toBeInTheDocument();
+    expect(screen.getByText('524,288')).toBeInTheDocument();
+    expect(screen.getByText('1193 us')).toBeInTheDocument();
+    expect(screen.getByText('Raw output')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Ask AI Coach' }));
+    expect(sent).toEqual([{ type: 'openCoach' }]);
+
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'results',
+          results: {
+            tone: 'failed',
+            banner: 'Failed: runtime error',
+            checkedAt: '',
+            lastPassedAt: '',
+            stale: true,
+            staleReason: 'solution was edited; run or check again.',
+            askCoachEnabled: false,
+            output: [
+              'Failed on Example 1:',
+              '  Input:    "A man, a plan, a canal: Panama"',
+              '  Expected: true',
+              '  Error:    java.lang.StringIndexOutOfBoundsException: Index 28',
+              '  at Solution.isPalindrome(Solution.java:13)',
+            ].join('\n'),
+          },
+        },
+      });
+    });
+
+    expect(screen.getByText('Result may be out of date')).toBeInTheDocument();
+    expect(screen.getByText('Failed on Example 1')).toBeInTheDocument();
+    expect(screen.getByText('"A man, a plan, a canal: Panama"')).toBeInTheDocument();
+    expect(screen.getByText('true')).toBeInTheDocument();
+    expect(screen.getByText('at Solution.isPalindrome(Solution.java:13)')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ask AI Coach' })).toBeDisabled();
   });
 
   it('switches dev sample pages on hashchange using valid catalog IDs', () => {

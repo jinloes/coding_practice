@@ -13,6 +13,7 @@ import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
 import com.intellij.ui.SearchTextField;
 import com.intellij.ui.components.JBList;
+import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
@@ -97,7 +98,7 @@ class PracticePanelTest {
     }
 
     @Test
-    void revealNextHintIsDisabledWithItsReasonUntilAnAttemptIsSelected() {
+    void hintsTabStaysUnnumberedAndCatalogToggleAndResponsiveLayoutWork() {
         EdtTestUtil.runInEdtAndWait(() -> {
             PracticePanel panel = new PracticePanel(fixture.getProject());
             try {
@@ -111,12 +112,19 @@ class PracticePanelTest {
                         .findFirst().orElseThrow();
                 list.setSelectedValue(withoutAttempts, true);
                 assertThat(list.getSelectedValue()).isEqualTo(withoutAttempts);
+                assertThat(panel.hintsTabTitle()).isEqualTo("Hints");
 
-                var button = panel.hintButton().component();
-                assertThat(button.isEnabled())
-                        .as("an exercise without attempts is selected, so no attempt is selected")
-                        .isFalse();
-                assertThat(button.getToolTipText()).isEqualTo("Start or resume an attempt to reveal hints");
+                assertThat(panel.isCatalogVisible()).isTrue();
+                panel.setCatalogVisible(false);
+                assertThat(panel.isCatalogVisible()).isFalse();
+                panel.setCatalogVisible(true);
+                assertThat(panel.isCatalogVisible()).isTrue();
+
+                assertThat(panel.isHorizontalSplit()).isFalse();
+                panel.applyResponsiveLayout(PracticePanel.WIDE_LAYOUT_THRESHOLD_PX);
+                assertThat(panel.isHorizontalSplit()).isTrue();
+                panel.applyResponsiveLayout(PracticePanel.WIDE_LAYOUT_THRESHOLD_PX - 1);
+                assertThat(panel.isHorizontalSplit()).isFalse();
             } finally {
                 Disposer.dispose(panel);
             }
@@ -352,6 +360,34 @@ class PracticePanelTest {
                 HtmlPageViewTest.dispatchDoubleClick(list, singleRow.x + 8, singleRow.y + singleRow.height + 60, 5_000L);
                 PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
                 assertThat(attemptsOf(freshExercise)).isEmpty();
+            } finally {
+                Disposer.dispose(panel);
+            }
+        });
+    }
+
+    @Test
+    void selectingOrOpeningAProblemAutomaticallyShowsTheProblemTab() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            PracticePanel panel = new PracticePanel(fixture.getProject());
+            try {
+                @SuppressWarnings("unchecked")
+                JBList<Exercise> list = (JBList<Exercise>) panel.preferredFocusedComponent();
+                JBTabbedPane tabs = UIUtil.findComponentsOfType(panel, JBTabbedPane.class)
+                        .stream().findFirst().orElseThrow();
+                Exercise first = list.getModel().getElementAt(0);
+                Exercise second = list.getModel().getElementAt(1);
+
+                list.setSelectedValue(first, true);
+                tabs.setSelectedIndex(3); // Results tab
+                assertThat(tabs.getTitleAt(tabs.getSelectedIndex())).isEqualTo("Results");
+
+                list.setSelectedValue(second, true);
+                assertThat(tabs.getTitleAt(tabs.getSelectedIndex())).isEqualTo("Problem");
+
+                tabs.setSelectedIndex(3); // Results tab again
+                panel.startOrOpenAttempt();
+                assertThat(tabs.getTitleAt(tabs.getSelectedIndex())).isEqualTo("Problem");
             } finally {
                 Disposer.dispose(panel);
             }

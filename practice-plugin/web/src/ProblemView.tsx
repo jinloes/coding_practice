@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Accordion, Badge, Button, Code, Group, Paper, Stack, Text, ThemeIcon, Title, Tooltip } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
 import { send } from './bridge';
-import { DifficultyBadge, Html, Memberships, SectionLabel } from './common';
+import { DifficultyBadge, Markdown, Memberships, SectionLabel } from './common';
 import type { Problem } from './types';
 
 export function ProblemView({ problem }: { problem: Problem | null }) {
@@ -71,7 +71,7 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
         </Group>
       </Stack>
 
-      <Html html={problem.statementHtml} />
+      <Markdown content={problem.statement} />
 
       <Stack gap="xs">
         <SectionLabel>Visible examples</SectionLabel>

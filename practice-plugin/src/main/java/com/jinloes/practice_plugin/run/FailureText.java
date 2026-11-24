@@ -1,5 +1,7 @@
 package com.jinloes.practice_plugin.run;
 
+import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Example;
+
 /**
  * Renders one JUnit failure as text a learner can act on: which case failed, what went wrong, and
  * the line in their own code that produced it.
@@ -13,10 +15,19 @@ final class FailureText {
     private FailureText() {}
 
     static String render(String className, String testName, String type, String message, String trace) {
+        return render(className, testName, type, message, trace, null);
+    }
+
+    static String render(String className, String testName, String type, String message, String trace,
+                         Example example) {
         StringBuilder text = new StringBuilder(origin(className))
                 .append(": ")
                 .append(humanize(testName))
                 .append('\n');
+        if (example != null) {
+            text.append("    Input:    ").append(example.input()).append('\n');
+            text.append("    Expected: ").append(example.output()).append('\n');
+        }
         for (String line : reason(type, message).split("\n", -1)) {
             String stripped = line.stripTrailing();
             if (!stripped.isBlank()) {
@@ -114,7 +125,7 @@ final class FailureText {
      * Returns the deepest frame in the learner's own files. Their solution is where they can make a
      * change, so it is the only frame worth printing.
      */
-    private static String learnerFrame(String trace) {
+    static String learnerFrame(String trace) {
         if (trace == null) {
             return "";
         }

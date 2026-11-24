@@ -15,6 +15,8 @@ record PageEvent(Type type, String id) {
         START_OR_OPEN,
         RUN_EXAMPLES,
         RUN_SAMPLE,
+        REVEAL_HINT,
+        OPEN_COACH,
         COACH_DIAGNOSE,
         COACH_TRANSLATE,
         COACH_COMPARE,
@@ -36,6 +38,8 @@ record PageEvent(Type type, String id) {
                 case "startOrOpen" -> new PageEvent(Type.START_OR_OPEN, "");
                 case "runExamples" -> new PageEvent(Type.RUN_EXAMPLES, "");
                 case "runSample" -> new PageEvent(Type.RUN_SAMPLE, "");
+                case "revealHint" -> new PageEvent(Type.REVEAL_HINT, "");
+                case "openCoach" -> new PageEvent(Type.OPEN_COACH, "");
                 case "coachDiagnose" -> new PageEvent(Type.COACH_DIAGNOSE, "");
                 case "coachTranslate" -> new PageEvent(Type.COACH_TRANSLATE, "");
                 case "coachCompare" -> new PageEvent(Type.COACH_COMPARE, "");

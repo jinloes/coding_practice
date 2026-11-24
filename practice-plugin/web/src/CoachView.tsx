@@ -10,9 +10,9 @@ import {
   Text,
   Textarea,
   Title,
-  Typography,
 } from '@mantine/core';
 import { send } from './bridge';
+import { Markdown } from './common';
 import type { Coach } from './types';
 
 const MAX_FOLLOW_UP_CHARS = 2000;
@@ -154,9 +154,7 @@ export function CoachView({ coach }: { coach: Coach }) {
                 <Text size="xs" fw={600} c={isAssistant ? 'blue' : 'dimmed'} mb={6}>
                   {isAssistant ? 'AI Coach' : 'You'}
                 </Text>
-                <Typography>
-                  <div dangerouslySetInnerHTML={{ __html: turn.html }} />
-                </Typography>
+                <Markdown content={turn.markdown} />
               </Paper>
             );
           })}

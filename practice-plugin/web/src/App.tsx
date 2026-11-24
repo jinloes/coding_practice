@@ -3,7 +3,9 @@ import { Box, createTheme, MantineProvider, type CSSVariablesResolver } from '@m
 import { snapshot, subscribe } from './bridge';
 import { CoachView } from './CoachView';
 import { ChooserView, GuideView } from './GuideView';
+import { HintsView } from './HintsView';
 import { ProblemView } from './ProblemView';
+import { ResultsView } from './ResultsView';
 import type { Page, Theme } from './types';
 
 /**
@@ -52,6 +54,10 @@ function PageView({ page }: { page: Page }) {
       return <GuideView guide={page.guide} />;
     case 'chooser':
       return <ChooserView selected={page.selected} />;
+    case 'hints':
+      return <HintsView hints={page.hints} />;
+    case 'results':
+      return <ResultsView results={page.results} />;
     case 'coach':
       return <CoachView key={page.coach.attemptId ?? page.coach.exerciseId ?? 'empty'} coach={page.coach} />;
   }
@@ -65,6 +71,10 @@ function pageIdentity(page: Page): string {
       return `guide:${page.guide.id}`;
     case 'chooser':
       return `chooser:${page.selected?.title ?? ''}`;
+    case 'hints':
+      return `hints:${page.hints.exerciseTitle ?? ''}`;
+    case 'results':
+      return `results:${page.results.banner}:${page.results.checkedAt}`;
     case 'coach':
       return `coach:${page.coach.attemptId ?? page.coach.exerciseId ?? ''}`;
   }

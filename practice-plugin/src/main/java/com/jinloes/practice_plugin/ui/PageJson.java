@@ -24,8 +24,8 @@ import java.util.Set;
  * Serializes a {@link PracticePage} and the IDE theme into the {@code PageState} JSON the React pages
  * render. The contract is mirrored in {@code web/src/types.ts}; change both together.
  *
- * <p>Statement, summary, and lesson text is converted with {@link MarkdownHtml}, which escapes it, so the
- * pages may insert those fields as HTML. Every other string is plain text.
+ * <p>Markdown fields (statement, summary, lesson, hints, and coach turns) are sent as raw Markdown text
+ * and rendered safely by {@code react-markdown} + {@code remark-gfm} without raw HTML injection.
  */
 final class PageJson {
     private static final Gson GSON = new GsonBuilder().serializeNulls().create();
@@ -65,6 +65,8 @@ final class PageJson {
             case PracticePage.Study study when study.guide() != null ->
                     guidePage(study.guide(), study.selected(), study.passed());
             case PracticePage.Study study -> chooserPage(study.selected());
+            case PracticePage.Hints hints -> hintsPage(hints);
+            case PracticePage.Results results -> resultsPage(results);
             case PracticePage.Coach coach -> coachPage(coach);
         });
         return GSON.toJson(state);
@@ -83,7 +85,7 @@ final class PageJson {
         problem.addProperty("topic", exercise.topic());
         problem.addProperty("difficulty", exercise.difficulty());
         problem.addProperty("passed", source.passed().contains(exercise.id()));
-        problem.addProperty("statementHtml", MarkdownHtml.toHtml(exercise.statement()));
+        problem.addProperty("statement", exercise.statement());
         JsonArray examples = new JsonArray();
         exercise.examples().forEach(example -> {
             JsonObject item = new JsonObject();
@@ -108,8 +110,8 @@ final class PageJson {
         body.addProperty("id", guide.id());
         body.addProperty("title", guide.title());
         body.addProperty("kind", TrackCatalog.isTrack(guide.id()) ? "track" : "guide");
-        body.addProperty("summaryHtml", MarkdownHtml.inline(guide.summary()));
-        body.addProperty("lessonHtml", MarkdownHtml.toHtml(guide.lesson()));
+        body.addProperty("summary", guide.summary());
+        body.addProperty("lesson", guide.lesson());
         JsonArray levels = new JsonArray();
         for (String difficulty : GuideCatalog.DIFFICULTIES) {
             JsonArray exercises = new JsonArray();
@@ -146,6 +148,49 @@ final class PageJson {
         return page;
     }
 
+    private static JsonObject hintsPage(PracticePage.Hints source) {
+        JsonObject page = kind("hints");
+        JsonObject hints = new JsonObject();
+        Exercise exercise = source.exercise();
+        if (exercise == null) {
+            hints.add("exerciseTitle", null);
+            hints.addProperty("hasAttempt", false);
+            hints.addProperty("revealedCount", 0);
+            hints.addProperty("totalCount", 0);
+            hints.add("revealedHints", new JsonArray());
+            page.add("hints", hints);
+            return page;
+        }
+        List<String> all = exercise.hints();
+        int revealed = source.hasAttempt() ? Math.min(source.revealedCount(), all.size()) : 0;
+        hints.addProperty("exerciseTitle", exercise.title());
+        hints.addProperty("hasAttempt", source.hasAttempt());
+        hints.addProperty("revealedCount", revealed);
+        hints.addProperty("totalCount", all.size());
+        JsonArray revealedHints = new JsonArray();
+        for (int index = 0; index < revealed; index++) {
+            revealedHints.add(all.get(index));
+        }
+        hints.add("revealedHints", revealedHints);
+        page.add("hints", hints);
+        return page;
+    }
+
+    private static JsonObject resultsPage(PracticePage.Results source) {
+        JsonObject page = kind("results");
+        JsonObject results = new JsonObject();
+        results.addProperty("tone", source.tone());
+        results.addProperty("banner", source.banner());
+        results.addProperty("checkedAt", source.checkedAt());
+        results.addProperty("lastPassedAt", source.lastPassedAt());
+        results.addProperty("stale", source.stale());
+        results.addProperty("staleReason", source.staleReason());
+        results.addProperty("askCoachEnabled", source.askCoachEnabled());
+        results.addProperty("output", source.output());
+        page.add("results", results);
+        return page;
+    }
+
     private static JsonObject coachPage(PracticePage.Coach source) {
         JsonObject page = kind("coach");
         JsonObject coach = new JsonObject();
@@ -172,7 +217,7 @@ final class PageJson {
         for (PracticePage.CoachTurn turn : source.turns()) {
             JsonObject item = new JsonObject();
             item.addProperty("role", turn.role());
-            item.addProperty("html", MarkdownHtml.toHtml(turn.markdown()));
+            item.addProperty("markdown", turn.markdown());
             item.addProperty("createdAt", turn.createdAt());
             turns.add(item);
         }

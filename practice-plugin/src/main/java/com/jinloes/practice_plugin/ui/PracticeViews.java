@@ -34,7 +34,6 @@ import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -210,15 +209,6 @@ final class PracticeViews {
         return listener;
     }
 
-    static JPanel hintTab(JComponent hints, HintButton hintButton) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JBScrollPane(hints), BorderLayout.CENTER);
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        actions.add(hintButton.component());
-        panel.add(actions, BorderLayout.SOUTH);
-        return panel;
-    }
-
     static JPanel column(Component... rows) {
         JPanel panel = new JPanel(new GridLayout(0, 1, 4, 4));
         for (Component row : rows) {
@@ -240,6 +230,36 @@ final class PracticeViews {
         return panel;
     }
 
+    /** Wraps the filter controls and scrollable exercise list into one collapsible catalog pane. */
+    static JPanel catalogPane(
+            ExerciseFilters filters,
+            JBLabel count,
+            ActionLink resetFilters,
+            JBList<Exercise> exercises
+    ) {
+        JPanel panel = new JPanel(new BorderLayout(0, 6));
+        panel.add(header(filters, count, resetFilters), BorderLayout.NORTH);
+        panel.add(new JBScrollPane(exercises), BorderLayout.CENTER);
+        return panel;
+    }
+
+    /** Natural-height footer that pairs the attempt bar and run toolbar on one row when wide. */
+    static JPanel footer(JComponent attemptBar, JComponent toolbar, JBLabel status, boolean wide) {
+        JPanel controls = new JPanel(new BorderLayout(8, 4));
+        if (wide) {
+            controls.add(attemptBar, BorderLayout.CENTER);
+            controls.add(toolbar, BorderLayout.EAST);
+        } else {
+            controls.add(attemptBar, BorderLayout.NORTH);
+            controls.add(toolbar, BorderLayout.SOUTH);
+        }
+        JPanel panel = new JPanel(new BorderLayout(0, 4));
+        panel.setBorder(JBUI.Borders.emptyTop(2));
+        panel.add(controls, BorderLayout.NORTH);
+        panel.add(status, BorderLayout.SOUTH);
+        return panel;
+    }
+
     static JBList<Exercise> exerciseList(
             DefaultListModel<Exercise> model,
             Supplier<Set<String>> passed,
@@ -258,8 +278,8 @@ final class PracticeViews {
     }
 
     static OnePixelSplitter splitter(JComponent first, JComponent second) {
-        OnePixelSplitter split = new OnePixelSplitter(true, "algorithm.practice.splitter", 0.35f);
-        split.setFirstComponent(new JBScrollPane(first));
+        OnePixelSplitter split = new OnePixelSplitter(true, "algorithm.practice.splitter", 0.34f);
+        split.setFirstComponent(first);
         split.setSecondComponent(second);
         return split;
     }

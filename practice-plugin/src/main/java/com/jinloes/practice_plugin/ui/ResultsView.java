@@ -1,121 +1,133 @@
 package com.jinloes.practice_plugin.ui;
 
-import com.intellij.icons.AllIcons;
-import com.intellij.ui.AnimatedIcon;
-import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.JBTextArea;
-import com.intellij.util.ui.JBFont;
-import com.intellij.util.ui.JBUI;
-import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 
-import javax.swing.Icon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** The Results tab: a status banner and check history above the latest details or run output. */
+/** The Results tab: structured verdict, timestamps, complexity scaling, failure diagnosis, and raw output. */
 final class ResultsView {
-    private final JBLabel banner = new JBLabel();
-    private final JBLabel history = new JBLabel();
-    private final JButton askCoach = new JButton("Ask AI Coach");
-    private final JBTextArea output = PracticeViews.textArea();
-    private final JPanel panel = new JPanel(new BorderLayout());
+    private final PageView view;
 
+    private String tone = "idle";
+    private String banner = "";
+    private String checkedAt = "";
+    private String lastPassedAt = "";
+    private String output = "";
+    private String staleReason = "";
+    private boolean askCoachEnabled;
     private boolean displayedResult;
     private boolean stale;
 
     ResultsView() {
-        this(() -> {});
+        this(new PageView() {
+            private final JPanel placeholder = new JPanel();
+
+            @Override
+            public JComponent component() {
+                return placeholder;
+            }
+
+            @Override
+            public void show(PracticePage page) {
+            }
+        });
     }
 
-    ResultsView(Runnable onAskCoach) {
-        banner.setFont(JBFont.label().asBold().biggerOn(1));
-        banner.setIconTextGap(JBUI.scale(6));
-        history.setForeground(UIUtil.getContextHelpForeground());
-        history.setFont(JBFont.label());
-        askCoach.setEnabled(false);
-        askCoach.setToolTipText("Run Check on this attempt to unlock the AI Coach");
-        askCoach.addActionListener(_ -> onAskCoach.run());
-        JPanel labels = new JPanel(new GridLayout(0, 1, 0, 2));
-        labels.add(banner);
-        labels.add(history);
-        JPanel header = new JPanel(new BorderLayout(8, 0));
-        header.setBorder(JBUI.Borders.empty(8, 8, 0, 8));
-        header.add(labels, BorderLayout.CENTER);
-        header.add(askCoach, BorderLayout.EAST);
-        panel.add(header, BorderLayout.NORTH);
-        panel.add(new JBScrollPane(output), BorderLayout.CENTER);
+    ResultsView(PageView view) {
+        this.view = Objects.requireNonNull(view, "view");
         clear();
     }
 
     void setAskCoachEnabled(boolean enabled) {
-        askCoach.setEnabled(enabled);
-        askCoach.setToolTipText(enabled
-                ? "Open the post-check AI Coach for this attempt"
-                : "Run Check on this attempt to unlock the AI Coach");
+        if (askCoachEnabled != enabled) {
+            askCoachEnabled = enabled;
+            render();
+        }
     }
 
-    JButton askCoachButton() {
-        return askCoach;
+    boolean isAskCoachEnabled() {
+        return askCoachEnabled;
     }
 
     JComponent component() {
-        return panel;
+        return view.component();
+    }
+
+    void setActive(boolean active) {
+        view.setActive(active);
     }
 
     void clear() {
         displayedResult = false;
         stale = false;
-        setBanner(null, "");
-        history.setText("");
-        output.setText("");
+        tone = "idle";
+        banner = "";
+        checkedAt = "";
+        lastPassedAt = "";
+        staleReason = "";
+        output = "";
+        render();
     }
 
     /** Shows the saved result of the attempt's last full check. */
     void showEntry(ManagedPracticeProgress.Entry entry) {
         displayedResult = !entry.checkedFingerprint.isEmpty();
         stale = false;
-        showStatus(entry);
+        staleReason = "";
+        tone = toneForStatus(entry.status);
+        banner = label(entry.status);
+        checkedAt = nonBlank(entry.checkedAt);
+        lastPassedAt = nonBlank(entry.lastPassedAt);
         String details = entry.details == null ? "" : entry.details;
         String complexity = "PASSED".equals(entry.status)
                 && entry.complexity != null && !entry.complexity.isBlank()
                 ? "\n\n" + entry.complexity
                 : "";
-        setOutput(details + complexity);
+        output = details + complexity;
+        render();
     }
 
     /** Updates the banner and history from the saved entry without replacing the output. */
     void showStatus(ManagedPracticeProgress.Entry entry) {
         displayedResult = !entry.checkedFingerprint.isEmpty();
         stale = false;
-        setBanner(icon(entry.status), label(entry.status));
-        history.setText("Last full check: " + orNever(entry.checkedAt)
-                + "    Most recent pass: " + orNever(entry.lastPassedAt));
+        staleReason = "";
+        tone = toneForStatus(entry.status);
+        banner = label(entry.status);
+        checkedAt = nonBlank(entry.checkedAt);
+        lastPassedAt = nonBlank(entry.lastPassedAt);
+        render();
     }
 
     void showRunning() {
         displayedResult = false;
         stale = false;
-        setBanner(AnimatedIcon.Default.INSTANCE, "Running...");
+        staleReason = "";
+        tone = "running";
+        banner = "Running...";
+        render();
     }
 
     /** Shows the latest run or check output. */
     void showOutput(String text) {
-        setOutput(text);
+        output = text == null ? "" : text;
+        render();
     }
 
     void showError(String text) {
         displayedResult = false;
         stale = false;
-        setBanner(AllIcons.General.Error, "Action failed");
-        history.setText("");
-        setOutput(text);
+        staleReason = "";
+        tone = "error";
+        banner = "Action failed";
+        checkedAt = "";
+        lastPassedAt = "";
+        output = text == null ? "" : text;
+        render();
     }
 
     /** Shows the banner for a finished example or custom-input run, chosen from its finished text. */
@@ -123,14 +135,18 @@ final class ResultsView {
         displayedResult = true;
         RunBanner run = runBanner(text);
         stale = run.outcome() == RunOutcome.STALE;
-        setBanner(switch (run.outcome()) {
-            case STALE -> AllIcons.General.Warning;
-            case PASSED -> AllIcons.RunConfigurations.TestPassed;
-            case FAILED -> AllIcons.RunConfigurations.TestFailed;
-            case ERROR -> AllIcons.RunConfigurations.TestError;
-            case INFO -> AllIcons.General.Information;
-        }, run.text());
-        history.setText("");
+        staleReason = stale ? "Files changed during the run; run the current solution again." : "";
+        tone = switch (run.outcome()) {
+            case STALE -> "stale";
+            case PASSED -> "passed";
+            case FAILED -> "failed";
+            case ERROR -> "error";
+            case INFO -> "info";
+        };
+        banner = run.text();
+        checkedAt = "";
+        lastPassedAt = "";
+        render();
     }
 
     enum RunOutcome { STALE, PASSED, FAILED, INFO, ERROR }
@@ -171,9 +187,13 @@ final class ResultsView {
     void showMessage(String title, String text) {
         displayedResult = false;
         stale = false;
-        setBanner(AllIcons.General.Information, title);
-        history.setText("");
-        setOutput(text);
+        staleReason = "";
+        tone = "info";
+        banner = title == null ? "" : title;
+        checkedAt = "";
+        lastPassedAt = "";
+        output = text == null ? "" : text;
+        render();
     }
 
     boolean hasDisplayedResult() {
@@ -181,11 +201,11 @@ final class ResultsView {
     }
 
     String bannerText() {
-        return banner.getText();
+        return banner;
     }
 
     String outputText() {
-        return output.getText();
+        return output;
     }
 
     /** Marks the shown result as out of date with the solution and explains why, at most once per result. */
@@ -194,8 +214,11 @@ final class ResultsView {
             return;
         }
         stale = true;
-        setBanner(AllIcons.General.Warning, banner.getText().isEmpty() ? "Stale" : banner.getText() + " (stale)");
-        output.append((output.getText().isEmpty() ? "" : "\n") + "STALE: " + reason);
+        staleReason = reason == null ? "" : reason;
+        tone = "stale";
+        banner = banner.isEmpty() ? "Stale" : banner + " (stale)";
+        output = output + (output.isEmpty() ? "" : "\n") + "STALE: " + reason;
+        render();
     }
 
     /** The banner text for a {@code CheckResult.Status} name; unknown names are shown as they are. */
@@ -214,30 +237,23 @@ final class ResultsView {
         };
     }
 
-    private static Icon icon(String status) {
+    private static String toneForStatus(String status) {
         return switch (status == null ? "" : status) {
-            case "PASSED" -> AllIcons.RunConfigurations.TestPassed;
-            case "ASSERTION_FAILED" -> AllIcons.RunConfigurations.TestFailed;
-            case "COMPILATION_FAILED", "RUNTIME_ERROR", "TIMED_OUT" -> AllIcons.RunConfigurations.TestError;
-            case "CANCELLED" -> AllIcons.RunConfigurations.TestIgnored;
-            case "RUNNER_ERROR" -> AllIcons.General.Error;
-            case "RUNNING" -> AnimatedIcon.Default.INSTANCE;
-            default -> AllIcons.RunConfigurations.TestNotRan;
+            case "PASSED" -> "passed";
+            case "ASSERTION_FAILED" -> "failed";
+            case "COMPILATION_FAILED", "RUNTIME_ERROR", "TIMED_OUT", "RUNNER_ERROR" -> "error";
+            case "RUNNING" -> "running";
+            case "CANCELLED" -> "info";
+            default -> "idle";
         };
     }
 
-    private static String orNever(String timestamp) {
-        return timestamp == null || timestamp.isBlank() ? "never" : timestamp;
+    private static String nonBlank(String timestamp) {
+        return timestamp == null || timestamp.isBlank() ? "" : timestamp;
     }
 
-    private void setBanner(Icon icon, String text) {
-        banner.setIcon(icon);
-        banner.setText(text);
-        banner.setVisible(!text.isEmpty());
-    }
-
-    private void setOutput(String text) {
-        output.setText(text);
-        output.setCaretPosition(0);
+    private void render() {
+        view.show(new PracticePage.Results(
+                tone, banner, checkedAt, lastPassedAt, stale, staleReason, askCoachEnabled, output));
     }
 }
