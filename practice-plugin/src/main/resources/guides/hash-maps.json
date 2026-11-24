@@ -34,6 +34,13 @@
     "agent-satisfaction-ranking",
     "sliding-window-rate-limiter",
     "collection-storage-report",
-    "credit-window-rate-limiter"
+    "credit-window-rate-limiter",
+    "accept-language-matcher",
+    "commodity-price-tracker",
+    "lfu-cache",
+    "longest-word-chain",
+    "roman-to-integer",
+    "token-ttl-manager",
+    "transactional-kv-store"
   ]
 }

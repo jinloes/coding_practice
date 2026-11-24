@@ -32,6 +32,7 @@
     "binary-tree-inorder-successor",
     "binary-root-path-sum",
     "binary-tree-traversal-orders",
-    "link-tree-level-neighbors"
+    "link-tree-level-neighbors",
+    "closest-common-org-group"
   ]
 }

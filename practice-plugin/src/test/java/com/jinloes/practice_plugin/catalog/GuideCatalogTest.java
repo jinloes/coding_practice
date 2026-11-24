@@ -62,7 +62,14 @@ class GuideCatalogTest {
     void findsTheGuidesThatIncludeAnExercise() {
         assertThat(GuideCatalog.containing("merge-sorted-lists")).extracting(Guide::id)
                 .containsExactly("two-pointers", "linked-lists");
-        assertThat(GuideCatalog.containing("roman-to-integer")).isEmpty();
+        assertThat(GuideCatalog.containing("roman-to-integer")).extracting(Guide::id)
+                .containsExactly("hash-maps", "math");
+        assertThat(GuideCatalog.containing("not-in-any-guide")).isEmpty();
+        for (Exercise exercise : ExerciseCatalog.all()) {
+            assertThat(GuideCatalog.containing(exercise.id()))
+                    .as("exercise %s belongs to at least one study guide", exercise.id())
+                    .isNotEmpty();
+        }
         assertThatThrownBy(() -> GuideCatalog.find("missing"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("missing");

@@ -21,6 +21,7 @@
     "minimum-interval-point-cover",
     "minimize-total-wait-time",
     "reorganize-adjacent-characters",
-    "cinema-schedule-gaps"
+    "cinema-schedule-gaps",
+    "text-line-justification"
   ]
 }

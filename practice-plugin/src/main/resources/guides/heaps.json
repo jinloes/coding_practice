@@ -24,6 +24,8 @@
     "weighted-server-task-assignment",
     "k-closest-sorted-values",
     "reorganize-adjacent-characters",
-    "collection-storage-report"
+    "collection-storage-report",
+    "commodity-price-tracker",
+    "limit-order-book"
   ]
 }

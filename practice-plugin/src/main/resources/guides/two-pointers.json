@@ -29,6 +29,9 @@
     "merge-sorted-arrays-in-place",
     "one-edit-away",
     "replace-and-remove-chars",
-    "reverse-word-order"
+    "reverse-word-order",
+    "valid-palindrome-one-deletion",
+    "string-list-codec",
+    "longest-common-prefix"
   ]
 }

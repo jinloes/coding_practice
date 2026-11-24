@@ -19,6 +19,8 @@
     "row-column-sorted-matrix-search",
     "sorted-insert-position",
     "guess-number-by-feedback",
-    "k-closest-sorted-values"
+    "k-closest-sorted-values",
+    "snapshot-array",
+    "weighted-job-scheduling"
   ]
 }

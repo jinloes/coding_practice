@@ -8,6 +8,8 @@
     "wildcard-word-dictionary",
     "grid-multi-word-search",
     "one-character-difference",
-    "wildcard-route-matcher"
+    "wildcard-route-matcher",
+    "longest-common-prefix",
+    "search-autocomplete-suggestions"
   ]
 }

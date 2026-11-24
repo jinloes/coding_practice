@@ -71,8 +71,11 @@ class StudyGuideViewTest {
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("merge-sorted-lists"), Set.of()))
                 .contains("<p>Merge Sorted Lists appears in: Two Pointers, Linked Lists.</p>")
                 .contains("<p>Practice tracks: " + expectedTracks + ".</p>");
-        assertThat(StudyGuideView.html(null, ExerciseCatalog.find("roman-to-integer"), Set.of()))
-                .contains("<p>Roman to Integer is not part of any guide yet.</p>")
+        var unguided = new ExerciseCatalog.Exercise(
+                "unguided-sample", "Unguided Sample", "Topic", "Easy", "Statement",
+                java.util.List.of(), java.util.List.of(), "Input: x", "x", "O(1)", "O(1)", 0, 0);
+        assertThat(StudyGuideView.html(null, unguided, Set.of()))
+                .contains("<p>Unguided Sample is not part of any guide yet.</p>")
                 .doesNotContain("Practice tracks");
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("course-schedule"), Set.of()))
                 .contains("<p>Practice tracks: Blind 75, NeetCode 150, Google.</p>");

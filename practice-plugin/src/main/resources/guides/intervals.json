@@ -13,6 +13,8 @@
     "summarize-integer-ranges",
     "minimum-interval-point-cover",
     "tweet-counts-by-frequency",
-    "cinema-schedule-gaps"
+    "cinema-schedule-gaps",
+    "range-module",
+    "subscription-cost-explorer"
   ]
 }

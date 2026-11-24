@@ -20,6 +20,8 @@
     "nested-repeat-decoding",
     "infix-expression-value",
     "sliding-window-rate-limiter",
-    "grid-snake-game"
+    "grid-snake-game",
+    "nested-list-iterator",
+    "transactional-kv-store"
   ]
 }

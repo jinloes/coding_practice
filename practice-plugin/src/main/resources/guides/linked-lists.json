@@ -22,6 +22,7 @@
     "linked-list-intersection-with-cycles",
     "reverse-linked-list-subrange",
     "kth-node-from-end",
-    "deduplicate-linked-list"
+    "deduplicate-linked-list",
+    "lfu-cache"
   ]
 }

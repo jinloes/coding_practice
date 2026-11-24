@@ -26,6 +26,9 @@
     "employee-news-spread-time",
     "grid-obstacle-shortest-path",
     "grouped-dependency-order",
-    "region-recolor"
+    "region-recolor",
+    "bus-routes-min-transfers",
+    "closest-common-org-group",
+    "currency-exchange-queries"
   ]
 }

@@ -22,6 +22,7 @@
     "rectangle-intersection",
     "pascal-triangle-rows",
     "string-integer-conversion",
-    "credit-window-rate-limiter"
+    "credit-window-rate-limiter",
+    "roman-to-integer"
   ]
 }

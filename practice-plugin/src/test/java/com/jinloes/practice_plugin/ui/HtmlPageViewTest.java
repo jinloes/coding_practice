@@ -30,7 +30,10 @@ class HtmlPageViewTest {
                         "Two Pointers", "Linked Lists", "Blind 75")
                 .doesNotContain("(passed)");
         assertThat(passed).contains(exercise.title() + " (passed)");
-        assertThat(HtmlPageView.html(new PracticePage.Problem(ExerciseCatalog.find("roman-to-integer"), Set.of())))
+        var unguided = new ExerciseCatalog.Exercise(
+                "unguided-sample", "Unguided Sample", "Topic", "Easy", "Statement",
+                List.of(), List.of(), "Input: x", "x", "O(1)", "O(1)", 0, 0);
+        assertThat(HtmlPageView.html(new PracticePage.Problem(unguided, Set.of())))
                 .contains("Not part of any guide yet.")
                 .doesNotContain("Practice tracks:");
         assertThat(HtmlPageView.html(new PracticePage.Problem(null, Set.of())))

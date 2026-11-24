@@ -246,6 +246,7 @@ def validate_guides(root: Path, manifests: dict[str, dict], errors: list[str]) -
     if extra:
         errors.append(f"guides/ has unindexed json files: {extra}")
 
+    in_any_guide: set[str] = set()
     for guide_id in indexed:
         path = guides_dir / f"{guide_id}.json"
         if not path.is_file():
@@ -269,6 +270,12 @@ def validate_guides(root: Path, manifests: dict[str, dict], errors: list[str]) -
         for ex_id in ex_ids:
             if ex_id not in manifests:
                 errors.append(f"guides/{guide_id}.json: unknown exercise {ex_id!r}")
+            else:
+                in_any_guide.add(ex_id)
+
+    unguided = sorted(set(manifests) - in_any_guide)
+    if unguided:
+        errors.append(f"exercises not listed in any study guide: {unguided}")
 
     return len(indexed)
 

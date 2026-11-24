@@ -36,6 +36,8 @@
     "pascal-triangle-rows",
     "multiplier-end-pick-score",
     "microwave-timer-min-cost",
-    "max-painting-profit"
+    "max-painting-profit",
+    "longest-word-chain",
+    "weighted-job-scheduling"
   ]
 }
