@@ -18,6 +18,7 @@ class CoachPromptTest {
                 "Expected [0, 1] but got [1, 0]", "", List.of(), ""));
         assertThat(diagnose)
                 .contains("Do NOT dump a complete optimal solution.")
+                .contains("trust <learner_code> as the source of truth.")
                 .contains("<learner_code>\nclass Solution {}\n</learner_code>")
                 .contains("<check_output>\nExpected [0, 1] but got [1, 0]\n</check_output>")
                 .contains("Action: Diagnose my attempt")

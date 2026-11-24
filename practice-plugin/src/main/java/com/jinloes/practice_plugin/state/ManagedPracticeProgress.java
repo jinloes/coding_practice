@@ -149,6 +149,7 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
 
     public void record(String attemptId, String exerciseId, String fingerprint, CheckResult result) {
         Entry entry = entry(attemptId, exerciseId);
+        boolean codeChanged = !entry.checkedFingerprint.isEmpty() && !entry.checkedFingerprint.equals(fingerprint);
         entry.checkedFingerprint = fingerprint;
         entry.checkedAt = Instant.now().toString();
         entry.status = result.status().name();
@@ -160,6 +161,11 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
         entry.failures = result.failures();
         if (result.status() == CheckResult.Status.PASSED) {
             entry.lastPassedAt = entry.checkedAt;
+        }
+        if (codeChanged
+                && result.status() != CheckResult.Status.CANCELLED
+                && result.status() != CheckResult.Status.RUNNER_ERROR) {
+            entry.coachHistory.clear();
         }
     }
 

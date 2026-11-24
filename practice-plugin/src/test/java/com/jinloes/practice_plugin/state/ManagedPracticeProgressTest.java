@@ -239,6 +239,35 @@ class ManagedPracticeProgressTest {
     }
 
     @Test
+    void clearsCoachHistoryOnlyWhenCompletedCheckHasChangedFingerprint() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        String attemptId = "pair-sum-recheck";
+
+        progress.record(attemptId, "pair-sum", "fp-1",
+                new CheckResult(CheckResult.Status.PASSED, 5, 0, "passed"));
+        progress.appendCoachTurn(attemptId, "pair-sum", "user", "Compare with optimal");
+        progress.appendCoachTurn(attemptId, "pair-sum", "assistant", "Old O(n^2) analysis");
+
+        // Re-checking identical code preserves history.
+        progress.record(attemptId, "pair-sum", "fp-1",
+                new CheckResult(CheckResult.Status.PASSED, 5, 0, "passed"));
+        assertThat(progress.coachHistory(attemptId, "pair-sum")).hasSize(2);
+
+        // Cancelled or runner-error checks with a new fingerprint preserve history.
+        progress.record(attemptId, "pair-sum", "fp-2",
+                new CheckResult(CheckResult.Status.CANCELLED, 0, 0, "cancelled"));
+        assertThat(progress.coachHistory(attemptId, "pair-sum")).hasSize(2);
+        progress.record(attemptId, "pair-sum", "fp-3",
+                new CheckResult(CheckResult.Status.RUNNER_ERROR, 0, 0, "error"));
+        assertThat(progress.coachHistory(attemptId, "pair-sum")).hasSize(2);
+
+        // A completed check with a new fingerprint clears stale history.
+        progress.record(attemptId, "pair-sum", "fp-4",
+                new CheckResult(CheckResult.Status.PASSED, 5, 0, "passed"));
+        assertThat(progress.coachHistory(attemptId, "pair-sum")).isEmpty();
+    }
+
+    @Test
     void serializesAndDeserializesNewAndLegacyXmlState() throws Exception {
         ManagedPracticeProgress original = new ManagedPracticeProgress();
         original.record("pair-sum-1", "pair-sum", "fp1",
