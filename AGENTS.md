@@ -14,6 +14,7 @@ Use the Gradle wrapper from the repository root (requires JDK 25 for the Gradle 
 ./gradlew testClasses
 ./gradlew :regex:test
 ./gradlew :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
+./gradlew :plugin-common:check
 ./gradlew :practice-plugin:test -Pfast
 ./gradlew :practice-plugin:test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=pair-sum
 python3 practice-plugin/scripts/catalog_tool.py validate
@@ -30,12 +31,13 @@ changes do not replace the standalone plugin checks.
 Documentation (`README.md`, `ARCHITECTURE.md`, `AGENTS.md`, module `CODE-MAP.md` / `ARCHITECTURE.md` / `README.md` / `AGENTS.md`, and `.github/instructions/*.instructions.md`) is part of the implementation contract.
 
 - Update affected docs in the same change whenever architecture, build commands, dependencies, workflows, catalog rules, or user-visible features change — never defer documentation updates to a later change.
-- Shared plugin dependency and toolchain versions live in `gradle/libs.versions.toml` and are imported by both `practice-plugin` and `system-design-plugin`. Update versions there so both plugins stay in sync.
-- Avoid hardcoding mutable catalog totals (such as exercise counts) in `README.md`; point to the manifest index files (`exercises/index.txt`, `tracks/index.txt`, `problems/index.txt`) instead.
+- Shared plugin dependency and toolchain versions live in `gradle/libs.versions.toml` and are imported by `plugin-common`, `practice-plugin`, and `system-design-plugin` (plus root `build.gradle`). Update versions there so all builds stay in sync.
+- Shared plugin utilities (`CopilotModels`, `OwnedDirectory`) live in `plugin-common/`; shared IDE sandbox logic lives in `gradle/local-sandbox.gradle`.
+- Avoid hardcoding mutable catalog totals (such as exercise counts) in `README.md`; point to the manifest index files (`exercises/index.txt`, `guides/index.txt`, `tracks/index.txt`, `problems/index.txt`) instead.
 
 ## Coding And Test Conventions
 
-- Use Java 17 for the root Gradle modules except `regex`, which uses Java 21. `practice-plugin` and `system-design-plugin` are isolated Gradle builds wired into root `settings.gradle` via `includeBuild(...)` and use a Java 25 toolchain.
+- Use Java 17 for the root Gradle modules except `regex`, which uses Java 21. `plugin-common`, `practice-plugin`, and `system-design-plugin` are isolated Gradle builds wired into root `settings.gradle` via `includeBuild(...)` and use a Java 25 toolchain.
 - Use JUnit 5 annotations: `@Test`, `@BeforeEach`, `@AfterEach`, `@BeforeAll`, `@AfterAll`, `@Disabled`.
 - Use AssertJ assertions (`assertThat(...)`) instead of JUnit assertions.
 - Do not introduce JUnit 4 or Hamcrest in tests.

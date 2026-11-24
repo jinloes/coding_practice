@@ -1,4 +1,4 @@
-package com.jinloes.practice_plugin.platform;
+package com.jinloes.plugin_common.platform;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -12,12 +12,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Guards the five ownership scenarios the superseded per-workspace implementations agreed on. Each
- * assertion states the decision the stricter original made, because widening what this class
- * deletes is irreversible for a learner.
+ * Guards the ownership invariants for plugin-owned generated directory trees.
  */
 class OwnedDirectoryTest {
-    private static final String MARKER = ".algorithm-practice-owned";
+    private static final String MARKER = ".plugin-owned";
 
     @TempDir
     Path tempDir;

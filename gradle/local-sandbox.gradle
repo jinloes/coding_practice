@@ -124,23 +124,23 @@ class LocalSandboxSupport {
         return 0
     }
 
-    static void prepareSandboxWorkspace(File sandboxWorkspace, File configDir) {
+    static void prepareSandboxWorkspace(File sandboxWorkspace, File configDir, String projectName, String toolWindowId) {
         def ideaDir = new File(sandboxWorkspace, '.idea')
-        writeIfMissing(new File(ideaDir, '.name'), 'System Design Sandbox')
+        writeIfMissing(new File(ideaDir, '.name'), projectName)
         writeIfMissing(new File(ideaDir, 'misc.xml'), '''<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ProjectRootManager" version="2" languageLevel="JDK_25" />
 </project>
 ''')
-        writeIfMissing(new File(ideaDir, 'workspace.xml'), '''<?xml version="1.0" encoding="UTF-8"?>
+        writeIfMissing(new File(ideaDir, 'workspace.xml'), """<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ToolWindowManager">
     <layoutV2>
-      <window_info active="true" anchor="right" id="System Design" order="0" show_stripe_button="true" visible="true" weight="0.35" />
+      <window_info active="true" anchor="right" id="${XmlUtil.escapeXml(toolWindowId)}" order="0" show_stripe_button="true" visible="true" weight="0.35" />
     </layoutV2>
   </component>
 </project>
-''')
+""")
         ensureTrustedWorkspace(configDir, sandboxWorkspace)
     }
 
@@ -184,15 +184,23 @@ class LocalSandboxSupport {
 class PrepareSandboxWorkspaceAction implements Action<Task> {
     private final File sandboxWorkspace
     private final Provider<Directory> configDir
+    private final String projectName
+    private final String toolWindowId
 
-    PrepareSandboxWorkspaceAction(File sandboxWorkspace, Provider<Directory> configDir) {
+    PrepareSandboxWorkspaceAction(
+            File sandboxWorkspace,
+            Provider<Directory> configDir,
+            String projectName,
+            String toolWindowId) {
         this.sandboxWorkspace = sandboxWorkspace
         this.configDir = configDir
+        this.projectName = projectName
+        this.toolWindowId = toolWindowId
     }
 
     @Override
     void execute(Task task) {
-        LocalSandboxSupport.prepareSandboxWorkspace(sandboxWorkspace, configDir.get().asFile)
+        LocalSandboxSupport.prepareSandboxWorkspace(sandboxWorkspace, configDir.get().asFile, projectName, toolWindowId)
     }
 }
 
@@ -209,6 +217,8 @@ abstract class GenerateIdeRunConfigTask extends DefaultTask {
 
 def projectRootDir = layout.projectDirectory.asFile
 def idePathProperty = providers.gradleProperty('idePath').filter { !it.isBlank() }
+def configuredProjectName = project.hasProperty('sandboxProjectName') ? project.property('sandboxProjectName').toString() : 'Plugin Sandbox'
+def configuredToolWindowId = project.hasProperty('sandboxToolWindowId') ? project.property('sandboxToolWindowId').toString() : 'Plugin'
 
 intellijPlatformTesting {
     runIde {
@@ -220,7 +230,8 @@ intellijPlatformTesting {
             task {
                 description = 'Runs a sandbox IDE using the newest locally installed IntelliJ IDEA build.'
                 args(sandboxWorkspace.absolutePath)
-                doFirst(new PrepareSandboxWorkspaceAction(sandboxWorkspace, sandboxConfigDirectory))
+                doFirst(new PrepareSandboxWorkspaceAction(
+                        sandboxWorkspace, sandboxConfigDirectory, configuredProjectName, configuredToolWindowId))
             }
         }
     }

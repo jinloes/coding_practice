@@ -7,12 +7,16 @@ on:
       - master
     paths:
       - 'practice-plugin/**'
+      - 'plugin-common/**'
       - 'gradle/libs.versions.toml'
+      - 'gradle/local-sandbox.gradle'
       - '.github/workflows/practice-plugin.yml'
   pull_request:
     paths:
       - 'practice-plugin/**'
+      - 'plugin-common/**'
       - 'gradle/libs.versions.toml'
+      - 'gradle/local-sandbox.gradle'
       - '.github/workflows/practice-plugin.yml'
 
 permissions:
@@ -39,7 +43,9 @@ jobs:
           cache: gradle
           cache-dependency-path: |
             gradle/libs.versions.toml
+            plugin-common/build.gradle
             practice-plugin/build.gradle
+            practice-plugin/gradle.properties
             practice-plugin/gradle/wrapper/gradle-wrapper.properties
 
       - name: Cache npm packages
@@ -95,10 +101,10 @@ jobs:
           fi
           echo "only=$ONLY" >> "$GITHUB_OUTPUT"
 
-      - name: Run plugin checks, frontend tests, coverage gate, and distribution build
+      - name: Run plugin-common and plugin checks, frontend tests, coverage gate, and distribution build
         working-directory: practice-plugin
         env:
           CATALOG_ONLY: ${{ steps.catalog.outputs.only }}
         run: |
-          bash ./gradlew check buildPlugin -PcatalogOnly="$CATALOG_ONLY" --no-daemon --console=plain
+          bash ./gradlew :plugin-common:check check buildPlugin -PcatalogOnly="$CATALOG_ONLY" --no-daemon --console=plain
           test -f build/distributions/practice-plugin-1.0-SNAPSHOT.zip

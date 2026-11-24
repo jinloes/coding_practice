@@ -9,6 +9,11 @@ The plugin source lives here, but learners do not need to create a project,
 module, folder, SDK, or Gradle import. It does not depend on this repository's
 other modules or modify their exercises.
 
+For interview-prep structure alongside the plugin, see the
+[DSA Interview Study Guide](docs/README.md) (45-minute coding interview
+playbook, pattern recognition and Java complexity cheat sheet, and 4-week /
+8-week study plans).
+
 ## Build and install
 
 The initial target is IntelliJ IDEA **2026.2.3**, build **262.10968.63**. The

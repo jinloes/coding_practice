@@ -1,4 +1,4 @@
-package com.jinloes.practice_plugin.coach;
+package com.jinloes.plugin_common.copilot;
 
 import com.microsoft.copilot.generated.rpc.ModelPolicyState;
 

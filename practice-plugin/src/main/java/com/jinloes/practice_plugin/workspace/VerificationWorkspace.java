@@ -3,8 +3,8 @@ package com.jinloes.practice_plugin.workspace;
 import com.intellij.openapi.application.PathManager;
 import com.jinloes.practice_plugin.catalog.ExampleLibraries;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
+import com.jinloes.plugin_common.platform.OwnedDirectory;
 import com.jinloes.practice_plugin.platform.Os;
-import com.jinloes.practice_plugin.platform.OwnedDirectory;
 
 import java.io.IOException;
 import java.io.InputStream;

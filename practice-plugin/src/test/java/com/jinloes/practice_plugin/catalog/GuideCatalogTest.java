@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -20,10 +22,18 @@ class GuideCatalogTest {
 
     @Test
     void listsTheGuidesInOrderWithEveryManifestExerciseEasiestFirst() throws IOException {
-        assertThat(GuideCatalog.all()).extracting(Guide::id).containsExactly(
-                "hash-maps", "two-pointers", "sliding-window", "stacks-queues", "linked-lists", "binary-search",
-                "prefix-sums", "heaps", "graphs", "trees", "tries", "backtracking", "dynamic-programming",
-                "intervals", "bit-manipulation", "matrices", "greedy", "math");
+        List<String> indexed = GuideCatalog.indexedIds();
+        assertThat(indexed).isNotEmpty().doesNotHaveDuplicates();
+        assertThat(GuideCatalog.all()).extracting(Guide::id).containsExactlyElementsOf(indexed);
+        try (var files = Files.list(Path.of("src/main/resources/guides"))) {
+            List<String> manifestIds = files
+                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                    .map(path -> path.getFileName().toString().replace(".json", ""))
+                    .toList();
+            assertThat(manifestIds)
+                    .as("guides/index.txt must match all guides/*.json files")
+                    .containsExactlyInAnyOrderElementsOf(indexed);
+        }
         for (Guide guide : GuideCatalog.all()) {
             assertThat(guide.exercises()).extracting(Exercise::id)
                     .as("exercises of %s match its manifest", guide.id())

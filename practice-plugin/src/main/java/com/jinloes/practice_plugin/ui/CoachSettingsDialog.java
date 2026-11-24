@@ -15,8 +15,8 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.util.Alarm;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.UIUtil;
+import com.jinloes.plugin_common.copilot.CopilotModels;
 import com.jinloes.practice_plugin.coach.CopilotCoach;
-import com.jinloes.practice_plugin.coach.CopilotModels;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 import org.jetbrains.annotations.NotNull;
 

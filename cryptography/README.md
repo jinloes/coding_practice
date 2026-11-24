@@ -1,8 +1,8 @@
 # Key Management & Cryptography Study Guide
 
-A four-week plan for a **Staff-level backend engineer on a key management / cryptography platform
-team**: the people who run the KMS, the secrets manager, and the crypto libraries every other
-engineer uses.
+A practical, four-week study guide for **applied cryptography, key management, secrets management,
+and PKI**: covering how to choose primitives safely, build and operate key/secrets infrastructure,
+and design misuse-resistant crypto APIs.
 
 It has two parts:
 
@@ -14,18 +14,17 @@ It has two parts:
 ./gradlew :cryptography:test
 ```
 
-## What a Staff interview for this kind of role usually probes
+## Core competency areas
 
-| Area | What "strong" looks like |
+| Area | What strong mastery looks like |
 |---|---|
-| Crypto fundamentals | Picks the right primitive and says *why*; knows the failure modes (nonce reuse, unauthenticated encryption, timing leaks). Never proposes rolling their own cipher. |
+| Crypto fundamentals | Picks the right primitive and says *why*; knows the failure modes (nonce reuse, unauthenticated encryption, timing leaks). Never proposes rolling a custom cipher. |
 | Key management | Key hierarchies, envelope encryption, rotation without downtime, lifecycle states, crypto-shredding, HSM trust boundaries. |
 | Secrets management | Secret zero, workload identity, dynamic short-lived credentials, leases and revocation, Kubernetes integration. |
 | Distributed systems design | Designs a multi-region KMS / secrets service for high QPS and 99.99%+ availability; reasons about caching, consistency, failure modes, and blast radius. |
-| Developer-facing libraries | Misuse-resistant API design, crypto agility, versioned ciphertext formats, safe migrations across thousands of services. |
+| Developer-facing libraries | Misuse-resistant API design, crypto agility, versioned ciphertext formats, safe migrations across services. |
 | Cloud & Kubernetes | Cloud KMS/IAM models, KMS-backed etcd encryption, service identity, mTLS / PKI. |
-| Coding | Clean, tested code under time pressure; often a data-structure problem, sometimes a crypto-flavored one (serialization format, key rotation, caching, rate limiting). |
-| Staff behaviors | Leading multi-team programs, driving consensus, raising the bar for others, making and documenting trade-offs. |
+| Implementation & drills | Clean, tested code for core primitives and protocols (serialization formats, key rotation, caching, rate limiting). |
 
 ## Four-week plan
 
@@ -60,27 +59,27 @@ Why does encrypt-then-MAC beat MAC-then-encrypt? What does forward secrecy requi
 **Self-check:** Rotate a KEK without re-encrypting a petabyte. Delete one tenant's data from
 immutable backups. Explain why the encryption context belongs in the audit log.
 
-### Week 3: System design at Staff scope
+### Week 3: System and library design
 
 | Day | Read | Do |
 |---|---|---|
 | 1 | [05 Designing a KMS](docs/05-designing-a-kms.md): requirements, API, data model | Do the design in 45 minutes on paper, *then* read the walkthrough |
 | 2 | 05: scale, caching, multi-region, failure modes | Do back-of-envelope numbers for 1M decrypts/sec |
-| 3 | [06 Crypto library design](docs/06-crypto-library-design.md) | Design the API for an encryption library used by 1,000 services |
+| 3 | [06 Crypto library design](docs/06-crypto-library-design.md) | Design the API for an encryption library used across many services |
 | 4 | 06: crypto agility, migrations, rollout | Plan a fleet-wide migration from one algorithm to another |
 | 5 | Practice prompts in [09 Question bank](docs/09-interview-question-bank.md) | Two timed mock designs (secrets manager; field-level encryption) |
 | Weekend | Review weak spots | Exercises 6-8 |
 
-### Week 4: Leadership, coding, and mocks
+### Week 4: Hands-on drills, review, and mocks
 
-| Day | Read | Do |
+| Day | Focus | Do |
 |---|---|---|
-| 1 | [08 Staff engineer leadership](docs/08-staff-engineer-leadership.md) | Draft 6 stories in the STAR(R) format |
-| 2 | 08: influence, consensus, AI-assisted development | Rehearse stories out loud; time them to ~3 minutes |
-| 3 | Coding drills | Two medium problems + rebuild `InMemoryKms` from scratch in 45 minutes |
-| 4 | Question bank rapid-fire | Answer 30 questions out loud |
-| 5 | Full mock: 45 min design + 45 min coding + 30 min behavioral | Ask a peer to play interviewer |
-| Weekend | Rest and light review | Re-read your cheat sheet and stories |
+| 1 | Streaming & keysets | Complete exercises 7-8 in [10 Exercises](docs/10-exercises.md) |
+| 2 | Rate limiting & rotation | Complete exercises 9-10 (per-tenant rate limiter and rotation scheduler) |
+| 3 | Coding drills | Rebuild `InMemoryKms` and `EnvelopeEncryptor` from scratch in 45 minutes |
+| 4 | Question bank rapid-fire | Answer 30 questions from [09 Question bank](docs/09-interview-question-bank.md) out loud |
+| 5 | Full mock: 45 min design + 45 min coding | Ask a peer to play interviewer or record and review yourself |
+| Weekend | Rest and light review | Re-read your primitive cheat sheet and failure-mode notes |
 
 ## Reference code map
 
@@ -110,4 +109,3 @@ Tink, libsodium, or AWS Encryption SDK) and a managed KMS/HSM.
 - AWS KMS Cryptographic Details whitepaper: the clearest public description of a production KMS.
 - Google Tink design docs and "Key management" docs; HashiCorp Vault architecture and seal docs.
 - *Designing Data-Intensive Applications*, Martin Kleppmann: for the distributed systems half.
-- *Staff Engineer*, Will Larson, and *The Staff Engineer's Path*, Tanya Reilly: for the leadership half.

@@ -39,9 +39,7 @@ ext {
 def idePath = providers.gradleProperty('idePath').filter { !it.isBlank() }
 
 dependencies {
-    implementation(libs.copilot.sdk) {
-        exclude group: 'net.java.dev.jna'
-    }
+    implementation 'com.jinloes.coding_practice:plugin-common'
     exampleLibraries libs.assertj.core
     verificationLibraries platform(libs.junit.bom)
     verificationLibraries libs.junit.jupiter
@@ -263,4 +261,8 @@ tasks.named('processTestResources') {
     from('gradle/wrapper') { into 'bootstrap/gradle/wrapper' }
 }
 
-apply from: 'gradle/local-sandbox.gradle'
+ext {
+    sandboxProjectName = 'Algorithm Practice Sandbox'
+    sandboxToolWindowId = 'Practice'
+}
+apply from: '../gradle/local-sandbox.gradle'

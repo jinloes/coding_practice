@@ -38,7 +38,7 @@ subprojects {
 
                 dependency group: 'org.projectlombok', name: 'lombok', version: '1.18.42'
                 dependency group: 'com.google.guava', name: 'guava', version: '33.4.0-jre'
-                dependency group: 'org.assertj', name: 'assertj-core', version: '3.26.3'
+                dependency group: 'org.assertj', name: 'assertj-core', version: rootProject.libs.versions.assertj.get()
                 dependency group: 'io.vavr', name: 'vavr', version: '0.10.3'
                 dependency group: 'org.apache.commons', name: 'commons-lang3', version: '3.17.0'
                 dependency group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
@@ -57,7 +57,7 @@ subprojects {
         }
 
         jacoco {
-            toolVersion = '0.8.15'
+            toolVersion = rootProject.libs.versions.jacoco.get()
         }
 
         test {

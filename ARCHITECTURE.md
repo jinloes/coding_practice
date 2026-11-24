@@ -7,8 +7,10 @@ This repository is a multi-module Gradle project for Java platform, regex engine
 ## Build System
 
 - Build tool: Gradle 9.3.1 (`./gradlew` at repository root and in each plugin directory)
-- Multi-module layout in root `settings.gradle` for Java 17/21 modules, plus `includeBuild` composite builds for `practice-plugin` and `system-design-plugin`
-- Shared plugin dependency and toolchain versions live in root `gradle/libs.versions.toml` and are imported by both `practice-plugin` and `system-design-plugin`
+- Multi-module layout in root `settings.gradle` for Java 17/21 modules, plus `includeBuild` composite builds for `plugin-common`, `practice-plugin`, and `system-design-plugin`
+- Shared plugin dependency and toolchain versions live in root `gradle/libs.versions.toml` and are imported by `plugin-common`, `practice-plugin`, and `system-design-plugin` (as well as root `build.gradle` for shared AssertJ/JaCoCo versions)
+- Shared plugin sandbox launcher (`runLocalIde` and `generateIdeRunConfig`) lives in root `gradle/local-sandbox.gradle`, applied by both plugins with `sandboxProjectName` and `sandboxToolWindowId`
+- Shared plugin Java utilities (`com.jinloes.plugin_common.copilot.CopilotModels` and `com.jinloes.plugin_common.platform.OwnedDirectory`) plus the Copilot SDK dependency live in `plugin-common/` with a 100% line/branch JaCoCo gate
 - Spring dependency management plugin applies only to root `subprojects`, keeping plugin builds isolated
 - Shared IntelliJ run configurations in `.run/` launch plugin sandboxes directly when the repository root is opened in IntelliJ IDEA (with JDK 25 as the Gradle JVM)
 
@@ -87,7 +89,7 @@ A learner's solution is untrusted code, so it never runs in the IDE's process:
   JUnit 5 + AssertJ test suite offline, and runs the advisory complexity probe.
 - Results come back only as JUnit XML, parsed by `TestReports` with DOCTYPE processing disabled and
   a size cap, never as objects loaded into the IDE.
-- Every generated directory is created and deleted through `platform/OwnedDirectory`, which writes a
+- Every generated directory is created and deleted through `OwnedDirectory` (shared via `plugin-common`), which writes a
   marker file and refuses to delete any tree it did not create. One delete protocol, one place to
   audit.
 
@@ -100,15 +102,15 @@ ui  ──▶  app / coach / run  ◀──▶  state
                     workspace  ──▶  catalog
                         │
                         ▼
-                    platform
+              platform / plugin-common
 ```
 
 - `catalog` — exercise, study guide, and practice track definitions (`exercises/index.txt`,
-  `guides/*.json`, `tracks/index.txt`). Counts such as "11 hidden tests" are **derived** from the
+  `guides/index.txt`, `tracks/index.txt`). Counts such as "11 hidden tests" are **derived** from the
   templates at load, never hand-copied.
 - `coach` — optional post-submission AI Coach using the user's Copilot CLI with every tool disabled
-  and `com.microsoft:copilot-sdk` for model discovery.
-- `platform` — host facts and mechanisms with no plugin concepts (`Os`, `OwnedDirectory`).
+  and `com.microsoft:copilot-sdk` / `CopilotModels` (via `plugin-common`) for model discovery.
+- `platform` — host facts (`Os`); symlink-safe directory ownership (`OwnedDirectory`) lives in `plugin-common`.
 - `workspace` — the four workspace types above. It knows nothing about running or UI, which is what
   lets it be tested without an IDE.
 - `state` — persisted learner progress (`ManagedPracticeProgress`).

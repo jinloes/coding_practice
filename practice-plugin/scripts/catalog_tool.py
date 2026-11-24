@@ -28,6 +28,7 @@ REQUIRED_EXERCISE_FILES = [
     "Workload.java",
 ]
 TRACK_NOTE_SECTIONS = ("About this list", "What to expect", "How to prepare")
+GUIDE_LESSON_SECTIONS = ("How it works", "When to reach for it", "Common patterns", "Pitfalls")
 STUDY_LIST_IDS = {"blind-75", "neetcode-150"}
 
 
@@ -234,19 +235,58 @@ def validate_tracks(root: Path, manifests: dict[str, dict], errors: list[str]) -
     return len(indexed)
 
 
+def validate_guides(root: Path, manifests: dict[str, dict], errors: list[str]) -> int:
+    guides_dir = root / "src/main/resources/guides"
+    indexed = read_index(guides_dir / "index.txt", "guides/index.txt", errors)
+    disk = {p.stem for p in guides_dir.glob("*.json")} if guides_dir.is_dir() else set()
+    missing = sorted(set(indexed) - disk)
+    extra = sorted(disk - set(indexed))
+    if missing:
+        errors.append(f"guides/ missing json files for indexed IDs: {missing}")
+    if extra:
+        errors.append(f"guides/ has unindexed json files: {extra}")
+
+    for guide_id in indexed:
+        path = guides_dir / f"{guide_id}.json"
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            errors.append(f"guides/{guide_id}.json: invalid JSON: {exc}")
+            continue
+        if not isinstance(data.get("summary"), str) or not data["summary"].strip():
+            errors.append(f"guides/{guide_id}.json: blank summary")
+        lesson_lines = {line.strip() for line in data.get("lesson", "").splitlines()}
+        for sec in GUIDE_LESSON_SECTIONS:
+            if sec not in lesson_lines:
+                errors.append(f"guides/{guide_id}.json: lesson missing section {sec!r}")
+        ex_ids = data.get("exercises", [])
+        if not ex_ids:
+            errors.append(f"guides/{guide_id}.json: empty exercises list")
+        if len(ex_ids) != len(set(ex_ids)):
+            errors.append(f"guides/{guide_id}.json: duplicate exercises")
+        for ex_id in ex_ids:
+            if ex_id not in manifests:
+                errors.append(f"guides/{guide_id}.json: unknown exercise {ex_id!r}")
+
+    return len(indexed)
+
+
 def cmd_validate(_: argparse.Namespace) -> int:
     start = time.monotonic()
     root = plugin_root()
     errors: list[str] = []
     manifests = validate_exercises(root, errors)
+    guide_count = validate_guides(root, manifests, errors)
     track_count = validate_tracks(root, manifests, errors)
     elapsed_ms = int((time.monotonic() - start) * 1000)
     if errors:
-        print(f"FAIL ({len(errors)} issue(s) across {len(manifests)} exercises, {track_count} tracks in {elapsed_ms} ms):")
+        print(f"FAIL ({len(errors)} issue(s) across {len(manifests)} exercises, {guide_count} guides, {track_count} tracks in {elapsed_ms} ms):")
         for err in errors:
             print(f"  - {err}")
         return 1
-    print(f"OK: validated {len(manifests)} exercises and {track_count} tracks in {elapsed_ms} ms.")
+    print(f"OK: validated {len(manifests)} exercises, {guide_count} guides, and {track_count} tracks in {elapsed_ms} ms.")
     return 0
 
 

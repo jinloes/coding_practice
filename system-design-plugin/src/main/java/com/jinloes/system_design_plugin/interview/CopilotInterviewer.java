@@ -14,7 +14,8 @@ import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.util.Key;
 import com.intellij.util.EnvironmentUtil;
-import com.jinloes.system_design_plugin.platform.OwnedDirectory;
+import com.jinloes.plugin_common.copilot.CopilotModels;
+import com.jinloes.plugin_common.platform.OwnedDirectory;
 
 import java.io.File;
 import java.io.IOException;

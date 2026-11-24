@@ -2,5 +2,6 @@ rootProject.name = 'coding_practice'
 
 include ":regex", ":concurrency", ":reflection", ":cryptography", ":system-design"
 
+includeBuild("plugin-common")
 includeBuild("practice-plugin")
 includeBuild("system-design-plugin")

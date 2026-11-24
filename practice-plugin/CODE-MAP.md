@@ -10,10 +10,10 @@ boundaries and runtime flows belong in `ARCHITECTURE.md`.
 ```text
 practice-plugin/
   build.gradle
-  settings.gradle
+  settings.gradle           includes ../plugin-common and ../gradle/libs.versions.toml
   gradle.properties
-  gradle/local-sandbox.gradle
-  scripts/catalog_tool.py   <1s static catalog validator & exercise scaffolder
+  docs/                     DSA interview study guide (playbook, pattern/complexity cheat sheet, study plans)
+  scripts/catalog_tool.py   <1s static catalog validator (exercises, guides, tracks) & exercise scaffolder
   src/main/java/com/jinloes/practice_plugin/
     app/
     catalog/
@@ -29,6 +29,7 @@ practice-plugin/
   src/main/resources/
     exercises/index.txt
     exercises/<id>/
+    guides/index.txt
     guides/<id>.json
     tracks/index.txt
     tracks/<id>.json
@@ -47,8 +48,8 @@ practice-plugin/
 |---|---|---|
 | `app` | Cross-package application use cases | `LegacyImportService` |
 | `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example/verification libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
-| `coach` | Post-submission AI Coach prompt assembly, sandboxed Copilot CLI execution, and SDK model discovery | `CoachPrompt`, `CopilotCoach`, `CopilotModels` |
-| `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
+| `coach` | Post-submission AI Coach prompt assembly and sandboxed Copilot CLI execution (`CopilotModels` comes from `plugin-common`) | `CoachPrompt`, `CopilotCoach` |
+| `platform` | OS differences (`OwnedDirectory` comes from `plugin-common`) | `Os` |
 | `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `ExampleExecution`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `FullCheckLaunchCleanup`, `CheckRunConfigurations`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `runner` (`verificationRunner`) | Java 17 child-JVM coordinator and JUnit Platform XML runner packaged into `verification-runner.jar` | `VerificationMain`, `JUnitSuiteRunner` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
@@ -91,7 +92,7 @@ Set `idePath` in `practice-plugin/gradle.properties` or user-level Gradle
 properties to use a local IDE. Never commit a real machine path. Plugin
 sandboxes (`build/sandbox`) live under `build/`, while `.intellijPlatform/`
 retains cached IDE/platform artifacts across `clean` builds. `runLocalIde` and
-`generateIdeRunConfig` live in `gradle/local-sandbox.gradle`. On Windows, forked
+`generateIdeRunConfig` live in the shared root `../gradle/local-sandbox.gradle`. On Windows, forked
 IDE and test JVMs set `winp.folder.preferred` to `build/winp` so `winp` never
 extracts native helpers into Gradle's immutable platform transform cache.
 
@@ -215,8 +216,9 @@ also run after test failures with `--continue`.
 
 ## Adding A Study Guide
 
-1. Choose a stable lowercase kebab-case ID and append it to the ordered `IDS`
-   list in `GuideCatalog`.
+1. Choose a stable lowercase kebab-case ID and append it to
+   `src/main/resources/guides/index.txt` in display order (`GuideCatalog` loads
+   from that index).
 2. Add `src/main/resources/guides/<id>.json` with `id`, `title`, a one-line
    `summary`, a `lesson`, and an `exercises` array of existing exercise IDs.
    Order within a level follows the array; levels come from each exercise's
@@ -225,10 +227,9 @@ also run after test failures with `--continue`.
    `How it works`, `When to reach for it`, `Common patterns`, and `Pitfalls`,
    each followed by `- ` bullets. Teach the technique without solving a listed
    exercise.
-4. Add the guide ID to the guide order in `GuideCatalogTest` and the README
-   guide list, then run `GuideCatalogTest` and the full plugin suite. Guide
-   membership is checked against the manifests, so editing a guide's
-   `exercises` array needs no test change.
+4. Run `python3 scripts/catalog_tool.py validate` and `GuideCatalogTest`
+   (which validates `guides/index.txt` and manifest invariants directly rather
+   than hardcoding a guide list).
 
 ## Adding A Practice Track
 

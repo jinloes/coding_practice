@@ -15,8 +15,8 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.util.Alarm;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.UIUtil;
+import com.jinloes.plugin_common.copilot.CopilotModels;
 import com.jinloes.system_design_plugin.interview.CopilotInterviewer;
-import com.jinloes.system_design_plugin.interview.CopilotModels;
 import com.jinloes.system_design_plugin.state.DesignProgress;
 import org.jetbrains.annotations.NotNull;
 

@@ -8,7 +8,7 @@ The project is organized as independent Gradle submodules so each topic can evol
 
 ### Algorithm And Data Structure Practice
 
-All algorithm, data structure, and object-design problems live in the IntelliJ practice plugin under `practice-plugin`. Each exercise is tagged with a topic and difficulty, grouped by technique in study guides, and collected into curated practice tracks. See [practice-plugin/README.md](practice-plugin/README.md).
+All algorithm, data structure, and object-design problems live in the IntelliJ practice plugin under `practice-plugin`. Each exercise is tagged with a topic and difficulty, grouped by technique in study guides, and collected into curated practice tracks. Start with the [DSA Interview Study Guide](practice-plugin/docs/README.md) (45-minute playbook, pattern/complexity cheat sheet, and 4-/8-week study plans) and [practice-plugin/README.md](practice-plugin/README.md).
 
 ### Java Platform Modules
 

@@ -7,10 +7,9 @@ Package root: `src/main/java/com/jinloes/system_design_plugin/`.
 | Package | Key classes |
 |---|---|
 | `catalog` | `DesignCatalog` (problem order from `problems/index.txt`, `LEVELS`, rubric `DIMENSIONS`, `VERDICTS`, `HINT_COUNT`, manifest validation, notes template), `TrackCatalog` (domain tracks and problem-to-track index), `GuideCatalog` (concept and delivery guides) |
-| `platform` | `OwnedDirectory` (symlink-safe create, write, and delete under an owned root) |
-| `workspace` | `DesignWorkspace` (attempts, symlink-safe `delete`, `ownerOfDiagram`, `isAttemptsPath`, immutable `ReviewInput` capture with legacy-byte fingerprint and staleness, feedback history) |
+| `workspace` | `DesignWorkspace` (attempts, symlink-safe `delete` via `plugin-common`'s `OwnedDirectory`, `ownerOfDiagram`, `isAttemptsPath`, immutable `ReviewInput` capture with legacy-byte fingerprint and staleness, feedback history) |
 | `state` | `DesignProgress` (persistent selections, custom attempt labels, creation timestamps, hints, target level, monotonic best verdicts, strongest-verdict per-problem dimension scores paired with `scoresVerdict`, change subscriptions, interviewer settings) |
-| `interview` | `DiagramLabels` (spatial `T`-tool label attachment and arrow redirection), `DiagramSummary`, `InterviewPrompt` (level calibration and follow-up probe fencing), `InterviewFeedback` (schema, parsing, stored round/level/follow-up metadata), `CopilotInterviewer` (CLI process), `CopilotModels` |
+| `interview` | `DiagramLabels` (spatial `T`-tool label attachment and arrow redirection), `DiagramSummary`, `InterviewPrompt` (level calibration and follow-up probe fencing), `InterviewFeedback` (schema, parsing, stored round/level/follow-up metadata), `CopilotInterviewer` (CLI process; uses `plugin-common`'s `CopilotModels`) |
 | `web` | `WebAssets` (private origin and URL mapping), `PageEvent` (tool-window events and sequenced editor messages), `PageState` (tool-window JSON, tracks, guides, dimension readiness summary, and review history), `ToolWindowView` (builds `PageState.View` and `DimensionSummary`), `DesignSession` (testable off-EDT attempt, timestamp, backfill, follow-up lookup, and captured-input review-recording coordinator), `DiagramSaveGuard` (raw-byte load/last-successful-save baseline), `MarkdownHtml` |
 | `ui` | `DesignToolWindowFactory`, `DesignController` (thin EDT/VFS/JCEF adapter over `DesignSession`), `BrowserPage` and `WebAssetHandler` (JCEF page and request filter), `DiagramEditorProvider` and `DiagramEditor`, `InterviewerSettingsDialog`, `IdeTheme` |
 
@@ -66,7 +65,7 @@ the Gradle configuration cache, build cache, parallel execution, and skips the
 IntelliJ plugin self-update network check. `buildSearchableOptions` is disabled
 because the plugin registers no IDE Settings configurables, `npmInstall` uses
 `fastNpmInstall`, and `webUi` and `test` normalize path inputs so both cache
-cleanly across `clean` builds. `runLocalIde` and `generateIdeRunConfig` live in `gradle/local-sandbox.gradle`.
+cleanly across `clean` builds. `runLocalIde` and `generateIdeRunConfig` live in the shared root `../gradle/local-sandbox.gradle`.
 Plugin sandboxes (`build/sandbox`) and the default sandbox workspace
 (`build/sandbox-workspace`) live under `build/`, while `.intellijPlatform/`
 retains cached IDE/platform artifacts across `clean` builds. Forked IDE and test

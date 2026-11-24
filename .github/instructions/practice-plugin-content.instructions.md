@@ -52,10 +52,10 @@ least one of them; `KnownWrongSolutions` loads it from the test resources.
 
 ## Study Guide Content Rules
 
-Every guide ID listed in `GuideCatalog` must provide
-`src/main/resources/guides/<id>.json` with a matching `id`, non-blank `title`,
-`summary`, and `lesson`, and a non-empty `exercises` array of existing,
-non-duplicated exercise IDs.
+Every guide ID listed in `src/main/resources/guides/index.txt` (`GuideCatalog`)
+must provide `src/main/resources/guides/<id>.json` with a matching `id`,
+non-blank `title`, `summary`, and `lesson`, and a non-empty `exercises` array
+of existing, non-duplicated exercise IDs.
 
 - Lessons are original text in the `MarkdownHtml` subset (paragraphs, `- `
   bullets, inline code) and contain the label lines `How it works`,
@@ -65,9 +65,10 @@ non-duplicated exercise IDs.
   solution, which belongs to that exercise's hints.
 - Guides never declare difficulty. Levels come from each exercise's manifest
   and must be `Easy`, `Medium`, or `Hard`.
-- An exercise may appear in several guides. Update the guide order in
-  `GuideCatalogTest` when the guide list changes; membership is checked against
-  the manifests.
+- An exercise may appear in several guides. `GuideCatalogTest` validates
+  invariants directly from `guides/index.txt` and manifests, and
+  `python3 practice-plugin/scripts/catalog_tool.py validate` checks all
+  exercises, guides, and tracks statically in under a second.
 
 ## Practice Track Content Rules
 

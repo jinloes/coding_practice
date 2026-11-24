@@ -1,5 +1,6 @@
 package com.jinloes.practice_plugin.coach;
 
+import com.jinloes.plugin_common.copilot.CopilotModels;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

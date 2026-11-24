@@ -14,3 +14,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'system-design-plugin'
+
+includeBuild('../plugin-common')

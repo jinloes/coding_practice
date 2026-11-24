@@ -7,12 +7,16 @@ on:
       - master
     paths:
       - 'system-design-plugin/**'
+      - 'plugin-common/**'
       - 'gradle/libs.versions.toml'
+      - 'gradle/local-sandbox.gradle'
       - '.github/workflows/system-design-plugin.yml'
   pull_request:
     paths:
       - 'system-design-plugin/**'
+      - 'plugin-common/**'
       - 'gradle/libs.versions.toml'
+      - 'gradle/local-sandbox.gradle'
       - '.github/workflows/system-design-plugin.yml'
 
 permissions:
@@ -37,6 +41,7 @@ jobs:
           cache: gradle
           cache-dependency-path: |
             gradle/libs.versions.toml
+            plugin-common/build.gradle
             system-design-plugin/build.gradle
             system-design-plugin/gradle.properties
             system-design-plugin/gradle/wrapper/gradle-wrapper.properties
@@ -57,8 +62,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-system-design-plugin-node-
 
-      - name: Run plugin checks, coverage gate, and distribution build
+      - name: Run plugin-common and plugin checks, coverage gate, and distribution build
         working-directory: system-design-plugin
         run: |
-          bash ./gradlew check buildPlugin verifyPluginProjectConfiguration verifyPluginStructure --no-daemon --console=plain
+          bash ./gradlew :plugin-common:check check buildPlugin verifyPluginProjectConfiguration verifyPluginStructure --no-daemon --console=plain
           test -f build/distributions/system-design-plugin-1.0-SNAPSHOT.zip

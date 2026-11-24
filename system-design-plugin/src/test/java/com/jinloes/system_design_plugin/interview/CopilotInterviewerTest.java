@@ -1,6 +1,7 @@
 package com.jinloes.system_design_plugin.interview;
 
 import com.intellij.openapi.util.SystemInfo;
+import com.jinloes.plugin_common.copilot.CopilotModels;
 import com.jinloes.system_design_plugin.interview.CopilotInterviewer.InterviewException;
 import com.jinloes.system_design_plugin.interview.CopilotInterviewer.Settings;
 import org.junit.jupiter.api.BeforeEach;

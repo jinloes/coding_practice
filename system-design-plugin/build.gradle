@@ -39,11 +39,8 @@ dependencies {
         }
         bundledPlugins('com.intellij.modules.jcef')
     }
-    // Lists the account's models for the settings dialog. JNA serves only the SDK's in-process mode, which an
-    // explicit cliPath never selects, and the IDE loads its own JNA native library.
-    implementation(libs.copilot.sdk) {
-        exclude group: 'net.java.dev.jna'
-    }
+    // Shared plugin utilities (OwnedDirectory, CopilotModels) and Copilot SDK (JNA excluded).
+    implementation 'com.jinloes.coding_practice:plugin-common'
     testImplementation platform(libs.junit.bom)
     testImplementation libs.junit.jupiter
     testImplementation libs.junit.platform.launcher
@@ -272,4 +269,8 @@ tasks.named('processResources', ProcessResources) {
     from(webUi) { into 'web' }
 }
 
-apply from: 'gradle/local-sandbox.gradle'
+ext {
+    sandboxProjectName = 'System Design Sandbox'
+    sandboxToolWindowId = 'System Design'
+}
+apply from: '../gradle/local-sandbox.gradle'

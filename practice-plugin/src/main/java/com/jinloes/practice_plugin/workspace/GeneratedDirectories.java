@@ -2,7 +2,7 @@ package com.jinloes.practice_plugin.workspace;
 
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.project.Project;
-import com.jinloes.practice_plugin.platform.OwnedDirectory;
+import com.jinloes.plugin_common.platform.OwnedDirectory;
 
 import java.io.IOException;
 import java.nio.file.Files;

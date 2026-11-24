@@ -85,6 +85,5 @@ CBC padding oracle, and CTR nonce reuse make the "why" behind the rules in [01](
 
 - 45 min design: pick a prompt from [09](09-interview-question-bank.md), timebox, and draw diagrams.
 - 45 min coding: pick a coding prompt, write tests first.
-- 30 min behavioral: tell 3 stories from [08](08-staff-engineer-leadership.md) out loud, recorded.
 
-Review the recordings and note where you rambled or skipped trade-offs.
+Review your notes or recording and note where you rambled or skipped trade-offs.

@@ -29,31 +29,13 @@ import java.util.stream.Collectors;
  * so the two manifests cannot disagree about how hard a problem is.
  */
 public final class GuideCatalog {
-    /** Which guides exist, in the order the UI lists them. */
-    private static final List<String> IDS = List.of(
-            "hash-maps",
-            "two-pointers",
-            "sliding-window",
-            "stacks-queues",
-            "linked-lists",
-            "binary-search",
-            "prefix-sums",
-            "heaps",
-            "graphs",
-            "trees",
-            "tries",
-            "backtracking",
-            "dynamic-programming",
-            "intervals",
-            "bit-manipulation",
-            "matrices",
-            "greedy",
-            "math");
+    /** The resource listing which guides exist, in the order the UI lists them. */
+    static final String INDEX = "/guides/index.txt";
 
     /** The levels a guide groups its exercises into, easiest first. */
     public static final List<String> DIFFICULTIES = List.of("Easy", "Medium", "Hard");
 
-    private static final List<Guide> GUIDES = IDS.stream()
+    private static final List<Guide> GUIDES = indexedIds().stream()
             .map(id -> parse(id, read("/guides/" + id + ".json"), ExerciseCatalog::find))
             .toList();
 
@@ -63,6 +45,10 @@ public final class GuideCatalog {
     private static final Map<String, List<Guide>> BY_EXERCISE = indexByExercise(GUIDES);
 
     private GuideCatalog() {
+    }
+
+    static List<String> indexedIds() {
+        return ExerciseCatalog.indexedIds(read(INDEX));
     }
 
     /** A guide whose exercises are already ordered Easy, then Medium, then Hard. */

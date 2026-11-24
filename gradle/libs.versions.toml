@@ -2,7 +2,7 @@
 assertj = "3.26.3"
 copilot-sdk = "2.0.1"
 intellij-idea = "2026.2.3"
-intellij-platform = "2.19.0"
+intellij-platform = "2.20.1"
 jacoco = "0.8.15"
 junit-bom = "5.11.4"
 node = "24.22.0"
