@@ -12,10 +12,8 @@ All algorithm, data structure, and object-design problems live in the IntelliJ p
 
 ### Java Platform Modules
 
-- `concurrency`
-- `reflection`
-
-These modules focus on Java APIs and language features.
+- `concurrency` — Java concurrency examples and tests paired with a [Java Concurrency & Multithreading Study Guide](concurrency/README.md) (JMM, locks, lock-free atomics, `CompletableFuture`, virtual threads, and classic interview problems).
+- `reflection` — Java reflection API examples and tests.
 
 ### Regex Module
 

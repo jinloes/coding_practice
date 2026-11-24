@@ -58,6 +58,7 @@ jobs:
           cache-dependency-path: |
             build.gradle
             settings.gradle
+            gradle/libs.versions.toml
             */build.gradle
             gradle/wrapper/gradle-wrapper.properties
 

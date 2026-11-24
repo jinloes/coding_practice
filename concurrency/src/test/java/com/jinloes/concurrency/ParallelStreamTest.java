@@ -56,7 +56,6 @@ class ParallelStreamTest {
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
-    log.info("Val is {} on thread: {} {}", val, Thread.currentThread().getName(),
-        Thread.currentThread().getId());
+    log.info("Val is {} on thread: {}", val, Thread.currentThread().getName());
   }
 }
