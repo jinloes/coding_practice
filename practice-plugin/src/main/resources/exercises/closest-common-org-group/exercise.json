@@ -1,0 +1,30 @@
+{
+  "id": "closest-common-org-group",
+  "title": "Closest Common Org Group",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Given a company organization hierarchy where groups form a rooted tree and each employee belongs to one or more groups, find the **closest (deepest) common group** that contains every employee in a target list.\n\nImplement `closestCommonGroup(String[][] groupLinks, String[][] memberships, String[] targetEmployees)`:\n- `groupLinks[i] = [parentGroup, childGroup]` defines a parent-to-child group edge in the org tree (one single root group has no parent).\n- `memberships[j] = [groupName, employeeName]` assigns `employeeName` directly to `groupName`. An employee belongs to `groupName` and all of its ancestor groups.\n- `targetEmployees` is a non-empty array of employee names to cover.\n- Return the name of the deepest group (maximum distance from the root) that contains all distinct employees in `targetEmployees`. If an employee belongs to multiple groups, covering that employee requires being an ancestor of (or equal to) **at least one** of their groups.\n- Return `null` if any target employee does not exist in `memberships` or if no common group exists.\n\nContract\n- Group names are distinct non-empty strings forming a valid rooted tree (or a single group when `groupLinks` is empty and all memberships share one group).\n- `targetEmployees` may contain duplicates; treat it as a set of distinct target employees.\n- If multiple deepest groups tie (which can happen when an employee belongs to multiple groups), return the lexicographically smallest group name.\n\nExamples\n- Tree `Company -> Eng, HR`; `Eng -> Backend, Frontend`; Alice in `Backend`, Bob in `Frontend`, Carol in `HR`: closest common group for `[Alice, Bob]` is `Eng`; for `[Alice, Carol]` is `Company`.\n- Same group: Alice and Dave both in `Backend` -> `Backend`.\n- Multi-group employee: Eve in `Backend` and `HR`, Carol in `HR` -> `[Eve, Carol]` is `HR`.\n",
+  "examples": [
+    {
+      "input": "Company>Eng, Company>HR, Eng>Backend, Eng>Frontend; Backend:Alice, Frontend:Bob, HR:Carol; Alice, Bob",
+      "output": "Eng"
+    },
+    {
+      "input": "Company>Eng, Eng>Backend; Backend:Alice, Backend:Dave; Alice, Dave",
+      "output": "Backend"
+    },
+    {
+      "input": "Company>Eng, Company>HR, Eng>Backend; Backend:Eve, HR:Eve, HR:Carol; Eve, Carol",
+      "output": "HR"
+    }
+  ],
+  "hints": [
+    "Build the group tree (parent -> children) and find the root (a group that never appears as a child). Also collect the set of groups each target employee directly belongs to.",
+    "Verify that every distinct target employee appears in memberships (if any is missing, return null). Deduplicate targetEmployees so you know the exact count k of distinct targets to cover.",
+    "Run a single post-order DFS (or bottom-up traversal with depth) from the root: each node computes the BitSet or Set of target employee indices present in its subtree (its own direct target employees union its children's sets). Any group covering all k targets is a valid candidate; pick the one with greatest depth (breaking ties lexicographically). Intended complexity: O((G + E) * k) (O(n) for fixed target count k), O(G + E) space."
+  ],
+  "inputSyntax": "Input: parent>child, ...; group:emp, ...; target1, target2, for example: Company>Eng, Company>HR, Eng>Backend, Eng>Frontend; Backend:Alice, Frontend:Bob; Alice, Bob",
+  "sampleInput": "Company>Eng, Company>HR, Eng>Backend, Eng>Frontend; Backend:Alice, Frontend:Bob; Alice, Bob",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

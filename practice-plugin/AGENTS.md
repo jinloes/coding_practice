@@ -22,7 +22,12 @@ the implementation contract, not optional background reading.
   requirements change.
 - Update `README.md` in the same change when user workflows, UI controls,
   execution or storage behavior, plugin dependencies, build/install commands,
-  catalog counts, or contributor extension summaries change.
+  or contributor extension summaries change. Avoid hardcoding total exercise
+  counts in `README.md`; point to `src/main/resources/exercises/index.txt`.
+- Update `AGENTS.md` (here and at the repo root) and
+  `../.github/instructions/practice-plugin-content.instructions.md` in the same
+  change when build tasks, scripts, dependency management, or authoring rules
+  change.
 - Update every affected document when a change spans design, implementation
   guidance, and user-facing documentation. Do not leave known
   future-documentation work for a later change.
@@ -56,18 +61,22 @@ the IDE MCP `projectPath`.
 Run from `practice-plugin/` with the repository wrapper:
 
 ```bash
+python3 scripts/catalog_tool.py validate   # <1s static check of all exercises and tracks
+./gradlew test -Pfast                      # fast unit suite (excludes @Tag("catalog") and @Tag("gradle-integration"))
 ./gradlew test
-./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
 ./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
 ./gradlew runLocalIde      # sandbox IDE on newest locally installed IntelliJ build
 ./gradlew runIde           # sandbox IDE on pinned target platform
 ```
 
-`-PcatalogOnly` limits the slow per-exercise catalog checks to the listed
-exercise IDs; the full catalog takes several minutes. Use the smallest relevant
-test first, then run the full plugin test suite before finishing a code change
-(delegate full `./gradlew test` / `./gradlew check` runs to a `task` subagent or
-pass `--quiet` to keep test logs out of main context).
+`-PcatalogOnly` limits the slow per-exercise `@Tag("catalog")` subprocess checks
+to the listed exercise IDs; the full catalog takes several minutes (with
+parallelized reference/wrong/runner checks and sequential complexity probes).
+Use `scripts/catalog_tool.py validate` and `./gradlew test -Pfast` for fast
+iteration, then run `./gradlew check` before finishing a code change (delegate
+full `./gradlew test` / `./gradlew check` runs to a `task` subagent or pass
+`--quiet` to keep test logs out of main context). Shared plugin dependency
+versions live in `../gradle/libs.versions.toml`.
 
 ## Code Coverage
 

@@ -1,0 +1,30 @@
+{
+  "id": "snapshot-array",
+  "title": "Snapshot Array",
+  "topic": "Searching",
+  "difficulty": "Medium",
+  "statement": "Implement an integer array that supports taking lightweight snapshots and querying any index as of a past snapshot.\n\nContract\n- `new Solution(length)` creates an array of `length` elements (`length >= 1`), all initialized to `0`, at snapshot version `0`.\n- `set(index, val)` updates element `index` (`0 <= index < length`) to `val` in the current unsealed version.\n- `snap()` seals the current version, returns its snapshot ID (starting from `0` and increasing by `1` on each call), and advances to the next version.\n- `get(index, snapId)` returns the value held at `index` when snapshot `snapId` was taken (`0 <= snapId < number of completed snaps`).\n- Avoid copying the entire array on every `snap()`: store only actual mutations per index.\n\nExamples\n- With length `3`: `set(0, 5)`, `snap()` -> `0`, `set(0, 6)`, `get(0, 0)` -> `5`.\n- Multiple writes before one snap overwrite the same version: `set(1, 2)`, `set(1, 9)`, `snap()` -> `0`, `get(1, 0)` -> `9`.\n- Untouched indexes remain `0`: `snap()` -> `0`, `get(2, 0)` -> `0`.\n",
+  "examples": [
+    {
+      "input": "len 3; set 0 5, snap, set 0 6, get 0 0",
+      "output": "snap=0, get=5"
+    },
+    {
+      "input": "len 3; set 1 2, set 1 9, snap, get 1 0",
+      "output": "snap=0, get=9"
+    },
+    {
+      "input": "len 3; snap, get 2 0",
+      "output": "snap=0, get=0"
+    }
+  ],
+  "hints": [
+    "Copying the whole array on each snap() takes O(length * snaps) memory and time; instead, keep a history list of (snapId, value) pairs per index.",
+    "Because snapId only increases, each index's history list is naturally sorted by snapId; if set() is called multiple times at the same snapId, overwrite the last entry in place.",
+    "To answer get(index, snapId), binary search that index's history for the largest recorded version <= snapId. Intended complexity: O(1) amortized set/snap and O(log k) get (O(n log n) over n operations), with O(n) extra space."
+  ],
+  "inputSyntax": "Input: len N; op1, op2, ... where ops are set i v | snap | get i s, for example: len 3; set 0 5, snap, set 0 6, get 0 0",
+  "sampleInput": "len 3; set 0 5, snap, set 0 6, get 0 0",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

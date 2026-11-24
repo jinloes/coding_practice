@@ -153,7 +153,7 @@ overflow. Only one request runs at a time.
 
 The settings dialog fills its Model dropdown with
 `CopilotInterviewer.listModels`, which uses the Copilot Java SDK
-(`com.github:copilot-sdk-java`, bundled with its Jackson jars). JNA is excluded:
+(`com.microsoft:copilot-sdk`, bundled with its Jackson jars). JNA is excluded:
 it serves only the SDK's in-process mode, and an explicit `cliPath` always selects
 stdio. The SDK launches `<cli> --no-custom-instructions --disable-builtin-mcps
 --server --no-auto-update --log-level info --stdio` in a fresh owned run

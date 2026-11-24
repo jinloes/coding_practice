@@ -25,16 +25,65 @@ final class MarkdownHtml {
     static String toHtml(String markdown) {
         StringBuilder html = new StringBuilder();
         List<String> block = new ArrayList<>();
+        boolean inFence = false;
+        boolean hasCodeLine = false;
+        StringBuilder code = new StringBuilder();
         for (String line : markdown.strip().lines().toList()) {
+            String trimmed = line.strip();
+            if (trimmed.startsWith("```")) {
+                if (inFence) {
+                    html.append("<pre><code>").append(escape(code.toString())).append("</code></pre>");
+                    code.setLength(0);
+                    inFence = false;
+                    hasCodeLine = false;
+                } else {
+                    appendBlock(block, html);
+                    block.clear();
+                    inFence = true;
+                }
+                continue;
+            }
+            if (inFence) {
+                if (hasCodeLine) {
+                    code.append('\n');
+                }
+                code.append(line);
+                hasCodeLine = true;
+                continue;
+            }
             if (line.isBlank()) {
                 appendBlock(block, html);
                 block.clear();
+            } else if (headingLevel(trimmed) > 0) {
+                appendBlock(block, html);
+                block.clear();
+                int level = headingLevel(trimmed);
+                String tag = "h" + (level + 1);
+                String text = trimmed.substring(level + 1).strip();
+                html.append('<').append(tag).append('>').append(inline(text)).append("</").append(tag).append('>');
             } else {
                 block.add(line);
             }
         }
-        appendBlock(block, html);
+        if (inFence) {
+            html.append("<pre><code>").append(escape(code.toString())).append("</code></pre>");
+        } else {
+            appendBlock(block, html);
+        }
         return html.toString();
+    }
+
+    private static int headingLevel(String trimmed) {
+        if (trimmed.startsWith("### ")) {
+            return 3;
+        }
+        if (trimmed.startsWith("## ")) {
+            return 2;
+        }
+        if (trimmed.startsWith("# ")) {
+            return 1;
+        }
+        return 0;
     }
 
     /** Escapes {@code text} and renders its inline code spans, without any block markup. */

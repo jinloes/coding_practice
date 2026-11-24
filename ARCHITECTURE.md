@@ -8,6 +8,7 @@ This repository is a multi-module Gradle project for Java platform, regex engine
 
 - Build tool: Gradle 9.3.1 (`./gradlew` at repository root and in each plugin directory)
 - Multi-module layout in root `settings.gradle` for Java 17/21 modules, plus `includeBuild` composite builds for `practice-plugin` and `system-design-plugin`
+- Shared plugin dependency and toolchain versions live in root `gradle/libs.versions.toml` and are imported by both `practice-plugin` and `system-design-plugin`
 - Spring dependency management plugin applies only to root `subprojects`, keeping plugin builds isolated
 - Shared IntelliJ run configurations in `.run/` launch plugin sandboxes directly when the repository root is opened in IntelliJ IDEA (with JDK 25 as the Gradle JVM)
 
@@ -72,7 +73,7 @@ The word "workspace" means four different things, and keeping them apart is the 
 | `ManagedPracticeWorkspace` | Durable learner attempts — the solutions a learner keeps | IDE config directory (`PathManager.getConfigPath()`) |
 | `PracticeWorkspace` | Read-only access to attempts written by the pre-managed layout | Wherever the legacy attempt was created |
 | `PracticeModuleWorkspace` | Disposable IDE modules and compiled example harnesses | Generated, per-project, deleted on dispose |
-| `VerificationWorkspace` | The throwaway Gradle project that runs the hidden tests | Generated per check, deleted after |
+| `VerificationWorkspace` | The throwaway Java 17 verification directory that compiles and runs the hidden tests and complexity probe | Generated per check, deleted after |
 
 Only the first is durable. `ManagedPracticeWorkspace.SOLUTION_PATH` is effectively a storage format:
 every attempt directory on disk contains that exact path, so it exists once and is pinned by a test.
@@ -81,11 +82,9 @@ every attempt directory on disk contains that exact path, so it exists once and 
 
 A learner's solution is untrusted code, so it never runs in the IDE's process:
 
-- Each check materializes a fresh `VerificationWorkspace` — its own Gradle project, wrapper, and
-  build script — and runs it as a child process.
-- The generated build script is a **resource** (`src/main/resources/gradle/verification-build.gradle`)
-  whose dependency versions are injected at build time from `build.gradle`, so the plugin and the
-  code it generates cannot drift apart.
+- Each check materializes a fresh `VerificationWorkspace` and runs a Java 17 child JVM
+  (`verification-runner.jar` / `VerificationMain`) that compiles the solution, runs the bundled
+  JUnit 5 + AssertJ test suite offline, and runs the advisory complexity probe.
 - Results come back only as JUnit XML, parsed by `TestReports` with DOCTYPE processing disabled and
   a size cap, never as objects loaded into the IDE.
 - Every generated directory is created and deleted through `platform/OwnedDirectory`, which writes a
@@ -95,37 +94,32 @@ A learner's solution is untrusted code, so it never runs in the IDE's process:
 ### Layer boundaries
 
 ```
-ui  ──▶  app  ──▶  run  ◀──▶  state
-                    │
-                    ▼
-                workspace  ──▶  catalog
-                    │
-                    ▼
-                platform
+ui  ──▶  app / coach / run  ◀──▶  state
+                        │
+                        ▼
+                    workspace  ──▶  catalog
+                        │
+                        ▼
+                    platform
 ```
 
-- `catalog` — the exercise definitions. Each exercise is a directory under
-  `src/main/resources/exercises/<id>/` holding an `exercise.json` manifest plus its Java templates.
-  Counts such as "11 hidden tests" are **derived** from the templates at load, never hand-copied.
+- `catalog` — exercise, study guide, and practice track definitions (`exercises/index.txt`,
+  `guides/*.json`, `tracks/index.txt`). Counts such as "11 hidden tests" are **derived** from the
+  templates at load, never hand-copied.
+- `coach` — optional post-submission AI Coach using the user's Copilot CLI with every tool disabled
+  and `com.microsoft:copilot-sdk` for model discovery.
 - `platform` — host facts and mechanisms with no plugin concepts (`Os`, `OwnedDirectory`).
 - `workspace` — the four workspace types above. It knows nothing about running or UI, which is what
   lets it be tested without an IDE.
 - `state` — persisted learner progress (`ManagedPracticeProgress`).
-- `run` — the run lifecycle. `PracticeRunner` holds exactly one piece of state, an
-  `AtomicReference<RunSession>`, where `RunSession` is a sealed type: `Idle`, `ExampleSession`, or
-  `CheckSession`. What is in flight is a property of which variant is present, not of a dozen
-  independently mutable fields.
+- `run` — the run lifecycle. `PracticeRunner` holds an `AtomicReference<RunSession>`, where
+  `RunSession` is a sealed type (`Idle`, `ExampleSession`, `CheckSession`).
 - `app` — orchestration that spans layers without dragging UI into it (`LegacyImportService`).
-- `ui` — Swing only. The tool window panel registers a run-output listener and deregisters it on
-  dispose, so closing and reopening the window neither leaks panels nor loses output.
+- `ui` — React + Mantine pages (`web/`) rendered in JCEF with a Swing HTML fallback (`HtmlPageView`),
+  plus IntelliJ actions and dialogs.
 
-`workspace` references only `catalog` and `platform` — never `run` or `state` — which is what lets
-the workspace types be tested without starting an IDE.
-
-One two-way edge remains: `state.ManagedPracticeProgress` imports `run.CheckResult` while
-`run.PracticeRunner` imports `state.ManagedPracticeProgress`. `CheckResult` is a result value, not
-run machinery, so the natural fix is to move it to a layer both can depend on. That has not been
-done, and this document says so rather than drawing a diagram that is cleaner than the code.
+See [practice-plugin/ARCHITECTURE.md](practice-plugin/ARCHITECTURE.md) for the complete component
+map, lifecycle, and privacy boundaries.
 
 ## System Design Practice Plugin (`system-design-plugin`)
 

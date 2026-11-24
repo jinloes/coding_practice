@@ -80,7 +80,7 @@ Use **Interviewer settings** in the tool window to set the CLI path (empty means
 
 The **Model** field is a dropdown of the models your account can use. The plugin
 asks the CLI for them, through the bundled
-[Copilot Java SDK](https://github.com/github/copilot-sdk-java), when the dialog
+[Copilot Java SDK](https://github.com/microsoft/copilot-sdk), when the dialog
 opens, when the CLI path changes, and when you click **Refresh**. The status
 line shows the model count or why listing failed. You can still type any model
 ID; leave it empty for the CLI default.

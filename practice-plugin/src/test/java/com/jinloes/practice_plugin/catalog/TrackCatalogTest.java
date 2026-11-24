@@ -4,20 +4,37 @@ import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.GuideCatalog.Guide;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TrackCatalogTest {
     private static final List<String> NOTE_SECTIONS = List.of("About this list", "What to expect", "How to prepare");
+    private static final Set<String> STUDY_LIST_IDS = Set.of("blind-75", "neetcode-150");
 
     @Test
-    void listsTheTracksWithTheirExercisesEasiestFirst() {
+    void indexListsEveryTrackManifestOnceInDisplayOrder() throws IOException {
+        List<String> indexed = TrackCatalog.indexedIds();
+        assertThat(indexed).isNotEmpty().doesNotHaveDuplicates();
         assertThat(TrackCatalog.all()).extracting(Guide::id)
-                .containsExactly("blind-75", "neetcode-150", "google", "apple", "atlassian");
+                .containsExactlyElementsOf(indexed);
         assertThat(TrackCatalog.all()).extracting(Guide::title)
-                .containsExactly("Blind 75", "NeetCode 150", "Google", "Apple", "Atlassian");
+                .doesNotHaveDuplicates()
+                .allSatisfy(title -> assertThat(title).isNotBlank());
+        try (var files = Files.list(Path.of("src/main/resources/tracks"))) {
+            List<String> manifestIds = files
+                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                    .map(path -> path.getFileName().toString().replace(".json", ""))
+                    .toList();
+            assertThat(manifestIds)
+                    .as("tracks/index.txt must match all tracks/*.json files")
+                    .containsExactlyInAnyOrderElementsOf(indexed);
+        }
         for (Guide track : TrackCatalog.all()) {
             assertThat(track.exercises()).extracting(exercise -> GuideCatalog.DIFFICULTIES.indexOf(exercise.difficulty()))
                     .as("%s lists Easy, then Medium, then Hard", track.id())
@@ -51,40 +68,21 @@ class TrackCatalogTest {
         for (Guide track : TrackCatalog.all()) {
             assertThat(track.summary()).as("summary of %s", track.id())
                     .contains("not an official or verified question list");
+            assertThat(track.exercises()).as("%s has distinct exercises", track.id()).doesNotHaveDuplicates();
             for (String section : NOTE_SECTIONS) {
                 assertThat(track.lesson().lines().map(String::strip))
                         .as("%s note section label", track.id())
                         .contains(section);
             }
+            if (!STUDY_LIST_IDS.contains(track.id())) {
+                assertThat(track.summary()).as("company summary %s", track.id()).contains("Approximate");
+                for (String difficulty : GuideCatalog.DIFFICULTIES) {
+                    assertThat(track.exercisesAt(difficulty))
+                            .as("%s %s exercises", track.id(), difficulty)
+                            .isNotEmpty();
+                }
+            }
         }
-        assertThat(TrackCatalog.find("google").summary()).contains("Approximate");
-        assertThat(TrackCatalog.find("apple").summary()).contains("Approximate");
-        assertThat(TrackCatalog.find("atlassian").summary()).contains("Approximate");
-    }
-
-    @Test
-    void atlassianCoversEveryDifficultyWithDistinctExercises() {
-        Guide atlassian = TrackCatalog.find("atlassian");
-        assertThat(atlassian.exercises()).doesNotHaveDuplicates();
-        for (String difficulty : GuideCatalog.DIFFICULTIES) {
-            assertThat(atlassian.exercisesAt(difficulty)).as("Atlassian %s exercises", difficulty).isNotEmpty();
-        }
-        assertThat(atlassian.exercises()).extracting(Exercise::id)
-                .contains("agent-satisfaction-ranking", "sliding-window-rate-limiter",
-                        "collection-storage-report", "wildcard-route-matcher",
-                        "grid-snake-game", "credit-window-rate-limiter",
-                        "rank-teams-by-votes", "popularity-tracker");
-    }
-
-    @Test
-    void appleCoversEveryDifficultyWithDistinctExercises() {
-        Guide apple = TrackCatalog.find("apple");
-        assertThat(apple.exercises()).doesNotHaveDuplicates();
-        for (String difficulty : GuideCatalog.DIFFICULTIES) {
-            assertThat(apple.exercisesAt(difficulty)).as("Apple %s exercises", difficulty).isNotEmpty();
-        }
-        assertThat(apple.exercises()).extracting(Exercise::id)
-                .contains("region-recolor", "nested-repeat-decoding", "infix-expression-value");
     }
 
     @Test
@@ -98,12 +96,14 @@ class TrackCatalogTest {
 
     @Test
     void findsTheTracksThatIncludeAnExercise() {
-        assertThat(TrackCatalog.containing("course-schedule")).extracting(Guide::id)
-                .containsExactly("blind-75", "neetcode-150", "google");
-        assertThat(TrackCatalog.containing("queens-placement")).extracting(Guide::id)
-                .containsExactly("neetcode-150");
-        assertThat(TrackCatalog.containing("least-recently-used-cache")).extracting(Guide::id)
-                .containsExactly("neetcode-150", "google", "apple", "atlassian");
+        for (Exercise exercise : ExerciseCatalog.all()) {
+            List<Guide> expected = TrackCatalog.all().stream()
+                    .filter(track -> track.exercises().contains(exercise))
+                    .toList();
+            assertThat(TrackCatalog.containing(exercise.id()))
+                    .as("tracks containing %s", exercise.id())
+                    .containsExactlyElementsOf(expected);
+        }
         assertThat(TrackCatalog.containing("roman-to-integer")).isEmpty();
         assertThatThrownBy(() -> TrackCatalog.find("missing"))
                 .isInstanceOf(IllegalArgumentException.class)

@@ -65,6 +65,7 @@ final class PageJson {
             case PracticePage.Study study when study.guide() != null ->
                     guidePage(study.guide(), study.selected(), study.passed());
             case PracticePage.Study study -> chooserPage(study.selected());
+            case PracticePage.Coach coach -> coachPage(coach);
         });
         return GSON.toJson(state);
     }
@@ -142,6 +143,41 @@ final class PageJson {
         membership.addProperty("title", selected.title());
         addMemberships(membership, selected);
         page.add("selected", membership);
+        return page;
+    }
+
+    private static JsonObject coachPage(PracticePage.Coach source) {
+        JsonObject page = kind("coach");
+        JsonObject coach = new JsonObject();
+        if (source.exercise() == null) {
+            coach.add("exerciseId", null);
+            coach.add("exerciseTitle", null);
+        } else {
+            coach.addProperty("exerciseId", source.exercise().id());
+            coach.addProperty("exerciseTitle", source.exercise().title());
+        }
+        if (source.attemptId() == null) {
+            coach.add("attemptId", null);
+        } else {
+            coach.addProperty("attemptId", source.attemptId());
+        }
+        coach.addProperty("unlocked", source.unlocked());
+        coach.addProperty("lockReason", source.lockReason());
+        coach.addProperty("running", source.running());
+        coach.addProperty("checkSummary", source.checkSummary());
+        coach.addProperty("stale", source.stale());
+        coach.addProperty("error", source.error());
+        coach.addProperty("modelLabel", source.modelLabel());
+        JsonArray turns = new JsonArray();
+        for (PracticePage.CoachTurn turn : source.turns()) {
+            JsonObject item = new JsonObject();
+            item.addProperty("role", turn.role());
+            item.addProperty("html", MarkdownHtml.toHtml(turn.markdown()));
+            item.addProperty("createdAt", turn.createdAt());
+            turns.add(item);
+        }
+        coach.add("turns", turns);
+        page.add("coach", coach);
         return page;
     }
 

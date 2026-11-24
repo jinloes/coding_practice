@@ -123,12 +123,12 @@ edit-staleness feedback, error notifications, and `RunEvent` transitions for the
 panel. `ExerciseCellRenderer`, `AttemptBar`, `ResultsView`, `HintButton`, `PracticeActions` (the run toolbar and
 title actions), `PracticeIdeActions` (the global `Tools > Algorithm Practice` IDE actions for Find Action and custom keymap shortcuts), and `CustomInputPrompt` are the native Swing and action-system pieces.
 
-#### Problem and Study Guide pages
+#### Problem, Study Guide, and Coach pages
 
-The Problem and Study Guide tabs are `PageView`s that show an immutable
-`PracticePage` (`Problem` or `Study`, plus the passed IDs). `PracticePanel`
-wraps each tab in `PageView.lazy`, so the Study Guide browser is not created
-until that tab is opened and hidden tabs do not serialize or push updates until
+The Problem, Study Guide, and Coach tabs are `PageView`s that show an immutable
+`PracticePage` (`Problem`, `Study`, or `Coach`, plus the passed IDs). `PracticePanel`
+wraps each tab in `PageView.lazy`, so the Study Guide and Coach browsers are not created
+until their tab is opened and hidden tabs do not serialize or push updates until
 re-selected. There are two concrete implementations:
 
 - `ReactPageView` hosts the React/Mantine app from `web/` in a JCEF browser.
@@ -137,12 +137,20 @@ re-selected. There are two concrete implementations:
   clicks in `bridge.ts` until `window.practiceAttachSend` connects the
   `JBCefJSQuery`, forwarding JSON that `PageEvent` parses so the panel handles
   events on the EDT. A page can ask the panel to select an exercise, guide, or
-  track, reset active filters, start or open the current attempt, or run visible
-  examples or the manifest sample input; the page itself never executes code or
+  track, reset active filters, start or open the current attempt, run visible
+  examples or the manifest sample input, or trigger AI Coach actions (`coachDiagnose`,
+  `coachTranslate`, `coachCompare`, `coachFollowUp`, `coachCancel`, `coachClear`,
+  `coachSettings`); the page itself never executes code or
   touches files directly.
 - `HtmlPageView` is the fallback: a non-interactive Swing `JEditorPane` that
   reuses `PracticeViews.problemText` (including metadata, target complexity,
-  input syntax, and memberships) and `StudyGuideView.html`.
+  input syntax, and memberships), `StudyGuideView.html`, and a static Coach view.
+
+`CoachController` owns the AI Coach tab's unlock rule, background request
+lifecycle, generation-guarded cancellation/clear/disposal, and per-attempt
+history persistence; `CoachSettingsDialog` edits the Copilot CLI path, model
+selector, and timeout. `AttemptFiles.readCurrentSource` reads the live unsaved
+IntelliJ `Document` text (falling back to disk) for coaching prompts.
 
 JCEF is the optional bundled plugin `com.intellij.modules.jcef`. `plugin.xml`
 declares it as an optional dependency whose `practice-jcef.xml` registers the
@@ -209,10 +217,25 @@ to IntelliJ's execution infrastructure. `TestReports`, `FailureText`,
 `CheckResult`, `ComplexityAnalysis`, and `ComplexityReport` translate generated
 run artifacts into user-facing results.
 
+### `coach`
+
+`CopilotCoach` runs the local GitHub Copilot CLI in a fresh empty temporary
+directory with `-s`, `--no-custom-instructions`, `--disable-builtin-mcps`,
+`--available-tools=practice_no_tools`, `--no-ask-user`, and optional `--model=<id>`,
+piping the prompt on stdin with bounded output (512 KiB),
+timeout, and cancellation cleanup. `CopilotModels` lists and filters available
+enabled models via the official `com.microsoft:copilot-sdk` client (also spawned from an
+isolated empty scratch directory). `CoachPrompt` builds size-bounded prompts
+(capped at 48,000 chars, with statement, check output, learner source, and
+follow-up individually bounded) with untrusted learner code, check output,
+history, and follow-up questions delimited in XML tags.
+
 ### `state`
 
 `ManagedPracticeProgress` is non-roaming application state keyed by managed
-attempt ID. It stores selections, limits, hint progress, fingerprints,
+attempt ID. It stores selections, limits, AI Coach settings (`coachCliPath`,
+`coachModel`, `coachTimeoutSeconds`) and per-attempt `coachHistory` (capped at
+20 turns / 16,000 chars per turn), hint progress, fingerprints,
 current/previous results, complexity text, historical passes, and legacy
 mappings.
 

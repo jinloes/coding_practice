@@ -156,4 +156,143 @@ class ManagedPracticeProgressTest {
                 .as("limits %d/%d/%d are rejected", testSeconds, suiteSeconds, heapMb)
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void persistsAndCapsCoachSettingsAndPerAttemptHistory() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        progress.getState().coachCliPath = "/usr/local/bin/copilot";
+        progress.getState().coachModel = "gpt-5";
+        progress.getState().coachTimeoutSeconds = 90;
+
+        String attemptA = "pair-sum-a";
+        String attemptB = "pair-sum-b";
+        String huge = "Z".repeat(ManagedPracticeProgress.MAX_COACH_TURN_CHARS + 200);
+        progress.appendCoachTurn(attemptA, "pair-sum", "user", huge);
+        for (int i = 1; i <= ManagedPracticeProgress.MAX_COACH_TURNS + 2; i++) {
+            progress.appendCoachTurn(attemptA, "pair-sum", i % 2 == 0 ? "user" : "assistant", "turn-" + i);
+        }
+        progress.appendCoachTurn(attemptB, "pair-sum", "user", "keep-me");
+
+        assertThat(progress.coachHistory(attemptA, "pair-sum")).hasSize(ManagedPracticeProgress.MAX_COACH_TURNS);
+        assertThat(progress.coachHistory(attemptA, "pair-sum").get(0).text).isEqualTo("turn-3");
+        assertThat(progress.coachHistory(attemptA, "pair-sum").get(ManagedPracticeProgress.MAX_COACH_TURNS - 1).text)
+                .isEqualTo("turn-22");
+
+        progress.appendCoachTurn(attemptB, "pair-sum", "assistant", huge);
+        assertThat(progress.coachHistory(attemptB, "pair-sum").get(1).text)
+                .hasSize(ManagedPracticeProgress.MAX_COACH_TURN_CHARS);
+
+        progress.clearCoachHistory(attemptA, "pair-sum");
+        assertThat(progress.coachHistory(attemptA, "pair-sum")).isEmpty();
+        assertThat(progress.coachHistory(attemptB, "pair-sum")).hasSize(2);
+
+        assertThat(ManagedPracticeProgress.validCoachTimeout(14)).isFalse();
+        assertThat(ManagedPracticeProgress.validCoachTimeout(15)).isTrue();
+        assertThat(ManagedPracticeProgress.validCoachTimeout(600)).isTrue();
+        assertThat(ManagedPracticeProgress.validCoachTimeout(601)).isFalse();
+        assertThat(new ManagedPracticeProgress.CoachTurn().role).isEmpty();
+    }
+
+    @Test
+    void loadStateNormalizesMissingCoachSettingsAndNullCoachHistory() {
+        ManagedPracticeProgress progress = new ManagedPracticeProgress();
+        ManagedPracticeProgress.Data state = new ManagedPracticeProgress.Data();
+        state.coachCliPath = null;
+        state.coachModel = null;
+        state.coachTimeoutSeconds = 0;
+        ManagedPracticeProgress.Entry legacy = new ManagedPracticeProgress.Entry();
+        legacy.exerciseId = "pair-sum";
+        legacy.coachHistory = null;
+        state.attempts.put("pair-sum-legacy", legacy);
+
+        ManagedPracticeProgress.Entry oversized = new ManagedPracticeProgress.Entry();
+        oversized.exerciseId = "pair-sum";
+        for (int i = 1; i <= ManagedPracticeProgress.MAX_COACH_TURNS + 3; i++) {
+            oversized.coachHistory.add(new ManagedPracticeProgress.CoachTurn("user", "loaded-" + i, "2026-01-01T00:00:00Z"));
+        }
+        oversized.coachHistory.add(new ManagedPracticeProgress.CoachTurn(
+                "assistant", "X".repeat(ManagedPracticeProgress.MAX_COACH_TURN_CHARS + 500), "2026-01-01T00:00:01Z"));
+        ManagedPracticeProgress.CoachTurn nullFields = new ManagedPracticeProgress.CoachTurn();
+        nullFields.role = null;
+        nullFields.text = null;
+        nullFields.createdAt = null;
+        oversized.coachHistory.add(nullFields);
+        state.attempts.put("pair-sum-oversized", oversized);
+
+        progress.loadState(state);
+
+        assertThat(progress.getState().coachCliPath).isEmpty();
+        assertThat(progress.getState().coachModel).isEmpty();
+        assertThat(progress.getState().coachTimeoutSeconds)
+                .isEqualTo(ManagedPracticeProgress.DEFAULT_COACH_TIMEOUT_SECONDS);
+        assertThat(progress.coachHistory("pair-sum-legacy", "pair-sum")).isEmpty();
+
+        var loadedHistory = progress.coachHistory("pair-sum-oversized", "pair-sum");
+        assertThat(loadedHistory).hasSize(ManagedPracticeProgress.MAX_COACH_TURNS);
+        assertThat(loadedHistory.get(0).text).isEqualTo("loaded-6");
+        assertThat(loadedHistory.get(ManagedPracticeProgress.MAX_COACH_TURNS - 2).text)
+                .hasSize(ManagedPracticeProgress.MAX_COACH_TURN_CHARS);
+        var normalizedNull = loadedHistory.get(ManagedPracticeProgress.MAX_COACH_TURNS - 1);
+        assertThat(normalizedNull.role).isEmpty();
+        assertThat(normalizedNull.text).isEmpty();
+        assertThat(normalizedNull.createdAt).isEmpty();
+    }
+
+    @Test
+    void serializesAndDeserializesNewAndLegacyXmlState() throws Exception {
+        ManagedPracticeProgress original = new ManagedPracticeProgress();
+        original.record("pair-sum-1", "pair-sum", "fp1",
+                new CheckResult(CheckResult.Status.PASSED, 3, 0, "ok"));
+        original.getState().coachModel = "gpt-5";
+        original.getState().coachTimeoutSeconds = 120;
+        original.getState().coachCliPath = "/usr/local/bin/copilot";
+        original.appendCoachTurn("pair-sum-1", "pair-sum", "user", "Explain DP state");
+        original.appendCoachTurn("pair-sum-1", "pair-sum", "assistant", "Use dp[i].");
+
+        org.jdom.Element xml = com.intellij.util.xmlb.XmlSerializer.serialize(original.getState());
+        ManagedPracticeProgress.Data roundTripped =
+                com.intellij.util.xmlb.XmlSerializer.deserialize(xml, ManagedPracticeProgress.Data.class);
+        ManagedPracticeProgress reloaded = new ManagedPracticeProgress();
+        reloaded.loadState(roundTripped);
+
+        assertThat(reloaded.getState().coachModel).isEqualTo("gpt-5");
+        assertThat(reloaded.getState().coachTimeoutSeconds).isEqualTo(120);
+        assertThat(reloaded.getState().coachCliPath).isEqualTo("/usr/local/bin/copilot");
+        assertThat(reloaded.coachHistory("pair-sum-1", "pair-sum"))
+                .extracting(t -> t.role, t -> t.text)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple("user", "Explain DP state"),
+                        org.assertj.core.groups.Tuple.tuple("assistant", "Use dp[i]."));
+
+        // Old persisted XML without coachModel, coachTimeoutSeconds, coachCliPath, or coachHistory
+        String legacyXml = """
+                <Data>
+                  <option name="attempts">
+                    <map>
+                      <entry key="pair-sum-old">
+                        <value>
+                          <Entry>
+                            <option name="exerciseId" value="pair-sum" />
+                            <option name="status" value="PASSED" />
+                            <option name="checkedFingerprint" value="oldfp" />
+                          </Entry>
+                        </value>
+                      </entry>
+                    </map>
+                  </option>
+                </Data>
+                """;
+        org.jdom.Element legacyElement = com.intellij.openapi.util.JDOMUtil.load(legacyXml);
+        ManagedPracticeProgress.Data legacyData =
+                com.intellij.util.xmlb.XmlSerializer.deserialize(legacyElement, ManagedPracticeProgress.Data.class);
+        ManagedPracticeProgress fromLegacy = new ManagedPracticeProgress();
+        fromLegacy.loadState(legacyData);
+
+        assertThat(fromLegacy.getState().coachModel).isEmpty();
+        assertThat(fromLegacy.getState().coachCliPath).isEmpty();
+        assertThat(fromLegacy.getState().coachTimeoutSeconds)
+                .isEqualTo(ManagedPracticeProgress.DEFAULT_COACH_TIMEOUT_SECONDS);
+        assertThat(fromLegacy.entry("pair-sum-old", "pair-sum").status).isEqualTo("PASSED");
+        assertThat(fromLegacy.coachHistory("pair-sum-old", "pair-sum")).isEmpty();
+    }
 }

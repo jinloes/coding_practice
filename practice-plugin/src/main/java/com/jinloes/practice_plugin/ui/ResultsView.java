@@ -11,6 +11,7 @@ import com.intellij.util.ui.UIUtil;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
 
 import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 final class ResultsView {
     private final JBLabel banner = new JBLabel();
     private final JBLabel history = new JBLabel();
+    private final JButton askCoach = new JButton("Ask AI Coach");
     private final JBTextArea output = PracticeViews.textArea();
     private final JPanel panel = new JPanel(new BorderLayout());
 
@@ -29,17 +31,38 @@ final class ResultsView {
     private boolean stale;
 
     ResultsView() {
+        this(() -> {});
+    }
+
+    ResultsView(Runnable onAskCoach) {
         banner.setFont(JBFont.label().asBold().biggerOn(1));
         banner.setIconTextGap(JBUI.scale(6));
         history.setForeground(UIUtil.getContextHelpForeground());
         history.setFont(JBFont.label());
-        JPanel summary = new JPanel(new GridLayout(0, 1, 0, 2));
-        summary.setBorder(JBUI.Borders.empty(8, 8, 0, 8));
-        summary.add(banner);
-        summary.add(history);
-        panel.add(summary, BorderLayout.NORTH);
+        askCoach.setEnabled(false);
+        askCoach.setToolTipText("Run Check on this attempt to unlock the AI Coach");
+        askCoach.addActionListener(_ -> onAskCoach.run());
+        JPanel labels = new JPanel(new GridLayout(0, 1, 0, 2));
+        labels.add(banner);
+        labels.add(history);
+        JPanel header = new JPanel(new BorderLayout(8, 0));
+        header.setBorder(JBUI.Borders.empty(8, 8, 0, 8));
+        header.add(labels, BorderLayout.CENTER);
+        header.add(askCoach, BorderLayout.EAST);
+        panel.add(header, BorderLayout.NORTH);
         panel.add(new JBScrollPane(output), BorderLayout.CENTER);
         clear();
+    }
+
+    void setAskCoachEnabled(boolean enabled) {
+        askCoach.setEnabled(enabled);
+        askCoach.setToolTipText(enabled
+                ? "Open the post-check AI Coach for this attempt"
+                : "Run Check on this attempt to unlock the AI Coach");
+    }
+
+    JButton askCoachButton() {
+        return askCoach;
     }
 
     JComponent component() {

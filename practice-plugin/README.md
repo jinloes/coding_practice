@@ -96,12 +96,25 @@ downloading the pinned SDK).
    **Start or Open Attempt**, **Run Examples**, **Debug Examples**,
    **Check Solution**, and **Stop Practice Run** from **Tools > Algorithm
    Practice**, **Find Action**, or custom **Settings > Keymap** shortcuts.
+6. **AI Coach** (available on the **Coach** tab and via **Ask AI Coach** on the
+   **Results** tab) unlocks for an attempt once at least one full **Check
+   Solution** finishes with a terminal result (`PASSED`, `ASSERTION_FAILED`,
+   `COMPILATION_FAILED`, `RUNTIME_ERROR`, or `TIMED_OUT`) and stays locked while
+   no check has run or while a check is running. Choose **Diagnose my attempt**,
+   **Translate my approach** (for example, turning top-down recursion into
+   bottom-up DP), **Compare with optimal** (a model-inferred optimal approach,
+   since bundled reference solutions are never sent), or ask a follow-up
+   question. Each request runs the local GitHub Copilot CLI (`copilot`) in an
+   isolated empty scratch directory with tools, file access, URL fetches, and
+   custom instructions disabled, using the current editor buffer (including
+   unsaved edits). Configure the CLI path, model (fetched dynamically via the
+   Copilot SDK), and timeout (`15`–`600` seconds) from **AI Coach Settings**.
 
-The catalog includes 276 exercises (67 Easy, 176 Medium, 33 Hard). Browse them
-in the Practice tool window by topic, difficulty, guide, or track;
-`src/main/resources/exercises/index.txt` lists every exercise ID in display order.
-Each has an explicit contract and three optional hints. The last hint discusses
-the intended complexity.
+The catalog is defined in `src/main/resources/exercises/index.txt` (which lists
+every exercise ID in display order) and spans Easy, Medium, and Hard problems
+across all major interview topics. Browse them in the Practice tool window by
+topic, difficulty, guide, or track. Each exercise has an explicit contract and
+three optional hints. The last hint discusses the intended complexity.
 
 ## Study guides
 
@@ -140,6 +153,35 @@ through a curated set of problems. Bundled tracks:
   reported in Atlassian coding and code-design interviews, including rate
   limiting, collection storage aggregation, wildcard path routing, ranked
   voting, and stateful grid simulation.
+- **Meta**: Easy, Medium, and Hard problems focused on two-pointer string/array
+  checks, prefix sums, trees, graph BFS/DFS, sliding windows, intervals, and
+  heaps.
+- **Amazon**: Easy, Medium, and Hard problems covering autocomplete and tries,
+  heaps and top-k selection, grid BFS, greedy scheduling, caches, and sliding
+  windows.
+- **Stripe**: Easy, Medium, and Hard problems focused on HTTP header and string
+  parsing, shop/schedule penalty optimization, rate limiting, route matching,
+  and stateful APIs.
+- **Anthropic**: Easy, Medium, and Hard problems covering in-memory filesystems,
+  versioned snapshots, caches, task scheduling, rate limiting, and dependency
+  ordering.
+- **Databricks**: Easy, Medium, and Hard problems covering snapshot arrays,
+  time-series counters, k-way merging, interval coverage, caches, and
+  sliding-window aggregations.
+- **OpenAI**: Easy, Medium, and Hard problems covering transactional KV stores,
+  versioned snapshots, in-memory filesystems, LRU/LFU caches, lazy iterators,
+  rate limiters, and task schedulers.
+- **Uber & DoorDash**: Easy, Medium, and Hard problems focused on transit and
+  grid shortest paths, weighted job scheduling, spatial heaps, intervals, and
+  currency/dispatch graphs.
+- **Microsoft**: Easy, Medium, and Hard problems covering linked lists, binary
+  trees and codecs, matrix transforms, string parsing, iterators, and caches.
+- **Coinbase & Airbnb**: Easy, Medium, and Hard problems covering transactional
+  KV stores, currency exchange graphs, lazy iterators, limit order books,
+  filesystems, and range modules.
+- **Bloomberg & Citadel**: Easy, Medium, and Hard problems covering limit order
+  books, currency exchange graphs, streaming medians and leaderboards, LRU/LFU
+  caches, monotonic stacks, and trading DP.
 
 Tracks are hand curated from the plugin's own original exercises; they are not
 official, verified, or leaked question lists. When a track is open without a
@@ -198,7 +240,8 @@ jars are extracted locally, so example runs and full checks both work offline
 from first use.
 
 Solutions live below the IDE configuration path in the durable
-`algorithm-practice/attempts/` hierarchy. Progress, limits, selected attempts,
+`algorithm-practice/attempts/` hierarchy. Progress, limits, AI Coach settings
+and per-attempt conversation history (capped at 20 turns), selected attempts,
 revealed hints, fingerprints, and
 historical passes are stored in a non-roaming application setting keyed by attempt
 ID; they are not uploaded or synchronized. Full-check workspaces and reports are

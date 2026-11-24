@@ -1,0 +1,30 @@
+{
+  "id": "limit-order-book",
+  "title": "Limit Order Book",
+  "topic": "Heaps",
+  "difficulty": "Medium",
+  "statement": "Implement a price-time priority limit order book matching engine.\n\nEach incoming limit order is submitted via `submitOrder(int orderId, boolean isBuy, int price, int quantity)` and returns the list of `Trade(int buyId, int sellId, int price, int quantity)` executions produced by that order, in the exact order they match.\n\nContract\n- `price > 0` and `quantity > 0`. Each `orderId` is unique and arrives in strictly increasing time order.\n- A **buy** order matches resting **sell** orders whose price is `<= buy.price`, lowest sell price first; ties at the same sell price break by earliest arrival (FIFO).\n- A **sell** order matches resting **buy** orders whose price is `>= sell.price`, highest buy price first; ties at the same buy price break by earliest arrival (FIFO).\n- Every trade executes at the **resting** (maker) order's price, for `min(incomingRemaining, restingRemaining)` shares.\n- Partial fills reduce the resting order's remaining quantity and keep its original time priority. Fully filled resting orders are removed from the book.\n- Any unfilled remainder of the incoming order rests on the book.\n\nExamples\n- Sell `#1` 10@100, Sell `#2` 5@102, Buy `#3` 12@102 -> matches `Trade(3, 1, 100, 10)` then `Trade(3, 2, 102, 2)`, leaving Sell `#2` with 3 shares at 102.\n- FIFO at the same price: Buy `#1` 5@100, Buy `#2` 5@100, Sell `#3` 7@99 -> matches `Trade(1, 3, 100, 5)` then `Trade(2, 3, 100, 2)`.\n- Non-crossing orders rest without trading: Buy `#1` 4@95, Sell `#2` 4@105 -> `[]`, `[]`.\n",
+  "examples": [
+    {
+      "input": "S 1 100 10, S 2 102 5, B 3 102 12",
+      "output": "[], [], [3x1@100(10), 3x2@102(2)]"
+    },
+    {
+      "input": "B 1 100 5, B 2 100 5, S 3 99 7",
+      "output": "[], [], [1x3@100(5), 2x3@100(2)]"
+    },
+    {
+      "input": "B 1 95 4, S 2 105 4",
+      "output": "[], []"
+    }
+  ],
+  "hints": [
+    "Maintain two priority queues (or TreeMaps from price to a FIFO ArrayDeque of resting orders): a max-heap for bids (highest price first, then earliest sequence) and a min-heap for asks (lowest price first, then earliest sequence).",
+    "When a buy order arrives, while it has remaining quantity and the best ask has price <= buy.price, fill min(remaining, bestAsk.remaining) at bestAsk.price and emit a Trade(buyId, askId, bestAsk.price, filled).",
+    "Mirror the loop for incoming sell orders against the best bid (price >= sell.price), and push any remaining quantity onto the incoming side's book. Intended complexity: O(n log n) total across n orders (O(log P) per price level), O(n) space."
+  ],
+  "inputSyntax": "Input: comma-separated orders 'B|S id price qty', for example: S 1 100 10, S 2 102 5, B 3 102 12",
+  "sampleInput": "S 1 100 10, S 2 102 5, B 3 102 12",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

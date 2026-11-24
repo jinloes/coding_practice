@@ -1,0 +1,30 @@
+{
+  "id": "bus-routes-min-transfers",
+  "title": "Bus Routes Minimum Transfers",
+  "topic": "Graphs",
+  "difficulty": "Hard",
+  "statement": "You are given an array of bus routes where `routes[i]` lists the stop IDs that bus `i` visits in a continuous loop. Starting at `source` (not yet on any bus), return the minimum number of buses you must board to reach `target`, or `-1` if `target` is unreachable.\n\nContract\n- `routes` has `0` or more routes; each route contains `1` or more non-negative stop IDs.\n- Once on a bus, you may ride it to any stop on its route without boarding another bus.\n- If `source == target`, you need `0` buses (even if `source` does not appear on any route).\n- Return `-1` if no sequence of buses connects `source` to `target`.\n\nExamples\n- `routes = [[1, 2, 7], [3, 6, 7]]`, `source = 1`, `target = 6` -> `2` (take bus 0 to stop 7, then bus 1 to stop 6).\n- `routes = [[7, 12], [4, 5, 15], [6], [15, 19], [9, 12, 13]]`, `source = 15`, `target = 12` -> `-1`.\n- `routes = [[1, 2, 3]]`, `source = 5`, `target = 5` -> `0`.\n",
+  "examples": [
+    {
+      "input": "1 2 7 | 3 6 7; 1 -> 6",
+      "output": "2"
+    },
+    {
+      "input": "7 12 | 4 5 15 | 6 | 15 19 | 9 12 13; 15 -> 12",
+      "output": "-1"
+    },
+    {
+      "input": "1 2 3; 5 -> 5",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Handle source == target immediately by returning 0.",
+    "Build a map from each stop to the list of route indices that visit that stop, then run breadth-first search by bus count rather than by individual stop-to-stop hops.",
+    "Mark both visited stops and visited routes so each route's stop list is scanned at most once. Intended complexity: O(n) time and O(n) space, where n is the total number of stop entries across all routes."
+  ],
+  "inputSyntax": "Input: r1 | r2 | ...; source -> target (stops space-separated per route), for example: 1 2 7 | 3 6 7; 1 -> 6",
+  "sampleInput": "1 2 7 | 3 6 7; 1 -> 6",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

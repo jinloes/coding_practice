@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { Box, createTheme, MantineProvider, type CSSVariablesResolver } from '@mantine/core';
 import { snapshot, subscribe } from './bridge';
+import { CoachView } from './CoachView';
 import { ChooserView, GuideView } from './GuideView';
 import { ProblemView } from './ProblemView';
 import type { Page, Theme } from './types';
@@ -51,6 +52,8 @@ function PageView({ page }: { page: Page }) {
       return <GuideView guide={page.guide} />;
     case 'chooser':
       return <ChooserView selected={page.selected} />;
+    case 'coach':
+      return <CoachView key={page.coach.attemptId ?? page.coach.exerciseId ?? 'empty'} coach={page.coach} />;
   }
 }
 
@@ -62,6 +65,8 @@ function pageIdentity(page: Page): string {
       return `guide:${page.guide.id}`;
     case 'chooser':
       return `chooser:${page.selected?.title ?? ''}`;
+    case 'coach':
+      return `coach:${page.coach.attemptId ?? page.coach.exerciseId ?? ''}`;
   }
 }
 

@@ -23,6 +23,20 @@ class PageEventTest {
                 .isEqualTo(new PageEvent(PageEvent.Type.RUN_EXAMPLES, ""));
         assertThat(PageEvent.parse("{\"type\":\"runSample\"}"))
                 .isEqualTo(new PageEvent(PageEvent.Type.RUN_SAMPLE, ""));
+        assertThat(PageEvent.parse("{\"type\":\"coachDiagnose\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_DIAGNOSE, ""));
+        assertThat(PageEvent.parse("{\"type\":\"coachTranslate\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_TRANSLATE, ""));
+        assertThat(PageEvent.parse("{\"type\":\"coachCompare\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_COMPARE, ""));
+        assertThat(PageEvent.parse("{\"type\":\"coachFollowUp\",\"text\":\"Why O(n)?\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_FOLLOW_UP, "Why O(n)?"));
+        assertThat(PageEvent.parse("{\"type\":\"coachCancel\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_CANCEL, ""));
+        assertThat(PageEvent.parse("{\"type\":\"coachClear\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_CLEAR, ""));
+        assertThat(PageEvent.parse("{\"type\":\"coachSettings\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_SETTINGS, ""));
     }
 
     @Test
@@ -30,6 +44,7 @@ class PageEventTest {
         for (String message : new String[]{
                 "not json", "[]", "{}", "{\"type\":\"selectGuide\"}", "{\"type\":\"selectGuide\",\"id\":\"  \"}",
                 "{\"type\":\"selectExercise\",\"id\":42}", "{\"type\":true}", "{\"id\":\"graphs\"}",
+                "{\"type\":\"coachFollowUp\"}", "{\"type\":\"coachFollowUp\",\"text\":\"   \"}",
                 "{\"type\":\"deleteEverything\",\"id\":\"graphs\"}", "{\"type\":{},\"id\":\"graphs\"}"}) {
             assertThatIllegalArgumentException()
                     .as(message)

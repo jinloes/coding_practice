@@ -9,7 +9,9 @@ import com.intellij.openapi.components.Storage;
 import com.jinloes.practice_plugin.run.CheckResult;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +23,11 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
     public static final int DEFAULT_TEST_SECONDS = 5;
     public static final int DEFAULT_SUITE_SECONDS = 60;
     public static final int DEFAULT_HEAP_MB = 256;
+    public static final int DEFAULT_COACH_TIMEOUT_SECONDS = 120;
+    public static final int MIN_COACH_TIMEOUT_SECONDS = 15;
+    public static final int MAX_COACH_TIMEOUT_SECONDS = 600;
+    public static final int MAX_COACH_TURNS = 20;
+    public static final int MAX_COACH_TURN_CHARS = 16_000;
 
     public static final class Data {
         public Map<String, Entry> attempts = new LinkedHashMap<>();
@@ -29,6 +36,24 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
         public int testSeconds = DEFAULT_TEST_SECONDS;
         public int suiteSeconds = DEFAULT_SUITE_SECONDS;
         public int heapMb = DEFAULT_HEAP_MB;
+        public String coachCliPath = "";
+        public String coachModel = "";
+        public int coachTimeoutSeconds = DEFAULT_COACH_TIMEOUT_SECONDS;
+    }
+
+    public static final class CoachTurn {
+        public String role = "";
+        public String text = "";
+        public String createdAt = "";
+
+        public CoachTurn() {
+        }
+
+        public CoachTurn(String role, String text, String createdAt) {
+            this.role = role;
+            this.text = text;
+            this.createdAt = createdAt;
+        }
     }
 
     public static final class Entry {
@@ -43,6 +68,7 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
         public int hintsRevealed;
         public int tests;
         public int failures;
+        public List<CoachTurn> coachHistory = new ArrayList<>();
     }
 
     private Data data = new Data();
@@ -67,7 +93,38 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
         if (state.legacyMappings == null) {
             state.legacyMappings = new LinkedHashMap<>();
         }
+        if (state.coachCliPath == null) {
+            state.coachCliPath = "";
+        }
+        if (state.coachModel == null) {
+            state.coachModel = "";
+        }
+        if (!validCoachTimeout(state.coachTimeoutSeconds)) {
+            state.coachTimeoutSeconds = DEFAULT_COACH_TIMEOUT_SECONDS;
+        }
+        for (Entry entry : state.attempts.values()) {
+            if (entry.coachHistory == null) {
+                entry.coachHistory = new ArrayList<>();
+            } else {
+                normalizeCoachHistory(entry.coachHistory);
+            }
+        }
         data = state;
+    }
+
+    private static void normalizeCoachHistory(List<CoachTurn> history) {
+        while (history.size() > MAX_COACH_TURNS) {
+            history.remove(0);
+        }
+        for (CoachTurn turn : history) {
+            turn.role = turn.role == null ? "" : turn.role;
+            turn.createdAt = turn.createdAt == null ? "" : turn.createdAt;
+            if (turn.text == null) {
+                turn.text = "";
+            } else if (turn.text.length() > MAX_COACH_TURN_CHARS) {
+                turn.text = turn.text.substring(0, MAX_COACH_TURN_CHARS);
+            }
+        }
     }
 
     public Entry entry(String attemptId, String exerciseId) {
@@ -131,6 +188,29 @@ public final class ManagedPracticeProgress implements PersistentStateComponent<M
             throw new IllegalArgumentException(
                     "Use 1-300 seconds per test, at least that long and at most 1800 seconds per suite, and 64-2048 MiB.");
         }
+    }
+
+    public static boolean validCoachTimeout(int timeoutSeconds) {
+        return timeoutSeconds >= MIN_COACH_TIMEOUT_SECONDS && timeoutSeconds <= MAX_COACH_TIMEOUT_SECONDS;
+    }
+
+    public void appendCoachTurn(String attemptId, String exerciseId, String role, String text) {
+        Entry entry = entry(attemptId, exerciseId);
+        String bounded = text.length() > MAX_COACH_TURN_CHARS
+                ? text.substring(0, MAX_COACH_TURN_CHARS)
+                : text;
+        entry.coachHistory.add(new CoachTurn(role, bounded, Instant.now().toString()));
+        while (entry.coachHistory.size() > MAX_COACH_TURNS) {
+            entry.coachHistory.remove(0);
+        }
+    }
+
+    public void clearCoachHistory(String attemptId, String exerciseId) {
+        entry(attemptId, exerciseId).coachHistory.clear();
+    }
+
+    public List<CoachTurn> coachHistory(String attemptId, String exerciseId) {
+        return List.copyOf(entry(attemptId, exerciseId).coachHistory);
     }
 
     private static String legacyKey(String legacyRoot, String legacyAttemptId) {

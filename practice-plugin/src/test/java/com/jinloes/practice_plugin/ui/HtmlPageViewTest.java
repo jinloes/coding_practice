@@ -86,6 +86,29 @@ class HtmlPageViewTest {
     }
 
     @Test
+    void rendersCoachFallbackHtmlForLockedAndUnlockedTranscripts() {
+        var exercise = ExerciseCatalog.find("pair-sum");
+        String locked = HtmlPageView.html(new PracticePage.Coach(
+                exercise, "att-1", Set.of(), false, "Run Check first.", false, "Not checked yet", false, "", "CLI default", List.of()));
+        assertThat(locked).contains("AI Coach — Pair Sum", "Not checked yet", "Run Check first.");
+
+        String unlocked = HtmlPageView.html(new PracticePage.Coach(
+                exercise, "att-1", Set.of(), true, "", true, "Passed", true, "Timed out", "gpt-5",
+                List.of(
+                        new PracticePage.CoachTurn("user", "Diagnose my attempt", "2026-01-01T00:00:00Z"),
+                        new PracticePage.CoachTurn("assistant", "## Bottleneck\n```java\nreturn 0;\n```",
+                                "2026-01-01T00:00:01Z"))));
+        assertThat(unlocked).contains("Edited since last check");
+        assertThat(unlocked)
+                .contains("Interactive AI Coach controls require JCEF.")
+                .contains("AI Coach is thinking...")
+                .contains("Timed out")
+                .contains("<h3>You</h3>")
+                .contains("<h3>Coach</h3>")
+                .contains("<pre><code>return 0;</code></pre>");
+    }
+
+    @Test
     void resultsBannerHasAReadableLabelForEveryCheckStatus() {
         for (CheckResult.Status status : CheckResult.Status.values()) {
             assertThat(ResultsView.label(status.name()))

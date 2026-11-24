@@ -4,8 +4,8 @@ import com.github.gradle.node.npm.task.NpmTask
 plugins {
     id 'java'
     id 'jacoco'
-    id 'org.jetbrains.intellij.platform' version '2.19.0'
-    id 'com.github.node-gradle.node' version '7.1.0'
+    alias(libs.plugins.intellij.platform)
+    alias(libs.plugins.node.gradle)
 }
 
 group = 'com.jinloes.coding_practice'
@@ -35,19 +35,19 @@ dependencies {
         if (idePath.isPresent()) {
             local(idePath.get())
         } else {
-            intellijIdea('2026.2.3')
+            intellijIdea(libs.versions.intellij.idea.get())
         }
         bundledPlugins('com.intellij.modules.jcef')
     }
     // Lists the account's models for the settings dialog. JNA serves only the SDK's in-process mode, which an
     // explicit cliPath never selects, and the IDE loads its own JNA native library.
-    implementation('com.github:copilot-sdk-java:1.0.28') {
+    implementation(libs.copilot.sdk) {
         exclude group: 'net.java.dev.jna'
     }
-    testImplementation platform('org.junit:junit-bom:5.11.4')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'org.assertj:assertj-core:3.26.3'
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testImplementation libs.junit.platform.launcher
+    testImplementation libs.assertj.core
 }
 
 intellijPlatform {
@@ -164,7 +164,7 @@ tasks.named('test', Test) {
 }
 
 jacoco {
-    toolVersion = '0.8.15'
+    toolVersion = libs.versions.jacoco.get()
 }
 
 // Coverage is enforced on the logic packages. The ui package needs a running IDE and JCEF;

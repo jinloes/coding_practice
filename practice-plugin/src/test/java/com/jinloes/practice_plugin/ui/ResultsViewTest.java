@@ -111,4 +111,100 @@ class ResultsViewTest {
                 .as("prior scaling output must not appear on non-passing results")
                 .isEqualTo("1 case failed.");
     }
+
+    @Test
+    void askCoachButtonStartsDisabledAndInvokesCallbackWhenEnabled() {
+        var clicked = new java.util.concurrent.atomic.AtomicInteger();
+        ResultsView view = new ResultsView(clicked::incrementAndGet);
+
+        assertThat(view.askCoachButton().isEnabled()).isFalse();
+        view.askCoachButton().doClick();
+        assertThat(clicked).hasValue(0);
+
+        view.setAskCoachEnabled(true);
+        assertThat(view.askCoachButton().isEnabled()).isTrue();
+        view.askCoachButton().doClick();
+        assertThat(clicked).hasValue(1);
+    }
+
+    @Test
+    void coachControllerEnforcesUnlockPolicyRejectsLockedClearAndIsolatesConcurrentReplies() {
+        var pairSum = com.jinloes.practice_plugin.catalog.ExerciseCatalog.find("pair-sum");
+        var binarySearch = com.jinloes.practice_plugin.catalog.ExerciseCatalog.find("binary-search");
+        var attemptA = new com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace.Attempt(
+                "pair-sum-a", pairSum.id(), "v1", java.nio.file.Path.of("a/Solution.java"));
+        var attemptB = new com.jinloes.practice_plugin.workspace.ManagedPracticeWorkspace.Attempt(
+                "binary-search-b", binarySearch.id(), "v1", java.nio.file.Path.of("b/Solution.java"));
+
+        var progress = new com.jinloes.practice_plugin.state.ManagedPracticeProgress();
+        var currentExercise = new java.util.concurrent.atomic.AtomicReference<>(pairSum);
+        var currentAttempt = new java.util.concurrent.atomic.AtomicReference<>(attemptA);
+        var runnerRunning = new java.util.concurrent.atomic.AtomicBoolean(false);
+        var rendered = new java.util.concurrent.atomic.AtomicReference<PracticePage.Coach>();
+        PageView fakeView = new PageView() {
+            @Override public javax.swing.JComponent component() { return new javax.swing.JPanel(); }
+            @Override public void show(PracticePage page) { rendered.set((PracticePage.Coach) page); }
+        };
+        var pendingBackground = new java.util.ArrayDeque<Runnable>();
+        CoachController controller = new CoachController(
+                null, progress, fakeView, currentExercise::get, currentAttempt::get,
+                java.util.Set::of, runnerRunning::get, () -> true,
+                (prompt, settings, canceled) -> "## Coach Reply\nUse a table.",
+                ignored -> "class Solution {}", pendingBackground::addLast, Runnable::run);
+
+        assertThat(controller.isUnlocked()).isFalse();
+        controller.ask(com.jinloes.practice_plugin.coach.CoachPrompt.Mode.DIAGNOSE, "");
+        assertThat(pendingBackground).isEmpty();
+        assertThat(rendered.get().unlocked()).isFalse();
+
+        progress.record(attemptA.id(), pairSum.id(), "fp-cancel",
+                new com.jinloes.practice_plugin.run.CheckResult(
+                        com.jinloes.practice_plugin.run.CheckResult.Status.CANCELLED, 0, 0, "cancelled"));
+        assertThat(controller.isUnlocked()).isFalse();
+        progress.record(attemptA.id(), pairSum.id(), "fp-err",
+                new com.jinloes.practice_plugin.run.CheckResult(
+                        com.jinloes.practice_plugin.run.CheckResult.Status.RUNNER_ERROR, 0, 0, "runner error"));
+        assertThat(controller.isUnlocked()).isFalse();
+
+        progress.record(attemptA.id(), pairSum.id(), "fp-fail",
+                new com.jinloes.practice_plugin.run.CheckResult(
+                        com.jinloes.practice_plugin.run.CheckResult.Status.ASSERTION_FAILED, 5, 1, "wrong answer"));
+        progress.record(attemptB.id(), binarySearch.id(), "fp-pass",
+                new com.jinloes.practice_plugin.run.CheckResult(
+                        com.jinloes.practice_plugin.run.CheckResult.Status.PASSED, 5, 0, "all passed"));
+        assertThat(controller.isUnlocked()).isTrue();
+
+        // Switch attempts mid-flight; reply binds to attemptA and does not leak to attemptB.
+        controller.ask(com.jinloes.practice_plugin.coach.CoachPrompt.Mode.TRANSLATE, "");
+        assertThat(pendingBackground).hasSize(1);
+        currentExercise.set(binarySearch);
+        currentAttempt.set(attemptB);
+        controller.refresh();
+        pendingBackground.removeFirst().run();
+        assertThat(progress.coachHistory(attemptA.id(), pairSum.id())).hasSize(2);
+        assertThat(progress.coachHistory(attemptB.id(), binarySearch.id())).isEmpty();
+
+        // Locked clear with saved history (e.g. while a re-check is running) preserves history.
+        currentExercise.set(pairSum);
+        currentAttempt.set(attemptA);
+        runnerRunning.set(true);
+        assertThat(controller.isUnlocked()).isFalse();
+        controller.clear();
+        assertThat(progress.coachHistory(attemptA.id(), pairSum.id())).hasSize(2);
+        runnerRunning.set(false);
+        assertThat(controller.isUnlocked()).isTrue();
+
+        // Unlocked clear and cancel invalidate in-flight replies.
+        currentExercise.set(binarySearch);
+        currentAttempt.set(attemptB);
+        controller.ask(com.jinloes.practice_plugin.coach.CoachPrompt.Mode.COMPARE_OPTIMAL, "");
+        controller.clear();
+        pendingBackground.removeFirst().run();
+        assertThat(progress.coachHistory(attemptB.id(), binarySearch.id())).isEmpty();
+
+        controller.ask(com.jinloes.practice_plugin.coach.CoachPrompt.Mode.FOLLOW_UP, "Why?");
+        controller.cancel();
+        pendingBackground.removeFirst().run();
+        assertThat(progress.coachHistory(attemptB.id(), binarySearch.id())).isEmpty();
+    }
 }

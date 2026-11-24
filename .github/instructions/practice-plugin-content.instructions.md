@@ -71,10 +71,10 @@ non-duplicated exercise IDs.
 
 ## Practice Track Content Rules
 
-Every track ID listed in `TrackCatalog` must provide
-`src/main/resources/tracks/<id>.json` in the guide manifest schema with a
-non-empty `exercises` array of existing, non-duplicated exercise IDs. Tracks
-are hand-curated problem lists such as Blind 75 or a company list.
+Every track ID listed in `src/main/resources/tracks/index.txt` (`TrackCatalog`)
+must provide `src/main/resources/tracks/<id>.json` in the guide manifest schema
+with a non-empty `exercises` array of existing, non-duplicated exercise IDs.
+Tracks are hand-curated problem lists such as Blind 75 or a company list.
 
 - Every summary must say the list is not an official or verified question
   list. Company tracks must also say they are approximate, and their notes must
@@ -84,5 +84,7 @@ are hand-curated problem lists such as Blind 75 or a company list.
 - Exercises on a track are original problems. Never copy or paraphrase
   third-party problem statements, and never scrape or copy third-party
   company-tag data (for example paid question-frequency lists) into a track.
-- Track IDs must not collide with guide IDs. Update `TrackCatalogTest` when the
-  track list or membership changes.
+- Track IDs must not collide with guide IDs. `TrackCatalogTest` validates
+  invariants directly from `tracks/index.txt` and manifests, and
+  `python3 practice-plugin/scripts/catalog_tool.py validate` checks all
+  exercises and tracks statically in under a second.

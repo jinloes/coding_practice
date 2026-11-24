@@ -61,20 +61,16 @@ class LegacyImportServiceTest {
     }
 
     @Test
-    void rejectsAttemptsRootThatResolvesOutsideTheLegacyWorkspace() throws Exception {
-        assumeTrue(System.getProperty("os.name").startsWith("Windows"), "junction test is Windows-specific");
-        Path root = legacyRoot("junction-attempts");
-        Path outside = temporary.resolve("outside-attempts");
-        Files.createDirectories(outside);
-        Process process = new ProcessBuilder(
-                System.getenv("ComSpec"), "/c", "mklink", "/J",
-                root.resolve("attempts").toString(), outside.toString())
-                .redirectErrorStream(true)
-                .start();
-        String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-        assumeTrue(process.waitFor() == 0, "Could not create junction: " + output);
+    void rejectsAttemptsRootThatResolvesOutsideTheLegacyWorkspace() throws IOException {
+        Path root = legacyRoot("redirected-attempts");
+        Path attempts = Files.createDirectories(root.resolve("attempts"));
+        Path outside = Files.createDirectories(temporary.resolve("outside-attempts")).toRealPath();
+        Path realAttempts = attempts.toRealPath();
+        LegacyImportService redirecting = new LegacyImportService(
+                new ManagedPracticeWorkspace(),
+                path -> path.equals(realAttempts) ? outside : path.toRealPath());
 
-        assertThatThrownBy(() -> service().importLegacy(root, new PracticeProgress(), new ManagedPracticeProgress()))
+        assertThatThrownBy(() -> redirecting.importLegacy(root, new PracticeProgress(), new ManagedPracticeProgress()))
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("attempts directory must not redirect");
     }

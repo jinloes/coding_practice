@@ -60,7 +60,8 @@ Run from `system-design-plugin/` (or from the repository root as `./gradlew :sys
 ```
 
 Set `idePath` in a local, uncommitted Gradle properties file to build against a
-local IDE installation instead of downloading one. `gradle.properties` enables
+local IDE installation instead of downloading one. Shared plugin dependency and
+toolchain versions live in `../gradle/libs.versions.toml`. `gradle.properties` enables
 the Gradle configuration cache, build cache, parallel execution, and skips the
 IntelliJ plugin self-update network check. `buildSearchableOptions` is disabled
 because the plugin registers no IDE Settings configurables, `npmInstall` uses

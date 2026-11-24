@@ -9,6 +9,20 @@
   border: 1px solid color-mix(in srgb, var(--mantine-color-default-border) 80%, transparent);
 }
 
+.mantine-Typography-root pre {
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid var(--mantine-color-default-border);
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+.mantine-Typography-root pre code {
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
 .mantine-Code-root[data-block] {
   font-size: 0.9rem;
   line-height: 1.5;

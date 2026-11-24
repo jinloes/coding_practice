@@ -7,10 +7,12 @@ on:
       - master
     paths:
       - 'practice-plugin/**'
+      - 'gradle/libs.versions.toml'
       - '.github/workflows/practice-plugin.yml'
   pull_request:
     paths:
       - 'practice-plugin/**'
+      - 'gradle/libs.versions.toml'
       - '.github/workflows/practice-plugin.yml'
 
 permissions:
@@ -36,6 +38,7 @@ jobs:
           java-version: '25'
           cache: gradle
           cache-dependency-path: |
+            gradle/libs.versions.toml
             practice-plugin/build.gradle
             practice-plugin/gradle/wrapper/gradle-wrapper.properties
 
@@ -54,6 +57,9 @@ jobs:
           key: ${{ runner.os }}-practice-plugin-node-${{ hashFiles('practice-plugin/build.gradle') }}
           restore-keys: |
             ${{ runner.os }}-practice-plugin-node-
+
+      - name: Validate catalog manifests and tracks statically
+        run: python3 practice-plugin/scripts/catalog_tool.py validate
 
       - name: Select catalog exercises to execute
         id: catalog

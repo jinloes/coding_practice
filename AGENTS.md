@@ -14,7 +14,9 @@ Use the Gradle wrapper from the repository root (requires JDK 25 for the Gradle 
 ./gradlew testClasses
 ./gradlew :regex:test
 ./gradlew :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
+./gradlew :practice-plugin:test -Pfast
 ./gradlew :practice-plugin:test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=pair-sum
+python3 practice-plugin/scripts/catalog_tool.py validate
 ./gradlew :system-design-plugin:check
 bash ./gradlew :concurrency:check :cryptography:check :reflection:check :regex:check :system-design:check --no-daemon --console=plain
 ```
@@ -22,6 +24,14 @@ bash ./gradlew :concurrency:check :cryptography:check :reflection:check :regex:c
 The last command matches `.github/workflows/root-modules.yml`. It requires a
 working native PCRE2 library; Ubuntu CI installs `libpcre2-8-0`. Root-only
 changes do not replace the standalone plugin checks.
+
+## Keep Documentation Synchronized
+
+Documentation (`README.md`, `ARCHITECTURE.md`, `AGENTS.md`, module `CODE-MAP.md` / `ARCHITECTURE.md` / `README.md` / `AGENTS.md`, and `.github/instructions/*.instructions.md`) is part of the implementation contract.
+
+- Update affected docs in the same change whenever architecture, build commands, dependencies, workflows, catalog rules, or user-visible features change — never defer documentation updates to a later change.
+- Shared plugin dependency and toolchain versions live in `gradle/libs.versions.toml` and are imported by both `practice-plugin` and `system-design-plugin`. Update versions there so both plugins stay in sync.
+- Avoid hardcoding mutable catalog totals (such as exercise counts) in `README.md`; point to the manifest index files (`exercises/index.txt`, `tracks/index.txt`, `problems/index.txt`) instead.
 
 ## Coding And Test Conventions
 

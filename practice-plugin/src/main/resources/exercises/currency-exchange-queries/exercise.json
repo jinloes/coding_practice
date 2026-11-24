@@ -1,0 +1,30 @@
+{
+  "id": "currency-exchange-queries",
+  "title": "Currency Exchange Queries",
+  "topic": "Graphs",
+  "difficulty": "Medium",
+  "statement": "Given a list of currency conversion pairs `pairs[i] = [from, to]` with positive exchange rates `rates[i]` meaning `1 from = rates[i] to`, answer a list of conversion queries `queries[j] = [source, target]`.\n\nContract\n- `pairs` and `rates` have the same length `m >= 0`; every `rates[i] > 0.0`.\n- Each pair `(a, b)` with rate `r` implies both `a -> b` with factor `r` and `b -> a` with factor `1.0 / r`.\n- Assume the given rates are consistent (no conflicting cycles).\n- For each query `[source, target]`:\n  - If either `source` or `target` does not appear in `pairs`, return `-1.0` (even when `source.equals(target)`).\n  - If `source.equals(target)` and `source` appears in `pairs`, return `1.0`.\n  - Otherwise, return the product of rates along any path from `source` to `target`, or `-1.0` if no path exists.\n- Answers within `1e-5` of the exact value are accepted.\n\nExamples\n- `pairs = [[\"USD\", \"EUR\"], [\"EUR\", \"GBP\"]]`, `rates = [0.9, 0.8]`, queries `USD->GBP`, `GBP->USD`, `USD->USD`, `USD->JPY` -> `[0.72, 1.388888..., 1.0, -1.0]`.\n- Disconnected components: `USD->CAD = 1.35`, `EUR->GBP = 0.8`, query `USD->GBP` -> `-1.0`.\n- Unknown self-query: `BTC->BTC` when `BTC` is absent -> `-1.0`.\n",
+  "examples": [
+    {
+      "input": "USD-EUR:0.9, EUR-GBP:0.8; USD->GBP, GBP->USD, USD->USD, USD->JPY",
+      "output": "0.72, 1.38889, 1.0, -1.0"
+    },
+    {
+      "input": "USD-CAD:1.35, EUR-GBP:0.8; USD->GBP",
+      "output": "-1.0"
+    },
+    {
+      "input": "USD-EUR:0.9; BTC->BTC",
+      "output": "-1.0"
+    }
+  ],
+  "hints": [
+    "Model the exchange rates as a weighted directed graph: for each pair (a, b) with rate r, add edge a -> b with weight r and edge b -> a with weight 1.0 / r.",
+    "For each query [source, target], first check that both currencies exist in the graph; if source equals target, return 1.0 immediately.",
+    "Otherwise run BFS or DFS from source, multiplying edge weights along the path and tracking visited currencies to avoid cycles (or use weighted Union-Find for near-O(1) per query). Intended complexity: O(q * (V + E)) with BFS/DFS or O((E + q) alpha(V)) with weighted Union-Find (O(n) on the benchmark workload), O(V + E) space."
+  ],
+  "inputSyntax": "Input: A-B:rate, ...; S->T, ... (comma-separated rates and queries), for example: USD-EUR:0.9, EUR-GBP:0.8; USD->GBP, GBP->USD",
+  "sampleInput": "USD-EUR:0.9, EUR-GBP:0.8; USD->GBP, GBP->USD",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "minimum-shop-closing-hour",
+  "title": "Minimum Shop Closing Hour",
+  "topic": "Arrays",
+  "difficulty": "Medium",
+  "statement": "Choose the earliest hour to close a shop so the total customer-service penalty is as small as possible.\n\nContract\n- `log` is a non-null string of length `n` (`n >= 0`) containing only `'Y'` (customers arrive during that hour) and `'N'` (no customers arrive during that hour), indexed from hour `0` through hour `n - 1`.\n- You may close the shop at any integer hour `h` with `0 <= h <= n`. The shop is open for hours `0 .. h - 1` and closed for hours `h .. n - 1`.\n- Every hour the shop stays open with `'N'` adds `1` to the penalty, and every hour the shop is closed with `'Y'` adds `1` to the penalty.\n- Return the smallest hour `h` in `[0, n]` that achieves the minimum possible penalty.\n\nExamples\n- `bestClosingHour(\"YYNY\")` returns `2` (penalties for hours 0..4 are 3, 2, 1, 2, 1; earliest minimum is 2).\n- `bestClosingHour(\"NNNN\")` returns `0` (closing immediately avoids all idle-open penalties).\n- `bestClosingHour(\"YYYY\")` returns `4` (staying open for all four hours incurs zero penalty).\n",
+  "examples": [
+    {
+      "input": "log = \"YYNY\"",
+      "output": "2"
+    },
+    {
+      "input": "log = \"NNNN\"",
+      "output": "0"
+    },
+    {
+      "input": "log = \"YYYY\"",
+      "output": "4"
+    }
+  ],
+  "hints": [
+    "Closing at hour h has penalty equal to (number of 'N' in log[0..h-1]) + (number of 'Y' in log[h..n-1]).",
+    "Notice how the penalty changes when moving the closing hour from h to h + 1: if log[h] is 'Y', penalty drops by 1; if log[h] is 'N', penalty rises by 1.",
+    "Track the running relative penalty delta starting at 0 for h = 0, and update the best hour only when the new delta is strictly smaller than the best seen so far. Intended complexity: O(n) time and O(1) extra space."
+  ],
+  "inputSyntax": "Input: a Y/N log between single quotes, for example: 'YYNY'",
+  "sampleInput": "'YYNY'",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(1)"
+}

@@ -283,6 +283,153 @@ describe('App', () => {
     expect(screen.getByText('Not part of any guide yet.')).toBeInTheDocument();
   });
 
+  it('renders locked and unlocked AI Coach states and dispatches coach events', async () => {
+    const user = userEvent.setup();
+    const sent: unknown[] = [];
+    attachSend((message) => sent.push(JSON.parse(message)));
+
+    renderDom(<App />);
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'coach',
+          coach: {
+            exerciseId: 'coin-change',
+            exerciseTitle: 'Coin Change',
+            attemptId: 'att-1',
+            unlocked: false,
+            lockReason: 'Run Check on this attempt at least once to unlock the AI Coach.',
+            running: false,
+            checkSummary: 'Not checked yet',
+            stale: false,
+            error: '',
+            modelLabel: 'CLI default',
+            turns: [
+              { role: 'user', html: '<p>Saved prior turn</p>', createdAt: '2026-01-01T00:00:00Z' },
+            ],
+          },
+        },
+      });
+    });
+
+    expect(screen.getByRole('heading', { name: 'AI Coach — Coin Change' })).toBeInTheDocument();
+    expect(screen.getByText('AI Coach is locked')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Diagnose my attempt' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Translate my approach' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Compare with optimal' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Ask' })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(sent).toEqual([{ type: 'coachSettings' }]);
+
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'coach',
+          coach: {
+            exerciseId: 'coin-change',
+            exerciseTitle: 'Coin Change',
+            attemptId: 'att-1',
+            unlocked: true,
+            lockReason: '',
+            running: false,
+            checkSummary: 'Failed: wrong answer (3/5 tests)',
+            stale: true,
+            error: '',
+            modelLabel: 'gpt-5',
+            turns: [
+              { role: 'user', html: '<p>Translate my approach</p>', createdAt: '2026-01-01T00:00:00Z' },
+              {
+                role: 'assistant',
+                html: '<h3>State</h3><p>Define <code>dp[a]</code>.</p><pre><code>int[] dp = new int[amount + 1];</code></pre>',
+                createdAt: '2026-01-01T00:00:05Z',
+              },
+            ],
+          },
+        },
+      });
+    });
+
+    expect(screen.getByText('Model: gpt-5')).toBeInTheDocument();
+    expect(screen.getByText('Edited since last check')).toBeInTheDocument();
+    expect(screen.getByText(/model-inferred optimal approach/i)).toBeInTheDocument();
+    expect(screen.getByText('int[] dp = new int[amount + 1];')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Diagnose my attempt' }));
+    await user.click(screen.getByRole('button', { name: 'Translate my approach' }));
+    await user.click(screen.getByRole('button', { name: 'Compare with optimal' }));
+    await user.click(screen.getByRole('button', { name: 'Clear' }));
+
+    const textarea = screen.getByLabelText('Follow-up question');
+    await user.type(textarea, '  How do I pick the loop order?  ');
+    await user.click(screen.getByRole('button', { name: 'Ask' }));
+
+    expect(sent).toEqual([
+      { type: 'coachSettings' },
+      { type: 'coachDiagnose' },
+      { type: 'coachTranslate' },
+      { type: 'coachCompare' },
+      { type: 'coachClear' },
+      { type: 'coachFollowUp', text: 'How do I pick the loop order?' },
+    ]);
+
+    // Unsent draft resets when switching between two attempts of the same exercise.
+    await user.type(textarea, 'Unsent attempt-1 draft');
+    expect(textarea).toHaveValue('Unsent attempt-1 draft');
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'coach',
+          coach: {
+            exerciseId: 'coin-change',
+            exerciseTitle: 'Coin Change',
+            attemptId: 'att-2',
+            unlocked: true,
+            lockReason: '',
+            running: false,
+            checkSummary: 'Passed (5/5 tests)',
+            stale: false,
+            error: '',
+            modelLabel: 'gpt-5',
+            turns: [],
+          },
+        },
+      });
+    });
+    expect(screen.getByLabelText('Follow-up question')).toHaveValue('');
+
+    act(() => {
+      pushState({
+        theme: THEME,
+        page: {
+          kind: 'coach',
+          coach: {
+            exerciseId: 'coin-change',
+            exerciseTitle: 'Coin Change',
+            attemptId: 'att-2',
+            unlocked: true,
+            lockReason: '',
+            running: true,
+            checkSummary: 'Passed (5/5 tests)',
+            stale: false,
+            error: 'Previous timeout',
+            modelLabel: 'gpt-5',
+            turns: [],
+          },
+        },
+      });
+    });
+
+    expect(screen.getByText('AI Coach is analyzing your attempt...')).toBeInTheDocument();
+    expect(screen.getByText('Previous timeout')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(sent).toContainEqual({ type: 'coachCancel' });
+  });
+
   it('switches dev sample pages on hashchange using valid catalog IDs', () => {
     window.location.hash = '';
     renderSample();

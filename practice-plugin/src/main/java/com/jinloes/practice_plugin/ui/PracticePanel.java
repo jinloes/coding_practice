@@ -19,6 +19,7 @@ import com.jinloes.practice_plugin.app.LegacyImportService;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.TrackCatalog;
+import com.jinloes.practice_plugin.coach.CoachPrompt;
 import com.jinloes.practice_plugin.run.PracticeRunner;
 import com.jinloes.practice_plugin.run.RunEvent;
 import com.jinloes.practice_plugin.state.ManagedPracticeProgress;
@@ -47,6 +48,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     private static final int PROBLEM_TAB = 0;
     private static final int GUIDE_TAB = 1;
     private static final int HINTS_TAB = 2;
+    private static final int COACH_TAB = 4;
     private static final String LOCKED_HINTS_HTML = "<p>Start or resume an attempt to reveal hints.</p>";
 
     private final Project project;
@@ -65,10 +67,12 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     private final RunStatusPresenter runStatus;
     private final PageView problem;
     private final PageView guide;
+    private final PageView coach;
+    private final CoachController coachController;
     private final JBTabbedPane tabs = new JBTabbedPane();
     private String hintsHtml = LOCKED_HINTS_HTML;
     private final JEditorPane hints = PracticeViews.htmlPane(() -> hintsHtml);
-    private final ResultsView results = new ResultsView();
+    private final ResultsView results = new ResultsView(this::openCoachTab);
     private final HintButton hintButton = new HintButton(() -> guarded(this::revealHint));
     private final JBLabel status = new JBLabel("Choose an exercise.");
     private final ActionToolbar toolbar;
@@ -88,10 +92,14 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         tasks = new BackgroundTasks(project, () -> !disposed, this::error, this::onTaskCancelled);
         problem = PageView.lazy(this, this::onPageEvent, true);
         guide = PageView.lazy(this, this::onPageEvent, false);
+        coach = PageView.lazy(this, this::onPageEvent, false);
         setBorder(JBUI.Borders.empty(8));
 
         titleActions.add(PracticeActions.action("Limits", "Edit run and check limits",
                 AllIcons.General.Settings, () -> true, () -> guarded(() -> LimitsDialog.edit(project, progress))));
+        titleActions.add(PracticeActions.action("AI Coach Settings",
+                "Configure Copilot CLI path, model, and timeout for the AI Coach",
+                AllIcons.General.GearPlain, () -> true, () -> guarded(this::editCoachSettings)));
         titleActions.add(PracticeActions.action("Clean Generated Artifacts",
                 "Remove inactive generated practice artifacts", AllIcons.Actions.GC,
                 () -> !runner.isRunning(), this::cleanGeneratedArtifacts));
@@ -108,10 +116,14 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         tabs.addTab("Study Guide", guide.component());
         tabs.addTab("Hints", PracticeViews.hintTab(hints, hintButton));
         tabs.addTab("Results", results.component());
+        tabs.addTab("Coach", coach.component());
         add(PracticeViews.splitter(exercises, tabs), BorderLayout.CENTER);
 
         attemptBar = new AttemptBar(attempt -> AttemptBar.statusOf(progress, attempt),
                 this::showAttempt, () -> guarded(this::startOrResume), () -> guarded(this::newAttempt));
+        coachController = new CoachController(
+                project, progress, coach, exercises::getSelectedValue, attemptBar::selected,
+                () -> passed, runner::isRunning, () -> !disposed);
         runStatus = new RunStatusPresenter(project, progress, workspace, attemptBar, results, status, tasks);
         toolbar = PracticeActions.runToolbar(this, this);
         add(PracticeViews.column(attemptBar.component(), toolbar.getComponent(), status), BorderLayout.SOUTH);
@@ -184,8 +196,26 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
                 case START_OR_OPEN -> startOrResume();
                 case RUN_EXAMPLES -> runExamples();
                 case RUN_SAMPLE -> runSample();
+                case COACH_DIAGNOSE -> coachController.ask(CoachPrompt.Mode.DIAGNOSE, "");
+                case COACH_TRANSLATE -> coachController.ask(CoachPrompt.Mode.TRANSLATE, "");
+                case COACH_COMPARE -> coachController.ask(CoachPrompt.Mode.COMPARE_OPTIMAL, "");
+                case COACH_FOLLOW_UP -> coachController.ask(CoachPrompt.Mode.FOLLOW_UP, event.id());
+                case COACH_CANCEL -> coachController.cancel();
+                case COACH_CLEAR -> coachController.clear();
+                case COACH_SETTINGS -> editCoachSettings();
             }
         });
+    }
+
+    private void openCoachTab() {
+        tabs.setSelectedIndex(COACH_TAB);
+        coachController.refresh();
+    }
+
+    private void editCoachSettings() {
+        if (CoachSettingsDialog.edit(project, progress)) {
+            coachController.refresh();
+        }
     }
 
     private void selectExercise(Exercise exercise) {
@@ -220,6 +250,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         var entry = progress.entry(attempt.id(), exercise.id());
         setHintsHtml(HintButton.revealedHtml(exercise.hints(), entry.hintsRevealed));
         runStatus.showAttempt(attempt, entry);
+        coachController.refreshFreshness(attempt, entry, workspace, tasks);
     }
 
     private void setHintsHtml(String body) {
@@ -347,6 +378,8 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         tabs.setTitleAt(HINTS_TAB, HintButton.tabTitle(hasAttempt, revealed, totalHints));
         problem.show(new PracticePage.Problem(
                 exercise, passed, attempt != null, canRun()));
+        results.setAskCoachEnabled(coachController.isUnlocked());
+        coachController.refresh();
         toolbar.updateActionsAsync();
     }
 
@@ -358,18 +391,26 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         return results;
     }
 
+    CoachController coachController() {
+        return coachController;
+    }
+
     String statusText() {
         return status.getText();
     }
 
     void onAttemptEdited() {
-        runStatus.onAttemptEdited(attemptBar.selected(), exercises.getSelectedValue());
+        var attempt = attemptBar.selected();
+        Exercise exercise = exercises.getSelectedValue();
+        runStatus.onAttemptEdited(attempt, exercise);
+        coachController.onAttemptEdited(attempt, exercise);
     }
 
     private void syncActivePageTab() {
         int selected = tabs.getSelectedIndex();
         problem.setActive(selected == PROBLEM_TAB);
         guide.setActive(selected == GUIDE_TAB);
+        coach.setActive(selected == COACH_TAB);
     }
 
     private boolean isLegacyWorkspace() {
@@ -407,6 +448,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
         exercises.repaint();
         refreshGuide();
         attemptBar.component().repaint();
+        coachController.onCheckFinished(attemptBar.selected(), exercises.getSelectedValue(), workspace, tasks);
     }
 
     private void refreshGuide() {
@@ -419,6 +461,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
     @Override
     public void dispose() {
         disposed = true;
+        coachController.dispose();
         PracticeIdeActions.unregister(project, this);
         runner.removeEventListener(runEvents);
     }

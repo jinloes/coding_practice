@@ -14,7 +14,14 @@ record PageEvent(Type type, String id) {
         CLEAR_FILTERS,
         START_OR_OPEN,
         RUN_EXAMPLES,
-        RUN_SAMPLE
+        RUN_SAMPLE,
+        COACH_DIAGNOSE,
+        COACH_TRANSLATE,
+        COACH_COMPARE,
+        COACH_FOLLOW_UP,
+        COACH_CANCEL,
+        COACH_CLEAR,
+        COACH_SETTINGS
     }
 
     /** Parses the page's JSON message; throws {@link IllegalArgumentException} when it is malformed. */
@@ -29,6 +36,13 @@ record PageEvent(Type type, String id) {
                 case "startOrOpen" -> new PageEvent(Type.START_OR_OPEN, "");
                 case "runExamples" -> new PageEvent(Type.RUN_EXAMPLES, "");
                 case "runSample" -> new PageEvent(Type.RUN_SAMPLE, "");
+                case "coachDiagnose" -> new PageEvent(Type.COACH_DIAGNOSE, "");
+                case "coachTranslate" -> new PageEvent(Type.COACH_TRANSLATE, "");
+                case "coachCompare" -> new PageEvent(Type.COACH_COMPARE, "");
+                case "coachFollowUp" -> new PageEvent(Type.COACH_FOLLOW_UP, requiredString(message, "text"));
+                case "coachCancel" -> new PageEvent(Type.COACH_CANCEL, "");
+                case "coachClear" -> new PageEvent(Type.COACH_CLEAR, "");
+                case "coachSettings" -> new PageEvent(Type.COACH_SETTINGS, "");
                 default -> throw new IllegalArgumentException("Unknown page event: " + json);
             };
         } catch (JsonParseException | IllegalStateException | UnsupportedOperationException

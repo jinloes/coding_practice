@@ -55,13 +55,50 @@ export type Guide = {
 
 export type Membership = { title: string; guides: Link[]; tracks: Link[] };
 
+export type CoachTurn = {
+  role: string;
+  html: string;
+  createdAt: string;
+};
+
+export type Coach = {
+  exerciseId: string | null;
+  exerciseTitle: string | null;
+  attemptId: string | null;
+  unlocked: boolean;
+  lockReason: string;
+  running: boolean;
+  checkSummary: string;
+  stale: boolean;
+  error: string;
+  modelLabel: string;
+  turns: CoachTurn[];
+};
+
 export type Page =
   | { kind: 'problem'; problem: Problem | null }
   | { kind: 'guide'; guide: Guide }
-  | { kind: 'chooser'; selected: Membership | null };
+  | { kind: 'chooser'; selected: Membership | null }
+  | { kind: 'coach'; coach: Coach };
 
 export type PageState = { theme: Theme; page: Page };
 
-export type PageEvent =
-  | { type: 'selectExercise' | 'selectGuide' | 'selectTrack'; id: string }
-  | { type: 'clearFilters' | 'startOrOpen' | 'runExamples' | 'runSample'; id?: string };
+export type PageEvent = {
+  type:
+    | 'selectExercise'
+    | 'selectGuide'
+    | 'selectTrack'
+    | 'clearFilters'
+    | 'startOrOpen'
+    | 'runExamples'
+    | 'runSample'
+    | 'coachDiagnose'
+    | 'coachTranslate'
+    | 'coachCompare'
+    | 'coachFollowUp'
+    | 'coachCancel'
+    | 'coachClear'
+    | 'coachSettings';
+  id?: string;
+  text?: string;
+};

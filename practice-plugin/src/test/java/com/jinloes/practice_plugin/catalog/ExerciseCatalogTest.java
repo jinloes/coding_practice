@@ -2,6 +2,7 @@ package com.jinloes.practice_plugin.catalog;
 
 import com.jinloes.practice_plugin.run.ComplexityAnalysis;
 import com.jinloes.practice_plugin.run.ComplexityReport;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -9,9 +10,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +26,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ExerciseCatalogTest {
     private static final List<String> TEMPLATE_NAMES =
             List.of("Solution.java", "ExamplesTest.java", "CorrectnessTest.java");
+
+    @FunctionalInterface
+    private interface ExerciseCheck {
+        void run(ExerciseCatalog.Exercise exercise) throws Exception;
+    }
 
     @Test
     void indexListsEveryExerciseDirectoryOnceInDisplayOrder() throws IOException {
@@ -121,8 +132,10 @@ class ExerciseCatalogTest {
     }
 
     @Test
+    @Tag("catalog")
     void complexityProbeMeasuresEachReferenceSolutionAsItsIntendedComplexity() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
+        // Run sequentially so CPU contention does not skew per-exercise timing ratios.
+        runForEachExercise(exercisesUnderTest(), false, exercise -> {
             Path root = Files.createTempDirectory(Path.of("build"), "catalog-probe-" + exercise.id() + "-");
             try {
                 Path sourceRoot = root.resolve("src/com/jinloes/practice");
@@ -163,12 +176,13 @@ class ExerciseCatalogTest {
             } finally {
                 CatalogSandbox.deleteTree(root);
             }
-        }
+        });
     }
 
     @Test
+    @Tag("catalog")
     void referenceSolutionsPassTheirCompleteSuites() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
+        runForEachExercise(exercisesUnderTest(), true, exercise -> {
             CatalogSandbox.RunSummary summary = CatalogSandbox.compileAndRun(exercise, referenceSource(exercise), "reference");
             assertThat(summary.failures())
                     .as("reference solution for %s: %s", exercise.id(), summary.failureDetails())
@@ -176,12 +190,13 @@ class ExerciseCatalogTest {
             assertThat(summary.testsFound())
                     .as("reference tests found for %s", exercise.id())
                     .isEqualTo(exercise.fullCount());
-        }
+        });
     }
 
     @Test
+    @Tag("catalog")
     void starterAndKnownWrongSolutionsAreCaughtByTheSuites() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
+        runForEachExercise(exercisesUnderTest(), true, exercise -> {
             CatalogSandbox.RunSummary starter = CatalogSandbox.compileAndRun(
                     exercise,
                     ExerciseCatalog.resource(exercise, "Solution.java"),
@@ -194,12 +209,13 @@ class ExerciseCatalogTest {
             assertThat(wrong.failures())
                     .as("known wrong solution should fail for %s", exercise.id())
                     .isGreaterThan(0);
-        }
+        });
     }
 
     @Test
+    @Tag("catalog")
     void startersContainOnlyLearnerApiAndGeneratedRunnersPassVisibleExamples() throws Exception {
-        for (ExerciseCatalog.Exercise exercise : exercisesUnderTest()) {
+        runForEachExercise(exercisesUnderTest(), true, exercise -> {
             Path root = Files.createTempDirectory(Path.of("build"), "catalog-runner-" + exercise.id() + "-");
             try {
                 Path sourceRoot = root.resolve("src/com/jinloes/practice");
@@ -234,7 +250,59 @@ class ExerciseCatalogTest {
             } finally {
                 CatalogSandbox.deleteTree(root);
             }
+        });
+    }
+
+    /**
+     * Runs a check for every exercise and reports all failures together so one run surfaces every
+     * broken exercise instead of stopping at the first failure.
+     */
+    private static void runForEachExercise(
+            List<ExerciseCatalog.Exercise> exercises,
+            boolean parallel,
+            ExerciseCheck check) throws Exception {
+        List<String> failures = new ArrayList<>();
+        if (!parallel || exercises.size() <= 1) {
+            for (ExerciseCatalog.Exercise exercise : exercises) {
+                try {
+                    check.run(exercise);
+                } catch (Throwable failure) {
+                    failures.add(exercise.id() + ": " + failure.getMessage());
+                }
+            }
+        } else {
+            int threads = Math.min(Math.min(4, exercises.size()),
+                    Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
+            ExecutorService pool = Executors.newFixedThreadPool(threads);
+            try {
+                List<Future<String>> futures = new ArrayList<>(exercises.size());
+                for (ExerciseCatalog.Exercise exercise : exercises) {
+                    futures.add(pool.submit(() -> {
+                        try {
+                            check.run(exercise);
+                            return null;
+                        } catch (Throwable failure) {
+                            return exercise.id() + ": " + failure.getMessage();
+                        }
+                    }));
+                }
+                for (Future<String> future : futures) {
+                    try {
+                        String failure = future.get();
+                        if (failure != null) {
+                            failures.add(failure);
+                        }
+                    } catch (ExecutionException exception) {
+                        failures.add(String.valueOf(exception.getCause()));
+                    }
+                }
+            } finally {
+                pool.shutdownNow();
+            }
         }
+        assertThat(failures)
+                .as("Catalog failures (%d of %d exercises)", failures.size(), exercises.size())
+                .isEmpty();
     }
 
     /**

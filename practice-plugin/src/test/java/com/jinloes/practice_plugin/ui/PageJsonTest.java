@@ -47,8 +47,10 @@ class PageJsonTest {
         assertThat(problem.get("sampleInput").getAsString()).isEqualTo(exercise.sampleInput());
         assertThat(problem.get("hasAttempt").getAsBoolean()).isTrue();
         assertThat(problem.get("canRunExamples").getAsBoolean()).isFalse();
-        assertThat(ids(problem, "guides")).containsExactly("two-pointers", "linked-lists");
-        assertThat(ids(problem, "tracks")).containsExactly("blind-75", "neetcode-150");
+        assertThat(ids(problem, "guides"))
+                .containsExactlyElementsOf(GuideCatalog.containing(exercise.id()).stream().map(GuideCatalog.Guide::id).toList());
+        assertThat(ids(problem, "tracks"))
+                .containsExactlyElementsOf(TrackCatalog.containing(exercise.id()).stream().map(GuideCatalog.Guide::id).toList());
     }
 
     @Test
@@ -110,6 +112,40 @@ class PageJsonTest {
                 THEME);
 
         assertThat(json).as("no raw tag can close the injecting script").doesNotContain("</").doesNotContain("<p>");
+    }
+
+    @Test
+    void rendersCoachPageWithTurnsAndNullExerciseState() {
+        var exercise = ExerciseCatalog.find("pair-sum");
+        JsonObject coachPage = render(new PracticePage.Coach(
+                exercise, "att-1", Set.of(), true, "", false, "Failed: wrong answer", true, "", "gpt-5",
+                java.util.List.of(
+                        new PracticePage.CoachTurn("user", "Translate my approach", "2026-01-01T00:00:00Z"),
+                        new PracticePage.CoachTurn("assistant", "## Step 1\n```java\nint x = 1;\n```",
+                                "2026-01-01T00:00:02Z"))))
+                .getAsJsonObject("page");
+
+        assertThat(coachPage.get("kind").getAsString()).isEqualTo("coach");
+        JsonObject coach = coachPage.getAsJsonObject("coach");
+        assertThat(coach.get("exerciseId").getAsString()).isEqualTo("pair-sum");
+        assertThat(coach.get("exerciseTitle").getAsString()).isEqualTo(exercise.title());
+        assertThat(coach.get("attemptId").getAsString()).isEqualTo("att-1");
+        assertThat(coach.get("unlocked").getAsBoolean()).isTrue();
+        assertThat(coach.get("stale").getAsBoolean()).isTrue();
+        assertThat(coach.get("modelLabel").getAsString()).isEqualTo("gpt-5");
+        assertThat(coach.getAsJsonArray("turns")).hasSize(2);
+        assertThat(coach.getAsJsonArray("turns").get(1).getAsJsonObject().get("html").getAsString())
+                .contains("<h3>Step 1</h3>")
+                .contains("<pre><code>int x = 1;</code></pre>");
+
+        JsonObject emptyCoach = render(new PracticePage.Coach(
+                null, null, Set.of(), false, "Run Check first.", false, "", false, "", "CLI default", java.util.List.of()))
+                .getAsJsonObject("page").getAsJsonObject("coach");
+        assertThat(emptyCoach.get("exerciseId").isJsonNull()).isTrue();
+        assertThat(emptyCoach.get("exerciseTitle").isJsonNull()).isTrue();
+        assertThat(emptyCoach.get("attemptId").isJsonNull()).isTrue();
+        assertThat(emptyCoach.get("unlocked").getAsBoolean()).isFalse();
+        assertThat(emptyCoach.get("stale").getAsBoolean()).isFalse();
     }
 
     private static JsonObject render(PracticePage page) {

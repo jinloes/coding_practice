@@ -1,0 +1,30 @@
+{
+  "id": "nested-list-iterator",
+  "title": "Nested List Iterator",
+  "topic": "Stacks",
+  "difficulty": "Medium",
+  "statement": "Implement a lazy iterator over a nested list of integers. Each element is a `NestedValue`, which holds either a single integer or a list of `NestedValue` elements (which may itself be empty or arbitrarily nested).\n\nImplement `Solution(List<NestedValue> items)` with:\n- `boolean hasNext()` — returns `true` if another integer remains in left-to-right flattened order.\n- `int next()` — returns the next integer and advances the iterator. Throw `NoSuchElementException` if no integer remains.\n\nContract\n- Do not flatten the entire input eagerly into a `List<Integer>` in the constructor unless you want to trade off lazy space; the intended design uses an explicit stack of iterators or elements so `hasNext()` and `next()` run in amortized `O(1)` time with `O(depth)` auxiliary stack space.\n- Empty nested lists (such as `[[]]`, `[[], [1, []], []]`) must be skipped seamlessly so `hasNext()` returns `false` when only empty lists remain.\n- Calling `hasNext()` multiple times in a row without calling `next()` must not skip elements.\n\nExamples\n- `[[1, 1], 2, [1, 1]]` -> `[1, 1, 2, 1, 1]`\n- `[1, [4, [6]]]` -> `[1, 4, 6]`\n- `[[], [[]], [3, []]]` -> `[3]`\n",
+  "examples": [
+    {
+      "input": "[[1,1],2,[1,1]]",
+      "output": "[1, 1, 2, 1, 1]"
+    },
+    {
+      "input": "[1,[4,[6]]]",
+      "output": "[1, 4, 6]"
+    },
+    {
+      "input": "[[],[[]],[3,[]]]",
+      "output": "[3]"
+    }
+  ],
+  "hints": [
+    "Maintain a stack (Deque) of Iterator<NestedValue> (or ListIterator / elements in reverse order) starting with items.iterator() on top.",
+    "Write a helper advance() called by hasNext() that keeps expanding the top iterator until either the stack is empty or the next integer is staged in a field (e.g., Integer nextValue).",
+    "When next() is called, ensure hasNext() is true (otherwise throw NoSuchElementException), capture nextValue, clear it to null, and return it. Intended complexity: O(n) total time across a full traversal (amortized O(1) per element), O(depth) space (O(n) worst case)."
+  ],
+  "inputSyntax": "Input: nested integer list, for example: [[1,1],2,[1,1]]",
+  "sampleInput": "[[1,1],2,[1,1]]",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

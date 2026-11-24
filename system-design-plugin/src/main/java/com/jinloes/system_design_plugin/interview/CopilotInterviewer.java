@@ -1,7 +1,9 @@
 package com.jinloes.system_design_plugin.interview;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientMode;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.RuntimeConnection;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
@@ -175,10 +177,12 @@ public final class CopilotInterviewer {
         }
         cliArgs.addAll(LIST_ARGUMENTS);
         CopilotClient client = new CopilotClient(new CopilotClientOptions()
-                .setCliPath(launcher)
-                .setCliArgs(cliArgs.toArray(String[]::new))
-                .setCwd(directory.toString())
-                .setEnvironment(EnvironmentUtil.getEnvironmentMap()));
+                .setMode(CopilotClientMode.EMPTY)
+                .setRuntime(RuntimeConnection.forSpawnedStdio(launcher)
+                        .setArgs(cliArgs)
+                        .setBaseDirectory(directory.toString())
+                        .setWorkingDirectory(directory.toString())
+                        .setEnvironment(EnvironmentUtil.getEnvironmentMap())));
         long deadline = System.nanoTime() + timeout.toNanos();
         boolean forceStopped = false;
         try {

@@ -1,8 +1,8 @@
 plugins {
     id 'java'
     id 'jacoco'
-    id 'org.jetbrains.intellij.platform' version '2.19.0'
-    id 'com.github.node-gradle.node' version '7.1.0'
+    alias(libs.plugins.intellij.platform)
+    alias(libs.plugins.node.gradle)
 }
 
 group = 'com.jinloes.coding_practice'
@@ -33,33 +33,34 @@ sourceSets {
 }
 
 ext {
-    junitBomVersion = '5.11.4'
-    assertjVersion = '3.26.3'
     verificationRelease = '17'
 }
 
 def idePath = providers.gradleProperty('idePath').filter { !it.isBlank() }
 
 dependencies {
-    exampleLibraries "org.assertj:assertj-core:$assertjVersion"
-    verificationLibraries platform("org.junit:junit-bom:$junitBomVersion")
-    verificationLibraries 'org.junit.jupiter:junit-jupiter'
-    verificationLibraries 'org.junit.platform:junit-platform-launcher'
+    implementation(libs.copilot.sdk) {
+        exclude group: 'net.java.dev.jna'
+    }
+    exampleLibraries libs.assertj.core
+    verificationLibraries platform(libs.junit.bom)
+    verificationLibraries libs.junit.jupiter
+    verificationLibraries libs.junit.platform.launcher
     verificationLibraries 'org.apiguardian:apiguardian-api:1.1.2'
     intellijPlatform {
         if (idePath.isPresent()) {
             local(idePath.get())
         } else {
-            intellijIdea('2026.2.3')
+            intellijIdea(libs.versions.intellij.idea.get())
         }
         bundledPlugins('com.intellij.java', 'com.intellij.modules.jcef')
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform.INSTANCE)
     }
     testImplementation sourceSets.verificationRunner.output
-    testImplementation platform("org.junit:junit-bom:$junitBomVersion")
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation 'org.junit.platform:junit-platform-launcher'
-    testImplementation "org.assertj:assertj-core:$assertjVersion"
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testImplementation libs.junit.platform.launcher
+    testImplementation libs.assertj.core
     // The IDE fixture bootstrap references legacy TestCase; authored tests remain Jupiter.
     testRuntimeOnly('junit:junit:4.13.2') {
         transitive = false
@@ -74,27 +75,42 @@ intellijPlatform {
             sinceBuild = '262.10968.63'
             untilBuild = provider { null }
         }
-        pluginVerification {
-            ides {
-                current()
-            }
+    }
+    pluginVerification {
+        ides {
+            current()
         }
     }
 }
 
 // Redirects winp's extracted native helpers out of Gradle 9's immutable IntelliJ SDK transform cache on Windows.
-def winpDir = layout.buildDirectory.dir('winp')
-tasks.matching { it instanceof JavaForkOptions }.configureEach {
-    def targetDir = winpDir
-    jvmArgumentProviders.add({
-        def dir = targetDir.get().asFile
+class WinpArgumentProvider implements CommandLineArgumentProvider {
+    @Internal
+    final Provider<Directory> winpDir
+
+    WinpArgumentProvider(Provider<Directory> winpDir) {
+        this.winpDir = winpDir
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        def dir = winpDir.get().asFile
         dir.mkdirs()
-        ["-Dwinp.folder.preferred=${dir.absolutePath}".toString()]
-    } as CommandLineArgumentProvider)
+        return ["-Dwinp.folder.preferred=${dir.absolutePath}".toString()]
+    }
+}
+
+def winpArgumentProvider = new WinpArgumentProvider(layout.buildDirectory.dir('winp'))
+tasks.matching { it instanceof JavaForkOptions }.configureEach {
+    jvmArgumentProviders.add(winpArgumentProvider)
 }
 
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        if (providers.gradleProperty('fast').isPresent()) {
+            excludeTags 'catalog', 'gradle-integration'
+        }
+    }
     systemProperty 'practice.test.classpath', sourceSets.test.runtimeClasspath.asPath
     systemProperty 'idea.load.plugins.id', 'com.jinloes.practice'
     systemProperty 'practice.catalog.only', providers.gradleProperty('catalogOnly').getOrElse('')
@@ -107,7 +123,7 @@ test {
 }
 
 jacoco {
-    toolVersion = '0.8.15'
+    toolVersion = libs.versions.jacoco.get()
 }
 
 // Coverage is enforced on the logic packages. The ui package and the classes below need a running IDE,

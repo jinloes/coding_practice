@@ -3,10 +3,11 @@ package com.jinloes.practice_plugin.ui;
 import com.jinloes.practice_plugin.catalog.ExerciseCatalog.Exercise;
 import com.jinloes.practice_plugin.catalog.GuideCatalog.Guide;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/** What a {@link PageView} shows: the Problem tab or the Study Guide tab, with the learner's progress. */
+/** What a {@link PageView} shows: Problem, Study Guide, or AI Coach tab, with the learner's progress. */
 sealed interface PracticePage {
     Set<String> passed();
 
@@ -29,6 +30,39 @@ sealed interface PracticePage {
     record Study(Guide guide, Exercise selected, Set<String> passed) implements PracticePage {
         public Study {
             passed = Set.copyOf(Objects.requireNonNull(passed, "passed"));
+        }
+    }
+
+    /** One persisted or newly generated turn in the post-check AI Coach conversation. */
+    record CoachTurn(String role, String markdown, String createdAt) {
+        public CoachTurn {
+            role = Objects.requireNonNullElse(role, "");
+            markdown = Objects.requireNonNullElse(markdown, "");
+            createdAt = Objects.requireNonNullElse(createdAt, "");
+        }
+    }
+
+    /** The post-check AI Coach tab state for the selected attempt. */
+    record Coach(
+            Exercise exercise,
+            String attemptId,
+            Set<String> passed,
+            boolean unlocked,
+            String lockReason,
+            boolean running,
+            String checkSummary,
+            boolean stale,
+            String error,
+            String modelLabel,
+            List<CoachTurn> turns) implements PracticePage {
+        public Coach {
+            attemptId = attemptId == null || attemptId.isBlank() ? null : attemptId;
+            passed = Set.copyOf(Objects.requireNonNull(passed, "passed"));
+            lockReason = Objects.requireNonNullElse(lockReason, "");
+            checkSummary = Objects.requireNonNullElse(checkSummary, "");
+            error = Objects.requireNonNullElse(error, "");
+            modelLabel = Objects.requireNonNullElse(modelLabel, "");
+            turns = turns == null ? List.of() : List.copyOf(turns);
         }
     }
 }

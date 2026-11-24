@@ -19,7 +19,7 @@ import java.util.Properties;
  * A stand-in for {@code copilot --server --stdio} used by {@link CopilotInterviewerTest}: speaks
  * {@code Content-Length}-framed JSON-RPC on stdio. Its first argument (the "executable") is a properties file:
  * {@code record} (directory for argv, pid, the {@code envName} variable, and one line per request method),
- * {@code protocolVersion} (default 3), {@code modelsResult} (raw JSON), {@code modelsError} (error message), and
+ * {@code protocolVersion} (default 4), {@code modelsResult} (raw JSON), {@code modelsError} (error message), and
  * {@code mode}: {@code normal}, {@code exitEarly} (exit 4 before reading anything), or {@code hang} (answer
  * {@code connect}, never {@code models.list}). Notifications are ignored; it exits when stdin closes.
  */
@@ -57,7 +57,7 @@ final class FakeCopilotServer {
             ObjectNode reply = JSON.createObjectNode().put("jsonrpc", "2.0").set("id", message.get("id"));
             switch (method) {
                 case "connect" -> reply.putObject("result").put("protocolVersion",
-                        Integer.parseInt(script.getProperty("protocolVersion", "3")));
+                        Integer.parseInt(script.getProperty("protocolVersion", "4")));
                 case "models.list" -> {
                     if (mode.equals("hang")) {
                         continue;

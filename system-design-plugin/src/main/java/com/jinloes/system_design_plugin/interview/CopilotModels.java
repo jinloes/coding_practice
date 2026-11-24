@@ -1,6 +1,6 @@
 package com.jinloes.system_design_plugin.interview;
 
-import com.github.copilot.rpc.ModelInfo;
+import com.microsoft.copilot.generated.rpc.ModelPolicyState;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -21,24 +21,24 @@ public final class CopilotModels {
     }
 
     /** Keeps enabled (or unrestricted) models with valid IDs, drops duplicates, keeps order, and caps the list. */
-    public static List<Model> from(List<ModelInfo> infos) {
+    public static List<Model> from(List<com.microsoft.copilot.generated.rpc.Model> infos) {
         List<Model> models = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
         if (infos == null) {
             return models;
         }
-        for (ModelInfo info : infos) {
+        for (com.microsoft.copilot.generated.rpc.Model info : infos) {
             if (models.size() == MAX_MODELS) {
                 break;
             }
             if (info == null || !enabled(info)) {
                 continue;
             }
-            String id = info.getId();
+            String id = info.id();
             if (id == null || !ID.matcher(id).matches() || !seen.add(id)) {
                 continue;
             }
-            String name = info.getName();
+            String name = info.name();
             models.add(new Model(id, name == null || name.isBlank() ? id : name.strip()));
         }
         return models;
@@ -62,11 +62,11 @@ public final class CopilotModels {
         return List.copyOf(ids);
     }
 
-    private static boolean enabled(ModelInfo info) {
-        if (info.getPolicy() == null) {
+    private static boolean enabled(com.microsoft.copilot.generated.rpc.Model info) {
+        if (info.policy() == null) {
             return true;
         }
-        String state = info.getPolicy().getState();
-        return state == null || "enabled".equals(state);
+        ModelPolicyState state = info.policy().state();
+        return state == null || ModelPolicyState.ENABLED.equals(state);
     }
 }

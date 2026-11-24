@@ -28,6 +28,36 @@ final class HtmlPageView implements PageView {
                     ? "<p>No exercises match these filters. Use Reset filters above the exercise list to show all exercises.</p>"
                     : PracticeViews.problemText(problem.exercise(), problem.passed());
             case PracticePage.Study study -> StudyGuideView.html(study.guide(), study.selected(), study.passed());
+            case PracticePage.Coach coach -> coachHtml(coach);
         };
+    }
+
+    private static String coachHtml(PracticePage.Coach coach) {
+        StringBuilder out = new StringBuilder();
+        String title = coach.exercise() == null ? "AI Coach" : "AI Coach — " + coach.exercise().title();
+        out.append("<h2>").append(MarkdownHtml.inline(title)).append("</h2>");
+        if (!coach.checkSummary().isBlank()) {
+            out.append("<p>").append(MarkdownHtml.inline(coach.checkSummary())).append("</p>");
+        }
+        if (!coach.unlocked()) {
+            out.append("<p>").append(MarkdownHtml.inline(coach.lockReason())).append("</p>");
+        } else {
+            if (coach.stale()) {
+                out.append("<p>Edited since last check — AI Coach uses your current editor code alongside the last check result.</p>");
+            }
+            out.append("<p>Interactive AI Coach controls require JCEF.</p>");
+        }
+        if (coach.running()) {
+            out.append("<p>AI Coach is thinking...</p>");
+        }
+        if (!coach.error().isBlank()) {
+            out.append("<p>").append(MarkdownHtml.inline(coach.error())).append("</p>");
+        }
+        for (PracticePage.CoachTurn turn : coach.turns()) {
+            String speaker = "assistant".equals(turn.role()) ? "Coach" : "You";
+            out.append("<h3>").append(speaker).append("</h3>");
+            out.append(MarkdownHtml.toHtml(turn.markdown()));
+        }
+        return out.toString();
     }
 }

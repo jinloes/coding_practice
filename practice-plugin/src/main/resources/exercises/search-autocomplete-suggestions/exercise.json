@@ -1,0 +1,30 @@
+{
+  "id": "search-autocomplete-suggestions",
+  "title": "Search Autocomplete Suggestions",
+  "topic": "Tries",
+  "difficulty": "Medium",
+  "statement": "Return up to three lexicographically smallest product names matching each typed prefix of a search query.\n\nContract\n- `products` is a non-null array of distinct, non-empty lowercase ASCII product names. Do not mutate the input array.\n- `query` is a non-null, non-empty lowercase ASCII string.\n- Return a `List<List<String>>` of size `query.length()`. Entry `i` (`0 <= i < query.length()`) contains at most `3` names from `products` that start with `query.substring(0, i + 1)`, ordered lexicographically.\n- If fewer than three products match a prefix, include all matching products; if none match, include an empty list.\n\nExamples\n- `suggest([\"mobile\", \"mouse\", \"moneypot\", \"monitor\", \"mousepad\"], \"mouse\")` returns:\n  - `\"m\"` -> `[\"mobile\", \"moneypot\", \"monitor\"]`\n  - `\"mo\"` -> `[\"mobile\", \"moneypot\", \"monitor\"]`\n  - `\"mou\"` -> `[\"mouse\", \"mousepad\"]`\n  - `\"mous\"` -> `[\"mouse\", \"mousepad\"]`\n  - `\"mouse\"` -> `[\"mouse\", \"mousepad\"]`\n- `suggest([\"haven\"], \"haven\")` returns `[\"haven\"]` for each of the 5 prefixes.\n- `suggest([\"bag\", \"ball\"], \"cat\")` returns three empty lists.\n",
+  "examples": [
+    {
+      "input": "products = [\"mobile\", \"mouse\", \"moneypot\", \"monitor\", \"mousepad\"], query = \"mouse\"",
+      "output": "[[\"mobile\", \"moneypot\", \"monitor\"], [\"mobile\", \"moneypot\", \"monitor\"], [\"mouse\", \"mousepad\"], [\"mouse\", \"mousepad\"], [\"mouse\", \"mousepad\"]]"
+    },
+    {
+      "input": "products = [\"haven\"], query = \"haven\"",
+      "output": "[[\"haven\"], [\"haven\"], [\"haven\"], [\"haven\"], [\"haven\"]]"
+    },
+    {
+      "input": "products = [\"bag\", \"ball\"], query = \"cat\"",
+      "output": "[[], [], []]"
+    }
+  ],
+  "hints": [
+    "Copy and sort the product names lexicographically first; all names sharing any prefix then occupy a single contiguous range.",
+    "As each character of query is typed, the matching range [left, right] only narrows—advance left while sorted[left] does not match query[i], and pull right inward while sorted[right] does not match.",
+    "At each step, take at most three items starting at left (up to right). Intended complexity: O(n log n) time to sort and narrow the window, and O(n) extra space."
+  ],
+  "inputSyntax": "Input: product1, product2 | query, for example: mobile, mouse, moneypot, monitor, mousepad | mouse",
+  "sampleInput": "mobile, mouse, moneypot, monitor, mousepad | mouse",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

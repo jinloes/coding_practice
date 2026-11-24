@@ -1,0 +1,30 @@
+{
+  "id": "range-module",
+  "title": "Range Module",
+  "topic": "Intervals",
+  "difficulty": "Hard",
+  "statement": "Implement a data structure that tracks a union of half-open integer intervals `[left, right)` (all real numbers `x` with `left <= x < right`).\n\nContract\n- `new Solution()` initializes an empty tracked set.\n- `addRange(left, right)` adds every number in `[left, right)` to the tracked set (`left < right`).\n- `queryRange(left, right)` returns `true` if and only if every number in `[left, right)` is currently tracked (`left < right`).\n- `removeRange(left, right)` stops tracking every number in `[left, right)` (`left < right`).\n\nExamples\n- `addRange(10, 20)`, `removeRange(14, 16)`, `queryRange(10, 14)` -> `true`, `queryRange(13, 15)` -> `false`, `queryRange(16, 17)` -> `true`.\n- Adjacent intervals coalesce: `addRange(1, 5)`, `addRange(5, 10)`, `queryRange(2, 9)` -> `true`.\n- Removing a range that spans multiple intervals trims both ends: `addRange(1, 5)`, `addRange(7, 12)`, `removeRange(3, 9)`, `queryRange(1, 3)` -> `true`, `queryRange(9, 12)` -> `true`, `queryRange(3, 4)` -> `false`.\n",
+  "examples": [
+    {
+      "input": "add 10 20, remove 14 16, query 10 14, query 13 15, query 16 17",
+      "output": "query=true, query=false, query=true"
+    },
+    {
+      "input": "add 1 5, add 5 10, query 2 9",
+      "output": "query=true"
+    },
+    {
+      "input": "add 1 5, add 7 12, remove 3 9, query 1 3, query 9 12, query 3 4",
+      "output": "query=true, query=true, query=false"
+    }
+  ],
+  "hints": [
+    "Maintain a sorted map (TreeMap) of disjoint, non-adjacent intervals start -> end.",
+    "For addRange(left, right), start from floorEntry(left) if it overlaps or touches left (entry.getValue() >= left), merge all entries with start <= right, delete them, and insert the merged [newLeft, newRight).",
+    "For removeRange(left, right), find all overlapping entries, delete them, and re-insert any strictly non-empty left remainder [start, left) or right remainder [right, end). For queryRange(left, right), check floorEntry(left) != null && floorEntry(left).getValue() >= right. Intended complexity: O(n log n) over n operations, O(n) space."
+  ],
+  "inputSyntax": "Input: op1, op2, ... where ops are add l r | remove l r | query l r, for example: add 10 20, remove 14 16, query 10 14, query 13 15, query 16 17",
+  "sampleInput": "add 10 20, remove 14 16, query 10 14, query 13 15, query 16 17",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

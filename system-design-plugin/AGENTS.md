@@ -6,10 +6,11 @@ rules overlap.
 
 ## Keep Documentation Synchronized
 
-`ARCHITECTURE.md` and `CODE-MAP.md` are part of the implementation contract.
-Inspect their headings (`^#{1,3} `) and read the relevant sections before
-changing behavior, storage, the page contract, the interviewer, or the build,
-and update affected sections in the same change.
+`ARCHITECTURE.md`, `CODE-MAP.md`, `README.md`, and `AGENTS.md` are part of the
+implementation contract. Inspect their headings (`^#{1,3} `) and read the
+relevant sections before changing behavior, storage, the page contract, the
+interviewer, dependencies, or the build, and update every affected document in
+the same change. Do not leave documentation updates for a later change.
 
 Root `.ignore` excludes `problems/*.json` and build caches from ripgrep `grep`
 by default (keeping `problems/index.txt` visible and allowing explicit-path
@@ -57,7 +58,9 @@ Run from `system-design-plugin/` with its own wrapper: `./gradlew test`, then
 subagent or pass `--quiet` to keep build logs out of main context). Coverage is
 gated at 100% line and 100% branch outside `ui`; never lower it or add
 exclusions to pass. Use JUnit 5 with AssertJ, keep test classes package-private,
-and do not add JUnit 4 or Hamcrest.
+and do not add JUnit 4 or Hamcrest. Shared plugin dependency versions live in
+`../gradle/libs.versions.toml`; update `AGENTS.md` alongside any build or
+workflow changes.
 
 ## Problem Content Rules
 

@@ -64,9 +64,13 @@ class StudyGuideViewTest {
     void withoutAGuideListsTheGuidesThatIncludeTheSelectedExercise() {
         assertThat(StudyGuideView.html(null, null, Set.of()))
                 .isEqualTo("<p>Choose a guide above to study a topic, or a track to practice its list.</p>");
+        String expectedTracks = TrackCatalog.containing("merge-sorted-lists").stream()
+                .map(GuideCatalog.Guide::title)
+                .reduce((a, b) -> a + ", " + b)
+                .orElseThrow();
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("merge-sorted-lists"), Set.of()))
                 .contains("<p>Merge Sorted Lists appears in: Two Pointers, Linked Lists.</p>")
-                .contains("<p>Practice tracks: Blind 75, NeetCode 150.</p>");
+                .contains("<p>Practice tracks: " + expectedTracks + ".</p>");
         assertThat(StudyGuideView.html(null, ExerciseCatalog.find("roman-to-integer"), Set.of()))
                 .contains("<p>Roman to Integer is not part of any guide yet.</p>")
                 .doesNotContain("Practice tracks");

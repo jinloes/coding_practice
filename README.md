@@ -59,7 +59,9 @@ Run commands from the repository root with `./gradlew`:
 ./gradlew check
 ./gradlew :regex:test
 ./gradlew :regex:test --tests "com.jinloes.regex.PCRE2EngineTest"
+./gradlew :practice-plugin:test -Pfast
 ./gradlew :practice-plugin:check
+python3 practice-plugin/scripts/catalog_tool.py validate
 ./gradlew :system-design-plugin:check
 ```
 
@@ -85,12 +87,13 @@ Use JDK 25 and a working native PCRE2 library; Ubuntu CI installs
 
 [`practice-plugin/`](practice-plugin/README.md) is an isolated IntelliJ IDEA
 plugin build included in root `settings.gradle` via `includeBuild("practice-plugin")`.
-It presents problems and hints, creates durable managed Java attempts that work
-from any open project, and supports local correctness checks, native debugging,
-and saved progress. Existing plugin-created practice projects can be imported
-without changing their files. Run it from root (`./gradlew :practice-plugin:runIde`
-or the shared **Algorithm Practice Sandbox (runIde)** configuration) or standalone
-from `practice-plugin/`.
+It presents problems, study guides, curated tracks, and hints, creates durable
+managed Java attempts that work from any open project, supports local
+correctness checks, complexity probes, native debugging, saved progress, and an
+opt-in post-submission AI Coach powered by the user's Copilot CLI. Existing
+plugin-created practice projects can be imported without changing their files.
+Run it from root (`./gradlew :practice-plugin:runIde` or the shared **Algorithm
+Practice Sandbox (runIde)** configuration) or standalone from `practice-plugin/`.
 
 ## System Design Practice Plugin
 
@@ -106,6 +109,7 @@ or the shared **System Design Sandbox (runLocalIde)** configuration) or standalo
 ## Project Layout
 
 - Root `build.gradle` centralizes shared dependency management and test configuration for root submodules
+- Root `gradle/libs.versions.toml` centralizes shared dependency and plugin versions for `practice-plugin` and `system-design-plugin`
 - Root `settings.gradle` defines the root submodules and links `practice-plugin` and `system-design-plugin` via `includeBuild`
 - Root `.run/` provides shared IntelliJ Gradle sandbox run configurations for both plugins
 - Each module owns its own source and test code under `src/main/java` and `src/test/java`

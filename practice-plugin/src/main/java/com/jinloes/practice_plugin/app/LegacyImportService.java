@@ -21,7 +21,13 @@ import java.util.Objects;
  * the {@code workspace} package stay free of {@code run} and {@code state} dependencies.
  */
 public final class LegacyImportService {
+    @FunctionalInterface
+    interface PathResolver {
+        Path resolve(Path path) throws IOException;
+    }
+
     private final ManagedPracticeWorkspace attempts;
+    private final PathResolver realPath;
 
     public record LegacyImportResult(int imported, int skipped, String summary) {}
 
@@ -30,7 +36,12 @@ public final class LegacyImportService {
     }
 
     public LegacyImportService(ManagedPracticeWorkspace attempts) {
+        this(attempts, Path::toRealPath);
+    }
+
+    LegacyImportService(ManagedPracticeWorkspace attempts, PathResolver realPath) {
         this.attempts = Objects.requireNonNull(attempts, "attempts");
+        this.realPath = Objects.requireNonNull(realPath, "realPath");
     }
 
     public LegacyImportResult importLegacy(
@@ -41,13 +52,13 @@ public final class LegacyImportService {
         if (Files.isSymbolicLink(legacyRoot)) {
             throw new IOException("The legacy practice root must not redirect.");
         }
-        Path root = legacyRoot.toRealPath();
+        Path root = realPath.resolve(legacyRoot);
         if (!PracticeWorkspace.isWorkspace(root)) {
             throw new IOException("The current project is not a marked legacy practice project.");
         }
         Path attemptsRoot = root.resolve("attempts");
         if (!Files.isDirectory(attemptsRoot, LinkOption.NOFOLLOW_LINKS)
-                || !attemptsRoot.toRealPath().equals(root.resolve("attempts"))) {
+                || !realPath.resolve(attemptsRoot).equals(attemptsRoot)) {
             throw new IOException("The legacy attempts directory must not redirect.");
         }
 

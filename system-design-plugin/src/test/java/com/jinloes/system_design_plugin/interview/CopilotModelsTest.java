@@ -1,7 +1,8 @@
 package com.jinloes.system_design_plugin.interview;
 
-import com.github.copilot.rpc.ModelInfo;
-import com.github.copilot.rpc.ModelPolicy;
+import com.microsoft.copilot.generated.rpc.Model;
+import com.microsoft.copilot.generated.rpc.ModelPolicy;
+import com.microsoft.copilot.generated.rpc.ModelPolicyState;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -11,22 +12,19 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CopilotModelsTest {
-    private static ModelInfo info(String id, String name, String policyState, boolean withPolicy) {
-        ModelInfo info = new ModelInfo().setId(id).setName(name);
-        if (withPolicy) {
-            info.setPolicy(new ModelPolicy().setState(policyState));
-        }
-        return info;
+    private static Model info(String id, String name, ModelPolicyState policyState, boolean withPolicy) {
+        ModelPolicy policy = withPolicy ? new ModelPolicy(policyState, null) : null;
+        return new Model(id, name, null, null, null, policy, null, null, null, null, null, null, null, null, null, null);
     }
 
     @Test
     void keepsEnabledOrUnrestrictedModelsInOrder() {
         List<CopilotModels.Model> models = CopilotModels.from(Arrays.asList(
-                info("b-model", "B", "enabled", true),
+                info("b-model", "B", ModelPolicyState.ENABLED, true),
                 info("a-model", "A", null, true),
                 info("c-model", "C", null, false),
-                info("off", "Off", "disabled", true),
-                info("unconfigured", "U", "unconfigured", true),
+                info("off", "Off", ModelPolicyState.DISABLED, true),
+                info("unconfigured", "U", ModelPolicyState.UNCONFIGURED, true),
                 null));
         assertThat(models).extracting(CopilotModels.Model::id).containsExactly("b-model", "a-model", "c-model");
     }
@@ -49,7 +47,7 @@ class CopilotModelsTest {
 
     @Test
     void capsTheListAndToleratesNull() {
-        List<ModelInfo> many = new ArrayList<>();
+        List<Model> many = new ArrayList<>();
         for (int index = 0; index < CopilotModels.MAX_MODELS + 5; index++) {
             many.add(info("m" + index, "M", null, false));
         }

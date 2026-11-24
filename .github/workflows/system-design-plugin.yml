@@ -7,10 +7,12 @@ on:
       - master
     paths:
       - 'system-design-plugin/**'
+      - 'gradle/libs.versions.toml'
       - '.github/workflows/system-design-plugin.yml'
   pull_request:
     paths:
       - 'system-design-plugin/**'
+      - 'gradle/libs.versions.toml'
       - '.github/workflows/system-design-plugin.yml'
 
 permissions:
@@ -34,6 +36,7 @@ jobs:
           java-version: '25'
           cache: gradle
           cache-dependency-path: |
+            gradle/libs.versions.toml
             system-design-plugin/build.gradle
             system-design-plugin/gradle.properties
             system-design-plugin/gradle/wrapper/gradle-wrapper.properties

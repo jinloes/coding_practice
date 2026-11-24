@@ -1,0 +1,30 @@
+{
+  "id": "transactional-kv-store",
+  "title": "Transactional Key-Value Store",
+  "topic": "Data Structures",
+  "difficulty": "Medium",
+  "statement": "Implement an in-memory key-value store that supports nested transactions.\n\nContract\n- `new Solution()` creates an empty store with no active transaction.\n- `set(key, value)` sets `key` to `value` in the current transaction (or in the base store if no transaction is active).\n- `get(key)` returns the current value for `key`, or `null` if `key` is absent or deleted in the current view.\n- `delete(key)` removes `key` in the current transaction (or from the base store if no transaction is active).\n- `begin()` opens a new nested transaction on top of the current state.\n- `commit()` merges the innermost active transaction into its parent transaction (or into the base store if it is the outermost transaction) and returns `true`; returns `false` if no transaction is active.\n- `rollback()` discards the innermost active transaction and returns `true`; returns `false` if no transaction is active.\n\nExamples\n- `set(\"a\", \"1\")`, `begin()`, `set(\"a\", \"2\")`, `get(\"a\")` -> `\"2\"`, `rollback()` -> `true`, `get(\"a\")` -> `\"1\"`.\n- Deleting a key inside a transaction shadows an outer value: `set(\"a\", \"1\")`, `begin()`, `delete(\"a\")`, `get(\"a\")` -> `null`, `rollback()` -> `true`, `get(\"a\")` -> `\"1\"`.\n- Nested transactions: `begin()`, `set(\"x\", \"10\")`, `begin()`, `set(\"x\", \"20\")`, `commit()` -> `true`, `get(\"x\")` -> `\"20\"`, `rollback()` -> `true`, `get(\"x\")` -> `null`.\n",
+  "examples": [
+    {
+      "input": "set a 1, begin, set a 2, get a, rollback, get a",
+      "output": "get=2, rollback=true, get=1"
+    },
+    {
+      "input": "set a 1, begin, delete a, get a, rollback, get a",
+      "output": "get=null, rollback=true, get=1"
+    },
+    {
+      "input": "begin, set x 10, begin, set x 20, commit, get x, rollback, get x",
+      "output": "commit=true, get=20, rollback=true, get=null"
+    }
+  ],
+  "hints": [
+    "Copying the entire store on every begin() turns nested transactions into O(n * depth) work. Instead, maintain a stack of delta maps for open transactions.",
+    "Use a dedicated sentinel object (tombstone) inside a transaction delta map to represent delete(key), so a delete inside an inner transaction properly shadows a value in an outer transaction or the base store.",
+    "On get(key), check transaction frames from top to bottom and stop at the first frame containing key (returning null for a tombstone). On commit(), merge the top delta into the parent delta (or apply sets/deletes to the base store if it was the outermost transaction). Intended complexity: O(1) average set/delete/begin and O(n) total work across n operations with shallow nesting, O(n) space."
+  ],
+  "inputSyntax": "Input: op1, op2, ... where ops are set k v | get k | delete k | begin | commit | rollback, for example: set a 1, begin, set a 2, get a, rollback, get a",
+  "sampleInput": "set a 1, begin, set a 2, get a, rollback, get a",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

@@ -71,4 +71,33 @@ class MarkdownHtmlTest {
                 .as("example inputs are placed inside an existing code element")
                 .isEqualTo("pairSum([1, 2], 3)");
     }
+
+    @Test
+    void rendersHeadingsAndFencedCodeBlocksWithEscapedContent() {
+        String markdown = """
+                # Top Heading
+                ## Section `dp[i]`
+                ### Subheading
+                Intro line.
+                ```java
+                if (a < b && b > 0) {
+                    return dp[i];
+                }
+                ```
+                Outro.""";
+
+        assertThat(MarkdownHtml.toHtml(markdown))
+                .isEqualTo("<h2>Top Heading</h2>"
+                        + "<h3>Section <code>dp[i]</code></h3>"
+                        + "<h4>Subheading</h4>"
+                        + "<p>Intro line.</p>"
+                        + "<pre><code>if (a &lt; b &amp;&amp; b &gt; 0) {\n    return dp[i];\n}</code></pre>"
+                        + "<p>Outro.</p>");
+
+        assertThat(MarkdownHtml.toHtml("```\n\nline\n```"))
+                .isEqualTo("<pre><code>\nline</code></pre>");
+
+        assertThat(MarkdownHtml.toHtml("```\nunclosed <tag>"))
+                .isEqualTo("<pre><code>unclosed &lt;tag&gt;</code></pre>");
+    }
 }

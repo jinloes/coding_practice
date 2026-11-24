@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
  * track notes.
  */
 public final class TrackCatalog {
-    /** Which tracks exist, in the order the UI lists them. */
-    private static final List<String> IDS = List.of("blind-75", "neetcode-150", "google", "apple", "atlassian");
+    /** The resource listing which tracks exist, in the order the UI lists them. */
+    static final String INDEX = "/tracks/index.txt";
 
-    private static final List<Guide> TRACKS = IDS.stream()
+    private static final List<Guide> TRACKS = indexedIds().stream()
             .map(id -> GuideCatalog.parse(id, read("/tracks/" + id + ".json"), ExerciseCatalog::find))
             .toList();
 
@@ -30,6 +30,10 @@ public final class TrackCatalog {
     private static final Map<String, List<Guide>> BY_EXERCISE = GuideCatalog.indexByExercise(TRACKS);
 
     private TrackCatalog() {
+    }
+
+    static List<String> indexedIds() {
+        return ExerciseCatalog.indexedIds(read(INDEX));
     }
 
     public static List<Guide> all() {

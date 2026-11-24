@@ -1,0 +1,30 @@
+{
+  "id": "text-line-justification",
+  "title": "Text Line Justification",
+  "topic": "Strings",
+  "difficulty": "Hard",
+  "statement": "Given an array of non-empty `words` and an integer `maxWidth`, pack as many words as possible onto each line in order and format every line to have **exact** length `maxWidth`.\n\nFormatting rules\n- **Greedy packing:** Pack consecutive words into a line as long as the sum of their lengths plus at least one space between adjacent words does not exceed `maxWidth`.\n- **Full justification (non-last lines with 2+ words):** Distribute the total padding spaces (`maxWidth - sumOfWordLengths`) as evenly as possible across the `gaps = wordCount - 1` gaps between words. If the spaces do not divide evenly, the leftmost `extra = spaces % gaps` gaps each receive one additional space.\n- **Left justification (the last line, or any line containing only 1 word):** Separate words by a single space and pad the right end with spaces until the line length equals `maxWidth`.\n\nContract\n- `words` has at least one word, and every word satisfies `1 <= word.length() <= maxWidth`.\n- Every returned string must have length equal to `maxWidth`.\n\nExamples\n- `[\"Ship\", \"clean\", \"code\", \"to\", \"teams\", \"every\", \"day.\"]`, `maxWidth = 14` ->\n  `\"Ship     clean\"`, `\"code  to teams\"`, `\"every day.    \"`.\n- `[\"Fast\", \"builds\", \"require\", \"instrumentation\", \"and\", \"tests\"]`, `maxWidth = 16` ->\n  `\"Fast      builds\"`, `\"require         \"`, `\"instrumentation \"`, `\"and tests       \"`.\n- `[\"Code\", \"well\"]`, `maxWidth = 10` -> `[\"Code well \"]`.\n",
+  "examples": [
+    {
+      "input": "14; Ship clean code to teams every day.",
+      "output": "[\"Ship     clean\", \"code  to teams\", \"every day.    \"]"
+    },
+    {
+      "input": "16; Fast builds require instrumentation and tests",
+      "output": "[\"Fast      builds\", \"require         \", \"instrumentation \", \"and tests       \"]"
+    },
+    {
+      "input": "10; Code well",
+      "output": "[\"Code well \"]"
+    }
+  ],
+  "hints": [
+    "Use an outer index i pointing to the first word of the next line. Advance j greedily while the words [i..j] fit within maxWidth with single spaces: lineWordChars + words[j].length() + (j - i) <= maxWidth.",
+    "Count wordsOnLine = j - i and totalSpaces = maxWidth - lineWordChars. Determine whether this line is left-justified: that happens if and only if j == words.length (last line) or wordsOnLine == 1.",
+    "For a left-justified line, join words with single spaces and append trailing spaces to reach maxWidth. For a fully justified line with gaps = wordsOnLine - 1, put base = totalSpaces / gaps spaces in every gap, plus 1 extra space in the first (totalSpaces % gaps) gaps. Intended complexity: O(totalChars) (O(n) in total output characters), O(maxWidth) working space (O(n) including output)."
+  ],
+  "inputSyntax": "Input: maxWidth; space-separated words, for example: 14; Ship clean code to teams every day.",
+  "sampleInput": "14; Ship clean code to teams every day.",
+  "intendedTime": "O(n)",
+  "intendedSpace": "O(n)"
+}

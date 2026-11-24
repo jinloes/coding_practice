@@ -1,0 +1,30 @@
+{
+  "id": "longest-word-chain",
+  "title": "Longest Word Chain",
+  "topic": "Dynamic Programming",
+  "difficulty": "Medium",
+  "statement": "Given an array of lowercase English `words`, a word `a` is a **predecessor** of word `b` if and only if inserting exactly one letter anywhere in `a` (without reordering the remaining letters) produces `b`. For example, `\"cat\"` is a predecessor of `\"chat\"`, while `\"tac\"` is not.\n\nA **word chain** is a sequence `[w_1, w_2, ..., w_k]` (`k >= 1`) where each `w_i` is a predecessor of `w_{i+1}` and every word comes from `words`. Return the maximum possible length of a word chain.\n\nContract\n- `words` may be empty (return `0`) and may contain duplicates (duplicates do not extend a chain because a predecessor must be strictly 1 character shorter).\n- Word lengths are positive and words are not guaranteed to be sorted.\n\nExamples\n- `[\"a\", \"at\", \"cat\", \"chat\", \"chart\", \"dog\"]` -> `5` (`\"a\" -> \"at\" -> \"cat\" -> \"chat\" -> \"chart\"`).\n- `[\"in\", \"pin\", \"spin\", \"spine\", \"spline\", \"on\"]` -> `5` (`\"in\" -> \"pin\" -> \"spin\" -> \"spine\" -> \"spline\"`).\n- `[\"team\", \"jira\"]` -> `1` (no word is a predecessor of another).\n",
+  "examples": [
+    {
+      "input": "a, at, cat, chat, chart, dog",
+      "output": "5"
+    },
+    {
+      "input": "in, pin, spin, spine, spline, on",
+      "output": "5"
+    },
+    {
+      "input": "team, jira",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Because every step increases word length by 1, sorting the words by ascending length guarantees that all possible predecessors of word w are processed before w.",
+    "Let dp[w] be the length of the longest word chain ending at w (initialized to 1). For each word w of length L, generate each of its L candidate predecessors by deleting one character at index i (0 <= i < L).",
+    "Look up each candidate predecessor in a HashMap<String, Integer> dp; set dp[w] = max(dp[w], dp.getOrDefault(pred, 0) + 1) and track the global maximum. Intended complexity: O(n log n + n * L^2) time (O(n log n) for bounded L), O(n * L) space."
+  ],
+  "inputSyntax": "Input: comma-separated words, for example: a, at, cat, chat, chart, dog",
+  "sampleInput": "a, at, cat, chat, chart, dog",
+  "intendedTime": "O(n log n)",
+  "intendedSpace": "O(n)"
+}

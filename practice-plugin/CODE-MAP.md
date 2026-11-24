@@ -13,9 +13,11 @@ practice-plugin/
   settings.gradle
   gradle.properties
   gradle/local-sandbox.gradle
+  scripts/catalog_tool.py   <1s static catalog validator & exercise scaffolder
   src/main/java/com/jinloes/practice_plugin/
     app/
     catalog/
+    coach/
     platform/
     run/
     state/
@@ -25,8 +27,10 @@ practice-plugin/
     VerificationMain.java
     JUnitSuiteRunner.java
   src/main/resources/
+    exercises/index.txt
     exercises/<id>/
     guides/<id>.json
+    tracks/index.txt
     tracks/<id>.json
     harness/ComplexityProbe.java
     META-INF/plugin.xml
@@ -43,11 +47,12 @@ practice-plugin/
 |---|---|---|
 | `app` | Cross-package application use cases | `LegacyImportService` |
 | `catalog` | Exercise, study guide, and practice track registries, manifest parsing, bundled example/verification libraries | `ExerciseCatalog`, `GuideCatalog`, `TrackCatalog`, `ExampleLibraries` |
+| `coach` | Post-submission AI Coach prompt assembly, sandboxed Copilot CLI execution, and SDK model discovery | `CoachPrompt`, `CopilotCoach`, `CopilotModels` |
 | `platform` | Safe filesystem ownership and OS differences | `OwnedDirectory`, `Os` |
 | `run` | Run/debug/check lifecycle, process control, reports, complexity | `PracticeRunner`, `ExampleExecution`, `RunEvent`, `RunDecisions` (pure run messages/decisions), `RunSession`, `FullCheck`, `FullCheckLaunchCleanup`, `CheckRunConfigurations`, `ExampleRunConfigurations`, `CheckResult`, `TestReports`, `ComplexityAnalysis` |
 | `runner` (`verificationRunner`) | Java 17 child-JVM coordinator and JUnit Platform XML runner packaged into `verification-runner.jar` | `VerificationMain`, `JUnitSuiteRunner` |
 | `state` | IntelliJ persistent state | `ManagedPracticeProgress`, legacy `PracticeProgress` |
-| `ui` | Tool window UI, rendering, and IDE actions | `PracticePanel`, `RunStatusPresenter`, `ExerciseFilters`, `AttemptBar`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `PracticeIdeActions`, `ExerciseCellRenderer`, `CustomInputPrompt`, `PracticePage`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
+| `ui` | Tool window UI, rendering, and IDE actions | `PracticePanel`, `RunStatusPresenter`, `CoachController`, `CoachSettingsDialog`, `ExerciseFilters`, `AttemptBar`, `ResultsView` (result and run banners), `HintButton`, `PracticeActions`, `PracticeIdeActions`, `ExerciseCellRenderer`, `CustomInputPrompt`, `PracticePage`, `PageView` (`LazyPageView`/`ReactPageView`/`HtmlPageView`), `PageJson`, `PageEvent`, `StudyGuideView`, `LimitsDialog`, `PracticeViews`, `BackgroundTasks`, `AttemptFiles`, `PracticeToolWindowFactory`, `MarkdownHtml` |
 | `workspace` | Durable attempts, IDE modules, generated checks, legacy format | `ManagedPracticeWorkspace`, `PracticeModuleWorkspace`, `GeneratedDirectories`, `VerificationWorkspace`, `PracticeWorkspace` |
 
 Dependencies should point toward focused lower-level services. Keep
@@ -60,7 +65,8 @@ Run from `practice-plugin/`:
 
 ```bash
 ./gradlew test
-./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest"
+python3 scripts/catalog_tool.py validate   # <1s static check of all exercises and tracks
+./gradlew test -Pfast                      # fast unit suite (excludes @Tag("catalog") and @Tag("gradle-integration"))
 ./gradlew test --tests "com.jinloes.practice_plugin.catalog.ExerciseCatalogTest" -PcatalogOnly=id1,id2
 ./gradlew check            # full suite plus the coverage gate
 ./gradlew buildPlugin
@@ -103,7 +109,9 @@ cd web && npm ci && npm test && npm run dev
 - Change `web/src/types.ts` and `ui/PageJson.java` together, and update
   `PageJsonTest`.
 - New page actions need a `PageEvent.Type` (`selectExercise`, `selectGuide`,
-  `selectTrack`, `clearFilters`, `startOrOpen`, `runExamples`, `runSample`), a
+  `selectTrack`, `clearFilters`, `startOrOpen`, `runExamples`, `runSample`,
+  `coachDiagnose`, `coachTranslate`, `coachCompare`, `coachFollowUp`,
+  `coachCancel`, `coachClear`, `coachSettings`), a
   handler in `PracticePanel.onPageEvent`, and a `PageEventTest` case.
 - Pages must work offline: Vite inlines all JS and CSS into one `index.html`,
   so do not add runtime CDN or font URLs.
@@ -201,8 +209,9 @@ also run after test failures with `--continue`.
    `ExerciseCatalogTest` compiles and runs it through `CatalogSandbox`.
 6. Add the exercise ID to every study guide whose technique it practices, and
    to any practice track whose list or commonly reported patterns it matches.
-7. Update the exercise and difficulty counts in the README.
-8. Run the catalog test, then the full plugin suite.
+7. Run `python3 scripts/catalog_tool.py validate`, then the catalog test
+   (`-PcatalogOnly=<id>`), then the full plugin suite. (You can also bootstrap
+   a new exercise with `python3 scripts/catalog_tool.py scaffold <id> --title ... --topic ... --difficulty ...`.)
 
 ## Adding A Study Guide
 
@@ -224,8 +233,9 @@ also run after test failures with `--continue`.
 ## Adding A Practice Track
 
 1. Choose a stable lowercase kebab-case ID (for example `blind-75` or a company
-   name) that does not collide with a guide ID, and append it to the ordered
-   `IDS` list in `TrackCatalog`.
+   name) that does not collide with a guide ID, and append it to
+   `src/main/resources/tracks/index.txt` in display order (`TrackCatalog` loads
+   from that index).
 2. Add `src/main/resources/tracks/<id>.json` using the guide manifest schema:
    `id`, `title`, `summary`, `lesson`, and `exercises`. The summary must state
    that the list is not an official or verified question list; company tracks
@@ -234,9 +244,10 @@ also run after test failures with `--continue`.
    `About this list`, `What to expect`, and `How to prepare`, in original
    words. Never copy third-party problem statements, scrape company-tag data,
    or claim specific questions.
-4. Add any missing exercises first (see Adding An Exercise), then update
-   `TrackCatalogTest` expectations and the README track list, and run
-   `TrackCatalogTest` and the full plugin suite.
+4. Add any missing exercises first (see Adding An Exercise), update the README
+   track list if needed, and run `python3 scripts/catalog_tool.py validate` and
+   `TrackCatalogTest` (which checks manifest invariants rather than hardcoded
+   membership lists).
 
 ### Exercise Assertions
 
