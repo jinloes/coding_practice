@@ -150,6 +150,8 @@ def validate_exercises(root: Path, errors: list[str]) -> dict[str, dict]:
             for forbidden in ("static void main", "@Test", "assertEquals", "assertPair", "assertValues"):
                 if forbidden in starter:
                     errors.append(f"{ex_id}/Solution.java: starter contains forbidden {forbidden!r}")
+            if re.search(r"public\s+static\s+(?:final\s+)?class\s+\w+", starter) and "public String toString()" not in starter:
+                errors.append(f"{ex_id}/Solution.java: nested static class must override toString() for readable assertion output")
 
         examples = data.get("examples")
         ex_count = len(examples) if isinstance(examples, list) else -1

@@ -6,6 +6,11 @@ public class Solution {
         public Node next;
 
         public Node(int value, Node next) { this.value = value; this.next = next; }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static Node reverseBetween(Node head, int start, int end) { Node prev = null, cur = head; while (cur != null) { Node next = cur.next; cur.next = prev; prev = cur; cur = next; } return prev; }
 }

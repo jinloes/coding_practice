@@ -6,6 +6,11 @@ public class Solution {
         public Node next;
 
         public Node(int value, Node next) { this.value = value; this.next = next; }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static Node kthFromEnd(Node head, int k) { if (k < 1) throw new IllegalArgumentException("k must be positive"); for (int i = 1; head != null && i < k; i++) head = head.next; return head; }
 }

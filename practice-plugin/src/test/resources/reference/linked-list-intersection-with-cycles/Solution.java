@@ -9,6 +9,11 @@ public class Solution {
             this.value = value;
             this.next = next;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static Node firstIntersection(Node first, Node second) { Node entryA = cycleEntry(first), entryB = cycleEntry(second); if (entryA == null && entryB == null) return acyclicIntersection(first, second, null); if (entryA == null || entryB == null) return null; if (entryA == entryB) { Node before = acyclicIntersection(first, second, entryA); return before == null ? entryA : before; } for (Node node = entryA.next; node != entryA; node = node.next) if (node == entryB) return entryA; return null; }
     private static Node cycleEntry(Node head) { Node slow = head, fast = head; while (fast != null && fast.next != null) { slow = slow.next; fast = fast.next.next; if (slow == fast) { Node entry = head; while (entry != slow) { entry = entry.next; slow = slow.next; } return entry; } } return null; }

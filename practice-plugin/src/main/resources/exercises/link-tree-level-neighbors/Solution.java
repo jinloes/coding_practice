@@ -9,6 +9,11 @@ public class Solution {
 
         public Node(int value) { this.value = value; }
         public Node(int value, Node left, Node right) { this.value = value; this.left = left; this.right = right; }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
 
     public static Node connect(Node root) {

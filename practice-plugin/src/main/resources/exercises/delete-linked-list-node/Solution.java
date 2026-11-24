@@ -9,6 +9,11 @@ public class Solution {
             this.value = value;
             this.next = next;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static void deleteNode(Node node) { throw new UnsupportedOperationException("Implement deleteNode"); }
 }

@@ -9,6 +9,11 @@ public class Solution {
             this.value = value;
             this.next = next;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static void deleteNode(Node node) { if (node == null || node.next == null) throw new IllegalArgumentException("node must be non-tail"); node.value = node.next.value; node.next = node.next.next; }
 }

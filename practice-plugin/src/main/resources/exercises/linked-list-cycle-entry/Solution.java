@@ -9,6 +9,11 @@ public class Solution {
             this.value = value;
             this.next = next;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static Node cycleEntry(Node head) { throw new UnsupportedOperationException("Implement cycleEntry"); }
 }

@@ -9,6 +9,11 @@ public class Solution {
             this.value = value;
             this.next = next;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static Node cycleEntry(Node head) { Node slow = head, fast = head; while (fast != null && fast.next != null) { slow = slow.next; fast = fast.next.next; if (slow == fast) { Node entry = head; while (entry != slow) { entry = entry.next; slow = slow.next; } return entry; } } return null; }
 }

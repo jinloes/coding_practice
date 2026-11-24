@@ -17,6 +17,11 @@ public class Solution {
             this.left = left;
             this.right = right;
         }
+
+        @Override
+        public String toString() {
+            return "TreeNode(value=" + value + ")";
+        }
     }
 
     public static List<Integer> rightSideView(TreeNode root) {

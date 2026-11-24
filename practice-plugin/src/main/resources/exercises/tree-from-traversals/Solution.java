@@ -15,6 +15,11 @@ public class Solution {
             this.left = left;
             this.right = right;
         }
+
+        @Override
+        public String toString() {
+            return "TreeNode(value=" + value + ")";
+        }
     }
 
     public static TreeNode buildTree(int[] preorder, int[] inorder) {

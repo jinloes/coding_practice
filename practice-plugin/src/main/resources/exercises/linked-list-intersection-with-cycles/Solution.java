@@ -9,6 +9,11 @@ public class Solution {
             this.value = value;
             this.next = next;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
     public static Node firstIntersection(Node first, Node second) { throw new UnsupportedOperationException("Implement firstIntersection"); }
 }

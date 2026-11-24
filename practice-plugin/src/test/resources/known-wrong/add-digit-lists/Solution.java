@@ -8,6 +8,11 @@ public class Solution {
         public ListNode(int val) {
             this.val = val;
         }
+
+        @Override
+        public String toString() {
+            return "ListNode(val=" + val + ")";
+        }
     }
 
     public static ListNode addDigitLists(ListNode a, ListNode b) {

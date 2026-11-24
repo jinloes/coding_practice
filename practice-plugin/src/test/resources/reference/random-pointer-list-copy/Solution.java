@@ -9,6 +9,11 @@ public class Solution {
         public Node(int value) {
             this.value = value;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
 
     public static Node copyList(Node head) {

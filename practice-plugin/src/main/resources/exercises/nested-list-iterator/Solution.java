@@ -38,6 +38,11 @@ public class Solution {
             }
             return list;
         }
+
+        @Override
+        public String toString() {
+            return isInteger() ? String.valueOf(integer) : list.toString();
+        }
     }
 
     public Solution(List<NestedValue> items) {

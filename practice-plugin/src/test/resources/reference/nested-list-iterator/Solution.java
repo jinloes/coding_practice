@@ -41,6 +41,11 @@ public class Solution {
             }
             return list;
         }
+
+        @Override
+        public String toString() {
+            return isInteger() ? String.valueOf(integer) : list.toString();
+        }
     }
 
     private final Deque<Iterator<NestedValue>> stack = new ArrayDeque<>();

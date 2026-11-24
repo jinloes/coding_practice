@@ -11,6 +11,11 @@ public class Solution {
             this.value = value;
             this.next = next;
         }
+
+        @Override
+        public String toString() {
+            return "Node(value=" + value + ")";
+        }
     }
 
     public static Node mergeKLists(Node[] lists) {

@@ -15,6 +15,11 @@ public class Solution {
             this.value = value;
             this.neighbors = new ArrayList<>();
         }
+
+        @Override
+        public String toString() {
+            return "GraphNode(value=" + value + ")";
+        }
     }
 
     public static GraphNode cloneGraph(GraphNode node) {

@@ -9,6 +9,11 @@ public class Solution {
         public TreeNode(int val) {
             this.val = val;
         }
+
+        @Override
+        public String toString() {
+            return "TreeNode(val=" + val + ")";
+        }
     }
 
     public static int diameter(TreeNode root) {

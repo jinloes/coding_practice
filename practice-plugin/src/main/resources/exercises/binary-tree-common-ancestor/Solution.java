@@ -4,6 +4,11 @@ public class Solution {
         public int value; public TreeNode left; public TreeNode right;
         public TreeNode(int value) { this.value = value; }
         public TreeNode(int value, TreeNode left, TreeNode right) { this.value = value; this.left = left; this.right = right; }
+
+        @Override
+        public String toString() {
+            return "TreeNode(value=" + value + ")";
+        }
     }
     public static TreeNode lowestCommonAncestor(TreeNode root,TreeNode first,TreeNode second){ throw new UnsupportedOperationException("Implement lowestCommonAncestor"); }
 }
