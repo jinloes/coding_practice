@@ -1,7 +1,9 @@
 {
   "id": "max-stack-with-pop-max",
   "title": "Max Stack With Pop Max",
-  "topic": "Stacks",
+  "topics": [
+    "Stacks"
+  ],
   "difficulty": "Hard",
   "statement": "Build a stack of integers that can also reveal and remove the current maximum value.\n\nContract\n- Construct an empty stack with `new Solution()`.\n- `push(x)` places `x` on top. `pop()` removes and returns the top value. `top()` returns the top value without removing it.\n- `peekMax()` returns the largest value currently in the stack.\n- `popMax()` removes and returns the largest value; if the maximum occurs more than once, remove the one closest to the top.\n- Tests only call read/remove operations when the stack is non-empty.\n\nExamples\n- Pushing `5, 1, 5`, then calling `top()` returns `5`.\n- Continuing from that stack, `popMax()` returns `5`, and the remaining top is `1`.\n",
   "examples": [

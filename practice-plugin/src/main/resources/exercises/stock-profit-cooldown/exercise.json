@@ -1,7 +1,9 @@
 {
   "id": "stock-profit-cooldown",
   "title": "Stock Profit with Cooldown",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Find the best total profit from trading one stock over several days when every sale forces a rest day.\n\nContract\n- `prices[i]` is the price on day `i`; `prices` is non-null and may be empty, and every price is non-negative.\n- You may hold at most one share at a time, and you may buy and sell as often as you like (one action per day).\n- After a sale you cannot buy on the very next day; that day is a cooldown. Buying again two or more days after a sale is fine.\n- Return the largest total profit; it is 0 when no profitable trade exists. Do not mutate `prices`.\n\nExamples\n- `maxProfit(new int[]{1, 2, 3, 0, 2})` returns `3`: buy at 1, sell at 3, rest a day, buy at 0, sell at 2.\n- `maxProfit(new int[]{5, 4, 3})` returns `0`: prices only fall, so never trade.\n- `maxProfit(new int[]{1, 4, 2, 7})` returns `6`: buy at 1 and sell at 7; selling at 4 forces a rest day, so the dip to 2 cannot be bought.\n",
   "examples": [

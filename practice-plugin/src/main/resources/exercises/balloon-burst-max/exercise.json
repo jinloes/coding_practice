@@ -1,7 +1,9 @@
 {
   "id": "balloon-burst-max",
   "title": "Balloon Burst Max",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Hard",
   "statement": "Pop a row of numbered balloons in the best order to collect the most coins.\n\nContract\n- `values` is non-null and may be empty; each entry is between 0 and 100 and the best total fits in an `int`.\n- Popping the balloon at some position pays `left * value * right` coins, where `left` and `right` are the values of the nearest balloons that have not been popped yet.\n- A missing neighbour (past either end of the row) counts as 1. Every balloon must be popped, one at a time.\n- Return the largest total number of coins over all pop orders; an empty row earns 0. Do not mutate `values`.\n\nExamples\n- `maxCoins(new int[]{3, 1, 5})` returns `35`.\n- `maxCoins(new int[]{7})` returns `7` because both neighbours count as 1.\n- `maxCoins(new int[]{})` returns `0`.\n",
   "examples": [

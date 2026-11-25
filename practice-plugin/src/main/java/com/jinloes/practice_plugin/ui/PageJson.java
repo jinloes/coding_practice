@@ -82,7 +82,7 @@ final class PageJson {
         JsonObject problem = new JsonObject();
         problem.addProperty("id", exercise.id());
         problem.addProperty("title", exercise.title());
-        problem.addProperty("topic", exercise.topic());
+        problem.add("topics", stringArray(exercise.topics()));
         problem.addProperty("difficulty", exercise.difficulty());
         problem.addProperty("passed", source.passed().contains(exercise.id()));
         problem.addProperty("statement", exercise.statement());
@@ -119,7 +119,7 @@ final class PageJson {
                 JsonObject item = new JsonObject();
                 item.addProperty("id", exercise.id());
                 item.addProperty("title", exercise.title());
-                item.addProperty("topic", exercise.topic());
+                item.add("topics", stringArray(exercise.topics()));
                 item.addProperty("passed", passed.contains(exercise.id()));
                 item.addProperty("selected", exercise.equals(selected));
                 exercises.add(item);
@@ -240,6 +240,12 @@ final class PageJson {
             links.add(link);
         });
         return links;
+    }
+
+    private static JsonArray stringArray(List<String> values) {
+        JsonArray array = new JsonArray();
+        values.forEach(array::add);
+        return array;
     }
 
     private static JsonObject kind(String kind) {

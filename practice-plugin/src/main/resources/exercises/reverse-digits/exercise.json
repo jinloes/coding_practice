@@ -1,7 +1,10 @@
 {
   "id": "reverse-digits",
   "title": "Reverse Digits",
-  "topic": "Math",
+  "topics": [
+    "Math",
+    "Bit Manipulation"
+  ],
   "difficulty": "Medium",
   "statement": "Reverse the decimal digits of a 32-bit signed integer, returning 0 if the result does not fit in 32 bits.\n\nContract\n- Reverse the digits of the absolute value and keep the original sign. Trailing zeros of the input become leading zeros and vanish, so `120` becomes `21`.\n- If the reversed value is outside the range of `int` (below `-2147483648` or above `2147483647`), return `0`.\n- `0` returns `0`. `Integer.MIN_VALUE` reverses to something too large, so it returns `0`.\n- Do not use `long`, `double`, `BigInteger`, or strings to hold the reversed number; detect the overflow before it happens using `int` arithmetic only.\n\nExamples\n- `reverseDigits(1203)` returns `3021`.\n- `reverseDigits(-450)` returns `-54`.\n- `reverseDigits(1563847412)` returns `0`, because the reversal `2147483651` exceeds `2147483647`.\n",
   "examples": [

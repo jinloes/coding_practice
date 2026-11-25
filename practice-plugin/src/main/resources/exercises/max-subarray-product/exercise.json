@@ -1,7 +1,10 @@
 {
   "id": "max-subarray-product",
   "title": "Maximum Subarray Product",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Find the largest product over all non-empty contiguous slices of an array.\n\nContract\n- `numbers` is non-null and has at least one element; values may be any `int`, including zero and negatives.\n- A subarray is a non-empty run of adjacent elements. Return the largest product of any subarray.\n- The product of every subarray is guaranteed to fit in a `long`, which is also the return type. Do not mutate `numbers`.\n\nExamples\n- `maxSubarrayProduct(new int[]{1, -2, 3, -4})` returns `24`.\n- `maxSubarrayProduct(new int[]{-3, 0, -2})` returns `0`.\n- `maxSubarrayProduct(new int[]{-6})` returns `-6`.\n",
   "examples": [

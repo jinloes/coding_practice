@@ -1,7 +1,10 @@
 {
   "id": "minimum-eating-speed",
   "title": "Minimum Eating Speed",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Arrays"
+  ],
   "difficulty": "Medium",
   "statement": "A hungry guest must clear every plate in a buffet within a time limit; find the slowest steady eating rate that still makes it.\n\nContract\n- `piles` is non-null and non-empty, every pile size is a positive `int`, and `hours >= piles.length` so an answer always exists.\n- At speed `k` the guest eats from one pile per hour: that hour removes up to `k` items from the chosen pile, and if the pile has fewer than `k` items left the rest of that hour is wasted.\n- Return the smallest integer `k >= 1` such that all piles can be finished in at most `hours` hours.\n- Total hours can exceed the `int` range for tiny speeds, so count hours with `long`. Do not mutate `piles`.\n\nExamples\n- `minimumSpeed(new int[]{4, 9, 11}, 5)` returns `6`: that needs `1 + 2 + 2 = 5` hours, while speed `5` needs `6`.\n- `minimumSpeed(new int[]{10, 10}, 2)` returns `10`.\n- `minimumSpeed(new int[]{7, 1, 3}, 100)` returns `1`.\n",
   "examples": [

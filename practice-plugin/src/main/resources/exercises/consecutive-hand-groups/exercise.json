@@ -1,7 +1,9 @@
 {
   "id": "consecutive-hand-groups",
   "title": "Consecutive Hand Groups",
-  "topic": "Greedy",
+  "topics": [
+    "Greedy"
+  ],
   "difficulty": "Medium",
   "statement": "Check whether a hand of numbered cards can be dealt out completely into runs of consecutive values.\n\nContract\n- `cards` is a non-null array of ints (duplicates allowed, possibly empty) and `groupSize` is the required size of every run.\n- Every card must be used exactly once, in a group of exactly `groupSize` cards whose values are consecutive (`v, v + 1, ..., v + groupSize - 1`).\n- Return `true` if such a split exists. An empty hand can be split trivially.\n- Throw `IllegalArgumentException` when `groupSize` is less than 1. Do not mutate `cards`.\n\nExamples\n- `canGroup(new int[]{4, 5, 6, 9, 10, 11}, 3)` returns `true` (runs 4-6 and 9-11).\n- `canGroup(new int[]{1, 2, 3, 5}, 2)` returns `false`.\n- `canGroup(new int[]{8}, 1)` returns `true`.\n",
   "examples": [

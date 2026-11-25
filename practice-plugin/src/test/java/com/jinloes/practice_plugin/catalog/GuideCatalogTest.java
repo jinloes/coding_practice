@@ -139,7 +139,7 @@ class GuideCatalogTest {
     }
 
     private static Exercise fake(String id, String difficulty) {
-        return new Exercise(id, id.toUpperCase(), "Topic", difficulty, "Statement", List.of(), List.of(),
+        return new Exercise(id, id.toUpperCase(), List.of("Topic"), difficulty, "Statement", List.of(), List.of(),
                 "Input: x", "x", "O(1)", "O(1)", 0, 0);
     }
 }

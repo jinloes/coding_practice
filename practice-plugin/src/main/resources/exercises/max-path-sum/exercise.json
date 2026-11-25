@@ -1,7 +1,9 @@
 {
   "id": "max-path-sum",
   "title": "Max Path Sum",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Hard",
   "statement": "Find the largest total that any path through a binary tree can collect.\n\nContract\n- `root` is non-null. Nodes have an integer `value`, possibly negative, and nullable `left` and `right` children.\n- A path is a non-empty chain of nodes in which each consecutive pair is joined by a parent-child edge and no node appears twice. It may start and end at any nodes and does not have to pass through the root or end at a leaf.\n- Return the greatest sum of values over all such paths. The answer is guaranteed to fit in an `int`.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[1, 2, 3]` returns 6, by going from 2 up through 1 and down to 3.\n- `[5, -4, 6, null, 3]` returns 11, by taking 5 and 6 and skipping the negative branch.\n- `[-7]` returns -7, because a path must contain at least one node.\n",
   "examples": [

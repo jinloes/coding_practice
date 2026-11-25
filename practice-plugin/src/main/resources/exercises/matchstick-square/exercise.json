@@ -1,7 +1,9 @@
 {
   "id": "matchstick-square",
   "title": "Matchstick Square",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether every matchstick can be used as one side segment of a square.\n\nContract\n- `matchsticks` is non-null and contains non-negative lengths.\n- Every matchstick must be assigned to exactly one of four sides with equal positive total length.\n- Return `false` for fewer than four sticks, total length zero, a total not divisible by four, or no valid assignment. Do not mutate the input.\n\nExamples\n- `canFormSquare(new int[]{1, 1, 2, 2, 2})` returns `true`.\n- `canFormSquare(new int[]{3, 3, 3, 3, 4})` returns `false`.\n- `canFormSquare(new int[]{0, 0, 0, 0})` returns `false`.\n",
   "examples": [

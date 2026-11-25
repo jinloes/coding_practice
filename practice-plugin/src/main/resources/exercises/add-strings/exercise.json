@@ -1,7 +1,11 @@
 {
   "id": "add-strings",
   "title": "Add Strings",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Two Pointers",
+    "Math"
+  ],
   "difficulty": "Easy",
   "statement": "Add two non-negative integers that are written as decimal strings.\n\nContract\n- `first` and `second` are non-null, non-empty, and contain only the digits `0`\n  through `9`. Neither has a leading zero unless it is exactly `\"0\"`.\n- Either number may have thousands of digits, far more than a `long` holds.\n  Do not convert a whole input to a numeric type or use `BigInteger`.\n- Return the sum as a decimal string in the same form: digits only, with no\n  leading zeros unless the sum is `\"0\"`.\n\nExamples\n- `addStrings(\"456\", \"77\")` returns `\"533\"`.\n- `addStrings(\"1\", \"999\")` returns `\"1000\"`.\n- `addStrings(\"0\", \"0\")` returns `\"0\"`.\n",
   "examples": [

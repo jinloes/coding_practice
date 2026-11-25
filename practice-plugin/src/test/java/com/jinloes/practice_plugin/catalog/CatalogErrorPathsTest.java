@@ -23,8 +23,18 @@ class CatalogErrorPathsTest {
 
     @Test
     void exerciseValueObjectsRejectInvalidRequiredFieldsAndCounts() {
-        assertThat(new Exercise("demo", "Demo", "Topic", "Easy", "Statement", List.of(example()), List.of("hint"),
-                "Input: x", "x", "O(1)", "O(1)", 1, 2).fullCount()).isEqualTo(2);
+        Exercise valid = new Exercise("demo", "Demo", List.of("Arrays", "Two Pointers"), "Easy", "Statement",
+                List.of(example()), List.of("hint"), "Input: x", "x", "O(1)", "O(1)", 1, 2);
+        assertThat(valid.fullCount()).isEqualTo(2);
+        assertThat(valid.topic()).isEqualTo("Arrays");
+        assertThat(valid.topicSummary()).isEqualTo("Arrays · Two Pointers");
+
+        assertInvalidExercise("empty topics", () -> new Exercise("demo", "Demo", List.of(), "Easy", "Statement",
+                List.of(example()), List.of("hint"), "Input: x", "x", "O(1)", "O(1)", 1, 1));
+        assertInvalidExercise("blank topic", () -> new Exercise("demo", "Demo", List.of(" "), "Easy", "Statement",
+                List.of(example()), List.of("hint"), "Input: x", "x", "O(1)", "O(1)", 1, 1));
+        assertInvalidExercise("duplicate topics", () -> new Exercise("demo", "Demo", List.of("Arrays", "Arrays"),
+                "Easy", "Statement", List.of(example()), List.of("hint"), "Input: x", "x", "O(1)", "O(1)", 1, 1));
 
         assertInvalidExercise("input syntax",
                 () -> exerciseWith(" ", "x", "O(1)", "O(1)", List.of(example()), 1, 1));
@@ -223,7 +233,7 @@ class CatalogErrorPathsTest {
             int exampleCount,
             int fullCount
     ) {
-        return new Exercise("demo", "Demo", "Topic", "Easy", "Statement", examples, List.of("hint"),
+        return new Exercise("demo", "Demo", List.of("Topic"), "Easy", "Statement", examples, List.of("hint"),
                 inputSyntax, sampleInput, intendedTime, intendedSpace, exampleCount, fullCount);
     }
 
@@ -245,7 +255,7 @@ class CatalogErrorPathsTest {
     }
 
     private static String manifest(String id, String examples, String hints) {
-        return "{\"id\":\"" + id + "\",\"title\":\"Demo\",\"topic\":\"Topic\",\"difficulty\":\"Easy\","
+        return "{\"id\":\"" + id + "\",\"title\":\"Demo\",\"topics\":[\"Topic\"],\"difficulty\":\"Easy\","
                 + "\"statement\":\"Contract\\nExamples\",\"examples\":[" + examples + "],"
                 + "\"hints\":[" + hints + "],\"inputSyntax\":\"Input: x\",\"sampleInput\":\"x\","
                 + "\"intendedTime\":\"O(1)\",\"intendedSpace\":\"O(1)\"}";
@@ -274,7 +284,7 @@ class CatalogErrorPathsTest {
     }
 
     private static Exercise fake(String id, String difficulty) {
-        return new Exercise(id, id.toUpperCase(), "Topic", difficulty, "Statement", List.of(), List.of(),
+        return new Exercise(id, id.toUpperCase(), List.of("Topic"), difficulty, "Statement", List.of(), List.of(),
                 "Input: x", "x", "O(1)", "O(1)", 0, 0);
     }
 

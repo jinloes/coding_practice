@@ -1,7 +1,9 @@
 {
   "id": "tree-max-depth",
   "title": "Tree Max Depth",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Easy",
   "statement": "Count how many nodes lie on the longest downward path of a binary tree.\n\nContract\n- `root` may be null. Each node has an integer `value` and nullable `left` and `right` children.\n- Return the number of nodes on the longest path that starts at the root and ends at a leaf; an empty tree has depth 0.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[3, 9, 20, null, null, 15, 7]` has depth 3.\n- A null tree has depth 0.\n- `[4, 2, null, 1]` leans left and has depth 3.\n",
   "examples": [

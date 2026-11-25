@@ -1,7 +1,9 @@
 {
   "id": "binary-tree-common-ancestor",
   "title": "Binary Tree Common Ancestor",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "Find the lowest node in a general binary tree that contains two given nodes in its subtree.\n\nContract\n- `root`, `first`, and `second` are node references from the same node type. A node may be its own ancestor.\n- Return the lowest common ancestor by object identity when both requested nodes are present in the tree rooted at `root`.\n- Return null if the tree is empty or either requested node is not present. The tree is not necessarily a search tree, and values may repeat.\n\nExamples\n`lowestCommonAncestor(root, root.left, root.right).value` in tree `[3, 5, 1, 6, 2, 0, 8]` => `3`\n`lowestCommonAncestor(root, root.left, root.left.right).value` in that tree => `5`\n`lowestCommonAncestor(null, new TreeNode(1), new TreeNode(2))` => `null`\n",
   "examples": [

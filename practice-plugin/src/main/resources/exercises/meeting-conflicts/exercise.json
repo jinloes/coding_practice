@@ -1,7 +1,9 @@
 {
   "id": "meeting-conflicts",
   "title": "Meeting Conflicts",
-  "topic": "Intervals",
+  "topics": [
+    "Intervals"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether one person can attend every meeting on a calendar.\n\nContract\n- `meetings` is non-null, unsorted, and may be empty. Each meeting is `{start, end}` with\n  `start < end`; values may be any `int`, including extreme ones.\n- Meetings are half-open: `{start, end}` occupies `[start, end)`. A meeting that starts exactly\n  when another ends does not conflict with it.\n- Return `true` when no two meetings overlap, `false` otherwise. Identical meetings conflict.\n- Do not mutate `meetings`.\n\nExamples\n- `canAttendAll({{9, 10}, {10, 11}, {13, 14}})` returns `true`.\n- `canAttendAll({{1, 5}, {4, 8}})` returns `false`.\n- `canAttendAll({})` returns `true`.\n",
   "examples": [

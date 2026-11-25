@@ -1,13 +1,25 @@
 {
   "id": "island-count",
   "title": "Island Count",
-  "topic": "Graphs",
+  "topics": [
+    "Graphs",
+    "Matrices"
+  ],
   "difficulty": "Medium",
   "statement": "Count the islands on a map made of land and water cells.\n\nContract\n- `grid` is a rectangular `char[][]` (possibly empty) containing only `'1'` (land) and `'0'` (water).\n- An island is a maximal group of land cells connected through shared edges: up, down, left, or right. Diagonal neighbors are not connected.\n- Return the number of islands.\n- Your method may modify the grid, for example to mark visited cells; tests do not rely on it being unchanged.\n\nExamples\n- Rows `110`, `010`, `001` contain 2 islands.\n- A grid of only water contains 0 islands.\n- Rows `101`, `010`, `101` contain 5 islands, because diagonal cells do not connect.\n",
   "examples": [
-    {"input": "grid = [110, 010, 001]", "output": "2"},
-    {"input": "grid = [000, 000]", "output": "0"},
-    {"input": "grid = [101, 010, 101]", "output": "5"}
+    {
+      "input": "grid = [110, 010, 001]",
+      "output": "2"
+    },
+    {
+      "input": "grid = [000, 000]",
+      "output": "0"
+    },
+    {
+      "input": "grid = [101, 010, 101]",
+      "output": "5"
+    }
   ],
   "hints": [
     "Every island is a connected component of land cells, so count how many separate components exist.",

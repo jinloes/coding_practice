@@ -1,7 +1,9 @@
 {
   "id": "edit-distance",
   "title": "Edit Distance",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Count the fewest single-letter edits that turn one word into another.\n\nContract\n- `from` and `to` are non-null lowercase strings of any length, including empty.\n- One edit inserts a letter anywhere, deletes a letter, or replaces a letter with a different one. Each edit costs 1.\n- Return the minimum number of edits that makes `from` equal to `to`; identical words need 0.\n- Do not assume the words have the same length. Inputs are not mutated.\n\nExamples\n- `minEdits(\"planet\", \"plant\")` returns `1` (delete the `e`).\n- `minEdits(\"flaw\", \"lawn\")` returns `2` (delete `f`, then append `n`).\n- `minEdits(\"\", \"abc\")` returns `3`.\n",
   "examples": [

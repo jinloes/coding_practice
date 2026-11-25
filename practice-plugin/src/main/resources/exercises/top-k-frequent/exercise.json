@@ -1,7 +1,10 @@
 {
   "id": "top-k-frequent",
   "title": "Top K Frequent Values",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Find the k values that occur most often in an array.\n\nContract\n- `numbers` is a non-null, non-empty array of any `int` values, including negatives and the extremes of the `int` range.\n- `k` is between 1 and the number of distinct values in `numbers`.\n- The answer is guaranteed to be unambiguous: no value left out occurs as often as a value that is returned.\n- Return an array of exactly `k` distinct values in any order. Do not modify `numbers`.\n\nExamples\n- For `[1, 1, 1, 2, 2, 3]` and `k = 2`, the answer is `1` and `2` in any order.\n- For `[5]` and `k = 1`, the answer is `[5]`.\n- For `[4, 4, -1, -1, -1, 7]` and `k = 1`, the answer is `[-1]`.\n",
   "examples": [

@@ -1,7 +1,11 @@
 {
   "id": "timestamped-key-value-store",
   "title": "Timestamped Key-Value Store",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Strings",
+    "Data Structures"
+  ],
   "difficulty": "Medium",
   "statement": "Build a store that remembers every value a key has ever held and can answer what the value was at a given moment.\n\nContract\n- `set(key, value, time)` records that `key` holds `value` from `time` onward. Keys and values are non-null strings; `time` is a positive `int`.\n- For any one key, successive `set` calls use strictly increasing times. Different keys are independent and their times are unrelated.\n- `get(key, time)` returns the value from the most recent `set` of `key` whose time is at most `time`.\n- If the key was never set, or every `set` of it happened after `time`, `get` returns the empty string `\"\"`.\n- Earlier values stay available: a later `set` never changes the answer to a `get` for an earlier time.\n\nExamples\n- After `set(\"cat\", \"meow\", 5)`: `get(\"cat\", 5)` is `\"meow\"`, `get(\"cat\", 4)` is `\"\"` and `get(\"cat\", 9)` is `\"meow\"`.\n- After `set(\"a\", \"x\", 1)` and `set(\"a\", \"y\", 4)`: `get(\"a\", 3)` is `\"x\"`, `get(\"a\", 4)` is `\"y\"` and `get(\"a\", 1)` is `\"x\"`.\n- A new store answers `get(\"ghost\", 1)` with `\"\"`.\n",
   "examples": [

@@ -19,11 +19,23 @@ class CoachPromptTest {
         assertThat(diagnose)
                 .contains("Do NOT dump a complete optimal solution.")
                 .contains("trust <learner_code> as the source of truth.")
+                .contains("step-by-step Markdown trace table")
                 .contains("<learner_code>\nclass Solution {}\n</learner_code>")
                 .contains("<check_output>\nExpected [0, 1] but got [1, 0]\n</check_output>")
                 .contains("Action: Diagnose my attempt")
+                .doesNotContain("Dynamic Programming coaching note:")
                 .doesNotContain("Measured complexity:")
                 .doesNotContain("## Prior Conversation");
+
+        ExerciseCatalog.Exercise dpExercise = ExerciseCatalog.find("max-subarray-product");
+        String trace = CoachPrompt.build(new CoachPrompt.Request(
+                dpExercise, CoachPrompt.Mode.TRACE_EXAMPLE, "class Solution {}", "ASSERTION_FAILED",
+                "Expected 24 but got 40", "", List.of(), ""));
+        assertThat(trace)
+                .contains("Walk through one small, concrete example")
+                .contains("Dynamic Programming coaching note:")
+                .contains("what question the DP state answers at step i")
+                .contains("Action: Trace an example");
 
         String translate = CoachPrompt.build(new CoachPrompt.Request(
                 EXERCISE, CoachPrompt.Mode.TRANSLATE, "int f() { return 0; }", "TIMED_OUT",
@@ -99,7 +111,7 @@ class CoachPromptTest {
         assertThat(prompt.length()).isLessThanOrEqualTo(CoachPrompt.MAX_PROMPT_CHARS);
 
         ExerciseCatalog.Exercise hugeStatementExercise = new ExerciseCatalog.Exercise(
-                "huge", "Huge", "Arrays", "Easy", "W".repeat(CoachPrompt.MAX_PROMPT_CHARS),
+                "huge", "Huge", List.of("Arrays"), "Easy", "W".repeat(CoachPrompt.MAX_PROMPT_CHARS),
                 List.of(), List.of(), "n", "1", "O(n)", "O(1)", 0, 0);
         String boundedStatementPrompt = CoachPrompt.build(new CoachPrompt.Request(
                 hugeStatementExercise, CoachPrompt.Mode.FOLLOW_UP,

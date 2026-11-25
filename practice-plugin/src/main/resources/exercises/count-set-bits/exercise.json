@@ -1,7 +1,9 @@
 {
   "id": "count-set-bits",
   "title": "Count Set Bits",
-  "topic": "Bit Manipulation",
+  "topics": [
+    "Bit Manipulation"
+  ],
   "difficulty": "Easy",
   "statement": "Count how many bits are set to 1 in a 32-bit integer.\n\nContract\n- `value` is any `int`. Treat it as an unsigned 32-bit pattern, so negative numbers have their\n  sign bit and all other bits counted like any other bit.\n- Return a number from `0` to `32`.\n- `Integer.bitCount` and similar built-ins defeat the purpose of the exercise, so avoid them.\n  The tests cannot enforce this.\n\nExamples\n- `countSetBits(11)` returns `3` because `11` is `1011` in binary.\n- `countSetBits(0)` returns `0`.\n- `countSetBits(-1)` returns `32` because every bit is set.\n",
   "examples": [

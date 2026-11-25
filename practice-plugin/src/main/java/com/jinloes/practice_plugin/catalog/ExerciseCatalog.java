@@ -41,7 +41,7 @@ public final class ExerciseCatalog {
     public record Exercise(
             String id,
             String title,
-            String topic,
+            List<String> topics,
             String difficulty,
             String statement,
             List<Example> examples,
@@ -56,7 +56,12 @@ public final class ExerciseCatalog {
         public Exercise {
             id = Objects.requireNonNull(id, "id");
             title = Objects.requireNonNull(title, "title");
-            topic = Objects.requireNonNull(topic, "topic");
+            topics = List.copyOf(Objects.requireNonNull(topics, "topics"));
+            if (topics.isEmpty() || topics.stream().anyMatch(String::isBlank)
+                    || new HashSet<>(topics).size() != topics.size()) {
+                throw new IllegalArgumentException(
+                        "Exercise topics must be a non-empty list of unique non-blank strings");
+            }
             difficulty = Objects.requireNonNull(difficulty, "difficulty");
             statement = Objects.requireNonNull(statement, "statement");
             examples = List.copyOf(Objects.requireNonNull(examples, "examples"));
@@ -73,6 +78,16 @@ public final class ExerciseCatalog {
             if (exampleCount < 0 || fullCount < exampleCount || examples.size() != exampleCount) {
                 throw new IllegalArgumentException("Invalid exercise test counts");
             }
+        }
+
+        /** The primary topic (first entry in {@link #topics()}). */
+        public String topic() {
+            return topics.getFirst();
+        }
+
+        /** All topics joined for compact UI display. */
+        public String topicSummary() {
+            return String.join(" · ", topics);
         }
     }
 
@@ -195,7 +210,9 @@ public final class ExerciseCatalog {
         return new Exercise(
                 id,
                 text(manifest, id, "title"),
-                text(manifest, id, "topic"),
+                array(manifest, id, "topics").asList().stream()
+                        .map(element -> string(element, id, "topics"))
+                        .toList(),
                 text(manifest, id, "difficulty"),
                 text(manifest, id, "statement"),
                 array(manifest, id, "examples").asList().stream()

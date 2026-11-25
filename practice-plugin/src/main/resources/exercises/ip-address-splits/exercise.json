@@ -1,7 +1,10 @@
 {
   "id": "ip-address-splits",
   "title": "IP Address Splits",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "List every valid dotted IPv4 address that can be made by cutting a digit string into four pieces.\n\nContract\n- `digits` is non-null and contains only decimal digits. Lengths outside 4 through 12 have no valid split.\n- Return every address formed by four parts in their original order. Each part must be between `0` and `255`, inclusive.\n- A multi-digit part may not start with `0`; the single part `0` is allowed.\n- Return addresses in lexicographic cut order: try shorter earlier parts before longer earlier parts. Do not mutate the input.\n\nExamples\n- `splitIpAddresses(\"25525511135\")` returns `[\"255.255.11.135\", \"255.255.111.35\"]`.\n- `splitIpAddresses(\"0000\")` returns `[\"0.0.0.0\"]`.\n- `splitIpAddresses(\"123\")` returns `[]`.\n",
   "examples": [

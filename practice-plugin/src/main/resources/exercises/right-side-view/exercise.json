@@ -1,7 +1,9 @@
 {
   "id": "right-side-view",
   "title": "Right Side View",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "List the values you would see looking at a binary tree from its right-hand side.\n\nContract\n- `root` may be null. Each node has an integer `value` and nullable `left` and `right` children.\n- Return one value per level, from the root level downward: the value of the rightmost node on that level.\n- A node on the left still counts when no node to its right exists on the same level.\n- An empty tree gives an empty list. Do not modify the tree.\n\nExamples\n- `[5, 2, 8, null, 4, null, 6]` gives `[5, 8, 6]`.\n- A null tree gives `[]`.\n- `[7, 8, null, 9]` leans left but every level has one node, so the answer is `[7, 8, 9]`.\n",
   "examples": [

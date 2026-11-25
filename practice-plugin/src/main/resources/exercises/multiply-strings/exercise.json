@@ -1,7 +1,10 @@
 {
   "id": "multiply-strings",
   "title": "Multiply Strings",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Math"
+  ],
   "difficulty": "Medium",
   "statement": "Multiply two non-negative integers that are given as decimal strings and return the product as a decimal string, without using big-number classes.\n\nContract\n- `left` and `right` are non-null, non-empty, contain only the digits `0` to `9`, and have no leading zeros except for the single string `\"0\"`.\n- Return the exact product as a string with no leading zeros; the product of anything with `\"0\"` is `\"0\"`.\n- The inputs can be thousands of digits long, so do not convert them to `int`, `long`, `BigInteger` or `BigDecimal`.\n\nExamples\n- `multiply(\"12\", \"13\")` returns `\"156\"`.\n- `multiply(\"999\", \"999\")` returns `\"998001\"`.\n- `multiply(\"0\", \"5\")` returns `\"0\"`.\n",
   "examples": [

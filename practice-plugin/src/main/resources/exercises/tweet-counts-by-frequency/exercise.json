@@ -1,7 +1,10 @@
 {
   "id": "tweet-counts-by-frequency",
   "title": "Tweet Counts By Frequency",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Intervals"
+  ],
   "difficulty": "Medium",
   "statement": "Design a small tweet counter that groups recorded tweet times into fixed-size frequency buckets.\n\nContract\n- `recordTweet(tweetName, time)` records one occurrence for a non-null name at a non-negative second.\n- `getTweetCountsPerFrequency(freq, tweetName, startTime, endTime)` supports `minute`, `hour`, and `day`, using bucket sizes 60, 3600, and 86400 seconds.\n- The query range is inclusive. Return one count for each bucket starting at `startTime`, with the final bucket ending at `endTime` if the range is partial.\n- Unknown tweet names return zero-filled buckets. Results are ordered from earliest bucket to latest.\n\nExamples\nafter `recordTweet(\"a\", 0), recordTweet(\"a\", 60)`, `getTweetCountsPerFrequency(\"minute\", \"a\", 0, 60)` => `[1, 1]`\nafter `recordTweet(\"a\", 10), recordTweet(\"a\", 70)`, hourly query from 0 to 3599 => `[2]`\nquerying an unseen tweet by minute from 0 to 120 => `[0, 0, 0]`\n",
   "examples": [

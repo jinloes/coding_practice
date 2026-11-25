@@ -62,7 +62,7 @@ function LevelSection({ level, kind }: { level: GuideLevel; kind: Guide['kind'] 
           <NavLink
             key={exercise.id}
             label={exercise.title}
-            description={exercise.topic}
+            description={exercise.topics.join(' · ')}
             active={exercise.selected}
             variant="light"
             leftSection={

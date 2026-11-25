@@ -1,7 +1,10 @@
 {
   "id": "string-list-codec",
   "title": "String List Codec",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Two Pointers"
+  ],
   "difficulty": "Medium",
   "statement": "Design a reversible text format: turn a list of strings into one string, and recover the list from that string.\n\nContract\n- `encode(strings)` accepts a non-null list whose entries are non-null strings. Entries may be\n  empty and may contain any characters, including commas, quotes, digits, `#`, newlines,\n  and non-ASCII text. The list itself may be empty.\n- `encode` returns a non-null string. The exact format is yours to choose.\n- `decode(encoded)` receives only strings produced by your own `encode` and must return a list\n  equal to the original (same size, same order, same contents). Do not mutate the input list.\n- The two methods share no state between calls.\n\nExamples\n- Decoding the encoding of `[\"hello\", \"world\"]` returns `[\"hello\", \"world\"]`.\n- Decoding the encoding of `[\"\"]` returns a list with one empty string, which differs from an empty list.\n- Decoding the encoding of `[\"a,b\", \"c\"]` returns `[\"a,b\", \"c\"]`; separators inside entries cause no confusion.\n",
   "examples": [

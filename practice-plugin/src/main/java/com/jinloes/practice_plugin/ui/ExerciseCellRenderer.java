@@ -44,7 +44,7 @@ final class ExerciseCellRenderer extends ColoredListCellRenderer<Exercise> {
         append(exercise.title());
         append("  " + exercise.difficulty(),
                 new SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, difficultyColor(exercise.difficulty())));
-        append("  " + exercise.topic(),
+        append("  " + exercise.topicSummary(),
                 new SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, UIUtil.getContextHelpForeground()));
         setToolTipText(done ? "Passed a full check before" : null);
     }

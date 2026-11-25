@@ -1,7 +1,10 @@
 {
   "id": "reorganize-adjacent-characters",
   "title": "Reorganize Adjacent Characters",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps",
+    "Greedy"
+  ],
   "difficulty": "Medium",
   "statement": "Rearrange a lowercase string so equal characters are never adjacent.\n\nContract\n- `text` is non-null and contains lowercase English letters.\n- Return any string with the same multiset of characters and no equal neighbouring characters.\n- Return the empty string when no valid arrangement exists.\n\nExamples\n- `aab` may return `aba`.\n- `aaab` returns the empty string.\n",
   "examples": [

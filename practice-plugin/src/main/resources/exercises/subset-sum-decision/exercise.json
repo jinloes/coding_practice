@@ -1,7 +1,10 @@
 {
   "id": "subset-sum-decision",
   "title": "Subset Sum Decision",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking",
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether some subset of non-negative numbers adds exactly to a target.\n\nContract\n- `numbers` is non-null and contains non-negative integers. `target` may be any integer.\n- Each value can be used at most once. The empty subset is allowed, so target `0` is always reachable.\n- Return `false` for negative targets. Do not mutate `numbers`.\n\nExamples\n- `hasSubsetSum(new int[]{2, 4, 8}, 6)` returns `true`.\n- `hasSubsetSum(new int[]{5, 10, 12}, 1)` returns `false`.\n- `hasSubsetSum(new int[]{7, 3}, 0)` returns `true`.\n",
   "examples": [

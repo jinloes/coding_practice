@@ -1,7 +1,10 @@
 {
   "id": "missing-number",
   "title": "Missing Number",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Bit Manipulation"
+  ],
   "difficulty": "Easy",
   "statement": "Find the one value missing from an otherwise complete range.\n\nContract\n- `numbers` is non-null. With `n` equal to `numbers.length` (possibly 0), it\n  holds `n` distinct values, each from `0` through `n` inclusive, in any order.\n- Exactly one value in that range is absent. Return it.\n- Do not mutate the array.\n\nExamples\n- `missingNumber(new int[]{3, 0, 1})` returns `2`.\n- `missingNumber(new int[]{0, 1})` returns `2`.\n- `missingNumber(new int[]{9, 6, 4, 2, 3, 5, 7, 0, 1})` returns `8`.\n",
   "examples": [

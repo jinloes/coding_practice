@@ -1,7 +1,9 @@
 {
   "id": "all-subsets",
   "title": "All Subsets",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "Produce every subset of a collection of distinct integers.\n\nContract\n- `values` holds distinct integers (possibly negative) and may be empty.\n- Return every subset exactly once, including the empty subset and the full set. A collection of k values has 2^k subsets.\n- The order of the subsets and the order of the numbers inside a subset do not matter.\n- Each returned subset must be its own list, and `values` must not be changed.\n\nExamples\n- `subsets(new int[]{1, 2, 3})` returns `[[], [1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]]` in any order.\n- `subsets(new int[]{})` returns `[[]]`.\n- `subsets(new int[]{5, -1})` returns `[[], [5], [-1], [5, -1]]` in any order.\n",
   "examples": [

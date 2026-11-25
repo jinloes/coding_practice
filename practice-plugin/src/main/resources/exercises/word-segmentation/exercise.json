@@ -1,13 +1,24 @@
 {
   "id": "word-segmentation",
   "title": "Word Segmentation",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether a string can be cut into a sequence of dictionary words.\n\nContract\n- `text` is non-null and may be empty. `dictionary` is non-null, may be empty, and holds\n  non-empty words that may repeat.\n- Return `true` when `text` can be split into one or more consecutive pieces, in order and with\n  nothing left over, where every piece is a word from `dictionary`. Words may be used any number\n  of times. An empty `text` needs no pieces and is segmentable.\n- Matching is case-sensitive. Do not mutate `dictionary`.\n\nExamples\n- `canSegment(\"applepie\", List.of(\"apple\", \"pie\"))` returns `true`.\n- `canSegment(\"abcd\", List.of(\"a\", \"abc\", \"b\", \"cd\"))` returns `true` (\"a\", \"b\", \"cd\").\n- `canSegment(\"abce\", List.of(\"abc\", \"d\"))` returns `false`.\n",
   "examples": [
-    { "input": "text = \"applepie\", dictionary = [apple, pie]", "output": "true" },
-    { "input": "text = \"abcd\", dictionary = [a, abc, b, cd]", "output": "true" },
-    { "input": "text = \"abce\", dictionary = [abc, d]", "output": "false" }
+    {
+      "input": "text = \"applepie\", dictionary = [apple, pie]",
+      "output": "true"
+    },
+    {
+      "input": "text = \"abcd\", dictionary = [a, abc, b, cd]",
+      "output": "true"
+    },
+    {
+      "input": "text = \"abce\", dictionary = [abc, d]",
+      "output": "false"
+    }
   ],
   "hints": [
     "Taking the longest matching word at the front can lead to a dead end. Consider every word that matches a prefix.",

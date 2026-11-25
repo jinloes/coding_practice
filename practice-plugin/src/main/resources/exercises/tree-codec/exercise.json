@@ -1,7 +1,9 @@
 {
   "id": "tree-codec",
   "title": "Tree Codec",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Hard",
   "statement": "Turn a binary tree into text and rebuild an identical tree from that text.\n\nContract\n- Implement `serialize`, which converts a tree (possibly null) into a non-null string, and `deserialize`, which converts a string produced by `serialize` back into a tree.\n- For every tree, `deserialize(serialize(root))` must be a new tree with exactly the same shape and node values. Values may be any `int`, including negative ones and zero; missing children must be preserved.\n- You choose the text format. Tests only check that the round trip rebuilds the tree, not what the string looks like. Keep no state between calls.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- The round trip of `[1, 2, 3, null, null, 4, 5]` is `[1, 2, 3, null, null, 4, 5]`.\n- The round trip of a null tree is a null tree.\n- The round trip of `[-1, -2, null, -3]` is `[-1, -2, null, -3]`.\n",
   "examples": [

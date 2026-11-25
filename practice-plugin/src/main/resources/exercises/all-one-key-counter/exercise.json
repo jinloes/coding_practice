@@ -1,7 +1,10 @@
 {
   "id": "all-one-key-counter",
   "title": "All-One Key Counter",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps"
+  ],
   "difficulty": "Hard",
   "statement": "Design a counter that tracks string keys and can report a key with the highest or lowest positive count.\n\nContract\n- `new Solution()` creates an empty counter.\n- `inc(key)` increases `key` by one, inserting it with count 1 if it was absent.\n- `dec(key)` decreases `key` by one when present. If the count becomes zero, remove the key. Calling `dec` on an absent key changes nothing.\n- `getMaxKey()` returns any key whose count is currently maximum, or the empty string when the counter is empty.\n- `getMinKey()` returns any key whose positive count is currently minimum, or the empty string when the counter is empty.\n- Keys are non-null, non-empty strings. Each operation should be O(1) average time.\n\nExamples\n- After `inc(\"apple\")`, `inc(\"banana\")`, `inc(\"apple\")`, the max key is `apple` and the min key is `banana`.\n- After `inc(\"a\")`, `dec(\"a\")`, both queries return the empty string.\n- After `inc(\"x\")`, `inc(\"y\")`, either key may be returned by both queries because their counts tie.\n",
   "examples": [

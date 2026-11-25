@@ -1,13 +1,24 @@
 {
   "id": "clone-graph",
   "title": "Clone Graph",
-  "topic": "Graphs",
+  "topics": [
+    "Graphs"
+  ],
   "difficulty": "Medium",
   "statement": "Build a deep copy of a connected undirected graph, given a reference to one of its nodes.\n\nContract\n- A `GraphNode` has an `int value` and a `List<GraphNode> neighbors`. Edges are stored on both endpoints, so the graph may contain cycles, self-loops, and repeated edges.\n- Return a node in a brand-new graph: values are equal, the neighbor structure is the same (each copy lists its neighbors' copies in the same order as the original), and no node of the original graph appears anywhere in the copy.\n- Every original node must map to exactly one copy, even when several paths lead to it.\n- Return null when the input is null. Do not modify the original graph.\n\nExamples\n- `cloneGraph(null)` returns null.\n- A single node with value 7 and no neighbors yields a different node with value 7 and no neighbors.\n- A triangle of nodes 1, 2, 3 yields a separate triangle of three new nodes with the same values.\n",
   "examples": [
-    {"input": "node = null", "output": "null"},
-    {"input": "one node, value 7, no neighbors", "output": "a different node with value 7 and no neighbors"},
-    {"input": "triangle 1-2, 2-3, 3-1, starting at node 1", "output": "a separate triangle with values 1, 2, 3"}
+    {
+      "input": "node = null",
+      "output": "null"
+    },
+    {
+      "input": "one node, value 7, no neighbors",
+      "output": "a different node with value 7 and no neighbors"
+    },
+    {
+      "input": "triangle 1-2, 2-3, 3-1, starting at node 1",
+      "output": "a separate triangle with values 1, 2, 3"
+    }
   ],
   "hints": [
     "Copying a node is easy; the difficulty is that a node can be reached many times and the graph can loop back on itself.",

@@ -1,7 +1,9 @@
 {
   "id": "multiplier-end-pick-score",
   "title": "Multiplier End Pick Score",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Hard",
   "statement": "Choose numbers from the ends of an array to maximize a multiplier-weighted score.\n\nContract\n- `nums` and `multipliers` are non-null, and `multipliers.length <= nums.length`.\n- Perform exactly one operation for each multiplier, in order. On operation `i`, choose either the current leftmost or current rightmost value from `nums`, remove it, and add `multipliers[i] * chosenValue` to the score.\n- Return the maximum possible total score as an `int`. Inputs in this exercise are small enough that the optimal score fits in `int`.\n- Do not mutate either input array.\n\nExamples\n- `maximumScore(new int[]{1, 2, 3}, new int[]{3, 2, 1})` returns `14`.\n- `maximumScore(new int[]{-5, -3, -3, -2, 7, 1}, new int[]{-10, -5, 3, 4, 6})` returns `102`.\n- `maximumScore(new int[]{4}, new int[]{-2})` returns `-8`.\n",
   "examples": [

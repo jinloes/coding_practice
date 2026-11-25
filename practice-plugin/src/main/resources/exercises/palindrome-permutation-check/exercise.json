@@ -1,7 +1,10 @@
 {
   "id": "palindrome-permutation-check",
   "title": "Palindrome Permutation Check",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether the characters of a string can be rearranged to form a palindrome.\n\nContract\n- `text` is non-null and may be empty.\n- Count every UTF-16 character exactly as it appears; matching is case-sensitive and spaces or punctuation are ordinary characters.\n- Return `true` when at most one character has an odd count, because such a multiset can be placed in the center of a palindrome.\n- Return `false` when two or more different characters have odd counts.\n\nExamples\n- `canPermutePalindrome(\"carrace\")` returns `true` because it can become `racecar`.\n- `canPermutePalindrome(\"daily\")` returns `false`.\n- `canPermutePalindrome(\"aabb c\")` returns `false` because both the space and `c` have odd counts.\n",
   "examples": [

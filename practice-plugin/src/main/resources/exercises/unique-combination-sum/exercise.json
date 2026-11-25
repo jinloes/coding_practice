@@ -1,7 +1,9 @@
 {
   "id": "unique-combination-sum",
   "title": "Unique Combination Sum",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "List every distinct combination of numbers that adds up to a target when each number may be used at most once.\n\nContract\n- `candidates` holds positive integers, may repeat, and may be empty. `target` is positive.\n- Each element of `candidates` (each position) may be used at most once, so a value that appears twice can be used at most twice.\n- Return every combination whose sum is exactly `target`. Combinations are multisets: report each distinct combination once, even if it can be formed from different positions.\n- The order of the combinations and of the numbers inside each combination do not matter. Return an empty list when nothing reaches the target. Do not mutate `candidates`.\n\nExamples\n- `combinations(new int[]{4, 1, 1, 2, 3}, 5)` returns `[[1, 1, 3], [1, 4], [2, 3]]` in any order.\n- `combinations(new int[]{2, 2, 2}, 4)` returns `[[2, 2]]`.\n- `combinations(new int[]{3, 5}, 4)` returns `[]`.\n",
   "examples": [

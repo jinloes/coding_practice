@@ -1,7 +1,10 @@
 {
   "id": "closest-common-org-group",
   "title": "Closest Common Org Group",
-  "topic": "Graphs",
+  "topics": [
+    "Graphs",
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "Given a company organization hierarchy where groups form a rooted tree and each employee belongs to one or more groups, find the **closest (deepest) common group** that contains every employee in a target list.\n\nImplement `closestCommonGroup(String[][] groupLinks, String[][] memberships, String[] targetEmployees)`:\n- `groupLinks[i] = [parentGroup, childGroup]` defines a parent-to-child group edge in the org tree (one single root group has no parent).\n- `memberships[j] = [groupName, employeeName]` assigns `employeeName` directly to `groupName`. An employee belongs to `groupName` and all of its ancestor groups.\n- `targetEmployees` is a non-empty array of employee names to cover.\n- Return the name of the deepest group (maximum distance from the root) that contains all distinct employees in `targetEmployees`. If an employee belongs to multiple groups, covering that employee requires being an ancestor of (or equal to) **at least one** of their groups.\n- Return `null` if any target employee does not exist in `memberships` or if no common group exists.\n\nContract\n- Group names are distinct non-empty strings forming a valid rooted tree (or a single group when `groupLinks` is empty and all memberships share one group).\n- `targetEmployees` may contain duplicates; treat it as a set of distinct target employees.\n- If multiple deepest groups tie (which can happen when an employee belongs to multiple groups), return the lexicographically smallest group name.\n\nExamples\n- Tree `Company -> Eng, HR`; `Eng -> Backend, Frontend`; Alice in `Backend`, Bob in `Frontend`, Carol in `HR`: closest common group for `[Alice, Bob]` is `Eng`; for `[Alice, Carol]` is `Company`.\n- Same group: Alice and Dave both in `Backend` -> `Backend`.\n- Multi-group employee: Eve in `Backend` and `HR`, Carol in `HR` -> `[Eve, Carol]` is `HR`.\n",
   "examples": [

@@ -1,7 +1,9 @@
 {
   "id": "search-tree-k-largest-values",
   "title": "Search Tree K Largest Values",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "Return the largest values stored in a binary search tree, from largest to smaller values.\n\nContract\n- `root` may be null and represents a binary search tree with distinct integer values.\n- `k` is non-negative. Return at most `k` values.\n- Values must appear in strictly decreasing order. If `k` is larger than the tree size, return every value.\n- Do not mutate the tree.\n\nExamples\n`kLargest(tree(5, 3, 8, 2, 4, 7, 9), 3)` => `[9, 8, 7]`\n`kLargest(tree(4), 5)` => `[4]`\n`kLargest(null, 2)` => `[]`\n",
   "examples": [

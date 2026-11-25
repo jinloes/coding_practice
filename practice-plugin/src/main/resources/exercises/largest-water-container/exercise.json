@@ -1,7 +1,10 @@
 {
   "id": "largest-water-container",
   "title": "Largest Water Container",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Two Pointers"
+  ],
   "difficulty": "Medium",
   "statement": "Choose two vertical walls so the rectangle between them holds as much area as possible.\n\nContract\n- `heights` is non-null and may be empty; each value is a non-negative `int`, and wall i stands at x-coordinate i.\n- Picking walls i < j encloses an area of `min(heights[i], heights[j]) * (j - i)`. Return the largest area over all pairs, or `0` when there are fewer than two walls.\n- The area can exceed the `int` range, so the result is a `long`. Do not mutate `heights`.\n\nExamples\n- `maxArea(new int[]{1, 5, 2, 6, 3})` returns `10`, from the walls of height 5 and 6.\n- `maxArea(new int[]{4, 4})` returns `4`.\n- `maxArea(new int[]{7})` returns `0`.\n",
   "examples": [

@@ -1,7 +1,10 @@
 {
   "id": "valid-anagram",
   "title": "Valid Anagram",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether two words are anagrams of each other.\n\nContract\n- `first` and `second` are non-null and contain only the lowercase letters `a`\n  through `z`. Either may be empty.\n- Return true exactly when the two words use the same letters the same number of\n  times. Order does not matter, so a word is an anagram of itself.\n- Words of different lengths are never anagrams.\n- Do not mutate the inputs.\n\nExamples\n- `isAnagram(\"listen\", \"silent\")` returns `true`.\n- `isAnagram(\"rat\", \"car\")` returns `false`.\n- `isAnagram(\"aacc\", \"ccac\")` returns `false`.\n",
   "examples": [

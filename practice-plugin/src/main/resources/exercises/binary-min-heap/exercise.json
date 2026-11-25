@@ -1,7 +1,9 @@
 {
   "id": "binary-min-heap",
   "title": "Binary Min Heap",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Medium",
   "statement": "Implement a growable binary min-heap of integers.\n\nContract\n- `add` inserts any `int`, including duplicates and negative values. The heap has\n  no fixed capacity and must grow as needed.\n- `removeMin` removes and returns the smallest stored value. `peek` returns the\n  smallest value without removing it. Both throw `NoSuchElementException` when empty.\n- `size` reports the number of elements and `isEmpty` is equivalent to `size() == 0`.\n\nExamples\n- Adding `7`, `2`, and `5` makes `peek()` return `2`, then removals return `2`, `5`, `7`.\n- Duplicate minima are returned one at a time.\n- A new heap is empty and `removeMin()`/`peek()` throw `NoSuchElementException`.\n",
   "examples": [

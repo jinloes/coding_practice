@@ -1,7 +1,10 @@
 {
   "id": "best-three-score-average",
   "title": "Best Three Score Average",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Given score records, find the student whose best three scores have the largest average.\n\nContract\n- `records` is non-null. Each record has a non-null student name and an integer score.\n- Only the three highest scores for each student are considered. Students with fewer than three records are ignored.\n- Return the name with the largest top-three total. Break ties by the lexicographically smallest name.\n- Return the empty string when no student has three scores. Do not mutate `records`.\n\nExamples\n- `bestThreeAverage([Ada:90, Ada:95, Ada:100, Bob:100, Bob:70, Bob:60])` returns `Ada`.\n- `bestThreeAverage([Nia:50, Nia:80, Omar:90])` returns the empty string.\n- `bestThreeAverage([Amy:90, Amy:80, Amy:70, Bea:85, Bea:80, Bea:75])` returns `Amy`.\n",
   "examples": [

@@ -1,7 +1,10 @@
 {
   "id": "agent-satisfaction-ranking",
   "title": "Agent Satisfaction Ranking",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Track integer customer-satisfaction ratings for support agents and return qualified agents ranked from highest to lowest satisfaction.\n\nContract\n- Construct an empty tracker with `new Solution()`.\n- `recordScore(agentId, score)` records one integer rating for `agentId`. `agentId` must be non-null and non-blank, and `score` must be between `1` and `5` inclusive; otherwise throw `IllegalArgumentException`.\n- `qualifiedAgents(minRatings)` (`minRatings >= 1`, otherwise throw `IllegalArgumentException`) returns a new list of every agent with at least `minRatings` recorded scores.\n- Order qualified agents by highest exact average score first, then by higher total rating count, and finally alphabetically (`String.compareTo`) when both average and count tie.\n\nExamples\n- `recordScore(\"mia\", 5), recordScore(\"ben\", 4), recordScore(\"mia\", 4), recordScore(\"ben\", 5), recordScore(\"ben\", 5), qualifiedAgents(2)` => `[ben, mia]`\n- `recordScore(\"zoe\", 4), recordScore(\"zoe\", 4), recordScore(\"ava\", 4), recordScore(\"kai\", 5), qualifiedAgents(2)` => `[zoe]`\n- `recordScore(\"bob\", 5), recordScore(\"bob\", 3), recordScore(\"ada\", 4), recordScore(\"ada\", 4), recordScore(\"cam\", 4), qualifiedAgents(1)` => `[ada, bob, cam]`\n",
   "examples": [

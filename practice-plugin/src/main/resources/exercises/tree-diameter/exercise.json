@@ -1,7 +1,9 @@
 {
   "id": "tree-diameter",
   "title": "Tree Diameter",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Easy",
   "statement": "Find the length of the longest path between any two nodes of a binary tree.\n\nContract\n- A `TreeNode` has an `int val`, a `left` child, and a `right` child (either may be null).\n- A path moves along parent-child edges and never visits a node twice. It may start and end at any nodes and does not have to pass through the root.\n- Return the number of edges on the longest such path.\n- A null tree and a single-node tree both return 0.\n- Node values are irrelevant. Do not modify the tree.\n\nExamples\n- `diameter(null)` returns `0`.\n- A single node returns `0`.\n- Level order `[1, 2, 3, 4, 5]` returns `3`, from node 4 up through 2 and 1 down to 3.\n",
   "examples": [

@@ -1,7 +1,9 @@
 {
   "id": "weighted-server-task-assignment",
   "title": "Weighted Server Task Assignment",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Medium",
   "statement": "Assign arriving tasks to weighted servers.\n\nContract\n- `serverWeights` is non-null and non-empty; `taskDurations` is non-null and contains positive durations. Task `i` arrives at time `i`.\n- Choose the free server with smallest weight, then smallest index.\n- If none is free, advance time to the earliest completion and choose among the servers free then. Return one server index per task.\n\nExamples\n- Weights `[3, 3, 2]` and tasks `[1, 2, 3, 2, 1, 2]` return `[2, 2, 0, 2, 1, 2]`.\n- With one server, every answer is `0`.\n",
   "examples": [

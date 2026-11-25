@@ -1,7 +1,10 @@
 {
   "id": "longest-unique-substring",
   "title": "Longest Unique Substring",
-  "topic": "Sliding Window",
+  "topics": [
+    "Sliding Window",
+    "Strings"
+  ],
   "difficulty": "Medium",
   "statement": "Find the length of the longest run of consecutive characters in which no character appears twice.\n\nContract\n- `text` is non-null and may be empty. It may contain any `char` values, including spaces, punctuation, and non-ASCII characters; uppercase and lowercase differ.\n- The run must be contiguous (a substring, not a subsequence).\n- Return `0` for empty text.\n\nExamples\n- `longestUniqueLength(\"abacdbe\")` returns `5` (the run `acdbe`).\n- `longestUniqueLength(\"\")` returns `0`.\n- `longestUniqueLength(\"zzzz\")` returns `1`.\n",
   "examples": [

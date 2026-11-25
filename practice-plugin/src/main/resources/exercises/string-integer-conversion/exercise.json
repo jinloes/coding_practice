@@ -1,7 +1,9 @@
 {
   "id": "string-integer-conversion",
   "title": "String Integer Conversion",
-  "topic": "Math",
+  "topics": [
+    "Math"
+  ],
   "difficulty": "Easy",
   "statement": "Convert between 32-bit signed integers and their decimal text representation without using parsing helpers.\n\nContract\n- `stringToInt` receives a non-empty decimal string in 32-bit signed range, optionally starting with `-`.\n- `intToString` receives any Java `int`, including `0` and `Integer.MIN_VALUE`.\n- Do not call `Integer.parseInt`, `Integer.toString`, `String.valueOf`, or formatting APIs in the learner implementation.\n- Return the exact base-10 representation with no leading zeroes except for the value zero itself.\n\nExamples\n- `stringToInt(\"0\")` returns `0`.\n- `stringToInt(\"-2048\")` returns `-2048`.\n- `intToString(12345)` returns `\"12345\"`.\n",
   "examples": [

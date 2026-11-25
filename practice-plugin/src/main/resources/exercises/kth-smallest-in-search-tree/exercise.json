@@ -1,7 +1,9 @@
 {
   "id": "kth-smallest-in-search-tree",
   "title": "Kth Smallest In Search Tree",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "Find the k-th smallest value stored in a binary search tree.\n\nContract\n- `root` is the root of a valid binary search tree with distinct values; it is non-null.\n- `k` is 1-based and satisfies `1 <= k <=` the number of nodes.\n- Return the value that would be at position `k` if all values were sorted ascending.\n- Use `Solution.TreeNode` (fields `value`, `left`, `right`) and do not modify the tree.\n\nExamples\n- In `[5, 3, 8, 2, 4, 7, 9]`, `k = 3` returns `4` (sorted order is 2, 3, 4, 5, 7, 8, 9).\n- In `[10]`, `k = 1` returns `10`.\n- In `[20, 10, 30, null, 15]`, `k = 2` returns `15`.\n",
   "examples": [

@@ -47,7 +47,11 @@ final class ExerciseFilters {
         track.setRenderer(PracticeViews.labelled(Guide.class, Guide::title));
         track.setToolTipText("Hand-curated practice tracks such as Blind 75 and company lists; not official question lists");
         topic.addItem("All topics");
-        ExerciseCatalog.all().stream().map(Exercise::topic).distinct().sorted().forEach(topic::addItem);
+        ExerciseCatalog.all().stream()
+                .flatMap(exercise -> exercise.topics().stream())
+                .distinct()
+                .sorted()
+                .forEach(topic::addItem);
         difficulty.addItem("All difficulties");
         GuideCatalog.DIFFICULTIES.forEach(difficulty::addItem);
         guide.getAccessibleContext().setAccessibleName("Guide filter");
@@ -270,9 +274,10 @@ final class ExerciseFilters {
 
     private boolean matches(Exercise exercise, boolean passed) {
         String query = search.getText().strip().toLowerCase(Locale.ROOT);
-        return (topic.getSelectedIndex() == 0 || exercise.topic().equals(topic.getSelectedItem()))
+        return (topic.getSelectedIndex() == 0 || exercise.topics().contains(topic.getSelectedItem()))
                 && (difficulty.getSelectedIndex() == 0 || exercise.difficulty().equals(difficulty.getSelectedItem()))
                 && (progress.getSelectedIndex() == 0 || passed == (progress.getSelectedIndex() == 1))
-                && (query.isEmpty() || (exercise.title() + " " + exercise.topic()).toLowerCase(Locale.ROOT).contains(query));
+                && (query.isEmpty() || (exercise.title() + " " + String.join(" ", exercise.topics()))
+                        .toLowerCase(Locale.ROOT).contains(query));
     }
 }

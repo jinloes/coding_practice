@@ -1,7 +1,10 @@
 {
   "id": "longest-consecutive-run",
   "title": "Longest Consecutive Run",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Find the longest set of values in an unsorted array that form an unbroken sequence of consecutive integers.\n\nContract\n- `numbers` is non-null and may be empty; it is unsorted and may contain duplicates and any `int` values.\n- A run is a set of distinct values `v, v + 1, ..., v + k - 1` that all appear somewhere in the array, in any positions. Return the largest run length `k`, or `0` for an empty array.\n- `Integer.MAX_VALUE` and `Integer.MIN_VALUE` are not consecutive. Do not mutate `numbers`.\n\nExamples\n- `longestRun(new int[]{31, 8, 9, 30, 10, 32, 7})` returns `4`, from 7, 8, 9, 10.\n- `longestRun(new int[]{5, 5, 5})` returns `1`.\n- `longestRun(new int[0])` returns `0`.\n",
   "examples": [

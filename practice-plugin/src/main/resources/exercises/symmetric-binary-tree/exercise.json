@@ -1,7 +1,9 @@
 {
   "id": "symmetric-binary-tree",
   "title": "Symmetric Binary Tree",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether a binary tree is a mirror image of itself around its root.\n\nContract\n- `root` may be null. An empty tree is symmetric.\n- A tree is symmetric when the left and right subtrees have matching values in mirrored positions and matching shapes.\n- Return only the boolean answer and do not mutate the tree.\n\nExamples\n`isSymmetric(tree(1, 2, 2, 3, 4, 4, 3))` => `true`\n`isSymmetric(tree(1, 2, 2, null, 3, null, 3))` => `false`\n`isSymmetric(null)` => `true`\n",
   "examples": [

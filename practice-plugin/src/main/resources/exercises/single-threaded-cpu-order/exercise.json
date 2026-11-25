@@ -1,7 +1,9 @@
 {
   "id": "single-threaded-cpu-order",
   "title": "Single-Threaded CPU Order",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Medium",
   "statement": "Return the order in which a single worker processes indexed tasks.\n\nContract\n- `tasks` is non-null. Each row is exactly `[enqueueTime, processingTime]` with non-negative times, and the row index is the task id.\n- Whenever the worker is free, it may run any task whose enqueue time is at or before the current time.\n- Choose the available task with the smallest processing time; break ties by the smallest original index. If none is available, jump time to the next enqueue time.\n- Return every task index in the order processing starts. Do not mutate `tasks`.\n\nExamples\n- `processingOrder(new int[][]{{1,2},{2,4},{3,2},{4,1}})` returns `[0, 2, 3, 1]`.\n- Tasks `[[7,10],[7,12],[7,5],[7,4],[7,2]]` return `[4, 3, 2, 0, 1]`.\n- One task returns `[0]`.\n",
   "examples": [

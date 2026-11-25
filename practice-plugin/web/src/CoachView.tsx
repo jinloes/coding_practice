@@ -95,6 +95,14 @@ export function CoachView({ coach }: { coach: Coach }) {
             size="xs"
             variant="light"
             disabled={!canAsk}
+            onClick={() => send({ type: 'coachTrace' })}
+          >
+            Trace an example
+          </Button>
+          <Button
+            size="xs"
+            variant="light"
+            disabled={!canAsk}
             onClick={() => send({ type: 'coachTranslate' })}
           >
             Translate my approach

@@ -1,7 +1,9 @@
 {
   "id": "mirror-tree",
   "title": "Mirror Tree",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Easy",
   "statement": "Flip a binary tree left to right by rewiring its existing nodes.\n\nContract\n- `root` may be null. Nodes have an integer `value` and mutable `left` and `right` references.\n- At every node, swap the left and right children, then return the root. Mutate the nodes you are given: do not allocate replacement nodes or change values.\n- The returned root is the same node that was passed in; a null tree returns null.\n- Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[5, 2, 8, 1, null, 7, 9]` becomes `[5, 8, 2, 9, 7, null, 1]`.\n- `[1, 2]` becomes `[1, null, 2]`.\n- A null tree stays null.\n",
   "examples": [

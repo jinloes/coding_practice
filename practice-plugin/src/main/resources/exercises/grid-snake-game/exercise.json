@@ -1,7 +1,11 @@
 {
   "id": "grid-snake-game",
   "title": "Grid Snake Game",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Queues",
+    "Matrices"
+  ],
   "difficulty": "Medium",
   "statement": "Simulate a snake moving across a bounded 2D grid as food items appear one at a time.\n\nContract\n- `new Solution(width, height, food)` initializes a board with `height` rows (`0 .. height - 1`) and `width` columns (`0 .. width - 1`), where `width >= 1`, `height >= 1`, and `food` is a non-null array of `{row, col}` pairs (otherwise throw `IllegalArgumentException`).\n- The snake starts at `(0, 0)` with length `1` and score `0`. Food items activate strictly in array order: `food[i + 1]` is not on the board until `food[i]` has been eaten.\n- `step(direction)` advances the head one cell for `'U'` (`row - 1`), `'D'` (`row + 1`), `'L'` (`col - 1`), or `'R'` (`col + 1`); any other character throws `IllegalArgumentException`.\n- If the game is already over, or the new head falls outside the board, the game stays over and `step` returns `-1`.\n- If the active food item sits at the new head cell, the snake eats it: its tail stays in place, its length and score each increase by `1`, and the next food item becomes active.\n- Otherwise the current tail vacates its cell **before** self-collision is checked, so stepping onto the cell the tail just left is legal.\n- If the new head collides with any remaining body segment, mark the game over and return `-1`; otherwise return the current score.\n\nExamples\n- On a `3 x 2` board (`width = 3, height = 2`) with food `[(1, 2), (0, 1)]`, moves `R, D, R, U, L, U` return `[0, 0, 1, 1, 2, -1]`.\n- On a `2 x 2` board with food `[(0, 1), (1, 1), (1, 0)]`, moves `R, D, L, U, R` return `[1, 2, 3, 3, 3]`.\n- On a `3 x 3` board with food `[(0, 1), (0, 2), (1, 2), (1, 1)]`, moves `R, R, D, L, U, R` return `[1, 2, 3, 4, -1, -1]`.\n",
   "examples": [

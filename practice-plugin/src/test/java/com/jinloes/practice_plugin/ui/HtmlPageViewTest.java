@@ -31,7 +31,7 @@ class HtmlPageViewTest {
                 .doesNotContain("(passed)");
         assertThat(passed).contains(exercise.title() + " (passed)");
         var unguided = new ExerciseCatalog.Exercise(
-                "unguided-sample", "Unguided Sample", "Topic", "Easy", "Statement",
+                "unguided-sample", "Unguided Sample", List.of("Topic"), "Easy", "Statement",
                 List.of(), List.of(), "Input: x", "x", "O(1)", "O(1)", 0, 0);
         assertThat(HtmlPageView.html(new PracticePage.Problem(unguided, Set.of())))
                 .contains("Not part of any guide yet.")

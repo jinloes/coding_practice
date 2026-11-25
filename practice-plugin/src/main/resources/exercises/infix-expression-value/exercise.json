@@ -1,7 +1,10 @@
 {
   "id": "infix-expression-value",
   "title": "Infix Expression Value",
-  "topic": "Stacks",
+  "topics": [
+    "Stacks",
+    "Strings"
+  ],
   "difficulty": "Hard",
   "statement": "Evaluate an ordinary arithmetic expression with the four basic operators and parentheses.\n\nContract\n- `expression` is a non-null, non-empty string made only of digits, spaces, `+`, `-`, `*`, `/`, `(`, and `)`. Spaces may appear between tokens but never inside a number.\n- It is always well formed. Numbers are non-negative decimal literals. Parentheses are balanced and nest at most `1,000` levels deep.\n- `*` and `/` bind more tightly than `+` and `-`, and operators of equal precedence apply left to right: `10 - 3 - 2` is `5`.\n- A `-` may also be unary, but only at the very start of the expression or right after `(`; it negates the term that follows, as in `-(2 + 3)` or `(-4) * 2`. Every other operator is binary.\n- Division truncates toward zero, as Java's `/` on `int` does. No division by zero occurs, and every literal, every subexpression's value, and the result fit in an `int`. Do not call a scripting engine or other evaluator.\n\nExamples\n- `evaluate(\"1 + 2 * 3\")` returns `7`, because multiplication happens first.\n- `evaluate(\"(1 + 2) * 3\")` returns `9`.\n- `evaluate(\"-(8 - 3) / 2\")` returns `-2`: the parenthesized value is `5`, `5 / 2` truncates to `2`, and the unary minus negates it.\n",
   "examples": [

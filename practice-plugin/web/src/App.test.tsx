@@ -31,7 +31,7 @@ function problemState(
       problem: {
         id,
         title: id === 'pair-sum' ? 'Pair Sum' : 'Binary Search',
-        topic: 'Arrays',
+        topics: ['Arrays', 'Hash Maps'],
         difficulty: 'Easy',
         passed,
         statement: 'Find **two** indices.',
@@ -93,6 +93,8 @@ describe('App', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Pair Sum' })).toBeInTheDocument();
+    expect(screen.getByText('Arrays')).toBeInTheDocument();
+    expect(screen.getByText('Hash Maps')).toBeInTheDocument();
     expect(screen.getByLabelText('Passed')).toBeInTheDocument();
     expect(screen.getByText('Target: O(n) time, O(n) space')).toBeInTheDocument();
     expect(document.documentElement.style.fontSize).toBe('16px');
@@ -225,14 +227,14 @@ describe('App', () => {
               {
                 level: 'Easy',
                 exercises: [
-                  { id: 'pair-sum', title: 'Pair Sum', topic: 'Arrays', passed: true, selected: true },
-                  { id: 'move-zeroes', title: 'Move Zeroes', topic: 'Arrays', passed: false, selected: false },
+                  { id: 'pair-sum', title: 'Pair Sum', topics: ['Arrays', 'Hash Maps'], passed: true, selected: true },
+                  { id: 'move-zeroes', title: 'Move Zeroes', topics: ['Arrays', 'Two Pointers'], passed: false, selected: false },
                 ],
               },
               { level: 'Medium', exercises: [] },
               {
                 level: 'Hard',
-                exercises: [{ id: 'trapped-rainwater', title: 'Trapped Rainwater', topic: 'Arrays', passed: false, selected: false }],
+                exercises: [{ id: 'trapped-rainwater', title: 'Trapped Rainwater', topics: ['Arrays', 'Two Pointers'], passed: false, selected: false }],
               },
             ],
           },
@@ -262,7 +264,7 @@ describe('App', () => {
             lesson: 'How it works',
             levels: [
               { level: 'Easy', exercises: [] },
-              { level: 'Medium', exercises: [{ id: 'course-schedule', title: 'Course Schedule', topic: 'Graphs', passed: false, selected: false }] },
+              { level: 'Medium', exercises: [{ id: 'course-schedule', title: 'Course Schedule', topics: ['Graphs'], passed: false, selected: false }] },
               { level: 'Hard', exercises: [] },
             ],
           },
@@ -375,6 +377,7 @@ describe('App', () => {
     expect(screen.getByText('optimal').tagName).toBe('STRONG');
 
     await user.click(screen.getByRole('button', { name: 'Diagnose my attempt' }));
+    await user.click(screen.getByRole('button', { name: 'Trace an example' }));
     await user.click(screen.getByRole('button', { name: 'Translate my approach' }));
     await user.click(screen.getByRole('button', { name: 'Compare with optimal' }));
     await user.click(screen.getByRole('button', { name: 'Clear' }));
@@ -386,6 +389,7 @@ describe('App', () => {
     expect(sent).toEqual([
       { type: 'coachSettings' },
       { type: 'coachDiagnose' },
+      { type: 'coachTrace' },
       { type: 'coachTranslate' },
       { type: 'coachCompare' },
       { type: 'coachClear' },

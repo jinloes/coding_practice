@@ -1,7 +1,10 @@
 {
   "id": "remove-selected-characters",
   "title": "Remove Selected Characters",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Remove all characters from a text when they appear in a separate removal set.\n\nContract\n- `text` and `remove` are non-null strings. Either may be empty.\n- Treat `remove` as a set of Java `char` values: duplicates in `remove` do not change the result.\n- Return a new string containing the characters from `text` whose value is not present in `remove`, preserving their original order.\n- Matching is case-sensitive. Do not mutate either input.\n\nExamples\n- `removeSelected(\"Battle of the Vowels: Hawaii vs. Grozny\", \"aeiou\")` returns `\"Bttl f th Vwls: Hw vs. Grzny\"`.\n- `removeSelected(\"abracadabra\", \"ab\")` returns `\"rcdr\"`.\n- `removeSelected(\"keep\", \"xyz\")` returns `\"keep\"`.\n",
   "examples": [

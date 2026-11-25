@@ -1,7 +1,10 @@
 {
   "id": "row-column-sorted-matrix-search",
   "title": "Row And Column Sorted Matrix Search",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Matrices"
+  ],
   "difficulty": "Medium",
   "statement": "Search a matrix whose rows and columns are each sorted in ascending order.\n\nContract\n- `matrix` is non-null. It may have zero rows, and rows may be empty; non-empty rows form a rectangular grid.\n- Within the grid, every row is sorted left to right and every column is sorted top to bottom. The matrix is not necessarily sorted in row-major order.\n- Return whether `target` appears. Do not mutate `matrix`.\n\nExamples\n- `contains(new int[][]{{1, 4, 7}, {2, 5, 8}, {3, 6, 9}}, 5)` returns `true`.\n- Searching the same matrix for `10` returns `false`.\n- `contains(new int[][]{{-5, -1}, {-3, 4}}, -3)` returns `true`.\n",
   "examples": [

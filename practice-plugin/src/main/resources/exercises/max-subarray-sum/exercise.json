@@ -1,7 +1,12 @@
 {
   "id": "max-subarray-sum",
   "title": "Maximum Subarray Sum",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Prefix Sums",
+    "Dynamic Programming",
+    "Greedy"
+  ],
   "difficulty": "Medium",
   "statement": "Find the largest sum over all non-empty contiguous slices of an array.\n\nContract\n- `numbers` is non-null and has at least one element; values may be any `int`.\n- A subarray is a non-empty run of adjacent elements. Return the largest sum of any subarray.\n- Sums can exceed the `int` range, so the result is a `long`. Do not mutate `numbers`.\n\nExamples\n- `maxSubarraySum(new int[]{3, -5, 4, 2, -1, 6, -8})` returns `11`.\n- `maxSubarraySum(new int[]{-7, -3, -9})` returns `-3`.\n- `maxSubarraySum(new int[]{5})` returns `5`.\n",
   "examples": [

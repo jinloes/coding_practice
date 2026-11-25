@@ -1,7 +1,10 @@
 {
   "id": "sorted-matrix-search",
   "title": "Sorted Matrix Search",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Matrices"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether a value occurs in a grid whose numbers are in ascending order when read row by row.\n\nContract\n- `grid` is non-null and may have no rows. All rows have the same length, which may be `0`. Each row is sorted ascending, and the first value of every row is greater than the last value of the row above it, so values are strictly increasing in reading order.\n- Return `true` exactly when `target` appears somewhere in the grid. An empty grid, or a grid of empty rows, contains nothing.\n- Do not mutate `grid`.\n\nExamples\n- `containsValue(new int[][]{{1, 4, 7}, {9, 12, 15}, {20, 22, 30}}, 12)` returns `true`.\n- `containsValue(new int[][]{{1, 4, 7}, {9, 12, 15}, {20, 22, 30}}, 10)` returns `false`.\n- `containsValue(new int[][]{{5}}, 5)` returns `true`.\n",
   "examples": [

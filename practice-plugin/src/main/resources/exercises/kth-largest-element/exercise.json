@@ -1,7 +1,9 @@
 {
   "id": "kth-largest-element",
   "title": "Kth Largest Element",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Medium",
   "statement": "Find the value that would sit at rank k from the top if an unsorted array were sorted in descending order.\n\nContract\n- `nums` is unsorted and may hold negative numbers and repeated values; each occurrence counts separately toward the rank.\n- `k` is 1-based: `k = 1` is the maximum and `k = nums.length` is the minimum.\n- Return the value, not its index. Do not modify `nums`.\n- Throw `IllegalArgumentException` when `k < 1` or `k > nums.length` (this includes an empty array).\n\nExamples\n- `[9, 4, 7, 1, 8]` with `k = 2` returns `8`.\n- `[5, 5, 5, 2]` with `k = 3` returns `5`, because the three `5`s occupy ranks 1 to 3.\n- `[-3]` with `k = 1` returns `-3`.\n",
   "examples": [

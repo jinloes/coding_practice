@@ -1,7 +1,9 @@
 {
   "id": "string-interleaving",
   "title": "String Interleaving",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Check whether a third string can be formed by weaving two strings together without reordering either one.\n\nContract\n- All three arguments are non-null and may be empty; characters compare exactly (case-sensitive).\n- `merged` is an interleaving when its characters can be split into two subsequences that spell `first` and `second`, using every character of `merged` exactly once.\n- Characters taken from `first` keep their order, and so do those from `second`; the two strings may alternate in any pattern.\n- Return `false` immediately when the lengths do not add up. Three empty strings are an interleaving.\n\nExamples\n- `isInterleaving(\"ab\", \"ac\", \"acab\")` returns `true`: take `a`, `c` from the second string, then `a`, `b` from the first.\n- `isInterleaving(\"ab\", \"cd\", \"acbe\")` returns `false`: `e` appears in neither string.\n- `isInterleaving(\"\", \"xyz\", \"xyz\")` returns `true`: everything comes from the second string.\n",
   "examples": [

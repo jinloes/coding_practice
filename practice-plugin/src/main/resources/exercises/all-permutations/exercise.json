@@ -1,7 +1,9 @@
 {
   "id": "all-permutations",
   "title": "All Permutations",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "List every ordering of a collection of distinct integers.\n\nContract\n- `values` holds distinct integers and may be empty.\n- Return every ordering of all the values exactly once. k values have k! orderings; the empty input has exactly one ordering, the empty one.\n- The order in which the permutations are returned does not matter, but the order of numbers inside each permutation does.\n- Each returned permutation must be its own list, and `values` must not be changed.\n\nExamples\n- `permutations(new int[]{1, 2, 3})` returns `[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]` in any order.\n- `permutations(new int[]{})` returns `[[]]`.\n- `permutations(new int[]{4, 9})` returns `[[4, 9], [9, 4]]` in any order.\n",
   "examples": [

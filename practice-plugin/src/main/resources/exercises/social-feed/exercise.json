@@ -1,7 +1,9 @@
 {
   "id": "social-feed",
   "title": "Social Feed",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Medium",
   "statement": "Design a tiny social feed where users post, follow each other, and read their ten most recent posts.\n\nContract\n- Users and posts are identified by integers. Post ids are unique but carry no ordering: recency is the order in which `post` was called.\n- `post(user, postId)` publishes a post. `follow(follower, followee)` makes `follower` see `followee`'s posts; following yourself, or following someone twice, changes nothing. `unfollow` removes the link and does nothing if there is none.\n- `feed(user)` returns the ids of up to 10 most recent posts written by `user` or by anyone `user` currently follows, newest first. Posts made before a follow still count; unfollowing hides that person's posts at once.\n- A user who never posted or followed (or is unknown) has an empty feed. A user's own posts are always in their feed. Never list a post twice.\n\nExamples\n- `post(1, 5)`, `post(2, 6)`, `follow(1, 2)`: `feed(1)` is `[6, 5]` and `feed(2)` is `[6]`.\n- `follow(1, 2)`, `post(2, 8)`, `post(1, 9)`, `unfollow(1, 2)`: `feed(1)` is `[9]`.\n- User 3 posts ids 1 to 12 in order: `feed(3)` is `[12, 11, 10, 9, 8, 7, 6, 5, 4, 3]`.\n",
   "examples": [

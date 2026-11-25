@@ -1,7 +1,9 @@
 {
   "id": "remove-overlapping-intervals",
   "title": "Remove Overlapping Intervals",
-  "topic": "Intervals",
+  "topics": [
+    "Intervals"
+  ],
   "difficulty": "Medium",
   "statement": "Find the fewest intervals to delete so that the remaining ones do not overlap.\n\nContract\n- `intervals` is non-null, unsorted, and may be empty. Each interval is `{start, end}` with\n  `start < end`; values may be any `int`, including extreme ones.\n- Two intervals overlap only when they share more than a single point. Intervals that merely\n  touch, such as `{1, 2}` and `{2, 3}`, do **not** overlap.\n- Return the minimum number of intervals to remove. Identical intervals overlap each other.\n- Do not mutate `intervals`.\n\nExamples\n- `minRemovals({{1, 4}, {2, 3}, {3, 5}, {4, 6}})` returns `2`.\n- `minRemovals({{1, 2}, {2, 3}})` returns `0`.\n- `minRemovals({{0, 5}, {1, 2}, {3, 4}})` returns `1`.\n",
   "examples": [

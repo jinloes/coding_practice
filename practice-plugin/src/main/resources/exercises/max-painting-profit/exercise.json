@@ -1,7 +1,9 @@
 {
   "id": "max-painting-profit",
   "title": "Max Painting Profit",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Choose house painting jobs from a street to earn as much as possible without accepting three consecutive jobs.\n\nContract\n- `payouts` is non-null. Each entry is a non-negative amount offered by that house.\n- Return the maximum total payout obtainable by choosing any subset of houses that never contains three consecutive indices.\n- An empty street has profit `0`. Do not mutate `payouts`. Use `long` for totals.\n\nExamples\n- `maxProfit(new int[]{100, 50})` returns `150`.\n- `maxProfit(new int[]{100, 70, 60})` returns `170`.\n- `maxProfit(new int[]{40, 100, 50, 20, 100})` returns `260`.\n",
   "examples": [

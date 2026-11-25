@@ -1,7 +1,10 @@
 {
   "id": "move-zeroes",
   "title": "Move Zeroes",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Two Pointers"
+  ],
   "difficulty": "Easy",
   "statement": "Push every zero to the end of an array without reordering the rest.\n\nContract\n- `numbers` is non-null and may be empty.\n- Rearrange the array in place so that every zero sits after every nonzero\n  value. The nonzero values must keep their original relative order.\n- Work on the given array: do not return a new one and do not change its length.\n  The method returns nothing.\n\nExamples\n- `moveZeroes(new int[]{0, 1, 0, 3, 12})` leaves `[1, 3, 12, 0, 0]`.\n- `moveZeroes(new int[]{0, 0})` leaves `[0, 0]`.\n- `moveZeroes(new int[]{1, 2})` leaves `[1, 2]`.\n",
   "examples": [

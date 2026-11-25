@@ -1,7 +1,10 @@
 {
   "id": "rolling-hit-counter",
   "title": "Rolling Hit Counter",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Queues"
+  ],
   "difficulty": "Medium",
   "statement": "Design a counter that records event timestamps and reports how many landed inside the latest 300-second rolling window.\n\nContract\n- Create a new `Solution` with an empty history and a fixed 300-second window.\n- `hit(timestamp)` records one event at that integer timestamp. Calls are made with nondecreasing timestamps, and multiple hits at the same timestamp are distinct.\n- `hitsInLastWindow(timestamp)` returns the number of recorded hits with time strictly greater than `timestamp - 300` and less than or equal to `timestamp`. Older hits may be discarded.\n- Timestamps are non-negative `int` values.\n\nExamples\n`hit(1), hit(2), hit(300), hitsInLastWindow(300)` => `3`\n`hit(1), hit(301), hitsInLastWindow(301)` => `1`\n`hit(5), hit(5), hit(304), hitsInLastWindow(304)` => `3`\n",
   "examples": [

@@ -1,7 +1,10 @@
 {
   "id": "minimum-covering-window",
   "title": "Minimum Covering Window",
-  "topic": "Sliding Window",
+  "topics": [
+    "Sliding Window",
+    "Strings"
+  ],
   "difficulty": "Hard",
   "statement": "Find the shortest piece of a text that contains every character of a required text, counting repeats.\n\nContract\n- `source` and `required` are non-null and contain only ASCII characters (code below 128); matching is case-sensitive.\n- A window is a contiguous substring of `source`. It qualifies when, for every character, it holds at least as many copies as `required` does (so `\"LLO\"` needs two `L`).\n- Return the shortest qualifying window. If several have the same shortest length, return the leftmost.\n- Return `\"\"` if no window qualifies or if `required` is empty.\n\nExamples\n- `minimumWindow(\"HELLOWORLD\", \"LLO\")` returns `\"LLO\"`.\n- `minimumWindow(\"abc\", \"d\")` returns `\"\"`.\n- `minimumWindow(\"a\", \"a\")` returns `\"a\"`.\n",
   "examples": [

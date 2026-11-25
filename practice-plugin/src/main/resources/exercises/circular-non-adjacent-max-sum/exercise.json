@@ -1,7 +1,9 @@
 {
   "id": "circular-non-adjacent-max-sum",
   "title": "Circular Non-Adjacent Max Sum",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Pick values from a ring so that no two picked positions are neighbours, maximising the total.\n\nContract\n- `values` is a non-null array of non-negative `int`s and may be empty. The positions form a circle: index `i` neighbours `i - 1` and `i + 1`, and the last index also neighbours index `0` (a single value has no neighbour to conflict with).\n- Return the largest total of a set of pairwise non-neighbouring indices. Choosing nothing is allowed, so an empty array gives `0`.\n- The total can exceed the `int` range, so return a `long`. Do not mutate `values`.\n\nExamples\n- `maxSum(new int[]{2, 3, 2})` returns `3`.\n- `maxSum(new int[]{1, 2, 3, 1})` returns `4`.\n- `maxSum(new int[]{6})` returns `6`.\n",
   "examples": [

@@ -1,9 +1,13 @@
 {
   "id": "commodity-price-tracker",
   "title": "Commodity Price Tracker",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps",
+    "Heaps"
+  ],
   "difficulty": "Medium",
-  "statement": "Design an in-memory tracker for timestamped commodity prices where updates may arrive out of order and a later update with the same timestamp corrects the earlier price.\n\nImplement `Solution` with:\n- `void update(int timestamp, int price)` — records `price` for `timestamp`, replacing any prior price at that exact `timestamp`.\n- `int latest()` — returns the price at the largest recorded `timestamp`.\n- `int maxPrice()` — returns the highest current price across all recorded timestamps.\n- `int minPrice()` — returns the lowest current price across all recorded timestamps.\n\nContract\n- `timestamp >= 1` and `price >= 1`.\n- `latest()`, `maxPrice()`, and `minPrice()` are only called after at least one `update`.\n- When a timestamp's price is overwritten, the old price must no longer contribute to `maxPrice()` or `minPrice()` unless another timestamp still holds that same price.\n\nExamples\n- `update(1, 10)`, `update(2, 5)`, `latest() -> 5`, `maxPrice() -> 10`, `update(1, 3)` (corrects timestamp 1), `maxPrice() -> 5`, `update(4, 2)`, `minPrice() -> 2`.\n- Duplicate prices: `update(1, 10)`, `update(2, 10)`, `update(1, 4)` -> `maxPrice() -> 10`, `minPrice() -> 4`, `latest() -> 10`.\n- Out-of-order timestamps: `update(5, 20)`, `update(2, 50)`, `latest() -> 20`, `maxPrice() -> 50`, `minPrice() -> 20`.\n",
+  "statement": "Design an in-memory tracker for timestamped commodity prices where updates may arrive out of order and a later update with the same timestamp corrects the earlier price.\n\nImplement `Solution` with:\n- `void update(int timestamp, int price)` \u2014 records `price` for `timestamp`, replacing any prior price at that exact `timestamp`.\n- `int latest()` \u2014 returns the price at the largest recorded `timestamp`.\n- `int maxPrice()` \u2014 returns the highest current price across all recorded timestamps.\n- `int minPrice()` \u2014 returns the lowest current price across all recorded timestamps.\n\nContract\n- `timestamp >= 1` and `price >= 1`.\n- `latest()`, `maxPrice()`, and `minPrice()` are only called after at least one `update`.\n- When a timestamp's price is overwritten, the old price must no longer contribute to `maxPrice()` or `minPrice()` unless another timestamp still holds that same price.\n\nExamples\n- `update(1, 10)`, `update(2, 5)`, `latest() -> 5`, `maxPrice() -> 10`, `update(1, 3)` (corrects timestamp 1), `maxPrice() -> 5`, `update(4, 2)`, `minPrice() -> 2`.\n- Duplicate prices: `update(1, 10)`, `update(2, 10)`, `update(1, 4)` -> `maxPrice() -> 10`, `minPrice() -> 4`, `latest() -> 10`.\n- Out-of-order timestamps: `update(5, 20)`, `update(2, 50)`, `latest() -> 20`, `maxPrice() -> 50`, `minPrice() -> 20`.\n",
   "examples": [
     {
       "input": "U 1 10, U 2 5, L, MAX, U 1 3, MAX, U 4 2, MIN",

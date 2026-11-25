@@ -1,7 +1,9 @@
 {
   "id": "heaviest-stones-smash",
   "title": "Heaviest Stones Smash",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Easy",
   "statement": "Repeatedly smash the two heaviest stones together and report what is left at the end.\n\nContract\n- `stones` holds positive integer weights, in any order; it may be empty. Do not modify it.\n- Each round, take the two heaviest stones. If their weights are equal, both disappear; otherwise only one stone remains, weighing the difference of the two.\n- Continue until at most one stone remains. Return its weight, or `0` when none remain (including for an empty input).\n- A single stone is never smashed.\n\nExamples\n- `[8, 3, 5, 1]`: `8` and `5` leave `3`; the two `3`s vanish; `1` remains, so the answer is `1`.\n- `[6, 6]` cancel out completely, so the answer is `0`.\n- `[20]` is never smashed, so the answer is `20`.\n",
   "examples": [

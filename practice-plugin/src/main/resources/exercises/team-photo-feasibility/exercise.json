@@ -1,7 +1,9 @@
 {
   "id": "team-photo-feasibility",
   "title": "Team Photo Feasibility",
-  "topic": "Greedy",
+  "topics": [
+    "Greedy"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether two teams can be arranged for a two-row photo.\n\nContract\n- `red` and `blue` are non-null arrays of equal length. Each value is a player's height.\n- Return `true` if one whole team can stand in the back row so that every back-row player is strictly taller than the corresponding front-row player after reordering both teams.\n- Equal heights do not work for a pair. Do not mutate the input arrays.\n\nExamples\n- `canTakePhoto([5, 8, 1], [6, 9, 2])` returns `true`.\n- `canTakePhoto([5, 8, 1], [6, 7, 2])` returns `false`.\n- `canTakePhoto([3, 4], [4, 3])` returns `false`.\n",
   "examples": [

@@ -1,7 +1,10 @@
 {
   "id": "unique-by-first-name",
   "title": "Unique By First Name",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Return one directory entry for each first name.\n\nContract\n- `people` is non-null. Each entry has a non-blank `first` and `last` name.\n- Return a new list sorted by first name ascending. If several entries share a first name, keep the one that appeared earliest in the input.\n- Do not mutate the input list.\n\nExamples\n- `uniqueByFirstName([Ada Lovelace, Bob Stone, Ada Byron])` returns `[Ada Lovelace, Bob Stone]`.\n- `uniqueByFirstName([Zoe Zed, Amy Able, Zoe Young])` returns `[Amy Able, Zoe Zed]`.\n- `uniqueByFirstName([])` returns `[]`.\n",
   "examples": [

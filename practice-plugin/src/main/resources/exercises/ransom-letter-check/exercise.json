@@ -1,7 +1,10 @@
 {
   "id": "ransom-letter-check",
   "title": "Ransom Letter Check",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether the characters available in a magazine can assemble a requested letter.\n\nContract\n- `letterText` and `magazineText` are non-null and may be empty.\n- Every UTF-16 character in `letterText` must be used no more times than it appears in `magazineText`.\n- Characters are case-sensitive, and spaces or punctuation count like any other character.\n- Return `true` if the letter can be constructed, otherwise `false`.\n\nExamples\n- `canConstruct(\"note\", \"tone and more\")` returns `true`.\n- `canConstruct(\"aa\", \"ab\")` returns `false`.\n- `canConstruct(\"A\", \"aA\")` returns `true`.\n",
   "examples": [

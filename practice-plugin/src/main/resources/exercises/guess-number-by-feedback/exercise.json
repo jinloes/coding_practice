@@ -1,7 +1,9 @@
 {
   "id": "guess-number-by-feedback",
   "title": "Guess Number By Feedback",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search"
+  ],
   "difficulty": "Easy",
   "statement": "Find a hidden number by asking a feedback function about guesses.\n\nContract\n- The hidden value, if any, is in the inclusive range `1..upperBound`. If `upperBound <= 0`, return `-1` without calling `feedback`.\n- `feedback.applyAsInt(guess)` returns `0` when the guess is correct, a positive value when the hidden number is higher, and a negative value when it is lower.\n- Return the hidden number. The provided feedback is consistent with one value in range.\n\nExamples\n- With `upperBound = 10` and hidden value `6`, return `6`.\n- With `upperBound = 1` and hidden value `1`, return `1`.\n- With `upperBound = 100` and hidden value `99`, return `99`.\n",
   "examples": [

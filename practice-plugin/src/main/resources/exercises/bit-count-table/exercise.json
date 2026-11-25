@@ -1,7 +1,9 @@
 {
   "id": "bit-count-table",
   "title": "Bit Count Table",
-  "topic": "Bit Manipulation",
+  "topics": [
+    "Bit Manipulation"
+  ],
   "difficulty": "Easy",
   "statement": "Build a table of how many 1 bits each number from 0 to n contains.\n\nContract\n- `n` is a non-negative `int` that is small enough for an array of `n + 1` entries.\n- Return an `int[]` of length `n + 1` whose entry `i` is the number of 1 bits in the binary\n  form of `i`.\n- Aim to compute the whole table in a single pass rather than counting every number\n  from scratch.\n\nExamples\n- `countBits(5)` returns `{0, 1, 1, 2, 1, 2}`.\n- `countBits(0)` returns `{0}`.\n- `countBits(2)` returns `{0, 1, 1}`.\n",
   "examples": [

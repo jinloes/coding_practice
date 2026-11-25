@@ -1,7 +1,9 @@
 {
   "id": "binary-tree-inorder-successor",
   "title": "Binary Tree Inorder Successor",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "Find the node visited immediately after a target in inorder traversal.\n\nContract\n- `root` may be null and the tree is not necessarily a search tree.\n- `target` is matched by object identity, not by value.\n- Return the exact successor node, or null if the target is absent or last.\n\nExamples\n- In `[4, 2, 6, 1, 3, 5, 7]`, target value `3` has successor value `4`.\n- Target value `7` has no successor.\n",
   "examples": [

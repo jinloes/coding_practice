@@ -1,7 +1,10 @@
 {
   "id": "linked-list-cycle",
   "title": "Linked List Cycle",
-  "topic": "Linked Lists",
+  "topics": [
+    "Linked Lists",
+    "Two Pointers"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether following `next` references from the head of a singly linked list ever revisits a node.\n\nContract\n- `head` may be null or may point to the first node of a list. Each node has an integer `value` and a mutable `next` reference.\n- A list has a cycle when some node can be reached again by following `next` references. A node may link to itself.\n- Return true when the list has a cycle and false when the walk reaches null.\n- Node values may repeat, so equal values never prove a cycle; only the same node object does.\n- Do not modify the list and do not record visited nodes in a collection.\n\nExamples\n- A list `1 -> 2 -> 3` that ends in null has no cycle.\n- A list `3 -> 2 -> 0 -> -4` whose last node links back to the node holding `2` has a cycle.\n- A single node whose `next` is itself has a cycle.\n",
   "examples": [

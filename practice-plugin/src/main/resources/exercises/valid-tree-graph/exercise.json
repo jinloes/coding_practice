@@ -1,13 +1,24 @@
 {
   "id": "valid-tree-graph",
   "title": "Valid Tree Graph",
-  "topic": "Graphs",
+  "topics": [
+    "Graphs"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether an undirected graph is a single tree.\n\nContract\n- Nodes are numbered `0` through `nodeCount - 1`, where `nodeCount >= 1`. Each entry of `edges` is a pair `{a, b}` of valid nodes describing an undirected edge.\n- Return true exactly when the graph is connected and contains no cycle.\n- A repeated edge or a self-loop counts as a cycle.\n- Do not modify `edges`.\n\nExamples\n- `isTree(1, new int[0][2])` returns true.\n- `isTree(3, new int[][]{{0, 1}, {1, 2}})` returns true.\n- `isTree(3, new int[][]{{0, 1}, {1, 2}, {2, 0}})` returns false.\n",
   "examples": [
-    {"input": "nodeCount = 1, edges = []", "output": "true"},
-    {"input": "nodeCount = 3, edges = [[0, 1], [1, 2]]", "output": "true"},
-    {"input": "nodeCount = 3, edges = [[0, 1], [1, 2], [2, 0]]", "output": "false"}
+    {
+      "input": "nodeCount = 1, edges = []",
+      "output": "true"
+    },
+    {
+      "input": "nodeCount = 3, edges = [[0, 1], [1, 2]]",
+      "output": "true"
+    },
+    {
+      "input": "nodeCount = 3, edges = [[0, 1], [1, 2], [2, 0]]",
+      "output": "false"
+    }
   ],
   "hints": [
     "A tree on n nodes has a very specific number of edges. Checking that count rules out many inputs immediately.",

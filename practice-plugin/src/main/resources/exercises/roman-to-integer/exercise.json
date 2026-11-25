@@ -1,7 +1,11 @@
 {
   "id": "roman-to-integer",
   "title": "Roman to Integer",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Hash Maps",
+    "Math"
+  ],
   "difficulty": "Easy",
   "statement": "Convert a Roman numeral to the number it represents.\n\nContract\n- `numeral` is non-null and is a valid, standard Roman numeral for a value from\n  1 through 3999.\n- The symbols are `I` = 1, `V` = 5, `X` = 10, `L` = 50, `C` = 100, `D` = 500,\n  and `M` = 1000, written in uppercase.\n- Symbols normally appear from largest to smallest and add up. The only\n  exceptions are the six subtractive pairs `IV` = 4, `IX` = 9, `XL` = 40,\n  `XC` = 90, `CD` = 400, and `CM` = 900.\n- Return the value as an `int`.\n\nExamples\n- `romanToInt(\"III\")` returns `3`.\n- `romanToInt(\"LVIII\")` returns `58`.\n- `romanToInt(\"MCMXCIV\")` returns `1994`.\n",
   "examples": [

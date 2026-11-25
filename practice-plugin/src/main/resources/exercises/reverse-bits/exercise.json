@@ -1,7 +1,9 @@
 {
   "id": "reverse-bits",
   "title": "Reverse Bits",
-  "topic": "Bit Manipulation",
+  "topics": [
+    "Bit Manipulation"
+  ],
   "difficulty": "Easy",
   "statement": "Reverse the order of the 32 bits of an integer.\n\nContract\n- `value` is any `int`. Think of it as a row of 32 bits where bit 0 is the least significant.\n- Return the `int` whose bit `31 - i` equals bit `i` of `value`, for every `i` from `0` to `31`.\n- Leading zeros matter: all 32 positions take part, so the result can be negative.\n\nExamples\n- `reverseBits(1)` returns `-2147483648` (only the top bit is set).\n- `reverseBits(6)` returns `1610612736`, which is `0x60000000`.\n- `reverseBits(-1)` returns `-1`.\n",
   "examples": [

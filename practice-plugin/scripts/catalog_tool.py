@@ -3,7 +3,7 @@
 
 Usage:
   python3 practice-plugin/scripts/catalog_tool.py validate
-  python3 practice-plugin/scripts/catalog_tool.py scaffold <id> --title "..." --topic "..." --difficulty Easy|Medium|Hard
+  python3 practice-plugin/scripts/catalog_tool.py scaffold <id> --title "..." --topics "Arrays,Two Pointers" --difficulty Easy|Medium|Hard
 """
 
 from __future__ import annotations
@@ -104,6 +104,17 @@ def validate_exercises(root: Path, errors: list[str]) -> dict[str, dict]:
         difficulty = data.get("difficulty")
         if difficulty not in DIFFICULTY_ORDER:
             errors.append(f"{ex_id}: invalid difficulty {difficulty!r}")
+
+        if "topic" in data:
+            errors.append(f"{ex_id}: use 'topics' array instead of single 'topic'")
+        topics = data.get("topics")
+        if (
+            not isinstance(topics, list)
+            or not topics
+            or any(not isinstance(t, str) or not t.strip() for t in topics)
+            or len(topics) != len(set(topics))
+        ):
+            errors.append(f"{ex_id}: topics must be a non-empty list of unique non-blank strings")
 
         hints = data.get("hints")
         if not isinstance(hints, list) or len(hints) != 3 or any(not isinstance(h, str) or not h.strip() for h in hints):
@@ -312,13 +323,19 @@ def cmd_scaffold(args: argparse.Namespace) -> int:
         print(f"Error: exercise {ex_id!r} already exists", file=sys.stderr)
         return 2
 
+    topics = [t.strip() for t in args.topics.split(",") if t.strip()]
+    if not topics or len(topics) != len(set(topics)):
+        print("Error: --topics must be a non-empty comma-separated list of unique topics", file=sys.stderr)
+        return 2
+
     ex_dir.mkdir(parents=True)
     ref_dir.mkdir(parents=True)
     wrong_dir.mkdir(parents=True)
 
     manifest = {
+        "id": ex_id,
         "title": args.title,
-        "topic": args.topic,
+        "topics": topics,
         "difficulty": args.difficulty,
         "statement": (
             f"TODO: Describe {args.title}.\n\n"
@@ -463,7 +480,13 @@ def main() -> int:
     sc = sub.add_parser("scaffold", help="Create the 8-file skeleton for a new exercise.")
     sc.add_argument("id", help="Exercise ID (lowercase kebab-case)")
     sc.add_argument("--title", required=True, help="Exercise display title")
-    sc.add_argument("--topic", required=True, help="Exercise topic")
+    sc.add_argument(
+        "--topics",
+        "--topic",
+        dest="topics",
+        required=True,
+        help="Comma-separated exercise topics (primary first, e.g. 'Arrays,Two Pointers')",
+    )
     sc.add_argument("--difficulty", required=True, choices=DIFFICULTIES, help="Exercise difficulty")
     args = parser.parse_args()
     if args.command == "validate":

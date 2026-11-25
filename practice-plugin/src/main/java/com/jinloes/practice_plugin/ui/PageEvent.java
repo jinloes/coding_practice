@@ -18,6 +18,7 @@ record PageEvent(Type type, String id) {
         REVEAL_HINT,
         OPEN_COACH,
         COACH_DIAGNOSE,
+        COACH_TRACE,
         COACH_TRANSLATE,
         COACH_COMPARE,
         COACH_FOLLOW_UP,
@@ -41,6 +42,7 @@ record PageEvent(Type type, String id) {
                 case "revealHint" -> new PageEvent(Type.REVEAL_HINT, "");
                 case "openCoach" -> new PageEvent(Type.OPEN_COACH, "");
                 case "coachDiagnose" -> new PageEvent(Type.COACH_DIAGNOSE, "");
+                case "coachTrace" -> new PageEvent(Type.COACH_TRACE, "");
                 case "coachTranslate" -> new PageEvent(Type.COACH_TRANSLATE, "");
                 case "coachCompare" -> new PageEvent(Type.COACH_COMPARE, "");
                 case "coachFollowUp" -> new PageEvent(Type.COACH_FOLLOW_UP, requiredString(message, "text"));

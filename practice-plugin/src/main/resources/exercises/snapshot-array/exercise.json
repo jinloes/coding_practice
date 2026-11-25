@@ -1,7 +1,10 @@
 {
   "id": "snapshot-array",
   "title": "Snapshot Array",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Data Structures"
+  ],
   "difficulty": "Medium",
   "statement": "Implement an integer array that supports taking lightweight snapshots and querying any index as of a past snapshot.\n\nContract\n- `new Solution(length)` creates an array of `length` elements (`length >= 1`), all initialized to `0`, at snapshot version `0`.\n- `set(index, val)` updates element `index` (`0 <= index < length`) to `val` in the current unsealed version.\n- `snap()` seals the current version, returns its snapshot ID (starting from `0` and increasing by `1` on each call), and advances to the next version.\n- `get(index, snapId)` returns the value held at `index` when snapshot `snapId` was taken (`0 <= snapId < number of completed snaps`).\n- Avoid copying the entire array on every `snap()`: store only actual mutations per index.\n\nExamples\n- With length `3`: `set(0, 5)`, `snap()` -> `0`, `set(0, 6)`, `get(0, 0)` -> `5`.\n- Multiple writes before one snap overwrite the same version: `set(1, 2)`, `set(1, 9)`, `snap()` -> `0`, `get(1, 0)` -> `9`.\n- Untouched indexes remain `0`: `snap()` -> `0`, `get(2, 0)` -> `0`.\n",
   "examples": [

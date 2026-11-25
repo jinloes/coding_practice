@@ -1,7 +1,9 @@
 {
   "id": "random-pointer-list-copy",
   "title": "Random-Pointer List Copy",
-  "topic": "Linked Lists",
+  "topics": [
+    "Linked Lists"
+  ],
   "difficulty": "Medium",
   "statement": "Make an independent copy of a singly linked list in which every node also carries a second pointer to an arbitrary node of the same list.\n\nContract\n- A `Node` has an `int value`, a `next` pointer, and a `random` pointer. `random` is either null or refers to any node of the same list, including the node itself.\n- Return the head of a new list with the same length and values. Each copy's `next` must be the copy of the original's `next`, and each copy's `random` must be the copy of the original's `random` (or null when the original's is null).\n- No node of the original list may appear in the new list, not even through a `random` pointer.\n- Return null for a null list. Leave the original list exactly as it was.\n- Values may repeat, so copies must be matched by node, not by value.\n\nExamples\n- `copyList(null)` returns null.\n- A single node of value 5 whose `random` is itself becomes a new node of value 5 whose `random` is that new node.\n- Values `3, 7, 1` with random targets (index 1, none, index 0) yield new nodes `3, 7, 1` with the same relative random targets.\n",
   "examples": [

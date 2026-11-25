@@ -1,7 +1,10 @@
 {
   "id": "text-line-justification",
   "title": "Text Line Justification",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Greedy"
+  ],
   "difficulty": "Hard",
   "statement": "Given an array of non-empty `words` and an integer `maxWidth`, pack as many words as possible onto each line in order and format every line to have **exact** length `maxWidth`.\n\nFormatting rules\n- **Greedy packing:** Pack consecutive words into a line as long as the sum of their lengths plus at least one space between adjacent words does not exceed `maxWidth`.\n- **Full justification (non-last lines with 2+ words):** Distribute the total padding spaces (`maxWidth - sumOfWordLengths`) as evenly as possible across the `gaps = wordCount - 1` gaps between words. If the spaces do not divide evenly, the leftmost `extra = spaces % gaps` gaps each receive one additional space.\n- **Left justification (the last line, or any line containing only 1 word):** Separate words by a single space and pad the right end with spaces until the line length equals `maxWidth`.\n\nContract\n- `words` has at least one word, and every word satisfies `1 <= word.length() <= maxWidth`.\n- Every returned string must have length equal to `maxWidth`.\n\nExamples\n- `[\"Ship\", \"clean\", \"code\", \"to\", \"teams\", \"every\", \"day.\"]`, `maxWidth = 14` ->\n  `\"Ship     clean\"`, `\"code  to teams\"`, `\"every day.    \"`.\n- `[\"Fast\", \"builds\", \"require\", \"instrumentation\", \"and\", \"tests\"]`, `maxWidth = 16` ->\n  `\"Fast      builds\"`, `\"require         \"`, `\"instrumentation \"`, `\"and tests       \"`.\n- `[\"Code\", \"well\"]`, `maxWidth = 10` -> `[\"Code well \"]`.\n",
   "examples": [

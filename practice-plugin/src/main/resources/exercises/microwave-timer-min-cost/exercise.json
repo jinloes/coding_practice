@@ -1,7 +1,9 @@
 {
   "id": "microwave-timer-min-cost",
   "title": "Microwave Timer Minimum Cost",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Find the cheapest button sequence that sets a microwave timer to a target number of seconds.\n\nContract\n- `startDigit` is 0 through 9; `moveCost`, `pushCost`, and `targetSeconds` are non-negative integers. `targetSeconds` is between 1 and 6039 inclusive.\n- A sequence of one to four pressed digits is interpreted as `MMSS` after left-padding with zeroes. The seconds part may be 0 through 99, so `90` seconds can be entered either as `130` or `90`.\n- Moving from the current digit to a different digit costs `moveCost`; pressing the current digit costs `pushCost`. Pressing the same digit repeatedly does not pay another move cost.\n- Return the minimum total cost over every sequence that represents exactly `targetSeconds` seconds.\n\nExamples\n- `minCost(1, 2, 1, 600)` returns `6`.\n- `minCost(0, 1, 2, 76)` returns `6`.\n- `minCost(9, 100, 1, 9)` returns `1`.\n",
   "examples": [

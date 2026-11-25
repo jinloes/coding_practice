@@ -1,7 +1,9 @@
 {
   "id": "itinerary-reconstruction",
   "title": "Itinerary Reconstruction",
-  "topic": "Graphs",
+  "topics": [
+    "Graphs"
+  ],
   "difficulty": "Hard",
   "statement": "Order a set of one-way flight tickets into a single trip that uses every ticket exactly once and is alphabetically smallest.\n\nContract\n- Each ticket is a two-element list `[from, to]` of airport codes. The trip begins at `start`.\n- Every ticket must be used exactly once; the same ticket may appear several times and then must be used that many times.\n- A valid trip is guaranteed to exist. With no tickets the trip is just `[start]`.\n- Return the airports visited in order. When several valid trips exist, return the one that is smallest when compared airport by airport using normal string order.\n- Do not modify the ticket list.\n\nExamples\n- `[SEA-PDX, PDX-SEA, SEA-LAX]` from `SEA` returns `[SEA, PDX, SEA, LAX]`; flying to `LAX` first would strand the remaining tickets.\n- `[AAA-BBB]` from `AAA` returns `[AAA, BBB]`.\n- `[HUB-CCC, HUB-AAA, AAA-HUB, CCC-HUB]` from `HUB` returns `[HUB, AAA, HUB, CCC, HUB]`.\n",
   "examples": [

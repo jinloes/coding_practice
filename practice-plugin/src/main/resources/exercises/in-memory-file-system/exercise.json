@@ -1,7 +1,10 @@
 {
   "id": "in-memory-file-system",
   "title": "In-Memory File System",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Implement a tiny in-memory file system rooted at `/`.\n\nContract\n- Construct an empty file system with `new Solution()`.\n- `ls(path)` returns sorted child names for a directory, a singleton list containing the file name for a file, or an empty list for a missing path.\n- `mkdir(path)` creates all missing directories along the path. Calling it for `/` is allowed and changes nothing.\n- `addContentToFile(filePath, content)` creates the file and parent directories if needed, then appends `content`.\n- `readContentFromFile(filePath)` returns the complete content of an existing file. Tests only read files that exist.\n\nExamples\n- After `mkdir /a/b` and `add /a/b/c.txt hi`, `ls /a/b` returns `[c.txt]`.\n- Adding ` there` to `/a/b/c.txt` makes reading it return `hi there`.\n",
   "examples": [

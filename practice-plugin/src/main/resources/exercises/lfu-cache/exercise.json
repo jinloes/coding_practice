@@ -1,7 +1,11 @@
 {
   "id": "lfu-cache",
   "title": "Least Frequently Used Cache",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps",
+    "Linked Lists"
+  ],
   "difficulty": "Hard",
   "statement": "Design a fixed-capacity key-value cache that evicts the least frequently used entry when full, breaking frequency ties by evicting the least recently used entry.\n\nContract\n- `new Solution(capacity)` initializes a cache with capacity `capacity >= 0`.\n- `get(key)` returns the value stored for `key` if present, or `-1` otherwise. Accessing a present key increments its use frequency by `1` and marks it most recently used within its new frequency tier.\n- `put(key, value)` inserts or updates `key` with `value`:\n  - If `capacity == 0`, `put` does nothing.\n  - If `key` is already present, update its value, increment its frequency by `1`, and mark it most recently used in its new tier.\n  - If `key` is new and the cache is at capacity, evict the key with the lowest frequency; if multiple keys share that minimum frequency, evict the least recently used among them. Insert the new key with frequency `1`.\n- Both `get` and `put` must run in O(1) average time.\n\nExamples\n- Capacity `2`: `put(1, 10)`, `put(2, 20)`, `get(1)` -> `10`, `put(3, 30)` evicts `2`, `get(2)` -> `-1`, `get(3)` -> `30`.\n- Tie-breaking: Capacity `2`, `put(1, 1)`, `put(2, 2)`, `put(3, 3)` evicts `1` (both `1` and `2` had frequency `1`, and `1` was older), so `get(1)` -> `-1` and `get(2)` -> `2`.\n- Capacity `0`: `put(1, 1)`, `get(1)` -> `-1`.\n",
   "examples": [

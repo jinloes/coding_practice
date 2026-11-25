@@ -1,7 +1,9 @@
 {
   "id": "parentheses-generation",
   "title": "Parentheses Generation",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "List every well-formed arrangement of a given number of round-bracket pairs.\n\nContract\n- `pairs` is the number of `(` `)` pairs; it must be non-negative, otherwise throw `IllegalArgumentException`.\n- Return every string of exactly `pairs` opening and `pairs` closing brackets in which each closing bracket matches an earlier opening one (no prefix has more `)` than `(`). Each string appears exactly once.\n- The order of the returned strings is up to you. For `pairs == 0` the only arrangement is the empty string, so return a list holding just `\"\"`.\n\nExamples\n- `generate(1)` returns `[\"()\"]`.\n- `generate(2)` returns `\"(())\"` and `\"()()\"`, in any order.\n- `generate(3)` returns five strings: `\"((()))\"`, `\"(()())\"`, `\"(())()\"`, `\"()(())\"` and `\"()()()\"`, in any order.\n",
   "examples": [

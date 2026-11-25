@@ -1,7 +1,9 @@
 {
   "id": "label-partitions",
   "title": "Label Partitions",
-  "topic": "Greedy",
+  "topics": [
+    "Greedy"
+  ],
   "difficulty": "Medium",
   "statement": "Cut a lowercase string into as many consecutive pieces as possible so that no letter shows up in more than one piece, and report the piece lengths.\n\nContract\n- `text` is non-null and contains only the letters `a` to `z`; it may be empty.\n- Every letter that occurs in `text` must lie entirely inside one piece, and the pieces, read in order, must rebuild `text`.\n- Return the lengths of the pieces from left to right, using as many pieces as possible. The result is therefore unique.\n- An empty `text` has no pieces, so the result is an empty list.\n\nExamples\n- `partitionSizes(\"abcabdxyx\")` returns `[5, 1, 3]`: the pieces are `abcab`, `d` and `xyx`.\n- `partitionSizes(\"zzzz\")` returns `[4]` because a single letter cannot be split apart.\n- `partitionSizes(\"qrst\")` returns `[1, 1, 1, 1]`.\n",
   "examples": [

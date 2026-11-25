@@ -1,7 +1,10 @@
 {
   "id": "accept-language-matcher",
   "title": "Accept-Language Header Matcher",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Select supported locale tags that satisfy an HTTP-style `Accept-Language` preference list, ordered by client preference.\n\nContract\n- `header` is a non-null comma-separated string of requested language tags (for example `\"fr-CA, en, *\"`). Surrounding spaces around each tag are ignored, and blank entries are skipped.\n- `supported` is a non-null list of distinct, non-blank supported tags in server priority order (for example `[\"en-US\", \"en-GB\", \"fr-CA\"]`).\n- Matching is case-insensitive, and every tag in the returned list must use the exact spelling from `supported`.\n- Evaluate tags in `header` from left to right:\n  - A tag with a region subtag (contains `'-'`, like `en-US`) matches only the exact same tag in `supported`.\n  - A base language tag (no `'-'`, like `en`) matches any supported tag equal to it or starting with `<base>-`, in `supported` order.\n  - The wildcard `\"*\"` matches all remaining tags in `supported`, in `supported` order.\n- Never return duplicates: once a supported tag has been added, later preferences skip it.\n\nExamples\n- `matchLanguages(\"en-US, fr-CA\", [\"fr-CA\", \"en-GB\", \"en-US\"])` returns `[\"en-US\", \"fr-CA\"]`.\n- `matchLanguages(\"en, fr-CA\", [\"fr-FR\", \"en-GB\", \"en-US\", \"fr-CA\"])` returns `[\"en-GB\", \"en-US\", \"fr-CA\"]`.\n- `matchLanguages(\"de-DE, *\", [\"en-US\", \"fr-FR\"])` returns `[\"en-US\", \"fr-FR\"]`.\n",
   "examples": [

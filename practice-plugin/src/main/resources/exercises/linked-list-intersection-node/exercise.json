@@ -1,7 +1,10 @@
 {
   "id": "linked-list-intersection-node",
   "title": "Linked List Intersection Node",
-  "topic": "Linked Lists",
+  "topics": [
+    "Linked Lists",
+    "Two Pointers"
+  ],
   "difficulty": "Medium",
   "statement": "Find where two acyclic singly linked lists first share storage.\n\nContract\n- `first` and `second` may be null. Both reachable lists are acyclic.\n- Nodes are the same only when they are the exact same object; equal values do not count as an intersection.\n- Return the first shared node encountered while walking from each head, or null when the two lists are disjoint.\n- Do not mutate either list.\n\nExamples\n- Lists `1 -> 2 -> 8 -> 9` and `3 -> 8 -> 9` that share the `8` node return that `8` node.\n- Lists `1 -> 2` and `1 -> 2` built from separate nodes return null.\n- If both heads are the same object, return that head.\n",
   "examples": [

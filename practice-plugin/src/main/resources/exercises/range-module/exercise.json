@@ -1,7 +1,9 @@
 {
   "id": "range-module",
   "title": "Range Module",
-  "topic": "Intervals",
+  "topics": [
+    "Intervals"
+  ],
   "difficulty": "Hard",
   "statement": "Implement a data structure that tracks a union of half-open integer intervals `[left, right)` (all real numbers `x` with `left <= x < right`).\n\nContract\n- `new Solution()` initializes an empty tracked set.\n- `addRange(left, right)` adds every number in `[left, right)` to the tracked set (`left < right`).\n- `queryRange(left, right)` returns `true` if and only if every number in `[left, right)` is currently tracked (`left < right`).\n- `removeRange(left, right)` stops tracking every number in `[left, right)` (`left < right`).\n\nExamples\n- `addRange(10, 20)`, `removeRange(14, 16)`, `queryRange(10, 14)` -> `true`, `queryRange(13, 15)` -> `false`, `queryRange(16, 17)` -> `true`.\n- Adjacent intervals coalesce: `addRange(1, 5)`, `addRange(5, 10)`, `queryRange(2, 9)` -> `true`.\n- Removing a range that spans multiple intervals trims both ends: `addRange(1, 5)`, `addRange(7, 12)`, `removeRange(3, 9)`, `queryRange(1, 3)` -> `true`, `queryRange(9, 12)` -> `true`, `queryRange(3, 4)` -> `false`.\n",
   "examples": [

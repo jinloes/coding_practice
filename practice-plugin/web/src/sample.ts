@@ -21,7 +21,7 @@ const problem: PageState = {
     problem: {
       id: 'pair-sum',
       title: 'Pair Sum',
-      topic: 'Arrays',
+      topics: ['Arrays', 'Hash Maps'],
       difficulty: 'Easy',
       passed: true,
       statement: 'Return the indexes of two values in `nums` that add up to `target`.',
@@ -49,7 +49,7 @@ const guide: PageState = {
       summary: 'Trade memory for constant-time lookups.',
       lesson: 'How it works\n\n- Store what you have seen.',
       levels: [
-        { level: 'Easy', exercises: [{ id: 'pair-sum', title: 'Pair Sum', topic: 'Arrays', passed: true, selected: true }] },
+        { level: 'Easy', exercises: [{ id: 'pair-sum', title: 'Pair Sum', topics: ['Arrays', 'Hash Maps'], passed: true, selected: true }] },
         { level: 'Medium', exercises: [] },
         { level: 'Hard', exercises: [] },
       ],

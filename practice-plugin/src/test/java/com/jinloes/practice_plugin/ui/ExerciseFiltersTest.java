@@ -182,4 +182,23 @@ class ExerciseFiltersTest {
             assertThat(filters.visible(Set.of())).containsExactlyElementsOf(ExerciseCatalog.all());
         });
     }
+
+    @Test
+    void topicFilterAndSearchMatchSecondaryTopics() {
+        EdtTestUtil.runInEdtAndWait(() -> {
+            ExerciseFilters filters = new ExerciseFilters();
+            var pairSum = ExerciseCatalog.find("pair-sum");
+            assertThat(pairSum.topics()).contains("Arrays", "Hash Maps");
+
+            filters.selectTopic("Hash Maps");
+            assertThat(filters.visible(Set.of())).contains(pairSum);
+
+            filters.selectTopic("Arrays");
+            assertThat(filters.visible(Set.of())).contains(pairSum);
+
+            filters.selectTopic("All topics");
+            filters.setSearchText("hash maps");
+            assertThat(filters.visible(Set.of())).contains(pairSum);
+        });
+    }
 }

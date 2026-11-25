@@ -1,7 +1,9 @@
 {
   "id": "wildcard-route-matcher",
   "title": "Wildcard Route Matcher",
-  "topic": "Tries",
+  "topics": [
+    "Tries"
+  ],
   "difficulty": "Medium",
   "statement": "Design a slash-delimited URL route table that supports single-segment `*` wildcards and resolves the most specific matching handler.\n\nContract\n- Construct an empty router with `new Solution()`.\n- `register(pattern, handler)` registers `handler` (`handler` non-null and non-blank) for `pattern`. Re-registering the same normalized pattern overwrites its previous handler.\n- `match(path)` returns the handler for the most specific registered pattern matching `path`, or `\"\"` when no pattern matches.\n- Every `pattern` and `path` must be non-null, start with `\"/\"`, and contain no empty internal segments (`\"//\"`); otherwise throw `IllegalArgumentException`. A single trailing slash on non-root paths is normalized away (`\"/teams/\"` and `\"/teams\"` both have segment `[\"teams\"]`, while `\"/\"` has zero segments).\n- In a pattern, segment `\"*\"` matches any single segment; every other segment matches only exact literal text. Patterns match only paths with the same segment count.\n- If multiple patterns match `path`, prefer a **literal** segment over `\"*\"` at the earliest differing segment index from left to right.\n\nExamples\n- Registering `(/projects/*/issues -> listIssues)` and `(/projects/core/issues -> coreIssues)` resolves `/projects/core/issues` to `coreIssues` and `/projects/ops/issues` to `listIssues`.\n- Registering `(/api/*/members -> wildcardFirst)` and `(/api/v1/* -> literalFirst)` resolves `/api/v1/members` to `literalFirst`.\n- Registering `(/ -> home)` resolves `/` to `home` and `/unknown` to `\"\"`.\n",
   "examples": [

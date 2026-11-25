@@ -1,7 +1,10 @@
 {
   "id": "popularity-tracker",
   "title": "Popularity Tracker",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Track integer content identifiers by popularity and report an identifier tied for the current maximum.\n\nContract\n- Construct an empty tracker with `new Solution()`.\n- `increasePopularity(id)` increases that id's count by one, creating it when needed.\n- `decreasePopularity(id)` decreases an existing id by one, removes it when the count becomes zero, and ignores unknown ids.\n- `mostPopular()` returns any id with the highest positive count, or `-1` when no ids have positive counts.\n\nExamples\n- Increasing `10, 20, 10` makes `mostPopular()` return `10`.\n- Increasing and then decreasing `4` makes `mostPopular()` return `-1`.\n",
   "examples": [

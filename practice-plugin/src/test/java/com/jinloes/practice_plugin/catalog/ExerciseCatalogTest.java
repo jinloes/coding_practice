@@ -122,7 +122,7 @@ class ExerciseCatalogTest {
         assertThatThrownBy(() -> ExerciseCatalog.resource(pairSum, null))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ExerciseCatalog.resource(
-                new ExerciseCatalog.Exercise("unknown", "Unknown", "Test", "Easy", "Statement",
+                new ExerciseCatalog.Exercise("unknown", "Unknown", List.of("Test"), "Easy", "Statement",
                         List.of(), List.of(), "Input: none, for example: x", "x",
                         "O(n)", "O(1)", 0, 0),
                 "Solution.java"))

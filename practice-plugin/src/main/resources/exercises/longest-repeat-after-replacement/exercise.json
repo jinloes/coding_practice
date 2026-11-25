@@ -1,7 +1,10 @@
 {
   "id": "longest-repeat-after-replacement",
   "title": "Longest Repeat After Replacement",
-  "topic": "Sliding Window",
+  "topics": [
+    "Sliding Window",
+    "Strings"
+  ],
   "difficulty": "Medium",
   "statement": "Find the longest stretch that can be turned into one repeated letter using a limited number of replacements.\n\nContract\n- `text` is non-null, may be empty, and contains only uppercase letters `A`-`Z`. `k` is a non-negative `int`.\n- You may replace at most `k` characters, each with any uppercase letter.\n- Return the length of the longest substring (contiguous) that can be made of a single letter after at most `k` replacements.\n- Return `0` for empty text. Do not assume `k` is smaller than the text length.\n\nExamples\n- `longestRepeat(\"QQRQQ\", 1)` returns `5` (replace the `R`).\n- `longestRepeat(\"ABCD\", 0)` returns `1`.\n- `longestRepeat(\"XYXYXYX\", 2)` returns `5` (the window `XYXYX` has two `Y` to replace).\n",
   "examples": [

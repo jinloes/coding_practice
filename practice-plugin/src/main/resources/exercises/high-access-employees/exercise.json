@@ -1,7 +1,10 @@
 {
   "id": "high-access-employees",
   "title": "High Access Employees",
-  "topic": "Sliding Window",
+  "topics": [
+    "Sliding Window",
+    "Strings"
+  ],
   "difficulty": "Medium",
   "statement": "Find employees who badge in too frequently.\n\nContract\n- `accesses` is non-null. Each access has an employee name and a four-character `HHmm` time on a single day.\n- Return employee names, sorted alphabetically, for anyone with at least three accesses in a window strictly shorter than 60 minutes.\n- Multiple accesses at the same minute count separately. Do not mutate the input list.\n\nExamples\n- `alice@0830 alice@0850 alice@0920 bob@1200` returns `[alice]`.\n- `amy@1000 amy@1030 amy@1100` returns `[]` because the span is exactly 60 minutes.\n- `zoe@0000 zoe@0000 zoe@0001` returns `[zoe]`.\n",
   "examples": [

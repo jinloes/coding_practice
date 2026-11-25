@@ -1,7 +1,10 @@
 {
   "id": "substring-word-concatenations",
   "title": "Word Concatenation Substrings",
-  "topic": "Sliding Window",
+  "topics": [
+    "Sliding Window",
+    "Strings"
+  ],
   "difficulty": "Hard",
   "statement": "Find every place where a string contains all required words back-to-back in any order.\n\nContract\n- `text` and `words` are non-null. Every word is non-null, non-empty, and all words have the same length.\n- Return the starting indices, in increasing order, where the substring of length `words.length * wordLength` can be split into words that match `words` with exactly the same multiplicities.\n- The words may appear in any order inside the window. Overlapping answers are allowed.\n- If `words` is empty, or the combined length is longer than `text`, return an empty list.\n\nExamples\n- In `barfoothefoobarman` with `[foo, bar]`, return `[0, 9]`.\n- In `wordgoodgoodgoodbestword` with `[word, good, best, good]`, return `[8]`.\n- In `aaaaaa` with `[aa, aa]`, return `[0, 1, 2]`.\n",
   "examples": [

@@ -1,7 +1,9 @@
 {
   "id": "kth-largest-stream",
   "title": "Kth Largest in a Stream",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Easy",
   "statement": "Build a tracker that reports the kth largest value seen so far each time a number is added.\n\nContract\n- `new Solution(k, initial)` starts with the values in `initial` (any order, possibly empty) and a fixed rank `k >= 1`. Do not modify `initial`.\n- `add(value)` records one more value and returns the kth largest of every value recorded so far, counting repeated values separately.\n- At least `k` values exist after every `add`, which requires `initial.length >= k - 1`. Throw `IllegalArgumentException` when `k < 1` or when `initial` has fewer than `k - 1` values.\n- Values may be negative. `k` may be much smaller than the number of recorded values.\n\nExamples\n- With `k = 2` and `[10, 3, 7]`, adding `4, 12, 8, 15` returns `7, 10, 10, 12`.\n- With `k = 1` and no starting values, adding `-5, -9, 2` returns `-5, -5, 2`.\n- With `k = 2` and `[6, 6]`, adding `6, 1, 9` returns `6, 6, 6` because repeated values count separately.\n",
   "examples": [

@@ -1,7 +1,10 @@
 {
   "id": "sorted-target-range",
   "title": "Sorted Target Range",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Arrays"
+  ],
   "difficulty": "Medium",
   "statement": "Find the inclusive range of positions occupied by a target in a sorted array.\n\nContract\n- `numbers` is non-null and sorted in nondecreasing order. It may contain duplicates and may be empty.\n- Return a two-element array `{firstIndex, lastIndex}` for `target`. If the target is absent, return `{-1, -1}`.\n- Do not mutate `numbers`.\n\nExamples\n- `targetRange(new int[]{1, 2, 2, 2, 4}, 2)` returns `{1, 3}`.\n- `targetRange(new int[]{1, 3, 5}, 4)` returns `{-1, -1}`.\n- `targetRange(new int[]{7, 7, 7}, 7)` returns `{0, 2}`.\n",
   "examples": [

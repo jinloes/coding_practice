@@ -1,7 +1,9 @@
 {
   "id": "distinct-subsequence-count",
   "title": "Distinct Subsequence Count",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Hard",
   "statement": "Count how many different ways the characters of a pattern can be picked, in order, from a source string.\n\nContract\n- Both strings are non-null and may be empty; characters compare exactly (case-sensitive).\n- A selection is a set of positions in `source`, increasing from left to right, whose characters spell `pattern`. Two selections that use different positions count separately even when they spell the same text.\n- An empty `pattern` has exactly one selection (choose nothing); a pattern longer than `source` has none.\n- The answer fits in a `long`.\n\nExamples\n- `countSubsequences(\"bagbag\", \"bag\")` returns `4`: the `b`, `a`, `g` can be chosen from positions {0,1,2}, {0,1,5}, {0,4,5} or {3,4,5}.\n- `countSubsequences(\"xyz\", \"xzy\")` returns `0`: `y` comes before `z` in the source.\n- `countSubsequences(\"aaaa\", \"aa\")` returns `6`: any two of the four positions.\n",
   "examples": [

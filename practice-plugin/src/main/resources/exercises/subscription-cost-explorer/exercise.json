@@ -1,7 +1,11 @@
 {
   "id": "subscription-cost-explorer",
   "title": "Subscription Cost Explorer",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Prefix Sums",
+    "Intervals"
+  ],
   "difficulty": "Medium",
   "statement": "Build a calendar-year subscription cost explorer for a SaaS billing system. A customer may hold one or more product subscriptions across a target `year`, where each subscription starts in a given `YYYY-MM-DD` date, optionally ends on a given date (or continues indefinitely when `endDate == null`), and charges a fixed monthly price in cents.\n\nImplement `monthlyCostReport(List<Subscription> subscriptions, int year)` returning an array `long[12]` where index `0` is January and index `11` is December of `year`, holding the total cost in cents across all active subscriptions for each month.\n\nContract\n- `Subscription(String product, long monthlyPriceCents, String startDate, String endDate)`: `startDate` is always a valid `YYYY-MM-DD` date; `endDate` is either `null` (active through the end of time) or a valid `YYYY-MM-DD` date with `endDate >= startDate`.\n- **Billing rule:** A subscription is billed for its full `monthlyPriceCents` in every calendar month `(year, month)` that overlaps its active interval `[startDate, endDate]` by at least one day (i.e., `startYearMonth <= (year, month)` and, if `endDate != null`, `(year, month) <= endYearMonth`).\n- Multiple subscriptions (for the same or different products) sum independently.\n- If `subscriptions` is empty or none overlap `year`, return 12 zeros.\n\nExamples\n- Single subscription `(\"Jira\", 1000, \"2025-03-15\", null)` for `2025` -> `[0, 0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]`.\n- Bounded + overlapping subscriptions: `(\"Jira\", 1000, \"2024-11-01\", \"2025-02-10\")` and `(\"Confluence\", 500, \"2025-02-20\", \"2025-04-01\")` for `2025` -> `[1000, 1500, 500, 500, 0, 0, 0, 0, 0, 0, 0, 0]`.\n- Subscription outside target year: `(\"Jira\", 1000, \"2026-01-01\", null)` for `2025` -> all zeros.\n",
   "examples": [

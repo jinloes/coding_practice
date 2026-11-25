@@ -1,7 +1,10 @@
 {
   "id": "grid-word-search",
   "title": "Grid Word Search",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking",
+    "Matrices"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether a word can be traced through a grid of letters.\n\nContract\n- `grid` is non-null and rectangular, and may have no rows. `word` is non-null and non-empty. Cells and the word contain only letters; matching is case-sensitive.\n- The word exists if its letters can be matched one after another on cells where each next cell is directly above, below, left of, or right of the previous one (no diagonal steps).\n- A single cell may be used at most once within one path.\n- `grid` may be modified while searching, but it must hold its original contents when the method returns.\n\nExamples\n- With rows `ABC`, `SED`, `TRO`, `wordExists(grid, \"BEST\")` returns `true`.\n- With the same grid, `wordExists(grid, \"BEE\")` returns `false` because only one `E` exists.\n- With the single-cell grid `Z`, `wordExists(grid, \"Z\")` returns `true`.\n",
   "examples": [

@@ -37,6 +37,8 @@ class PageJsonTest {
         assertThat(page.get("kind").getAsString()).isEqualTo("problem");
         assertThat(problem.get("id").getAsString()).isEqualTo(exercise.id());
         assertThat(problem.get("title").getAsString()).isEqualTo(exercise.title());
+        assertThat(problem.getAsJsonArray("topics").asList().stream().map(e -> e.getAsString()).toList())
+                .containsExactlyElementsOf(exercise.topics());
         assertThat(problem.get("difficulty").getAsString()).isEqualTo(exercise.difficulty());
         assertThat(problem.get("passed").getAsBoolean()).isTrue();
         assertThat(problem.get("statement").getAsString()).isEqualTo(exercise.statement());

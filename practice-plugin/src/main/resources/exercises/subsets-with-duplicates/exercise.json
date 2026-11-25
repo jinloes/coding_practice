@@ -1,7 +1,9 @@
 {
   "id": "subsets-with-duplicates",
   "title": "Subsets with Duplicates",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "Produce every distinct subset of a collection of integers that may contain repeated values.\n\nContract\n- `values` may be empty and may contain equal numbers.\n- Return every distinct subset once. Two subsets are the same when they hold the same numbers the same number of times, regardless of which positions the numbers came from.\n- The empty subset is always included. The order of the subsets and of the numbers inside a subset do not matter.\n- Each returned subset must be its own list, and `values` must not be changed.\n\nExamples\n- `subsets(new int[]{1, 2, 2})` returns `[[], [1], [2], [1, 2], [2, 2], [1, 2, 2]]` in any order.\n- `subsets(new int[]{4, 4, 4})` returns `[[], [4], [4, 4], [4, 4, 4]]`.\n- `subsets(new int[]{0})` returns `[[], [0]]` in any order.\n",
   "examples": [

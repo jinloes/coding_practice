@@ -1,7 +1,10 @@
 {
   "id": "chained-hash-table",
   "title": "Chained Hash Table",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Implement a small string-keyed hash table that resolves collisions with separate chains.\n\nContract\n- `new Solution(capacity)` creates an empty table with exactly `capacity` buckets. Throw `IllegalArgumentException` when `capacity < 1`.\n- `put(key, value)` inserts or overwrites `key`. Keys are non-null strings; `value` may be null.\n- `get(key)` returns the stored value, or null when the key is absent. `containsKey(key)` distinguishes an absent key from a key mapped to null.\n- `remove(key)` deletes the key if present and returns whether a deletion happened.\n- `size()` returns the number of stored keys. Null keys passed to any key operation throw `IllegalArgumentException`.\n- Do not use `java.util.Map` or other map implementations in the table implementation.\n\nExamples\n- With capacity 4, `put(\"a\", \"1\")`, then `get(\"a\")` returns `\"1\"` and `size()` is 1.\n- Overwriting key `\"a\"` from `\"1\"` to `\"2\"` keeps `size()` at 1 and `get(\"a\")` returns `\"2\"`.\n- Removing a present key returns `true`; removing it again returns `false`.\n",
   "examples": [

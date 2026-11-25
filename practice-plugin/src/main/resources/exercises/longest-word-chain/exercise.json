@@ -1,7 +1,10 @@
 {
   "id": "longest-word-chain",
   "title": "Longest Word Chain",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Given an array of lowercase English `words`, a word `a` is a **predecessor** of word `b` if and only if inserting exactly one letter anywhere in `a` (without reordering the remaining letters) produces `b`. For example, `\"cat\"` is a predecessor of `\"chat\"`, while `\"tac\"` is not.\n\nA **word chain** is a sequence `[w_1, w_2, ..., w_k]` (`k >= 1`) where each `w_i` is a predecessor of `w_{i+1}` and every word comes from `words`. Return the maximum possible length of a word chain.\n\nContract\n- `words` may be empty (return `0`) and may contain duplicates (duplicates do not extend a chain because a predecessor must be strictly 1 character shorter).\n- Word lengths are positive and words are not guaranteed to be sorted.\n\nExamples\n- `[\"a\", \"at\", \"cat\", \"chat\", \"chart\", \"dog\"]` -> `5` (`\"a\" -> \"at\" -> \"cat\" -> \"chat\" -> \"chart\"`).\n- `[\"in\", \"pin\", \"spin\", \"spine\", \"spline\", \"on\"]` -> `5` (`\"in\" -> \"pin\" -> \"spin\" -> \"spine\" -> \"spline\"`).\n- `[\"team\", \"jira\"]` -> `1` (no word is a predecessor of another).\n",
   "examples": [

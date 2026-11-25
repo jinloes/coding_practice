@@ -19,7 +19,7 @@ export type Example = { input: string; output: string };
 export type Problem = {
   id: string;
   title: string;
-  topic: string;
+  topics: string[];
   difficulty: string;
   passed: boolean;
   statement: string;
@@ -37,7 +37,7 @@ export type Problem = {
 export type GuideExercise = {
   id: string;
   title: string;
-  topic: string;
+  topics: string[];
   passed: boolean;
   selected: boolean;
 };
@@ -116,6 +116,7 @@ export type PageEvent = {
     | 'revealHint'
     | 'openCoach'
     | 'coachDiagnose'
+    | 'coachTrace'
     | 'coachTranslate'
     | 'coachCompare'
     | 'coachFollowUp'

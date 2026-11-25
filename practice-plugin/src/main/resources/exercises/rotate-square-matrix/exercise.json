@@ -1,7 +1,10 @@
 {
   "id": "rotate-square-matrix",
   "title": "Rotate Square Matrix",
-  "topic": "Matrices",
+  "topics": [
+    "Matrices",
+    "Math"
+  ],
   "difficulty": "Medium",
   "statement": "Rotate a square matrix a quarter turn clockwise, in place.\n\nContract\n- `matrix` is non-null and square: it has `n` rows and each row has `n` columns. `n` may be 0.\n- After the call, the value that started at row `r`, column `c` must be at row `c`, column `n - 1 - r`.\n- Modify `matrix` itself and return nothing; do not build a second n x n matrix.\n\nExamples\n- `{{1,2},{3,4}}` becomes `{{3,1},{4,2}}`.\n- `{{1,2,3},{4,5,6},{7,8,9}}` becomes `{{7,4,1},{8,5,2},{9,6,3}}`.\n- `{{5}}` stays `{{5}}`.\n",
   "examples": [

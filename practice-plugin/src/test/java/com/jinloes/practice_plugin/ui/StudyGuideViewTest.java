@@ -5,6 +5,7 @@ import com.jinloes.practice_plugin.catalog.ExerciseCatalog;
 import com.jinloes.practice_plugin.catalog.GuideCatalog;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,7 +73,7 @@ class StudyGuideViewTest {
                 .contains("<p>Merge Sorted Lists appears in: Two Pointers, Linked Lists.</p>")
                 .contains("<p>Practice tracks: " + expectedTracks + ".</p>");
         var unguided = new ExerciseCatalog.Exercise(
-                "unguided-sample", "Unguided Sample", "Topic", "Easy", "Statement",
+                "unguided-sample", "Unguided Sample", List.of("Topic"), "Easy", "Statement",
                 java.util.List.of(), java.util.List.of(), "Input: x", "x", "O(1)", "O(1)", 0, 0);
         assertThat(StudyGuideView.html(null, unguided, Set.of()))
                 .contains("<p>Unguided Sample is not part of any guide yet.</p>")

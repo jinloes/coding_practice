@@ -1,7 +1,9 @@
 {
   "id": "rectangle-intersection",
   "title": "Rectangle Intersection",
-  "topic": "Math",
+  "topics": [
+    "Math"
+  ],
   "difficulty": "Medium",
   "statement": "Find the positive-area overlap of two axis-aligned rectangles.\n\nContract\n- Rectangles are non-null and described by their lower-left corner `x`, `y`, plus positive `width` and `height`.\n- Return a new `Rectangle` describing the area shared by both inputs, or `null` when they do not overlap with positive width and positive height.\n- Rectangles that only touch along an edge or at a corner do not intersect for this exercise.\n- Coordinates may be negative. Use wide arithmetic for edge calculations so large coordinates do not overflow.\n\nExamples\n- `intersection(rect(0, 0, 4, 3), rect(2, 1, 4, 4))` returns `rect(2, 1, 2, 2)`.\n- `intersection(rect(0, 0, 2, 2), rect(2, 0, 2, 2))` returns `null`.\n- `intersection(rect(-3, -2, 4, 4), rect(-1, -5, 3, 5))` returns `rect(-1, -2, 2, 2)`.\n",
   "examples": [

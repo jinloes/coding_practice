@@ -1,7 +1,9 @@
 {
   "id": "reverse-in-groups",
   "title": "Reverse in Groups",
-  "topic": "Linked Lists",
+  "topics": [
+    "Linked Lists"
+  ],
   "difficulty": "Hard",
   "statement": "Reverse a singly linked list in consecutive blocks of `k` nodes, leaving a final block that is shorter than `k` untouched.\n\nContract\n- Walk the list from the head, taking blocks of exactly `k` nodes. Reverse the order of the nodes inside each full block; a trailing block with fewer than `k` nodes keeps its original order.\n- Rearrange the existing nodes by relinking `next` pointers. Do not create new nodes and do not just swap the `val` fields; callers compare node identity.\n- Return the new head. A null list returns null. If `k` is larger than the list, nothing changes.\n- Throw `IllegalArgumentException` when `k < 1`. With `k == 1` the list is unchanged.\n- Use O(1) extra space beyond the list itself.\n\nExamples\n- `1 -> 2 -> 3 -> 4 -> 5` with `k = 2` becomes `2 -> 1 -> 4 -> 3 -> 5`.\n- `1 -> 2 -> 3 -> 4 -> 5 -> 6` with `k = 3` becomes `3 -> 2 -> 1 -> 6 -> 5 -> 4`.\n- `1 -> 2 -> 3` with `k = 1` stays `1 -> 2 -> 3`.\n",
   "examples": [

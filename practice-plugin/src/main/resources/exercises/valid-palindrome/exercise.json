@@ -1,7 +1,10 @@
 {
   "id": "valid-palindrome",
   "title": "Valid Palindrome",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Two Pointers"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether a piece of text reads the same forward and backward.\n\nContract\n- `text` is non-null and may be empty. It contains only printable ASCII\n  characters (codes 32 through 126).\n- Only letters and digits count. Skip spaces, punctuation, and every other\n  character.\n- Compare letters without regard to case, so `A` matches `a`. A digit only\n  matches the same digit.\n- Return true exactly when the letters and digits read the same in both\n  directions. Text with no letters or digits reads the same both ways.\n\nExamples\n- `isPalindrome(\"Was it a car or a cat I saw?\")` returns `true`.\n- `isPalindrome(\"race a car\")` returns `false`.\n- `isPalindrome(\".,!\")` returns `true`.\n",
   "examples": [

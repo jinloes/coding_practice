@@ -29,6 +29,8 @@ class PageEventTest {
                 .isEqualTo(new PageEvent(PageEvent.Type.OPEN_COACH, ""));
         assertThat(PageEvent.parse("{\"type\":\"coachDiagnose\"}"))
                 .isEqualTo(new PageEvent(PageEvent.Type.COACH_DIAGNOSE, ""));
+        assertThat(PageEvent.parse("{\"type\":\"coachTrace\"}"))
+                .isEqualTo(new PageEvent(PageEvent.Type.COACH_TRACE, ""));
         assertThat(PageEvent.parse("{\"type\":\"coachTranslate\"}"))
                 .isEqualTo(new PageEvent(PageEvent.Type.COACH_TRANSLATE, ""));
         assertThat(PageEvent.parse("{\"type\":\"coachCompare\"}"))

@@ -1,7 +1,10 @@
 {
   "id": "balanced-delimiters",
   "title": "Balanced Delimiters",
-  "topic": "Stacks",
+  "topics": [
+    "Stacks",
+    "Strings"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether a string of delimiters is properly balanced and nested.\n\nContract\n- `input` is non-null and contains only the six characters `(`, `)`, `[`, `]`,\n  `{`, and `}`. The empty string is valid.\n- Return true exactly when every opening delimiter is closed by the same kind\n  in last-in-first-out order, with no unmatched delimiters left over.\n\nExamples\n- `isBalanced(\"{[()]}\")` returns `true`.\n- `isBalanced(\"([]{})\")` returns `true`.\n- `isBalanced(\"([)]\")` returns `false`.\n",
   "examples": [

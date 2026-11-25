@@ -1,7 +1,9 @@
 {
   "id": "running-median",
   "title": "Running Median",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Hard",
   "statement": "Maintain the median of a growing stream of integers.\n\nContract\n- Implement an instance class with `void add(int value)` and `double median()`. A new instance starts with no values.\n- `add` accepts any `int`, including negatives, duplicates, `Integer.MIN_VALUE` and `Integer.MAX_VALUE`.\n- `median` returns the middle value of everything added so far, or the average of the two middle values when the count is even. The average must be exact even for values near the `int` limits.\n- `median` throws `IllegalStateException` when no value has been added yet.\n- `median` may be called any number of times between additions and must not change the result.\n\nExamples\n- After adding 5, 15 and 1 the medians are 5.0, 10.0 and 5.0 after each addition.\n- Calling `median()` on a new instance throws `IllegalStateException`.\n- After adding -1, -1, 4 and 4 the medians are -1.0, -1.0, -1.0 and 1.5.\n",
   "examples": [

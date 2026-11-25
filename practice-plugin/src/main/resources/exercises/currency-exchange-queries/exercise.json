@@ -1,7 +1,9 @@
 {
   "id": "currency-exchange-queries",
   "title": "Currency Exchange Queries",
-  "topic": "Graphs",
+  "topics": [
+    "Graphs"
+  ],
   "difficulty": "Medium",
   "statement": "Given a list of currency conversion pairs `pairs[i] = [from, to]` with positive exchange rates `rates[i]` meaning `1 from = rates[i] to`, answer a list of conversion queries `queries[j] = [source, target]`.\n\nContract\n- `pairs` and `rates` have the same length `m >= 0`; every `rates[i] > 0.0`.\n- Each pair `(a, b)` with rate `r` implies both `a -> b` with factor `r` and `b -> a` with factor `1.0 / r`.\n- Assume the given rates are consistent (no conflicting cycles).\n- For each query `[source, target]`:\n  - If either `source` or `target` does not appear in `pairs`, return `-1.0` (even when `source.equals(target)`).\n  - If `source.equals(target)` and `source` appears in `pairs`, return `1.0`.\n  - Otherwise, return the product of rates along any path from `source` to `target`, or `-1.0` if no path exists.\n- Answers within `1e-5` of the exact value are accepted.\n\nExamples\n- `pairs = [[\"USD\", \"EUR\"], [\"EUR\", \"GBP\"]]`, `rates = [0.9, 0.8]`, queries `USD->GBP`, `GBP->USD`, `USD->USD`, `USD->JPY` -> `[0.72, 1.388888..., 1.0, -1.0]`.\n- Disconnected components: `USD->CAD = 1.35`, `EUR->GBP = 0.8`, query `USD->GBP` -> `-1.0`.\n- Unknown self-query: `BTC->BTC` when `BTC` is absent -> `-1.0`.\n",
   "examples": [

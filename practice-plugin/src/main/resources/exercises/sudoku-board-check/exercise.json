@@ -1,7 +1,10 @@
 {
   "id": "sudoku-board-check",
   "title": "Sudoku Board Check",
-  "topic": "Matrices",
+  "topics": [
+    "Matrices",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether a partly filled 9x9 digit grid breaks the sudoku rules so far.\n\nContract\n- `board` is a non-null 9x9 `char[][]`; each cell is a digit `'1'` to `'9'` or `'.'` for an empty cell.\n- The board is valid when no digit repeats within any row, any column, or any of the nine 3x3 boxes that tile the grid. Empty cells never conflict with anything.\n- Only the filled cells are judged: return `true` for a board that obeys the rules even if it could not be completed into a full solution.\n- Do not mutate `board`.\n\nExamples\n- `isValid` on a grid whose filled cells never repeat in a row, column or box returns `true`.\n- Two `4`s at the top-left corner box, one at row 0 column 0 and one at row 1 column 1, return `false`.\n- Two `7`s in column 5, at rows 0 and 8, return `false`.\n",
   "examples": [

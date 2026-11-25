@@ -1,7 +1,9 @@
 {
   "id": "tree-from-traversals",
   "title": "Tree From Traversals",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "Rebuild a binary tree from its preorder and inorder traversals.\n\nContract\n- `preorder` and `inorder` are non-null arrays of the same length and describe the same binary tree.\n- All values in the tree are distinct, so the two traversals identify exactly one tree.\n- Return the root of the rebuilt tree using `Solution.TreeNode` (fields `value`, `left`, `right`), or `null` when both arrays are empty.\n- Do not mutate the input arrays.\n\nExamples\n- `buildTree(new int[]{4, 2, 1, 3, 6, 5}, new int[]{1, 2, 3, 4, 5, 6})` returns the tree `[4, 2, 6, 1, 3, 5]` (level order).\n- `buildTree(new int[]{7}, new int[]{7})` returns the single-node tree `[7]`.\n- `buildTree(new int[]{1, 2, 3}, new int[]{3, 2, 1})` returns `[1, 2, null, 3]`, a chain leaning left.\n",
   "examples": [

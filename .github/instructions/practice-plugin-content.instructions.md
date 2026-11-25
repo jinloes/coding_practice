@@ -29,6 +29,16 @@ src/test/resources/known-wrong/<id>/Solution.java
 The known-wrong candidate compiles against the shipped tests but must fail at
 least one of them; `KnownWrongSolutions` loads it from the test resources.
 
+- Every `exercise.json` must declare `"topics"` as a non-empty array of unique,
+  non-blank topic strings (never a single `"topic"` field). List the primary
+  domain or data structure first and include every applicable secondary pattern
+  or sub-topic (for example `["Arrays", "Two Pointers"]` or
+  `["Arrays", "Hash Maps"]`). Prefer existing canonical topic names (`Arrays`,
+  `Backtracking`, `Binary Search`, `Binary Trees`, `Bit Manipulation`,
+  `Data Structures`, `Dynamic Programming`, `Graphs`, `Greedy`, `Hash Maps`,
+  `Heaps`, `Intervals`, `Linked Lists`, `Math`, `Matrices`, `Prefix Sums`,
+  `Queues`, `Sliding Window`, `Stacks`, `Strings`, `Tries`, `Two Pointers`)
+  before introducing a new one.
 - Starters contain only the learner API, no `main`, assertions, or harness, and
   throw `UnsupportedOperationException("Implement <method>")`.
 - `ExamplesTest.java` and `CorrectnessTest.java` use one plain `@Test` per

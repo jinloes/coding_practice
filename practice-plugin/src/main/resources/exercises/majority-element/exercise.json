@@ -1,7 +1,10 @@
 {
   "id": "majority-element",
   "title": "Majority Element",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Find the value that fills more than half of an array.\n\nContract\n- `numbers` is non-null and non-empty. Values may be any `int`, including\n  negative values.\n- One value appears more than `numbers.length / 2` times, which means strictly\n  more than half of the entries. Return that value.\n- Do not mutate the array.\n\nExamples\n- `majorityElement(new int[]{3, 2, 3})` returns `3`.\n- `majorityElement(new int[]{2, 2, 1, 1, 1, 2, 2})` returns `2`.\n- `majorityElement(new int[]{7})` returns `7`.\n",
   "examples": [

@@ -1,7 +1,9 @@
 {
   "id": "palindrome-partitions",
   "title": "Palindrome Partitions",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Medium",
   "statement": "Split a string into consecutive pieces so that every piece reads the same forwards and backwards, and list all such splits.\n\nContract\n- `text` is a non-null string; characters are compared exactly (case-sensitive). It may be empty.\n- A partition cuts `text` into consecutive non-empty pieces that, joined in order, give back `text`. Every piece must be a palindrome. A single character is a palindrome.\n- Return every valid partition once, each as the list of its pieces in order. The order of the partitions does not matter.\n- The empty string has exactly one partition, the one with no pieces, so the result is `[[]]`.\n\nExamples\n- `partitions(\"aab\")` returns `[[\"a\", \"a\", \"b\"], [\"aa\", \"b\"]]` in any order.\n- `partitions(\"abc\")` returns `[[\"a\", \"b\", \"c\"]]`.\n- `partitions(\"racecar\")` returns four partitions, among them `[\"racecar\"]` and `[\"r\", \"aceca\", \"r\"]`.\n",
   "examples": [

@@ -1,7 +1,10 @@
 {
   "id": "substring-index",
   "title": "Substring Index",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Two Pointers"
+  ],
   "difficulty": "Easy",
   "statement": "Find where a pattern first appears inside a larger string.\n\nContract\n- `text` and `pattern` may be null. Return `-1` if either argument is null.\n- Return the zero-based index of the first occurrence of `pattern` in `text`, or `-1` when it is absent.\n- The empty pattern is found at index `0`, including in an empty text.\n- Do not use `String.indexOf`, `String.contains`, or regular expressions in the implementation. Do not mutate either input.\n\nExamples\n- `substringIndex(\"abc123\", \"abc\")` returns `0`.\n- `substringIndex(\"abc123\", \"c12\")` returns `2`.\n- `substringIndex(\"abc123\", \"xyz\")` returns `-1`.\n",
   "examples": [

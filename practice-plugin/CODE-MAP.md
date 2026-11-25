@@ -189,7 +189,9 @@ also run after test failures with `--continue`.
    order. `ExerciseCatalogTest` checks that the index, the exercise directories,
    and the reference and known-wrong directories all agree.
 2. Add `src/main/resources/exercises/<id>/exercise.json` with:
-   - stable `id`, title, topic, and difficulty;
+   - stable `id`, title, `topics` (non-empty array of unique topics, primary first,
+     plus any applicable secondary patterns such as `["Arrays", "Two Pointers"]`),
+     and difficulty;
    - an original statement with `Contract` and `Examples`;
    - structured visible examples;
    - exactly three progressive hints;
@@ -212,7 +214,7 @@ also run after test failures with `--continue`.
    to any practice track whose list or commonly reported patterns it matches.
 7. Run `python3 scripts/catalog_tool.py validate`, then the catalog test
    (`-PcatalogOnly=<id>`), then the full plugin suite. (You can also bootstrap
-   a new exercise with `python3 scripts/catalog_tool.py scaffold <id> --title ... --topic ... --difficulty ...`.)
+   a new exercise with `python3 scripts/catalog_tool.py scaffold <id> --title ... --topics "Arrays,Two Pointers" --difficulty ...`.)
 
 ## Adding A Study Guide
 

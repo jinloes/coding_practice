@@ -1,7 +1,9 @@
 {
   "id": "non-adjacent-max-sum",
   "title": "Non-Adjacent Max Sum",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Pick values from a row so that no two picked positions are neighbours, maximising the total.\n\nContract\n- `values` is a non-null array of non-negative `int`s and may be empty. You choose a set of indices; two chosen indices may never differ by exactly 1.\n- Return the largest total of the chosen values. Choosing nothing is allowed, so an empty array gives `0`.\n- The total can exceed the `int` range, so return a `long`. Do not mutate `values`.\n\nExamples\n- `maxSum(new int[]{4, 1, 7, 3})` returns `11` (indices 0 and 2).\n- `maxSum(new int[]{5})` returns `5`.\n- `maxSum(new int[]{2, 9, 2})` returns `9`.\n",
   "examples": [

@@ -1,7 +1,10 @@
 {
   "id": "word-count-report",
   "title": "Word Count Report",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Count normalized words in a block of text and return a deterministic report.\n\nContract\n- `text` is non-null and may be empty or all whitespace.\n- Split on whitespace. For each token, remove leading and trailing non-letter-or-digit characters, then lowercase the remaining text.\n- Discard tokens that become empty.\n- Return strings of the form `count word`, sorted first by word length and then lexicographically.\n\nExamples\n- `countWords(\"Red fish, red fish!\")` returns `[\"2 red\", \"2 fish\"]`.\n- `countWords(\"One two two three.\")` returns `[\"1 one\", \"2 two\", \"1 three\"]`.\n- `countWords(\" ... \")` returns `[]`.\n",
   "examples": [

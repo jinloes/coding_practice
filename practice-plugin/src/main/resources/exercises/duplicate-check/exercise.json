@@ -1,7 +1,10 @@
 {
   "id": "duplicate-check",
   "title": "Duplicate Check",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Hash Maps"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether any value occurs at least twice in an array.\n\nContract\n- `numbers` is non-null and may be empty. Values may be any `int`.\n- Return `true` when at least two different positions hold equal values, otherwise `false`.\n- Do not mutate `numbers`.\n\nExamples\n- `hasDuplicate(new int[]{4, 9, 1, 4})` returns `true`.\n- `hasDuplicate(new int[]{3, 8, 5})` returns `false`.\n- `hasDuplicate(new int[0])` returns `false`.\n",
   "examples": [

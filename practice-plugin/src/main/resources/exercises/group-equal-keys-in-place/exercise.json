@@ -1,7 +1,10 @@
 {
   "id": "group-equal-keys-in-place",
   "title": "Group Equal Keys In Place",
-  "topic": "Arrays",
+  "topics": [
+    "Arrays",
+    "Hash Maps"
+  ],
   "difficulty": "Medium",
   "statement": "Rearrange an array so equal keys occupy contiguous blocks.\n\nContract\n- `keys` is non-null and may be empty. Values may be any `int`.\n- Mutate `keys` in place so that, for every value, all copies of that value appear in one contiguous block. The order of the blocks is not specified.\n- Preserve exactly the same multiset of values.\n\nExamples\n- `[3, 1, 3, 2, 1]` may become `[1, 1, 2, 3, 3]`.\n- `[5, 5, 5]` remains a single block.\n- `[]` remains empty.\n",
   "examples": [

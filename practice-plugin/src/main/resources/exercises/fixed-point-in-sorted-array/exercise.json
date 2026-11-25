@@ -1,7 +1,10 @@
 {
   "id": "fixed-point-in-sorted-array",
   "title": "Fixed Point In Sorted Array",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Arrays"
+  ],
   "difficulty": "Medium",
   "statement": "Find an index whose value is the same as the index in a sorted array.\n\nContract\n- `numbers` is non-null, sorted in strictly increasing order, and may be empty.\n- Return the index `i` where `numbers[i] == i`, or `-1` when no such index exists.\n- Do not mutate `numbers`.\n\nExamples\n- `findFixedPoint(new int[]{-3, -1, 2, 5})` returns `2`.\n- `findFixedPoint(new int[]{1, 2, 3})` returns `-1`.\n- `findFixedPoint(new int[]{0, 4, 8})` returns `0`.\n",
   "examples": [

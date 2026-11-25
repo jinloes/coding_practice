@@ -1,7 +1,9 @@
 {
   "id": "min-tracking-stack",
   "title": "Min-Tracking Stack",
-  "topic": "Stacks",
+  "topics": [
+    "Stacks"
+  ],
   "difficulty": "Medium",
   "statement": "Build a stack of integers that can report its smallest value instantly.\n\nContract\n- `push(value)` adds a value to the top; the stack is unbounded and accepts every `int`, including duplicates.\n- `pop()` removes and returns the top value and `top()` returns it without removing it.\n- `min()` returns the smallest value currently stored, without removing anything. After pops, it must reflect only the values that remain, and duplicates of the minimum count separately.\n- `pop`, `top` and `min` throw `NoSuchElementException` on an empty stack. `size()` returns the number of stored values.\n- Every operation must run in constant time (amortized for `push`); scanning the stack to find the minimum is not allowed.\n\nExamples\n- After `push(5)`, `push(2)`, `push(7)`: `min()` returns `2` and `top()` returns `7`.\n- Continuing, `pop()` returns `7`, `pop()` returns `2`, and then `min()` returns `5` again.\n- On a new stack, `min()`, `top()` and `pop()` each throw `NoSuchElementException`.\n",
   "examples": [

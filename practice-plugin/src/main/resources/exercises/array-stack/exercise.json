@@ -1,7 +1,10 @@
 {
   "id": "array-stack",
   "title": "Array Stack",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Stacks"
+  ],
   "difficulty": "Medium",
   "statement": "Implement a last-in-first-out stack of integers backed by a growable array.\n\nContract\n- `push` adds one value to the top. The stack has no fixed capacity and accepts\n  every `int`, including duplicates and negative values.\n- `pop` removes and returns the newest value; `peek` returns it without removing it.\n  Both methods throw `NoSuchElementException` when the stack is empty.\n- `size` reports the number of stored values and `isEmpty` is equivalent to `size() == 0`.\n\nExamples\n- Pushing `4`, then `9`, makes `pop()` return `9` and then `4`.\n- `peek()` observes the top while leaving the size unchanged.\n- A new stack is empty and `pop()`/`peek()` throw `NoSuchElementException`.\n",
   "examples": [

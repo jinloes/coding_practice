@@ -1,7 +1,9 @@
 {
   "id": "base-conversion",
   "title": "Base Conversion",
-  "topic": "Math",
+  "topics": [
+    "Math"
+  ],
   "difficulty": "Medium",
   "statement": "Convert an integer string from one base to another.\n\nContract\n- `number` is a valid integer representation in `fromBase`, optionally starting with `-`.\n- Bases are between 2 and 16 inclusive. Digits may use `0`-`9` and `A`-`F`, in either case.\n- Return an uppercase representation in `toBase`, preserving a leading minus sign for negative non-zero values.\n- Zero is represented as exactly `\"0\"`.\n\nExamples\n- `convert(\"615\", 7, 13)` returns `\"1A7\"`.\n- `convert(\"-1010\", 2, 16)` returns `\"-A\"`.\n- `convert(\"0\", 10, 2)` returns `\"0\"`.\n",
   "examples": [

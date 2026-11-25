@@ -1,7 +1,10 @@
 {
   "id": "longest-k-repeating-substring",
   "title": "Longest K-Repeating Substring",
-  "topic": "Sliding Window",
+  "topics": [
+    "Sliding Window",
+    "Strings"
+  ],
   "difficulty": "Medium",
   "statement": "Find the longest substring in which every character that appears does so at least k times.\n\nContract\n- `text` is non-null. Characters are compared exactly as Java `char` values.\n- Return the length of the longest contiguous substring whose distinct characters each occur at least `k` times inside that substring.\n- If `k <= 1`, the whole string qualifies. If no non-empty substring qualifies, return `0`.\n\nExamples\n- `longestSubstring(\"aaabb\", 3)` returns `3`.\n- `longestSubstring(\"ababbc\", 2)` returns `5`.\n- `longestSubstring(\"abc\", 2)` returns `0`.\n",
   "examples": [

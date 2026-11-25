@@ -1,7 +1,10 @@
 {
   "id": "replace-and-remove-chars",
   "title": "Replace And Remove Characters",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Two Pointers"
+  ],
   "difficulty": "Medium",
   "statement": "Rewrite the active prefix of a character buffer by deleting one character and expanding another.\n\nContract\n- `chars` is non-null and has enough capacity for the expanded result.\n- Only the first `size` entries are input; entries after that are scratch space.\n- Remove every `b` from the active prefix, replace every `a` with two `d` characters, and preserve the order of all other characters.\n- Write the transformed text back into the beginning of `chars` and return its logical length.\n\nExamples\n- `replaceAndRemove(['a','c','d','b','b','c','a',...], 7)` writes `ddcdcdd` and returns `7`.\n- `replaceAndRemove(['b','b','c'], 3)` writes `c` and returns `1`.\n- `replaceAndRemove(['x','y'], 2)` writes `xy` and returns `2`.\n",
   "examples": [

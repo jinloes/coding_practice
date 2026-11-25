@@ -1,7 +1,11 @@
 {
   "id": "k-closest-sorted-values",
   "title": "K Closest Sorted Values",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Heaps",
+    "Arrays"
+  ],
   "difficulty": "Medium",
   "statement": "Choose sorted values closest to a target from a sorted array.\n\nContract\n- `values` is non-null and sorted ascending; `0 <= k <= values.length`.\n- Return exactly `k` values sorted ascending whose distances from `target` are smallest.\n- Distance ties prefer the smaller value, and the input must not be mutated.\n\nExamples\n- `[1, 2, 3, 4, 5]`, `k = 4`, `target = 3` returns `[1, 2, 3, 4]`.\n- `[1, 3, 6, 10]`, `k = 2`, `target = 7` returns `[6, 10]`.\n",
   "examples": [
@@ -24,4 +28,3 @@
   "intendedTime": "O(n)",
   "intendedSpace": "O(n)"
 }
-

@@ -1,7 +1,9 @@
 {
   "id": "queens-placement",
   "title": "Queens Placement",
-  "topic": "Backtracking",
+  "topics": [
+    "Backtracking"
+  ],
   "difficulty": "Hard",
   "statement": "Place n queens on an n-by-n chessboard so that no two attack each other, and list every such arrangement.\n\nContract\n- `n` is at least 1; throw `IllegalArgumentException` for anything smaller. Queens attack along rows, columns and both diagonals.\n- A board is a list of `n` strings of length `n`, one per row, using `'Q'` for a queen and `'.'` for an empty square.\n- Return every distinct board exactly once. The order of the boards is up to you.\n- If no arrangement exists, return an empty list.\n\nExamples\n- `solveQueens(4)` returns two boards: `[\".Q..\", \"...Q\", \"Q...\", \"..Q.\"]` and `[\"..Q.\", \"Q...\", \"...Q\", \".Q..\"]` in any order.\n- `solveQueens(1)` returns `[[\"Q\"]]`.\n- `solveQueens(3)` returns an empty list.\n",
   "examples": [

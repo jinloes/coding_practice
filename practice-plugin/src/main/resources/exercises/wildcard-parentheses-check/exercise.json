@@ -1,7 +1,9 @@
 {
   "id": "wildcard-parentheses-check",
   "title": "Wildcard Parentheses Check",
-  "topic": "Greedy",
+  "topics": [
+    "Greedy"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether a string of `(`, `)` and `*` can be read as a correctly nested set of parentheses when every `*` is free to act as `(`, as `)`, or as nothing.\n\nContract\n- `pattern` is non-null and contains only the characters `(`, `)` and `*`; it may be empty.\n- A reading is correct when every `)` closes an earlier unclosed `(` and no `(` is left open at the end.\n- Each `*` may be chosen independently as `(`, `)` or an empty string. Return true if at least one choice gives a correct reading.\n- An empty `pattern` is correct.\n\nExamples\n- `isBalanced(\"(*))\")` is true: read the star as `(` to get `(())`.\n- `isBalanced(\"*(\")` is false: the final `(` can never be closed.\n- `isBalanced(\"\")` is true.\n",
   "examples": [

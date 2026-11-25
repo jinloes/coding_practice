@@ -43,11 +43,13 @@ export function ProblemView({ problem }: { problem: Problem | null }) {
             </Tooltip>
           )}
         </Group>
-        <Group gap={6}>
+        <Group gap={6} wrap="wrap">
           <DifficultyBadge difficulty={problem.difficulty} />
-          <Badge color="gray" variant="light" size="sm" style={{ textTransform: 'none' }}>
-            {problem.topic}
-          </Badge>
+          {problem.topics.map((topic) => (
+            <Badge key={topic} color="gray" variant="light" size="sm" style={{ textTransform: 'none' }}>
+              {topic}
+            </Badge>
+          ))}
         </Group>
         <Text size="sm" c="dimmed">
           Target: {problem.intendedTime} time, {problem.intendedSpace} space

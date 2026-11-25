@@ -1,7 +1,10 @@
 {
   "id": "valid-palindrome-one-deletion",
   "title": "Valid Palindrome With One Deletion",
-  "topic": "Strings",
+  "topics": [
+    "Strings",
+    "Two Pointers"
+  ],
   "difficulty": "Easy",
   "statement": "Decide whether a lowercase string can become a palindrome after removing at most one character.\n\nContract\n- `text` is non-null and may be empty. Every character is a lowercase English letter (`a` through `z`).\n- Removing zero characters is allowed, so strings that are already palindromes return `true`.\n- Removing at most one character at any index is allowed; you may not reorder or replace characters.\n- Return `true` when zero or one deletion produces a string that reads the same forward and backward, and `false` otherwise.\n\nExamples\n- `canBePalindrome(\"aba\")` returns `true` (already a palindrome).\n- `canBePalindrome(\"abca\")` returns `true` (delete `'b'` or `'c'`).\n- `canBePalindrome(\"abc\")` returns `false`.\n",
   "examples": [

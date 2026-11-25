@@ -71,7 +71,7 @@ final class PracticeViews {
                 .append("<h2>").append(MarkdownHtml.inline(exercise.title()))
                 .append(passed.contains(exercise.id()) ? " (passed)" : "").append("</h2>")
                 .append("<p>").append(MarkdownHtml.inline(exercise.difficulty())).append(" &middot; ")
-                .append(MarkdownHtml.inline(exercise.topic())).append("<br>")
+                .append(MarkdownHtml.inline(exercise.topicSummary())).append("<br>")
                 .append("Target: ").append(MarkdownHtml.inline(exercise.intendedTime())).append(" time, ")
                 .append(MarkdownHtml.inline(exercise.intendedSpace())).append(" space</p>")
                 .append(MarkdownHtml.toHtml(exercise.statement()))

@@ -1,7 +1,9 @@
 {
   "id": "binary-tree-traversal-orders",
   "title": "Binary Tree Traversal Orders",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Easy",
   "statement": "Return preorder, inorder, and postorder value lists for one binary tree.\n\nContract\n- `root` may be null.\n- Return a `TraversalOrders` record containing the three lists.\n- Empty trees produce three empty lists and the tree must not be mutated.\n\nExamples\n- `[1, 2, 3, null, 4]` yields preorder `[1, 2, 4, 3]`, inorder `[2, 4, 1, 3]`, and postorder `[4, 2, 3, 1]`.\n- `[7]` yields `[7]` for all three orders.\n",
   "examples": [
@@ -24,4 +26,3 @@
   "intendedTime": "O(n)",
   "intendedSpace": "O(1)"
 }
-

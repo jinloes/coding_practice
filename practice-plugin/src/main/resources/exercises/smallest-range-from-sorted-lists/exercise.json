@@ -1,7 +1,9 @@
 {
   "id": "smallest-range-from-sorted-lists",
   "title": "Smallest Range From Sorted Lists",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Medium",
   "statement": "Choose a shortest value range that touches every sorted list.\n\nContract\n- `lists` is non-null, contains at least one list, and every inner list is non-empty and sorted in nondecreasing order.\n- Return a two-element array `[low, high]` describing the shortest inclusive range that contains at least one value from every list.\n- If several ranges have the same length, return the one with the smaller `low` value. Do not mutate the lists.\n\nExamples\n- `smallestRange([[4,10,15], [1,12,20], [6,14,24]])` returns `[12, 15]`.\n- `smallestRange([[1,2,3], [1,2,3]])` returns `[1, 1]`.\n- `smallestRange([[5], [0,10]])` returns `[0, 5]`.\n",
   "examples": [

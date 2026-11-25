@@ -1,7 +1,9 @@
 {
   "id": "equal-subset-partition",
   "title": "Equal Subset Partition",
-  "topic": "Dynamic Programming",
+  "topics": [
+    "Dynamic Programming"
+  ],
   "difficulty": "Medium",
   "statement": "Decide whether a list of positive whole numbers can be divided into two groups with exactly the same sum.\n\nContract\n- `values` is non-null and may be empty; every value is at least 1 and the total fits in an `int`.\n- Every value must go into exactly one of the two groups. A group may be empty only when the other is empty too, so an empty array counts as splittable.\n- Return `true` when some assignment gives both groups the same sum, otherwise `false`.\n- Do not mutate `values`.\n\nExamples\n- `canSplitEvenly(new int[]{3, 1, 1, 2, 1})` returns `true`: `{3, 1}` and `{1, 1, 2}` both sum to 4.\n- `canSplitEvenly(new int[]{2, 5, 4})` returns `false`: the total 11 is odd.\n- `canSplitEvenly(new int[]{6, 6})` returns `true`: one value goes to each group.\n",
   "examples": [

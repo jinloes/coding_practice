@@ -239,6 +239,7 @@ final class PracticePanel extends JPanel implements Disposable, PracticeActions.
                 case REVEAL_HINT -> revealHint();
                 case OPEN_COACH -> openCoachTab();
                 case COACH_DIAGNOSE -> coachController.ask(CoachPrompt.Mode.DIAGNOSE, "");
+                case COACH_TRACE -> coachController.ask(CoachPrompt.Mode.TRACE_EXAMPLE, "");
                 case COACH_TRANSLATE -> coachController.ask(CoachPrompt.Mode.TRANSLATE, "");
                 case COACH_COMPARE -> coachController.ask(CoachPrompt.Mode.COMPARE_OPTIMAL, "");
                 case COACH_FOLLOW_UP -> coachController.ask(CoachPrompt.Mode.FOLLOW_UP, event.id());

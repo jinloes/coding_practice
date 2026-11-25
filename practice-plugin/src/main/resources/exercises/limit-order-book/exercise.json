@@ -1,7 +1,9 @@
 {
   "id": "limit-order-book",
   "title": "Limit Order Book",
-  "topic": "Heaps",
+  "topics": [
+    "Heaps"
+  ],
   "difficulty": "Medium",
   "statement": "Implement a price-time priority limit order book matching engine.\n\nEach incoming limit order is submitted via `submitOrder(int orderId, boolean isBuy, int price, int quantity)` and returns the list of `Trade(int buyId, int sellId, int price, int quantity)` executions produced by that order, in the exact order they match.\n\nContract\n- `price > 0` and `quantity > 0`. Each `orderId` is unique and arrives in strictly increasing time order.\n- A **buy** order matches resting **sell** orders whose price is `<= buy.price`, lowest sell price first; ties at the same sell price break by earliest arrival (FIFO).\n- A **sell** order matches resting **buy** orders whose price is `>= sell.price`, highest buy price first; ties at the same buy price break by earliest arrival (FIFO).\n- Every trade executes at the **resting** (maker) order's price, for `min(incomingRemaining, restingRemaining)` shares.\n- Partial fills reduce the resting order's remaining quantity and keep its original time priority. Fully filled resting orders are removed from the book.\n- Any unfilled remainder of the incoming order rests on the book.\n\nExamples\n- Sell `#1` 10@100, Sell `#2` 5@102, Buy `#3` 12@102 -> matches `Trade(3, 1, 100, 10)` then `Trade(3, 2, 102, 2)`, leaving Sell `#2` with 3 shares at 102.\n- FIFO at the same price: Buy `#1` 5@100, Buy `#2` 5@100, Sell `#3` 7@99 -> matches `Trade(1, 3, 100, 5)` then `Trade(2, 3, 100, 2)`.\n- Non-crossing orders rest without trading: Buy `#1` 4@95, Sell `#2` 4@105 -> `[]`, `[]`.\n",
   "examples": [

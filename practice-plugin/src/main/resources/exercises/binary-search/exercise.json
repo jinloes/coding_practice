@@ -1,7 +1,10 @@
 {
   "id": "binary-search",
   "title": "Binary Search",
-  "topic": "Searching",
+  "topics": [
+    "Binary Search",
+    "Arrays"
+  ],
   "difficulty": "Easy",
   "statement": "Search a sorted array for a target value.\n\nContract\n- `sorted` is non-null and sorted in nondecreasing order; it may be empty.\n- Return any in-bounds index whose value equals `target`, or `-1` when the\n  target is absent. Duplicate values may therefore produce any matching index.\n- Do not mutate the input array.\n\nExamples\n- `search(new int[]{-4, -1, 0, 6, 9}, 6)` returns `3`.\n- `search(new int[]{1, 2, 2, 2, 8}, 2)` may return `1`, `2`, or `3`.\n- `search(new int[]{1, 4, 7}, 5)` returns `-1`.\n",
   "examples": [

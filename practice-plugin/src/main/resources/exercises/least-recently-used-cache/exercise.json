@@ -1,7 +1,11 @@
 {
   "id": "least-recently-used-cache",
   "title": "Least-Recently-Used Cache",
-  "topic": "Data Structures",
+  "topics": [
+    "Data Structures",
+    "Hash Maps",
+    "Linked Lists"
+  ],
   "difficulty": "Medium",
   "statement": "Design a fixed-capacity key-value cache that evicts the entry that has gone unused the longest.\n\nContract\n- `new Solution(capacity)` creates an empty cache holding at most `capacity` entries. Throw `IllegalArgumentException` when `capacity < 1`.\n- `get(key)` returns the stored value, or `-1` when the key is absent. Values are non-negative, so `-1` is unambiguous. A successful `get` makes the key the most recently used.\n- `put(key, value)` inserts or overwrites. Either way the key becomes the most recently used. When inserting a new key into a full cache, first evict the least recently used key.\n- Overwriting an existing key never evicts anything. A `get` that misses changes nothing.\n- Both `get` and `put` must run in O(1) average time.\n\nExamples\n- With capacity 2: `put(1, 10)`, `put(2, 20)`, `get(1)` returns `10`, `put(3, 30)` evicts key 2, so `get(2)` returns `-1`.\n- With capacity 1: `put(1, 5)`, `put(2, 6)` leaves only key 2, so `get(1)` returns `-1` and `get(2)` returns `6`.\n- With capacity 2: `put(1, 1)`, `put(2, 2)`, `put(1, 100)`, `put(3, 3)` evicts key 2, and `get(1)` returns `100`.\n",
   "examples": [

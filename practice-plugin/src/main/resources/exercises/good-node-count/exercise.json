@@ -1,7 +1,9 @@
 {
   "id": "good-node-count",
   "title": "Good Node Count",
-  "topic": "Binary Trees",
+  "topics": [
+    "Binary Trees"
+  ],
   "difficulty": "Medium",
   "statement": "Count the tree nodes whose value is not beaten by any ancestor.\n\nContract\n- `root` may be null. Each node has an integer `value` and nullable `left` and `right` children.\n- A node is good when no node on the path from the root down to it (excluding itself) has a strictly greater value. The root is always good, and a value equal to the largest ancestor still counts.\n- Return how many nodes are good; an empty tree has none. Values may be negative or repeated.\n- Do not modify the tree. Trees may be lopsided, with a height of up to 1000 nodes.\n\nExamples\n- `[6, 2, 7, 6, null, 3, 9]` has 4 good nodes: `6`, `7`, the left-hand `6` (it ties the root) and `9`.\n- A null tree has 0 good nodes.\n- `[9, 5, null, 4]` shrinks downward, so only the root is good.\n",
   "examples": [

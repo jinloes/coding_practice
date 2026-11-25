@@ -1,7 +1,10 @@
 {
   "id": "largest-histogram-rectangle",
   "title": "Largest Histogram Rectangle",
-  "topic": "Stacks",
+  "topics": [
+    "Stacks",
+    "Arrays"
+  ],
   "difficulty": "Hard",
   "statement": "Given the heights of adjacent bars, find the area of the largest rectangle that fits entirely inside the bars.\n\nContract\n- `heights` is non-null and may be empty. Every bar is exactly `1` wide and its height is a non-negative `int`.\n- The rectangle must cover consecutive bars and may be no taller than the shortest bar it covers; its area is that height times the number of bars covered.\n- Return the largest possible area as a `long` (areas can exceed the `int` range). An empty array, or one containing only zero-height bars, has area `0`.\n- Do not mutate `heights`.\n\nExamples\n- `largestRectangle(new int[]{3, 1, 4, 4, 2})` returns `8`, from the two bars of height `4`.\n- `largestRectangle(new int[]{7, 7, 7, 7})` returns `28`.\n- `largestRectangle(new int[]{})` returns `0`.\n",
   "examples": [
